@@ -277,11 +277,23 @@
       await accountList();
     }),
   );
+  if (native) {
+    const tools = el("details", "mail-account-tools"), summary = el("summary", "mail-button", T("tools")), menu = el("div", "mail-account-menu");
+    summary.dataset.liveText = "tools";
+    tools.append(summary, menu);
+    for (const key of ["account", "saved", "disconnect", "removeAccount"])
+      menu.append(head.querySelector('[data-live-text="' + key + '"]'));
+    menu.append(localButton);
+    menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
+    head.append(tools);
+    document.addEventListener("click", event => { if (!tools.contains(event.target)) tools.open = false; });
+  }
   layout.append(nav, list, reader);
   app.append(head, notice, layout);
   function btn(key, fn) {
     const b = el("button", "mail-button", T(key));
     b.type = "button";
+    if (key === "back") b.classList.add("mail-back");
     b.dataset.liveText = key;
     b.onclick = () => run(fn);
     return b;
@@ -612,11 +624,11 @@
           "mail-item" + (!item.flags.includes("\\Seen") ? " unread" : ""),
         ),
         b = btn("remote", () => open(item));
-      b.textContent =
-        (item.flags.includes("\\Flagged") ? "★ " : "") +
-        item.subject +
-        " · " +
-        item.from;
+      b.replaceChildren(
+        el("strong", "mail-subject", (item.flags.includes("\\Flagged") ? "★ " : "") + item.subject),
+        el("span", "mail-preview", item.from),
+        el("time", "mail-date", item.date ? new Date(item.date).toLocaleString(document.documentElement.lang, {dateStyle:"short", timeStyle:"short"}) : ""),
+      );
       delete b.dataset.liveText;
       b.dataset.liveUid = item.uid;
       row.style.display = "block";
@@ -823,8 +835,16 @@
       ),
       btn("catalogOne", () => catalogOne(mail, current)),
     );
-    reader.append(actions, el("pre", "mail-text", mail.text));
+    if (native) {
+      const tools = el("details", "mail-message-tools"), summary = el("summary", "mail-button", T("messageTools")), menu = el("div", "mail-message-menu");
+      summary.dataset.liveText = "messageTools";
+      for (const node of [...actions.children].slice(2)) menu.append(node);
+      menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
+      tools.append(summary, menu); actions.append(tools);
+    }
+    reader.append(actions, window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
     for (const [index, a] of mail.attachments.entries()) {
+      if (a.inline) continue; // Still present in raw MIME and attachment checks.
       const b = btn("download", () =>
         native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
           new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
@@ -835,9 +855,11 @@
       delete b.dataset.liveText;
       reader.append(b);
     }
-    const report = el("div", "mail-report");
+    const report = el(native ? "details" : "div", "mail-report"), findings = el("div");
+    if (native) report.append(el("summary", "", T("check")));
+    report.append(findings);
     reader.append(report);
-    await checks(mail, report);
+    await checks(mail, findings);
   }
   function compose(source = {}) {
     if (!leave()) return;

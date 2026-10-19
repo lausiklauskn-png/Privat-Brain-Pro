@@ -64,6 +64,12 @@ public class NativeStartupTest {
             awaitTrue(scenario, "Boolean(window.__updateSmokeInfo && window.__updateSmokeInfo.status === 'unsupported')");
             evaluate(scenario, "window.Capacitor.Plugins.ProUpdates.openDownload().catch(error => window.__updateOpenError = error.code); true");
             awaitTrue(scenario, "window.__updateOpenError === 'UPDATE_NOT_CHECKED'");
+            // Real Android WebView, including the iframe isolation boundary (not just a browser mock).
+            evaluate(scenario, "window.__mailExecuted=false; addEventListener('message',e=>{if(e.data==='mail-script-ran')window.__mailExecuted=true;}); document.querySelector('.main-pages [data-tab=mail]').click(); const box=PBMailView.render({text:'Fallback',html:'<table bgcolor=ivory><tr><td>Original newsletter</td></tr></table>',attachments:[]}); document.querySelector('#mailWorkspace').append(box); const frame=box.querySelector('iframe'); frame.onload=()=>window.__mailFrameReady=true; frame.srcdoc += '<script>parent.postMessage(\"mail-script-ran\",\"*\")</script>'; true");
+            awaitTrue(scenario, "window.__mailFrameReady===true");
+            assertEquals("false", evaluate(scenario, "window.__mailExecuted"));
+            assertEquals("true", evaluate(scenario, "(()=>{const f=document.querySelector('.mail-html');if(f.getAttribute('sandbox')!=='')return false;try{f.contentWindow.document;return false;}catch(e){return e.name==='SecurityError';}})()"));
+            assertEquals("true", evaluate(scenario, "document.querySelector('.wrap').getBoundingClientRect().width >= innerWidth-2"));
             evaluate(scenario, "document.querySelector('.main-pages [data-tab=explorer]').click(); true");
             awaitTrue(scenario, "document.querySelector('#panel-explorer').getBoundingClientRect().height > 0 && document.querySelector('#q').getBoundingClientRect().height === 0");
             evaluate(scenario, "document.querySelector('.main-pages [data-tab=search]').click(); true");

@@ -1,5 +1,8 @@
 (async () => {
   'use strict';
+  // Keep legal/site links reachable in Settings without a second page below the app window.
+  const settingsPage = document.querySelector('#panel-settings');
+  for (const node of document.querySelectorAll('.wrap>footer,body>.fp-badge-wrap')) settingsPage?.append(node);
   const text = {
     de: ['Android-Testversion', 'Direkte Mailverbindung und dauerhafter Ordnerzugriff werden noch ergänzt.'],
     en: ['Android test version', 'Direct mail and persistent folder access are still being added.'],

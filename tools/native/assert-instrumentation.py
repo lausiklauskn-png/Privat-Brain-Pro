@@ -27,6 +27,7 @@ mail_tests = {
     'vaultEncryptsAndTamperingCannotResetAccounts',
     'lostKeystoreKeyDoesNotCreateReplacementData',
     'mimeRoundTripPreservesBinaryAndRejectsHeaderInjection',
+    'originalHtmlAndCidSurviveMimeParsing',
     'defaultTrustRejectsUntrustedTlsBeforeAuthentication',
     'trustedTestCertificateStillRequiresMatchingHostname',
     'imapLibraryAuthenticatesOverVerifiedTls',
