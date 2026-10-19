@@ -27,4 +27,7 @@ getrennte Postfachbereiche im breiten Fenster, erreichbare Nachricht im schmalen
 Fenster, ursprüngliche Tabellenfarbe/Schriftfarbe, CID-Auflösung, externe Bilder
 abschaltbar, keine aktiven Mail-Ressourcen und kein Skript-/App-Ursprungszugriff.
 `PB_CAPTURE_DESIGN=1 npm run test:native-web` erzeugt die Aufnahmen neu.
+Die Aufnahmen warten auf das Ende des bestehenden Theme-Übergangs; sonst
+entsteht im Dunkelbild eine irreführende Mischung aus alten und neuen Farben.
+Zusätzlich bestanden dieselben Bedienproben mit nur 640 Pixeln Fensterhöhe.
 Tablet/DeX-Sichttest der fertigen APK durch den Nutzer folgt.

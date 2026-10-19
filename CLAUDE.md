@@ -329,7 +329,7 @@ Prüfgrenzen: `docs/NATIVE-MAIL-ARCHITEKTUR.md`, `docs/PRUEFSTAND-ANDROID.md`.
 PR #3 ist zusammengeführt, App-Quellstand a3f6051d8946c411449936bf59a1c86e12435fdc.
 Test-APK v0.1.0-preview.4 ist öffentlich; kein Dienst-Token/Termux für native Mail.
 Vollständige CI 39323175775 und signierte Updateprobe 39324803227 bestanden.
-Tatsächliche Anbieteranmeldung auf dem Nutzergerät bleibt offen. Details und
+Telekom-Anmeldung und Abruf sind inzwischen vom Nutzer bestätigt. Details und
 Prüfsumme: `docs/PRUEFSTAND-ANDROID.md`. Vorschau-Schlüssel außerhalb von Git;
 Langzeitbackup/Produktion weiterhin gesondert absichern, keine Geheimnisse erfragen.
 
@@ -345,3 +345,14 @@ Das native Fensterlayout füllt alle Seiten ohne 1040-px-Grenze. Postfach und
 Explorer besitzen scrollbare Bereiche wie Sende-Pruefer; OS-Fensterknöpfe bleiben.
 Kontowerkzeuge im Menü „Weitere Aktionen“, rechtliche Fußtexte in Einstellungen.
 Schutzmodule/Original-PWA unverändert. Prüfnachweise: docs/design/mail-preview5/.
+
+
+## Veröffentlicht: Vorschau .5
+
+Signierte Originalansicht-/Fensterlayout-APK v0.1.0-preview.5 ist öffentlich.
+Quellstand 3ce818c0c4f02813ec925b665d55a3743af051b0, derselbe Git-Baum wie
+vollständig geprüfter f327154c8d8e78214858bc131c85097053500828. CI 39331444809:
+10 Android-Fälle ohne Fehler/Überspringen. Signierte .4→.5-Updateprobe und Upload
+39332888607 erfolgreich; direkter Download HTTP 200 und SHA256 geprüft.
+Bestehende App aktualisieren, nicht deinstallieren. Echter Telekom-Abruf bestätigt;
+neue HTML-Ansicht und Update mit gespeicherten Konten durch Nutzer noch prüfen.
