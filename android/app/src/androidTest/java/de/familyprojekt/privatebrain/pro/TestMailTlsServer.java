@@ -43,10 +43,10 @@ final class TestMailTlsServer implements AutoCloseable {
 
     TestMailTlsServer(String alias, boolean smtp, boolean loseAcknowledgement) throws Exception {
         this.alias = alias;
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "AndroidKeyStore");
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC", "AndroidKeyStore");
         generator.initialize(new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
-            .setKeySize(2048).setDigests(KeyProperties.DIGEST_NONE, KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-            .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1, KeyProperties.SIGNATURE_PADDING_RSA_PSS)
+            .setAlgorithmParameterSpec(new java.security.spec.ECGenParameterSpec("secp256r1"))
+            .setDigests(KeyProperties.DIGEST_NONE, KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA384, KeyProperties.DIGEST_SHA512)
             .setCertificateSubject(new X500Principal("CN=localhost"))
             .setCertificateSerialNumber(BigInteger.ONE)
             .setCertificateNotBefore(new Date(System.currentTimeMillis() - 60000))
@@ -58,15 +58,15 @@ final class TestMailTlsServer implements AutoCloseable {
         X509KeyManager manager = new X509KeyManager() {
             public String[] getClientAliases(String type, java.security.Principal[] issuers) { return null; }
             public String chooseClientAlias(String[] types, java.security.Principal[] issuers, Socket socket) { return null; }
-            public String[] getServerAliases(String type, java.security.Principal[] issuers) { return type.contains("RSA") ? new String[] {"test"} : null; }
-            public String chooseServerAlias(String type, java.security.Principal[] issuers, Socket socket) { return type.contains("RSA") ? "test" : null; }
+            public String[] getServerAliases(String type, java.security.Principal[] issuers) { return type.contains("EC") ? new String[] {"test"} : null; }
+            public String chooseServerAlias(String type, java.security.Principal[] issuers, Socket socket) { return type.contains("EC") ? "test" : null; }
             public X509Certificate[] getCertificateChain(String name) { return new X509Certificate[] {certificate}; }
             public PrivateKey getPrivateKey(String name) { return key; }
         };
         SSLContext server = SSLContext.getInstance("TLSv1.2"); server.init(new KeyManager[] {manager}, null, null);
         listener = (SSLServerSocket) server.getServerSocketFactory().createServerSocket(0, 1, InetAddress.getByName("localhost"));
         listener.setEnabledProtocols(new String[] {"TLSv1.2"});
-        listener.setEnabledCipherSuites(new String[] {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"});
+        listener.setEnabledCipherSuites(new String[] {"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"});
         listener.setSoTimeout(15000); port = listener.getLocalPort();
         KeyStore anchors = KeyStore.getInstance(KeyStore.getDefaultType()); anchors.load(null);
         anchors.setCertificateEntry("only-this-test-server", certificate);
