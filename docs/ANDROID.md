@@ -53,7 +53,7 @@ keine Store-Veröffentlichung und keine Kostenfreigabe sind damit verbunden.
 Bei direkter APK-Installation bestätigt der Nutzer Androids Installationsdialog und
 gegebenenfalls die Freigabe der Download-App.
 
-Ab der nächsten veröffentlichten Vorschau 0.1.0-preview.4 steht unter Einstellungen „Auf Updates
+Seit Vorschau 0.1.0-preview.4 steht unter Einstellungen „Auf Updates
 prüfen“. Die Prüfung läuft nur nach Antippen, verbindet das Gerät mit der öffentlichen
 GitHub-Release-API und überträgt keine Dokumente, Mailkonten oder Zugriffstokens.
 GitHub sieht dabei technisch die Netzwerkadresse des Geräts. Offline und bei
@@ -124,3 +124,17 @@ in einem Android-Dialog erfasst und mit einem nicht exportierbaren Keystore-
 Schlüssel verschlüsselt gespeichert. Hintergrundabruf und Gmail sind noch offen.
 Details zu Versandzuständen, Größenlimits und Bibliotheksrechten:
 [NATIVE-MAIL-ARCHITEKTUR.md](NATIVE-MAIL-ARCHITEKTUR.md).
+
+## Erste direkte Geräte-Mail testen
+
+Aktueller [APK-Download](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.4/Private-Brain-Pro-0.1.0-preview.4.apk).
+Über die vorhandene Test-App installieren, ohne sie zu deinstallieren.
+Postfach → Mailkonto verbinden → Telekom / T-Online oder Hetzner.
+Die E-Mail-Adresse und das separate Passwort für E-Mail-Programme nur im nativen
+Dialog eingeben. Bei gleichem Benutzernamen darf dieses Feld leer bleiben.
+Die vorgegebenen Telekom-Server sind IMAPS 993 und SMTPS 465. Bei Hetzner die
+zum eigenen Konto gehörenden Servernamen verwenden.
+
+Erst Empfang und eine kleine Testmail an die eigene Adresse prüfen. Bei unklarem
+Versand beim Anbieter nachsehen; nicht blind nochmals senden. App-Geheimnisse
+niemals in Chat oder Repository schreiben.

@@ -80,7 +80,7 @@ die erste Veröffentlichung erfolgte über GitHub Actions mit dessen kurzlebigem
 Token und bereits signierter öffentlicher APK. Dabei wurde kein privater Schlüssel
 hochgeladen. Der temporäre Veröffentlichungszweig wurde danach entfernt.
 
-## Direkte Mailanbindung für Vorschau .4 – aktuelle Prüfung
+## Veröffentlichte direkte Mailanbindung 0.1.0-preview.4
 
 Vorschau .2 wurde nach Rückmeldung des Nutzers auf dem Samsung-Tablet installiert
 und gestartet; die gezeigte Mailmaske verlangt noch den privaten HTTPS-Dienst.
@@ -103,9 +103,47 @@ unvertrautes TLS, falschen Hostnamen, echte lokale IMAP-Anmeldung über Test-TLS
 SMTP-Annahme und Verbindungsabbruch nach DATA ohne Doppelversand. Der Testserver
 und seine flüchtigen Schlüssel entstehen nur auf dem Testgerät. Produktion bleibt
 beim Systemvertrauen; es werden keine realen Zugangsdaten verwendet.
-Vor Veröffentlichung ist der tatsächliche GitHub-Android-Lauf erforderlich.
+Erfolgreich ausgeführt: vollständiger [CI-Lauf 39323175775](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39323175775),
+HEAD `b3d26637425c22c7b1615b455a7f308fd23d4116`: sämtliche Web-/Dienstprüfungen,
+Build/Lint und **9 Android-Tests, 0 Fehler, 0 übersprungen**. Die zusätzliche
+[gezielte Android-Gegenprobe 39323203611](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39323203611) bestand ebenfalls.
+Die ersten TLS-Fixture-Läufe scheiterten am nicht exportierbaren RSA-Serverschlüssel
+des Emulators; der Testserver verwendet jetzt einen dort flüchtig erzeugten
+ECDSA-Schlüssel. Die Produktions-Zertifikatsprüfung wurde dafür nicht gelockert.
+
+PR #3 ist nach erfolgreicher vollständiger Prüfung zusammengeführt. Der Release-
+Quellstand `a3f6051d8946c411449936bf59a1c86e12435fdc` hat exakt denselben
+Git-Baum wie der geprüfte PR-HEAD. Vorschau 4 wurde aus diesem Stand neu gebaut.
+Sämtliche ZIP-Einträge entsprechen dem vorher geprüften Paketinhalt; die APK-
+Gesamtprüfsumme enthält auch die jeweils neu erzeugte Signatur.
+
+Veröffentlichung und tatsächlicher Test der signierten APK im Android-35-Emulator:
+[Release-Lauf 39324803227](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39324803227), erfolgreich.
+Installation von .2, Sprachwahl auf EN, Update mit .4 ohne Deinstallation,
+erhaltene Sprachwahl sowie Öffnen/Abbrechen der echten nativen Kontomaske bestätigt.
+Das beweist noch keine Übernahme bereits gespeicherter Mailkonten: .2 hatte keine
+native Kontenablage. Direkter öffentlicher Download mit HTTP 200, 4.967.275 Bytes
+und SHA-256 geprüft:
+`0219c0afaa5500e99028a06ad415b81a159adbd2e62f7b901229a78f9929f950`.
+Vorschau-Zertifikat, Paketkennung und freigegebene helle Pro-Icons bleiben gleich;
+VersionCode 4, VersionName `0.1.0-preview.4-test`, kein Debug-Flag.
 
 Noch nicht bestätigt: echte Telekom-/Hetzner-Anmeldung vom Nutzergerät, Empfang/
 Versand/Anhänge mit realen Konten, Provider-Funktionen, DeX-Bedienung der nativen
 Kontomaske und Update mit gespeicherten Mailkonten. Keine vollständige
 Funktionsgleichheit oder vollständige Malware-Erkennung behaupten.
+
+## Zusätzliche Stabilisierung der Dialogprüfung
+
+Ein weiterer Lauf desselben App-Codes, 39323170161, bestand alle acht Mailtests,
+scheiterte aber beim Starttest am Espresso-Fensterfokus: Der Standard-Root-Matcher
+wartete auf das Hauptfenster, während der Kontodialog den Fokus hatte. Die Probe
+verlangt jetzt ausdrücklich `isDialog()` bei Titelsuche, Passwortbeschriftung und
+Abbrechen. Der Test wird weiterhin tatsächlich ausgeführt, nicht übersprungen.
+Diese Änderung betrifft ausschließlich die Android-Instrumentierung; die
+veröffentlichte APK und ihre Brücke bleiben bytegleich.
+
+Die präzisierte Probe bestand im [Android-Lauf 39325034993](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39325034993):
+9 tatsächlich ausgeführte Tests, 0 Fehler, 0 übersprungen. Geprüfter Test-Quellstand
+`d7d20fb03b43fab03dd6f52f8208f57e2ddc2ff8`; die zusätzliche Dokumentation wird nicht
+in das Laufzeitpaket kopiert.

@@ -323,3 +323,12 @@ Dienst-Token für direkte Geräteverbindungen. Konten/Entwürfe/Versandnachweise
 AES-GCM/Keystore, keine stillen Ersatzschlüssel. Unklaren SMTP-Ausgang niemals
 automatisch wiederholen. Die .2-APK hat noch den alten Serverdialog. Stand und
 Prüfgrenzen: `docs/NATIVE-MAIL-ARCHITEKTUR.md`, `docs/PRUEFSTAND-ANDROID.md`.
+
+## Veröffentlicht: direkte Geräte-Mail in Vorschau .4
+
+PR #3 ist zusammengeführt, App-Quellstand a3f6051d8946c411449936bf59a1c86e12435fdc.
+Test-APK v0.1.0-preview.4 ist öffentlich; kein Dienst-Token/Termux für native Mail.
+Vollständige CI 39323175775 und signierte Updateprobe 39324803227 bestanden.
+Tatsächliche Anbieteranmeldung auf dem Nutzergerät bleibt offen. Details und
+Prüfsumme: `docs/PRUEFSTAND-ANDROID.md`. Vorschau-Schlüssel außerhalb von Git;
+Langzeitbackup/Produktion weiterhin gesondert absichern, keine Geheimnisse erfragen.
