@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private Brain — Impressum &amp; Datenschutz</title>
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0c0f21;color:#eef0ff;
+    line-height:1.65;margin:0;padding:24px 16px 60px}
+  .wrap{max-width:760px;margin:0 auto}
+  a{color:#8b9cff}
+  h1{font-size:1.4rem} h2{font-size:1.05rem;margin-top:1.8em;color:#cdd2ff}
+  .card{background:#171a35;border:1px solid #2a2f57;border-radius:14px;padding:16px 18px;margin:14px 0}
+  .mut{color:#9aa0cf;font-size:.9rem}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0c0f24;padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a href="index.html">← zurück zur App</a></p>
+  <h1>Private Brain — Datenschutz &amp; Impressum</h1>
+  <p class="mut">Probeversion v0.1 · Stand 2026 · privat, nicht öffentlich vermarktet.</p>
+
+  <div class="card">
+    <h2>Kurz gesagt</h2>
+    <p>Private Brain läuft <b>vollständig in deinem Browser</b>. Deine Dateien werden
+    <b>gelesen, nicht hochgeladen</b>. Der Kasten merkt sich nur einen winzigen Katalog
+    (Steckbrief, Bedeutungs-Vektor, Zeiger) — deine Originaldateien werden nie kopiert,
+    verschoben oder verändert.</p>
+  </div>
+
+  <h2>Welche Daten wo bleiben</h2>
+  <div class="card">
+    <ul>
+      <li><b>Deine Dateien:</b> bleiben dort, wo sie liegen. Beim „Ordner verbinden“ merkt
+      sich der Browser nur einen <i>Zeiger</i> (Handle) — kein Inhalt wird kopiert.</li>
+      <li><b>Der Katalog:</b> Dateiname, Pfad, Datum, ein kurzer Textausschnitt, der
+      Bedeutungs-Vektor und die vorgeschlagene Kategorie liegen lokal in der
+      <code>IndexedDB</code> deines Browsers. Nur auf diesem Gerät.</li>
+      <li><b>Kein Server, kein Konto, kein Tracking.</b> Es gibt keine Analyse, keine Cookies
+      zu Werbezwecken, keinen Cloud-Speicher.</li>
+    </ul>
+  </div>
+
+  <h2>Optionale EU-KI (Bring-Your-Own-Key)</h2>
+  <div class="card">
+    <p>Standardmäßig <b>aus</b>. Nur wenn du in den Einstellungen bewusst einen eigenen
+    API-Schlüssel eines EU-Anbieters (z. B. Mistral) hinterlegst, dürfen einzelne Bilder
+    oder Texte zur Texterkennung an diesen Anbieter gehen — mit klarer Anzeige. Der
+    Schlüssel bleibt in deinem Browser. Ob und wie der Anbieter Daten verarbeitet, richtet
+    sich nach dessen Datenschutzbestimmungen.</p>
+  </div>
+
+  <h2>Speicher &amp; Löschen</h2>
+  <div class="card">
+    <p>Den Katalog kannst du jederzeit in den Einstellungen leeren — das löscht
+    <b>keine</b> deiner Dateien. Löschst du die Browserdaten, verschwindet auch der Katalog;
+    deine Originale bleiben unberührt.</p>
+  </div>
+
+  <h2>Impressum</h2>
+  <div class="card">
+    <p class="mut">Private Probeversion. Verantwortliche Angaben werden vor einer etwaigen
+    Veröffentlichung ergänzt (Name, Anschrift, Kontakt gemäß §5 DDG / §18 MStV).</p>
+  </div>
+</div>
+</body>
+</html>

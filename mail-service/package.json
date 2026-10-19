@@ -1,0 +1,16 @@
+{
+  "name": "private-brain-mail-service",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "imapflow": "^1.0.195",
+    "mailparser": "^3.7.4",
+    "nodemailer": "^10.1.7"
+  }
+}

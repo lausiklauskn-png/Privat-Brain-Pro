@@ -1,0 +1,126 @@
+name: Signierte Android-Testversion oder stabile Version
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Veröffentlichungskanal
+        required: true
+        default: test
+        type: choice
+        options: [test, stable]
+      tag:
+        description: Neuer Versions-Tag, z. B. v0.1.0-preview.1
+        required: true
+        type: string
+permissions:
+  contents: write
+  checks: read
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.channel == 'stable' && 'android-production' || 'android-preview' }}
+    env:
+      PB_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      PB_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      PB_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      PB_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Erfolgreichen nativen Starttest desselben Commits verlangen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          passed=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --jq '[.check_runs[] | select(.name == "native-smoke" and .conclusion == "success")] | length')
+          if [[ "$passed" -lt 1 ]]; then
+            echo 'Vor dem Release muss der native Android-Starttest dieses Commits erfolgreich sein.'
+            exit 1
+          fi
+      - name: Signierung und Versionskennung prüfen
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          test -n "$PB_KEYSTORE_BASE64" && test -n "$PB_KEYSTORE_PASSWORD"
+          test -n "$PB_KEY_ALIAS" && test -n "$PB_KEY_PASSWORD"
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]
+          if [[ "$RELEASE_CHANNEL" == stable ]]; then
+            [[ "$RELEASE_TAG" != *-* ]]
+            grep -q "versionName \"${RELEASE_TAG#v}\"" android/app/build.gradle
+          else
+            [[ "$RELEASE_TAG" == *-preview.* ]]
+            grep -q "versionName \"${RELEASE_TAG#v}\"" android/app/build.gradle
+          fi
+          test "$(git branch --show-current)" = main
+          printf '%s' "$PB_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/private-brain.jks"
+          chmod 600 "$RUNNER_TEMP/private-brain.jks"
+          echo "PB_KEYSTORE_FILE=$RUNNER_TEMP/private-brain.jks" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Android SDK des GitHub-Runners prüfen
+        run: |
+          set -euo pipefail
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix mail-service --ignore-scripts
+      - run: npx playwright-core install --with-deps chromium
+      - name: Vor Veröffentlichung vollständig prüfen
+        run: |
+          export CB_CHROMIUM="$(node --input-type=module -e 'import {chromium} from "playwright-core"; process.stdout.write(chromium.executablePath())')"
+          export WFPDF_KLON="$GITHUB_WORKSPACE/tests/fixtures/Workflow-PDF"
+          npm test
+          npm test --prefix mail-service
+          npm run sync:android
+          npm run test:native-web
+      - name: APK und Android App Bundle bauen
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        working-directory: android
+        run: |
+          if [[ "$RELEASE_CHANNEL" == stable ]]; then
+            ./gradlew --no-daemon --max-workers=2 assembleRelease bundleRelease lintRelease
+          else
+            ./gradlew --no-daemon --max-workers=2 assemblePreview lintPreview
+          fi
+      - name: Signatur prüfen und Release vorbereiten
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          variant=preview
+          if [[ "$RELEASE_CHANNEL" == stable ]]; then variant=release; fi
+          mkdir -p release-files
+          cp "android/app/build/outputs/apk/$variant/app-$variant.apk" release-files/Private-Brain-Pro.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose release-files/Private-Brain-Pro.apk
+          if [[ "$RELEASE_CHANNEL" == stable ]]; then
+            cp android/app/build/outputs/bundle/release/app-release.aab release-files/Private-Brain-Pro.aab
+          fi
+          cd release-files
+          sha256sum Private-Brain-Pro.* > SHA256SUMS
+      - name: GitHub Release veröffentlichen (nur manuell gestartet)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          options=()
+          if [[ "$RELEASE_CHANNEL" == test ]]; then options+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" release-files/* --target "$GITHUB_SHA" \
+            --title "Private Brain Pro $RELEASE_TAG" --generate-notes "${options[@]}"
+      - name: Temporären Signierschlüssel entfernen
+        if: always()
+        run: rm -f "$RUNNER_TEMP/private-brain.jks"

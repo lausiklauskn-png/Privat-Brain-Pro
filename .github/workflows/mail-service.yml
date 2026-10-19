@@ -1,0 +1,59 @@
+name: Privater Mail-Dienst
+on:
+  pull_request:
+    paths: ['mail-service/**', '.github/workflows/mail-service.yml']
+  push:
+    branches: [main]
+    paths: ['mail-service/**', '.github/workflows/mail-service.yml']
+permissions:
+  contents: read
+jobs:
+  mail-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mail-service/package-lock.json
+      - run: npm ci --prefix mail-service --ignore-scripts
+      - run: npm test --prefix mail-service
+      - run: npm audit --prefix mail-service --omit=dev --audit-level=high
+      - name: Image aus privatem Checkout bauen
+        run: |
+          find . -type d -exec chmod go-rwx {} +
+          find . -type f -exec chmod go-rwx {} +
+          docker build -f mail-service/Dockerfile -t private-brain-mail:test .
+      - name: Dienst als node mit schreibgeschütztem Image starten
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker logs pb-mail-smoke; docker rm -f pb-mail-smoke >/dev/null' EXIT
+          docker run -d --name pb-mail-smoke --network none --read-only \
+            --cap-drop ALL --security-opt no-new-privileges:true \
+            --tmpfs /tmp:size=64m,mode=1777 \
+            --tmpfs /data:uid=1000,gid=1000,mode=0700 \
+            -e MAIL_ORIGIN=https://mail.example.test \
+            -e MAIL_TOKEN=ci-only-example-token-with-at-least-32-characters \
+            private-brain-mail:test
+          for attempt in {1..30}; do
+            if docker exec pb-mail-smoke node -e '
+              (async()=>{
+                const fs=await import("node:fs");
+                if(process.getuid()===0)throw Error("root");
+                const base="http://127.0.0.1:8787";
+                const a=await fetch(base+"/api/mail/accounts");
+                const b=await fetch(base+"/api/mail/accounts",{headers:{Authorization:"Bearer "+process.env.MAIL_TOKEN}});
+                const page=await fetch(base+"/");
+                const icon=await fetch(base+"/icon-512.png");
+                if(a.status!==401||b.status!==200||page.status!==200||icon.status!==200)throw Error("HTTP");
+                if((fs.statSync("/data/key").mode&0o777)!==0o600)throw Error("key permissions");
+                console.log("Nicht-root-Start, Programmdateien und geschützter Datenschlüssel geprüft.");
+              })().catch(()=>process.exit(1));
+            '; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1

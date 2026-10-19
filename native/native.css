@@ -1,0 +1,4 @@
+/* Keep the existing design. Only respect device cutouts and remove PWA controls. */
+body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+#installieren, #install-platz, #install-box { display: none !important; }
+.native-status { margin-top: 1rem; font-size: .85rem; line-height: 1.5; }

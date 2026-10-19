@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="brain-emoji" width="100" height="100" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+  <path d="M46 50 18 18M46 50 81 28M46 50 26 82" fill="none" stroke="#7855b8" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="46" cy="50" r="22" fill="#e7aa35" stroke="none"/>
+  <circle cx="18" cy="18" r="12" fill="#4969cf" stroke="none"/>
+  <circle cx="81" cy="28" r="9" fill="#9460c7" stroke="none"/>
+  <circle cx="26" cy="82" r="10" fill="#2498a0" stroke="none"/>
+</svg>

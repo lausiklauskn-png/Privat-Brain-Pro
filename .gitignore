@@ -1,0 +1,29 @@
+node_modules/
+.DS_Store
+*.log
+
+# NIEMALS committen: verschlüsselte Schlüssel-Backups + private Identität.
+# Die öffentliche spore.json (sbkim/spore.json) IST gewollt im Repo — der
+# private Schlüssel + das Backup bleiben ausschließlich auf Klaus' Gerät.
+*.sbkim.json
+*-backup-*.json
+sbkim/node_key*.json
+sbkim/*.enc.json
+
+# Private Mail-Dienst-Zugangsdaten bleiben auf dem eigenen Server.
+mail-service/data/
+mail-service/.env
+
+# Native build outputs and local signing configuration
+www/
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/
+android/local.properties
+*.jks
+*.keystore
+keystore.properties
+.env
+.test-support/
