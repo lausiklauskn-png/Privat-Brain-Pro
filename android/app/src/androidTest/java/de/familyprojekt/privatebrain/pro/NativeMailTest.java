@@ -111,6 +111,7 @@ public class NativeMailTest {
         try (TestMailTlsServer server = new TestMailTlsServer(alias + "-tls", false, false)) {
             Properties properties = MailAccount.properties();
             properties.put("mail.imaps.ssl.socketFactory", server.trustedClient);
+            properties.setProperty("mail.imaps.socketFactory.fallback", "false");
             Store client = Session.getInstance(properties).getStore("imaps");
             try { client.connect(server.numericHost(), server.port, "test", UUID.randomUUID().toString()); fail("Wrong hostname accepted"); }
             catch (Exception expected) { /* JavaMail rejects certificate identity before LOGIN. */ }
@@ -122,6 +123,7 @@ public class NativeMailTest {
         try (TestMailTlsServer server = new TestMailTlsServer(alias + "-tls", false, false)) {
             Properties properties = MailAccount.properties();
             properties.put("mail.imaps.ssl.socketFactory", server.trustedClient);
+            properties.setProperty("mail.imaps.socketFactory.fallback", "false");
             try (Store client = Session.getInstance(properties).getStore("imaps")) {
                 client.connect("localhost", server.port, "test", UUID.randomUUID().toString()); assertTrue(client.isConnected());
             }
@@ -135,6 +137,7 @@ public class NativeMailTest {
         AtomicInteger connects = new AtomicInteger();
         try (TestMailTlsServer server = new TestMailTlsServer(alias + "-tls", true, loseAcknowledgement)) {
             Properties properties = MailAccount.properties(); properties.put("mail.smtps.ssl.socketFactory", server.trustedClient);
+            properties.setProperty("mail.smtps.socketFactory.fallback", "false");
             Session session = Session.getInstance(properties);
             MailOutbox.Delivery wire = new MailOutbox.Delivery() {
                 SMTPTransport transport;

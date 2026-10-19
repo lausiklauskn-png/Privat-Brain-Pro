@@ -77,6 +77,9 @@ final class TestMailTlsServer implements AutoCloseable {
             try (Socket socket = listener.accept()) {
                 state = "accepted";
                 socket.setSoTimeout(15000);
+                state = "TLS handshake";
+                ((javax.net.ssl.SSLSocket) socket).startHandshake();
+                state = "greeting";
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), java.nio.charset.StandardCharsets.US_ASCII));
                 PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.US_ASCII));
                 if (smtp) smtp(reader, writer, loseAcknowledgement); else imap(reader, writer);
