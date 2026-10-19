@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBackUnconditionally;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -74,6 +75,32 @@ public class NativeStartupTest {
             awaitTrue(scenario, "document.querySelector('#panel-explorer').getBoundingClientRect().height > 0 && document.querySelector('#q').getBoundingClientRect().height === 0");
             evaluate(scenario, "document.querySelector('.main-pages [data-tab=search]').click(); true");
             awaitTrue(scenario, "document.querySelector('#q').getBoundingClientRect().height > 0");
+        }
+    }
+
+    @Test public void fileViewerAndTwelveAndroidBackStepsKeepAppAlive() throws Exception {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            awaitTrue(scenario, "Boolean(window.PBNavigation && window.PBWorkspace && typeof db !== 'undefined' && db)");
+            evaluate(scenario, "window.__navigationSentinel='unchanged'; PBWorkspace.navigate('explorer'); true");
+            evaluate(scenario, "showBlob(new File(['Original local document'],'android-navigation.txt',{type:'text/plain'}),{name:'android-navigation.txt'}); true");
+            awaitTrue(scenario, "document.querySelector('.native-file-text')?.textContent === 'Original local document'");
+            pressBackUnconditionally();
+            awaitTrue(scenario, "document.querySelector('.native-file-viewer').hidden && document.querySelector('#panel-explorer').classList.contains('on')");
+            assertEquals("\"https://localhost\"", evaluate(scenario, "location.origin"));
+            assertEquals("\"unchanged\"", evaluate(scenario, "window.__navigationSentinel"));
+            // Twelve real view entries, traversed with the actual Android back dispatcher.
+            for (int i = 0; i < 12; i++) {
+                evaluate(scenario, "showBlob(new File(['Step " + i + "'],'step.txt',{type:'text/plain'})); true");
+                awaitTrue(scenario, "document.querySelector('.native-file-text')?.textContent === 'Step " + i + "'");
+            }
+            for (int i = 10; i >= 0; i--) {
+                pressBackUnconditionally();
+                awaitTrue(scenario, "document.querySelector('.native-file-text')?.textContent === 'Step " + i + "'");
+            }
+            pressBackUnconditionally();
+            awaitTrue(scenario, "document.querySelector('.native-file-viewer').hidden && document.querySelector('#panel-explorer').classList.contains('on')");
+            assertEquals("\"unchanged\"", evaluate(scenario, "window.__navigationSentinel"));
+            assertEquals("true", evaluate(scenario, "Boolean(window.Capacitor.Plugins.ProFiles && window.PBMailDevice)"));
         }
     }
 }

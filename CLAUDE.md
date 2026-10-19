@@ -375,3 +375,13 @@ Signierte Updateprobe .5 → .6 und öffentlicher Download geprüft;
 [Prüfnachweis](docs/PRUEFSTAND-ANDROID.md),
 [APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.6/Private-Brain-Pro-0.1.0-preview.6.apk).
 Über die bestehende Test-App installieren, nicht deinstallieren.
+
+## Verlässlicher Rückweg aus Dateien (2026-10-20)
+
+Native Dateiöffnung nie über `window.open(blobURL)` im Hauptfenster. Die interne
+Dateiansicht und History liegen in `native/native-navigation.js`; AndroidX-Zurück
+ruft denselben Weg auf. Mindestens zwölf Datei-/Seiten-Rückschritte prüfen.
+Explorerzustand beim Zurück erhalten; Eingabe-Backspace nicht abfangen. PDF/Office
+nur ausdrücklich über den engen ProFiles-FileProvider-Weg öffnen; kein beliebiger
+Dateipfad, keine Originaländerung. Konten, Datenformate und PWA unverändert.
+Details: docs/RUECKNAVIGATION.md.

@@ -6,6 +6,16 @@ body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 .native-updates button { margin: .25rem .5rem .25rem 0; }
 .native-updates button[hidden] { display: none; }
 .native-updates p { margin-bottom: 0; }
+.native-navigation { display:flex; gap:4px; flex-wrap:wrap; }
+.native-navigation button { min-height:44px; padding:6px 10px; }
+.native-file-viewer { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.native-file-viewer[hidden] { display:none!important; }
+.native-file-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:none; padding:8px 12px; background:var(--card); border-bottom:1px solid var(--line); }
+.native-file-head button { min-height:44px; }
+.native-file-title { flex:1; min-width:0; overflow-wrap:anywhere; }
+.native-file-body { flex:1; min-height:0; overflow:auto; padding:12px; }
+.native-file-image { display:block; max-width:100%; height:auto; margin:auto; }
+.native-file-text { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; }
 
 /* Native window workspace, following Sende-Pruefer's full-window pane layout.
    Keep the OS title bar and original design tokens; no fullscreen API. */

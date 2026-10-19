@@ -29,6 +29,7 @@
   }
   function navigate(page,{record=true,replace=false}={}){
     if(!pages.has(page))page='search';
+    if(record && window.PBNavigation)return window.PBNavigation.navigate(page);
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='panel-'+page));
     document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('on',t.dataset.tab===page));
     if(record){
@@ -118,14 +119,23 @@
     } catch (_) { toast(text('unavailable'),6000); }
   }
   function button(label, action) { const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent=label;b.onclick=action;return b; }
+  function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value};}
+  function restoreExplorer(state){
+    folderPath=String(state?.path||'');el('explorerFilter').value=String(state?.filter||'');
+    el('explorerSort').value=['name','date','size'].includes(state?.sort)?state.sort:'name';renderExplorer();
+  }
+  function openFolder(path,{clear=false}={}){
+    if(window.PBNavigation)return window.PBNavigation.folder(path,clear);
+    folderPath=path;if(clear)el('explorerFilter').value='';renderExplorer();
+  }
   function renderExplorer() {
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
-    tree.append(button('📁 '+text('all'),()=>{folderPath='';renderExplorer();}));
+    tree.append(button('📁 '+text('all'),()=>openFolder('')));
     const folders = new Set();
     for (const e of all) { const parts=e.path.split('/'); parts.pop(); for(let i=1;i<=parts.length;i++) folders.add(parts.slice(0,i).join('/')); }
     for(const path of [...folders].sort((a,b)=>a.localeCompare(b))) {
-      const b=button('📁 '+path,()=>{folderPath=path;renderExplorer();});
+      const b=button('📁 '+path,()=>openFolder(path));
       b.setAttribute('aria-current',path===folderPath?'location':'false');tree.append(b);
     }
     el('explorerPath').textContent=folderPath || text('all');
@@ -161,13 +171,13 @@
   el('chooseLibrary').onclick=chooseLibrary;
   el('pauseLibrary').onclick=()=>{if(signing)return;library=null;localStorage.setItem('pb_library_enabled','0');refresh();};
   el('explorerFilter').oninput=renderExplorer;el('explorerSort').onchange=renderExplorer;
-  el('explorerHome').onclick=()=>{folderPath='';el('explorerFilter').value='';renderExplorer();};
-  el('explorerUp').onclick=()=>{folderPath=folderPath.split('/').slice(0,-1).join('/');renderExplorer();};
+  el('explorerHome').onclick=()=>openFolder('',{clear:true});
+  el('explorerUp').onclick=()=>openFolder(folderPath.split('/').slice(0,-1).join('/'));
   new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   new MutationObserver(syncNavigation).observe(el('panel-search'),{attributes:true,attributeFilter:['class']});
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate};
+  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();

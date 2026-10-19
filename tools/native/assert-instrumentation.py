@@ -23,6 +23,11 @@ expected = [case for case in cases
             and case.get('name') == 'bundledSearchAndNativeBridgeWork']
 if len(expected) != 1:
     raise SystemExit('Expected exactly one executed native startup test')
+navigation = [case for case in cases
+              if case.get('classname') == 'de.familyprojekt.privatebrain.pro.NativeStartupTest'
+              and case.get('name') == 'fileViewerAndTwelveAndroidBackStepsKeepAppAlive']
+if len(navigation) != 1:
+    raise SystemExit('Expected exactly one executed native file/back-navigation test')
 mail_tests = {
     'vaultEncryptsAndTamperingCannotResetAccounts',
     'lostKeystoreKeyDoesNotCreateReplacementData',
