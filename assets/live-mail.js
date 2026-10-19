@@ -846,8 +846,11 @@
     if (!leave()) return;
     draft = null;
     dirty = false;
-    current = item;
+    current = null;
+    mail = null;
+    reader.replaceChildren(el("p", "mail-muted", native ? S("choose") : T("body")));
     mail = await fetchMail(item);
+    current = item;
     await api(prefix() + "/messages/" + item.uid + "/action", {
       folder,
       validity,
