@@ -31,8 +31,8 @@ html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
 html = html.replace('</body>', '<script src="native.js"></script>\n</body>');
 if (!html.includes('<script src="assets/live-mail.js')) throw new Error('Review native mail adapter injection after source changes');
-html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="assets/live-mail.js');
+html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="native-mail-folders.js"></script>\n<script src="assets/live-mail.js');
 await writeFile(join(out, 'index.html'), html);
-for (const name of ['native.js', 'native.css', 'native-mail.js', 'native-mail-view.js']) await cp(join(root, 'native', name), join(out, name));
+for (const name of ['native.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 console.log('Native web bundle prepared from explicit public inputs.');

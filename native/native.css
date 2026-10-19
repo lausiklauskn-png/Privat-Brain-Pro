@@ -100,3 +100,15 @@ body .wrap { height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-i
   header .tools { flex-basis:100%; margin:0; justify-content:space-between; gap:4px; }
   .main-pages .tab { overflow-wrap:anywhere; font-size:.72rem; }
 }
+
+/* Connected mail uses the same heading, folders and message rows as the local mailbox. */
+#mailWorkspace>.mail-account-bar { padding:0; margin:0; flex:none; flex-direction:row; position:relative; z-index:25; border:0; border-radius:0; overflow:visible; background:transparent; }
+#mailWorkspace>.mail-account-bar[hidden] { display:none!important; }
+.mail-account-bar select { flex:1 1 220px; min-width:0; max-width:100%; min-height:44px; font:inherit; color:var(--ink); background:var(--field); border:1px solid var(--line); border-radius:10px; padding:10px; }
+.live-mail .mail-list .mail-item { display:grid; grid-template-columns:30px minmax(0,1fr); }
+.live-mail .mail-list .mail-item button { display:grid; grid-template-columns:32px minmax(0,1fr); }
+.live-mail .mail-list .mail-item .mail-date { grid-column:2; }
+#mailWorkspace .live-mail .mail-head h2 { margin:0 auto 0 0; }
+@media(max-width:650px) {
+  #mailWorkspace>.mail-account-bar { gap:4px; }
+}

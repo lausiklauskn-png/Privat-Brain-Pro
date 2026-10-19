@@ -5,6 +5,7 @@
   if (!plugin) return;
   const languages = ['de', 'en', 'ru', 'pl'];
   const labels = {
+    folderUnavailable: ["Dieser Ordner ist beim Anbieter noch nicht vorhanden.", "This folder does not exist with the provider yet.", "Этой папки ещё нет у провайдера.", "Ten folder nie istnieje jeszcze u dostawcy."],
     messageTools: ["Nachrichtenaktionen", "Message actions", "Действия с письмом", "Działania wiadomości"],
     tools: ["Weitere Aktionen", "More actions", "Другие действия", "Więcej działań"],
     remote: ['Geräte-Postfach', 'Device mailbox', 'Почта на устройстве', 'Poczta na urządzeniu'],
