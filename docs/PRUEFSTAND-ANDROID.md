@@ -264,3 +264,56 @@ Direkter öffentlicher Download am 2026-10-20 geprüft: HTTP 200, 4 977 080 Byte
 identischer SHA256 und bytegleich zur lokal signierten APK. Als Update über die
 bestehende Test-App installieren; nicht deinstallieren. Die unabhängige PWA
 bleibt sauber auf `0ac93cd845a93cb67b37b0f4c60726eaed9ed492`.
+
+
+## Verlässliche Dateinavigation – Vorschau .7 (2026-10-20)
+
+Der Nutzer meldet einen fehlenden Rückweg aus importierten Bildern/Originaldateien.
+Native Dateiöffnung führt jetzt in eine eigene Ansicht statt auf eine Blob-Adresse
+im Hauptfenster. Sichtbare Zurück-/Vorwärts-Knöpfe, AndroidX-Zurück, Maus und
+Tastatur verwenden einen gemeinsamen Verlauf für App-Seiten, Explorerordner,
+Großansicht und Originalansicht. Explorerzustand wird beim Zurück erhalten.
+PDF/Office öffnen ausdrücklich über eine passende Android-App; der interne
+Rückweg bleibt bestehen. [Verhalten und Grenzen](RUECKNAVIGATION.md).
+
+Vollständiger [CI-Lauf 39342179484](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39342179484)
+für HEAD `ffa6d3304b1e9555fcc73d8ce56915b80c8f32f1` erfolgreich: alle
+38 bestehenden npm-Prüfbefehle, 57 native Web-, 72 Mail- und **22 Navigationsproben**,
+14 Maildiensttests, Java-Tests, Android-Build/Lint sowie **11 Android-Tests ohne
+Fehler oder Überspringen**. Die zusätzliche native Probe öffnet zwölf Dateiansichten
+und geht über den tatsächlichen Android-Dispatcher zwölfmal zurück. Ein im
+WebView gespeicherter Testwert bleibt erhalten; kein App-Neuladen als Rückweg.
+Auch der parallele [Push-Lauf 39342135954](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39342135954)
+bestand. Die 21 geschützten Module bleiben bytegleich.
+
+PR #9 nach erfolgreicher vollständiger CI zusammengeführt als `b3287a2b00ea1b654fbdfb746668c28a1e88ddeb`,
+gleicher Git-Baum wie der geprüfte HEAD. Signiertes Paket
+`de.familyprojekt.privatebrain.pro.preview`, VersionCode 7,
+VersionName `0.1.0-preview.7-test`, API 24+, Ziel 36, kein Debug-Flag.
+Zertifikat unverändert:
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+Aktuelles gepacktes Webpaket bytegleich im APK, keine persönlichen Dateien,
+Signierschlüssel oder Testmaterialien enthalten. APK-SHA256:
+`7be2711ce2550a004244c49f819fb874486f6e04147e4c05c51fdad1068df483`.
+
+Veröffentlicht: [Vorschau .7](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/v0.1.0-preview.7)
+nach erfolgreicher [signierter Updateprobe und Upload 39343904505](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39343904505).
+Die originale öffentliche .6-APK wird installiert, Englisch gewählt, .7 ohne
+Deinstallation darüber installiert. Sprache, App-Start und echte native Kontomaske
+mit Abbrechen sind bestätigt. Zusätzlich: Explorer öffnen, sichtbares Zurück zum
+Postfach, echtes Android-Zurück zur Suche. Die Probe verwendet keine echten
+Mailzugangsdaten, persönlichen Dokumente oder vorhandenen Kontogeheimnisse.
+
+Direkter öffentlicher Download am 2026-10-20: HTTP 200, 4 982 784 Bytes,
+identischer SHA256 und bytegleich zur lokal signierten Datei. Nutzergerät,
+Samsung-DeX-Eingaben und externe PDF-/Office-Apps zusätzlich prüfen. Keine
+vollständige Anbieter-, Dokument- oder Kontenmigrationsprüfung daraus ableiten.
+Als Update installieren, nicht deinstallieren. Original-PWA weiterhin sauber auf
+`0ac93cd845a93cb67b37b0f4c60726eaed9ed492`.
+
+Der erste Veröffentlichungslauf 39343336492 bestand Installation/Start und
+Kontodialog, scheiterte jedoch am UI-Automator-Lokator des Explorer-Eingabehinweises.
+Die Probe verlangt jetzt den sichtbaren leeren Explorer-Inhalt und verwirft alte
+Fensterabbilder bei einem vorübergehend fehlenden Accessibility-Root. APK,
+Anwendungsquelle und die elf erfolgreich ausgeführten Android-Tests wurden dafür
+nicht geändert. Erst der vollständig erfolgreiche Folgelauf veröffentlicht.

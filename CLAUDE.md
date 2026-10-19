@@ -385,3 +385,12 @@ Explorerzustand beim Zurück erhalten; Eingabe-Backspace nicht abfangen. PDF/Off
 nur ausdrücklich über den engen ProFiles-FileProvider-Weg öffnen; kein beliebiger
 Dateipfad, keine Originaländerung. Konten, Datenformate und PWA unverändert.
 Details: docs/RUECKNAVIGATION.md.
+
+
+Vorschau .7 veröffentlicht: Rückweg aus Bildern/Dateien, 22 Navigationsproben und
+11 Android-Tests einschließlich zwölf echter Rückschritte bestanden. Vollständige
+CI 39342179484, signierte Updateprobe .6 → .7 mit sichtbarem und Android-Zurück
+39343904505 erfolgreich; öffentlicher APK-Download geprüft.
+[APK .7](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.7/Private-Brain-Pro-0.1.0-preview.7.apk).
+Bestehende App aktualisieren, nicht deinstallieren. Grenzen/Nachweise in
+`docs/RUECKNAVIGATION.md` und `docs/PRUEFSTAND-ANDROID.md`.
