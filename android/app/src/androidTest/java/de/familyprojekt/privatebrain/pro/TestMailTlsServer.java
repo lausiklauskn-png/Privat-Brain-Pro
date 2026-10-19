@@ -38,6 +38,8 @@ final class TestMailTlsServer implements AutoCloseable {
     private final SSLServerSocket listener;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Future<?> task;
+    private volatile String state = "accepting";
+    private volatile Exception failure;
 
     TestMailTlsServer(String alias, boolean smtp, boolean loseAcknowledgement) throws Exception {
         this.alias = alias;
@@ -73,15 +75,19 @@ final class TestMailTlsServer implements AutoCloseable {
         trustedClient = client.getSocketFactory();
         task = executor.submit(() -> {
             try (Socket socket = listener.accept()) {
+                state = "accepted";
                 socket.setSoTimeout(15000);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), java.nio.charset.StandardCharsets.US_ASCII));
                 PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.US_ASCII));
                 if (smtp) smtp(reader, writer, loseAcknowledgement); else imap(reader, writer);
-            } catch (SSLException ignored) { /* Expected when the client refuses this test certificate. */ }
-            catch (java.io.IOException ignored) { /* Expected for rejected hostname or deliberate connection loss. */ }
+            } catch (SSLException error) { failure = error; /* Expected for rejected test certificates. */ }
+            catch (java.io.IOException error) { failure = error; /* May be expected for deliberate loss. */ }
         });
     }
-    private void line(PrintWriter writer, String text) { writer.print(text + "\r\n"); writer.flush(); }
+    private void line(PrintWriter writer, String text) throws java.io.IOException {
+        writer.print(text + "\r\n"); writer.flush();
+        if (writer.checkError()) throw new java.io.IOException("Test server write failed at " + state);
+    }
     private void imap(BufferedReader reader, PrintWriter writer) throws java.io.IOException {
         line(writer, "* OK localhost test IMAP");
         String value;
@@ -89,6 +95,7 @@ final class TestMailTlsServer implements AutoCloseable {
             String[] parts = value.split(" ", 3);
             if (parts.length < 2) return;
             String tag = parts[0], command = parts[1].toUpperCase(java.util.Locale.ROOT);
+            state = "IMAP " + command;
             switch (command) {
                 case "CAPABILITY": line(writer, "* CAPABILITY IMAP4rev1 AUTH=PLAIN"); line(writer, tag + " OK capability"); break;
                 case "NOOP": line(writer, tag + " OK noop"); break;
@@ -108,6 +115,8 @@ final class TestMailTlsServer implements AutoCloseable {
         String value;
         while ((value = reader.readLine()) != null) {
             String command = value.toUpperCase(java.util.Locale.ROOT);
+            // Only protocol verbs, never AUTH arguments or message data.
+            state = "SMTP " + command.split(" ", 2)[0];
             if (command.startsWith("EHLO") || command.startsWith("HELO")) {
                 line(writer, "250-localhost"); line(writer, "250-AUTH PLAIN LOGIN"); line(writer, "250 SIZE 8388608");
             } else if (command.startsWith("AUTH PLAIN")) {
@@ -134,6 +143,7 @@ final class TestMailTlsServer implements AutoCloseable {
         }
     }
     void await() throws Exception { task.get(20, TimeUnit.SECONDS); }
+    String diagnostics() { return "Local test server state=" + state + "; failure=" + (failure == null ? "none" : failure.toString()); }
     String numericHost() { return listener.getInetAddress().getHostAddress(); }
     public void close() throws Exception {
         listener.close(); executor.shutdownNow();

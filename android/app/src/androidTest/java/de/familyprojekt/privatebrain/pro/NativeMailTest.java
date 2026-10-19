@@ -125,6 +125,7 @@ public class NativeMailTest {
             try (Store client = Session.getInstance(properties).getStore("imaps")) {
                 client.connect("localhost", server.port, "test", UUID.randomUUID().toString()); assertTrue(client.isConnected());
             }
+            catch (Exception error) { throw new AssertionError(server.diagnostics(), error); }
             server.await(); assertEquals(1, server.authentications.get());
         }
     }
@@ -147,7 +148,9 @@ public class NativeMailTest {
                 }
                 public void close() { try { if (transport != null) transport.close(); } catch (Exception ignored) { } }
             };
-            JSONObject first = new MailOutbox(storage).send(account.id, draft, prepared, wire);
+            JSONObject first;
+            try { first = new MailOutbox(storage).send(account.id, draft, prepared, wire); }
+            catch (Exception error) { throw new AssertionError(server.diagnostics(), error); }
             assertEquals(loseAcknowledgement ? "uncertain" : "sent", first.getString("status"));
             EncryptedMailStore reopened = new EncryptedMailStore(context, directory, alias);
             JSONObject repeated = new MailOutbox(reopened).send(account.id, draft, prepared, wire);
