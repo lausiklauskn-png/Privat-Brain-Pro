@@ -75,3 +75,13 @@ Der gepackte Webteil besteht 26 eigene Browserprüfungen. Acht visuelle Vergleic
 bestehenden Schrift-, Farb-, Rundungs- und Abstandsregeln. Android-Debugbuild und
 Lint liefen erfolgreich. Das ist kein Nachweis für echte Mailanmeldung,
 Modellqualität, Benachrichtigungen oder vollständige Funktionsgleichheit.
+
+
+## Native Startprüfung vor Release
+
+Der Job `native-smoke` verwendet einen hardwarebeschleunigten Android-35-Emulator
+und führt `:app:connectedDebugAndroidTest` aus. Der Test prüft die echte gepackte
+Seite, Navigation und Java-Bridge. Die Release-Pipeline verlangt einen erfolgreichen
+Starttest desselben Commits. Lokaler Prüfstand und noch offene Ausführung:
+[PRUEFSTAND-ANDROID.md](PRUEFSTAND-ANDROID.md). Ohne KVM den lokalen Software-Emulator
+nicht als verlässlichen Ersatz für diesen Test betrachten.

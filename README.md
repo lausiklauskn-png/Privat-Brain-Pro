@@ -3,11 +3,13 @@
 Eigenständige native Pro-App auf Basis der bestehenden Private-Brain-Oberfläche.
 Die ursprüngliche PWA bleibt unabhängig im Repository `Privat-Brain` bestehen.
 
-**Stand: Android-Grundversion.** Suche, Dateiimport, Katalog und Postfachoberfläche
+**Stand: Android-Grundversion im Aufbau, noch keine funktional freigegebene Testversion.** Suche, Dateiimport, Katalog und Postfachoberfläche
 werden lokal mit Capacitor ausgeliefert. Direkte native IMAP-/SMTP-Verbindungen,
 Keystore für Mailkonten, dauerhafter Geräteordnerzugriff und Hintergrundabruf sind
 noch nicht implementiert. Kein Anspruch auf vollständige Funktionsgleichheit.
-Die vorhandenen Mailprüfer sind kein Virenscanner. Modellgewichte fehlen noch;
+Die vorhandenen Mailprüfer sind kein Virenscanner.
+Der native Starttest im lokalen Software-Emulator scheiterte im WebView-Renderer;
+eine zuverlässige Hardware-/Geräteprüfung steht noch aus. Siehe [Prüfstand](docs/PRUEFSTAND-ANDROID.md). Modellgewichte fehlen noch;
 Stichwortsuche ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
 
 Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die Original-Icons bleiben erhalten.
