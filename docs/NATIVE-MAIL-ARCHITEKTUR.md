@@ -1,6 +1,6 @@
 # Direkte Mailanbindung auf Android
 
-Stand 2026-10-19, veröffentlicht in Vorschau 0.1.0-preview.4. Die ältere
+Stand 2026-10-19: direkte Mail seit Vorschau .4, Originalansicht und Fensterlayout in .5. Die ältere
 Vorschau .2 verwendet noch den privaten HTTPS-Maildienst.
 Der Nutzer hat direkte Telekom-Anmeldung und Nachrichtenabruf auf seinem Tablet
 bestätigt. Hetzner und tatsächlicher Versand/Anhangsaustausch bleiben gesondert zu prüfen.

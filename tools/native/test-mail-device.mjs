@@ -112,10 +112,10 @@ try{
     ok(`${width}px: original message remains reachable`,await frame.isVisible());
     if(width>=1280)ok(`${width}px: folder, message list and reader occupy separate full-height panes`,await page.evaluate(()=>{const ns=['.mail-folders','.mail-list','.mail-reader'].map(s=>document.querySelector('.live-mail '+s).getBoundingClientRect());return ns.every(r=>r.height>300)&&Math.abs(ns[0].top-ns[2].top)<2;}));
     await mail.locator('.live-mail .mail-reader').evaluate(e=>e.scrollTop=0);
-    if(process.env.PB_CAPTURE_DESIGN==='1') await page.screenshot({path:`docs/design/mail-preview5/nachher-postfach-${width}.png`});
+    if(process.env.PB_CAPTURE_DESIGN==='1') { await page.waitForTimeout(600); await page.screenshot({path:`docs/design/mail-preview5/nachher-postfach-${width}.png`}); }
   }
   await page.locator('#themeToggle').click();
-  if(process.env.PB_CAPTURE_DESIGN==='1') await page.screenshot({path:'docs/design/mail-preview5/nachher-postfach-dunkel-1920.png'});
+  if(process.env.PB_CAPTURE_DESIGN==='1') { await page.waitForTimeout(600); await page.screenshot({path:'docs/design/mail-preview5/nachher-postfach-dunkel-1920.png'}); }
   await page.evaluate(()=>PBMailDevice.addAccount());
   ok('Native account dialog receives the existing dark theme',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='addAccount').at(-1).args.dark===true));
   ok('Dark app keeps newsletter colors in its isolated original view',await body.locator('h1').evaluate(e=>getComputedStyle(e).color)==='rgb(19, 107, 114)');

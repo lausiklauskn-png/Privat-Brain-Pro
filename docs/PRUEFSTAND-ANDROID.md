@@ -173,3 +173,44 @@ Konten-/Keystoreformat und Paketkennung bleiben unverändert, VersionCode steigt
 auf 5. Über die vorhandene Test-App installieren; nicht deinstallieren.
 Die neue HTML-Darstellung und gespeicherte Telekom-Konten beim Update sind
 zusätzlich auf dem Nutzergerät zu kontrollieren.
+
+
+### Ausgeführte Prüfungen für .5
+
+Vollständiger [CI-Lauf 39331444809](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39331444809)
+erfolgreich, geprüfter HEAD `f327154c8d8e78214858bc131c85097053500828`:
+38 bestehende npm-Prüfbefehle, 57 native Webprüfungen, 48 Mail-Oberflächenproben,
+14 Maildiensttests, Java-Tests, Android-Build/Lint und **10 Android-Tests ohne
+Fehler oder übersprungene Fälle**. Darunter die echte Standard-WebView-Grenze
+mit absichtlich nach der Bereinigung eingesetztem Skript sowie unveränderte
+Original-MIME-Bytes mit HTML, Alternative-Text, CID-PNG und Binäranhang.
+21 geschützte Module weiterhin bytegleich. Vorschau-Lint: 0 Fehler, 7 Warnungen.
+
+PR #5 zusammengeführt: `3ce818c0c4f02813ec925b665d55a3743af051b0`, exakt
+Git-Baum `eec1b8cc8a2f91cd366f52e681e98c7c4a1b89ef` wie der geprüfte HEAD.
+Auch der parallele [Push-Lauf 39331439488](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39331439488)
+bestand. Sein erster Emulatorversuch brach beim Download des Systemimage-ZIP ab,
+bevor die App gestartet wurde; die Wiederholung desselben Quellstands bestand.
+Keine App- oder TLS-Prüfung wurde dafür abgeschwächt.
+
+Signierte Vorschau: Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 5,
+VersionName `0.1.0-preview.5-test`, API 24+, Ziel 36, kein Debug-Flag. Zertifikat
+SHA-256 unverändert: `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+APK-SHA256: `ebf3b0a515f05dc6e5f5695521643fcba05cb2016e0299fecd100676885f9417`.
+Unveränderte Bibliotheks-LICENSE/NOTICE und aktuelle Laufzeitdateien im APK geprüft;
+keine Schlüssel, Dienst-Daten oder Design-Testdateien im Webpaket.
+
+
+Veröffentlicht: [Vorschau .5](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/v0.1.0-preview.5).
+[Signierte Updateprobe und Upload 39332888607](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39332888607)
+erfolgreich: unveränderte .4-APK installiert, Englisch gewählt, .5 mit `adb install -r`
+darüber installiert, Englisch erhalten, App gestartet und echten nativen Kontodialog
+geöffnet/abgebrochen. Keine echten Kontozugangsdaten und kein SMTP-Versand in dieser
+Probe. Konten-, Dokument- und Samsung-spezifische Migrationsproben daraus nicht ableiten.
+Direkter öffentlicher APK-Download am 2026-10-19 mit HTTP 200 geprüft: 4 973 154 Bytes,
+identischer SHA256 und bytegleich zur lokal geprüften, signierten Datei.
+
+Die abschließende Dokumentationsänderung ergänzt Prüfnachweise und wartet bei
+Bildaufnahmen auf den vorhandenen Theme-Übergang. Keine Laufzeitdatei der APK wird
+geändert; 48 Mail-Oberflächenproben einschließlich neuer Aufnahmen erneut bestanden.
+Die unabhängige PWA bleibt auf `0ac93cd845a93cb67b37b0f4c60726eaed9ed492` sauber.
