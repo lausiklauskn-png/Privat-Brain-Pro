@@ -116,6 +116,8 @@ try{
   }
   await page.locator('#themeToggle').click();
   if(process.env.PB_CAPTURE_DESIGN==='1') await page.screenshot({path:'docs/design/mail-preview5/nachher-postfach-dunkel-1920.png'});
+  await page.evaluate(()=>PBMailDevice.addAccount());
+  ok('Native account dialog receives the existing dark theme',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='addAccount').at(-1).args.dark===true));
   ok('Dark app keeps newsletter colors in its isolated original view',await body.locator('h1').evaluate(e=>getComputedStyle(e).color)==='rgb(19, 107, 114)');
   await page.locator('#themeToggle').click();
   await page.setViewportSize({width:1280,height:900});

@@ -59,7 +59,7 @@
     attachmentLimit: 5 * 1024 * 1024,
     text,
     accounts: async () => (await invoke('accounts')).items,
-    addAccount: () => invoke('addAccount', {language:document.documentElement.lang, dark:document.documentElement.dataset.theme === 'dark'}),
+    addAccount: () => invoke('addAccount', {language:document.documentElement.lang, dark:document.documentElement.dataset.theme === 'dunkel'}),
     saved: async account => (await invoke('saved', {account})).items,
     savedDraft: (account,id) => invoke('savedDraft',{account,id}),
     openAttachment: args => invoke('openAttachment', args),
