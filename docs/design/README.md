@@ -5,8 +5,8 @@ Aufnahmen bei 360 und 1280 Pixeln, Suche/Postfach, Hell/Dunkel.
 
 8 Vergleiche: Schrift, Farben, Rundungen und Innenabstände ausgewählter
 Bestands-Steuerelemente stimmen zwischen PWA und gepacktem Android-Webteil überein.
-Der native Build blendet nur die PWA-Installationsknöpfe aus und berücksichtigt
-Systemränder. Das ersetzt keinen visuellen Test auf einem Android-Tablet/DeX.
+Das Pro-Icon hat auf Nutzerwunsch einen hellen Hintergrund bei erhaltenen 3D-Bubbles.
+Der native Build blendet PWA-Installationsknöpfe aus und berücksichtigt Systemränder. Das ersetzt keinen visuellen Test auf einem Android-Tablet/DeX.
 
 Die Bilder enthalten keine persönlichen Daten. Aufnahmen und Vergleiche wurden
 mit blockierten externen Anfragen erstellt, keine echten Mailkonten.

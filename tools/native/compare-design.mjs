@@ -21,12 +21,13 @@ try {
   for(const [i,url] of urls.entries()) {
    const page=await browser.newPage({viewport:{width,height:900}});pages.push(page);
    await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
-   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);if(dark)await page.click('#themeToggle');
+   await page.goto(url);await page.addStyleTag({content:'*, *::before, *::after { transition: none !important; animation: none !important; }'});await page.evaluate(()=>document.fonts.ready);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);if(dark)await page.click('#themeToggle');
   }
   for(const tab of ['search','mail']) {
    const styles=[];
    for(const [i,page] of pages.entries()) {
     await page.click(`.main-pages [data-tab="${tab}"]`);
+    await page.mouse.move(0,0);
     styles.push(await page.evaluate(()=>['.logo img','header h1','.main-pages .tab','#q','#themeToggle'].map(selector=>{
      const element=document.querySelector(selector);if(!element)return null;const style=getComputedStyle(element);return Object.fromEntries(['fontFamily','fontSize','color','backgroundColor','borderRadius','padding','gap'].map(key=>[key,style[key]]));
     })));
@@ -36,6 +37,6 @@ try {
   }
   for(const page of pages)await page.close();
  }
- await writeFile(`${output}/README.md`,`# Visueller Ausgangspunkt und Vergleich\n\nPWA-Quelle: Privat-Brain 0ac93cd845a93cb67b37b0f4c60726eaed9ed492.\nAufnahmen bei 360 und 1280 Pixeln, Suche/Postfach, Hell/Dunkel.\n\n${compared} Vergleiche: Schrift, Farben, Rundungen und Innenabstände ausgewählter\nBestands-Steuerelemente stimmen zwischen PWA und gepacktem Android-Webteil überein.\nDer native Build blendet nur die PWA-Installationsknöpfe aus und berücksichtigt\nSystemränder. Das ersetzt keinen visuellen Test auf einem Android-Tablet/DeX.\n\nDie Bilder enthalten keine persönlichen Daten. Aufnahmen und Vergleiche wurden\nmit blockierten externen Anfragen erstellt, keine echten Mailkonten.\n`);
+ await writeFile(`${output}/README.md`,`# Visueller Ausgangspunkt und Vergleich\n\nPWA-Quelle: Privat-Brain 0ac93cd845a93cb67b37b0f4c60726eaed9ed492.\nAufnahmen bei 360 und 1280 Pixeln, Suche/Postfach, Hell/Dunkel.\n\n${compared} Vergleiche: Schrift, Farben, Rundungen und Innenabstände ausgewählter\nBestands-Steuerelemente stimmen zwischen PWA und gepacktem Android-Webteil überein.\nDas Pro-Icon hat auf Nutzerwunsch einen hellen Hintergrund bei erhaltenen 3D-Bubbles.\nDer native Build blendet PWA-Installationsknöpfe aus und berücksichtigt Systemränder. Das ersetzt keinen visuellen Test auf einem Android-Tablet/DeX.\n\nDie Bilder enthalten keine persönlichen Daten. Aufnahmen und Vergleiche wurden\nmit blockierten externen Anfragen erstellt, keine echten Mailkonten.\n`);
  console.log(`${compared} design comparisons passed; 16 screenshots saved.`);
 } finally {await browser.close();for(const server of servers)await new Promise(r=>server.close(r));}

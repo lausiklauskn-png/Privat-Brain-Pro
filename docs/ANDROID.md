@@ -85,3 +85,14 @@ Seite, Navigation und Java-Bridge. Die Release-Pipeline verlangt einen erfolgrei
 Starttest desselben Commits. Lokaler Prüfstand und noch offene Ausführung:
 [PRUEFSTAND-ANDROID.md](PRUEFSTAND-ANDROID.md). Ohne KVM den lokalen Software-Emulator
 nicht als verlässlichen Ersatz für diesen Test betrachten.
+
+
+## Helles Pro-Icon
+
+Auf Nutzerwunsch erhält nur die Pro-App einen hellen Icon-Hintergrund.
+Die 3D-Bubbles und ihre Leuchtverbindungen bleiben das Motiv. Header-Icon,
+192-/512-Pixel-Icons und Android-Launcher verwenden dieselbe Variante; auch
+der adaptive Android-Hintergrund ist hell. Master unter
+`artwork/private-brain-pro-light.png`, Größenexport über
+`node tools/native/export-pro-icons.mjs`. Der Hell-/Dunkelmodus der Oberfläche
+bleibt erhalten. Die PWA-Icons im anderen Repository bleiben unverändert.

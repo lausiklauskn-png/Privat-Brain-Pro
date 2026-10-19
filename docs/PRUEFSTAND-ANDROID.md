@@ -56,3 +56,11 @@ PWA-Checkout wurde nicht verändert. Code ist auf dem Zweig `android-grundversio
 gesichert. Zur Fortsetzung: vorbereitete Netzfreigabe `api.github.com` in den
 Umgebungseinstellungen übernehmen, dann API-Zugriff und Actions-Ergebnisse prüfen,
 Native-Startfehler weiter untersuchen und erst nach erfolgreicher Prüfung veröffentlichen.
+
+
+## Icon-Aktualisierung
+
+Vorschau 0.1.0-preview.2 (versionCode 2) verwendet die ausdrücklich beauftragte
+helle Pro-Icon-Variante bei gleichem 3D-Bubble-Motiv. Kopf- und Android-Icon
+sowie 192-/512-Pixel-Exporte sind konsistent. Diese Änderung behebt oder bestätigt
+den zuvor beschriebenen nativen Starttest nicht.

@@ -20,7 +20,7 @@ try {
   ok('Only public runtime inputs packaged', !names.some(n=>['.git','mail-service','node_modules','package.json','sw.js'].includes(n)));
   const html=await readFile(root+'/index.html','utf8');
   ok('No PWA installation script or service-worker registration in native build', !html.includes('src="assets/installieren.js') && !html.includes('navigator.serviceWorker.register('));
-  ok('Original app icon retained byte for byte', (await readFile('icon-512.png')).equals(await readFile(root+'/icon-512.png')));
+  ok('Light Pro icon matches the bundled asset', (await readFile('icon-512.png')).equals(await readFile(root+'/icon-512.png')));
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   const url=`http://127.0.0.1:${server.address().port}/`;
   const page=await browser.newPage();const errors=[];

@@ -12,7 +12,8 @@ Der native Starttest im lokalen Software-Emulator scheiterte im WebView-Renderer
 eine zuverlässige Hardware-/Geräteprüfung steht noch aus. Siehe [Prüfstand](docs/PRUEFSTAND-ANDROID.md). Modellgewichte fehlen noch;
 Stichwortsuche ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
 
-Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die Original-Icons bleiben erhalten.
+Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die 3D-Bubbles bleiben erhalten. Die Pro-Icons erhalten auf ausdrücklichen
+Nutzerwunsch einen hellen Hintergrund; das unterscheidet sie von der PWA.
 Die geschützten Prüfmodule werden bytegleich mitgeführt.
 
 ## Entwicklung ohne eigenen PC

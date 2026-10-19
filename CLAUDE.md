@@ -301,3 +301,16 @@ erfolgreichen relevanten Prüfungen zusammenführen. Nicht nach einer bloßen
 Ankündigung stoppen; nur konkrete externe Voraussetzungen erfordern seine Aktion.
 Kein eigener Desktop-PC beim Nutzer voraussetzen. Keine Geheimnisse oder
 Signierschlüssel in Git oder Chat; Produktion und Vorschau getrennt signieren.
+
+
+## Helles Pro-Icon (Nutzerwunsch 2026-10-19)
+
+Der Nutzer hat ausdrücklich eine helle Pro-Variante des Icons beauftragt: glänzende
+3D-Bubbles und Leuchtverbindungen beibehalten, grauen Hintergrund durch helles
+Elfenbein ersetzen. Das betrifft Header-, App- und Installationsicons ausschließlich
+in diesem Pro-Repository. Die ältere Regel „Original-Icons nie überschreiben“ wird
+für diese gewünschte Pro-Ableitung entsprechend konkretisiert; die PWA bleibt
+unverändert. Vorlage: `artwork/private-brain-pro-light.png`, technische Größenexporte
+über `node tools/native/export-pro-icons.mjs`. Adaptive Android-Icons verwenden
+auch außerhalb des Motivs den hellen Hintergrund. Bestehenden Hell-/Dunkelmodus
+der Oberfläche weiterhin erhalten.
