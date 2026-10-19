@@ -3,24 +3,26 @@
 Eigenständige native Pro-App auf Basis der bestehenden Private-Brain-Oberfläche.
 Die ursprüngliche PWA bleibt unabhängig im Repository `Privat-Brain` bestehen.
 
-**Stand: Erste signierte Android-Grundversion 0.1.0-preview.2 veröffentlicht.**
-[Test-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.2/Private-Brain-Pro-0.1.0-preview.2.apk).
+**Stand: Android-Testversion 0.1.0-preview.4 mit direkter Geräte-Mail veröffentlicht.**
+[Test-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.4/Private-Brain-Pro-0.1.0-preview.4.apk).
 Suche, Dateiimport, Katalog und Postfachoberfläche werden lokal mit Capacitor
-ausgeliefert. Vorschau .2 wurde vom Nutzer auf einem Samsung-Tablet installiert
-und gestartet. Die neue direkte Geräte-Mailanbindung mit Keystore, IMAP/SMTP,
-Anhängen und persistentem Versandstatus wird für Vorschau .4 geprüft; der
-obige Download .2 enthält sie noch nicht. Noch offen sind dauerhafter Geräteordner-
-zugriff, Hintergrundabruf, Gmail OAuth und vollständige Funktionsgleichheit.
-Die Mailprüfer sind kein Virenscanner. Modellgewichte fehlen noch; Stichwortsuche
-ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
+ausgeliefert. Telekom/T-Online und Hetzner verbinden sich direkt über IMAPS/SMTPS
+vom Gerät, mit nativer Kontenerfassung, Android Keystore, Anhängen, lokalen
+Entwürfen und dauerhaftem Versandstatus. Dafür werden kein Dienst-Token und
+keine Termux-Befehle benötigt. Echte Anbieteranmeldung auf dem Nutzergerät steht
+noch aus. Noch offen sind dauerhafter Geräteordnerzugriff, Hintergrundabruf,
+Gmail OAuth und vollständige Funktionsgleichheit. Die Mailprüfer sind kein
+Virenscanner. Modellgewichte fehlen noch; Stichwortsuche ist verfügbar, echte
+e5-Modellqualität ist nicht nachgewiesen.
 Prüfnachweise und Grenzen: [Prüfstand](docs/PRUEFSTAND-ANDROID.md).
 
 Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die 3D-Bubbles bleiben erhalten. Die Pro-Icons erhalten auf ausdrücklichen
 Nutzerwunsch einen hellen Hintergrund; das unterscheidet sie von der PWA.
 Die geschützten Prüfmodule werden bytegleich mitgeführt.
 
-Die nächste Vorschau 0.1.0-preview.4 ergänzt direkte Mailverbindungen und die
-manuelle Versionsprüfung. Architektur, Rechte und Grenzen:
+Vorschau 0.1.0-preview.4 enthält direkte Mailverbindungen und die manuelle
+Versionsprüfung. Die signierte APK wurde im Android-Emulator über .2 installiert;
+die Sprachwahl blieb erhalten und die native Kontomaske öffnete sich. Architektur, Rechte und Grenzen:
 [Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md).
 
 ## Entwicklung ohne eigenen PC

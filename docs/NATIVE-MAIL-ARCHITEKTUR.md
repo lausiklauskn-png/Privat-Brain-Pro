@@ -1,7 +1,7 @@
 # Direkte Mailanbindung auf Android
 
-Stand 2026-10-19, Implementierung für Vorschau 0.1.0-preview.4. Die bisher
-veröffentlichte Vorschau .2 verwendet noch den privaten HTTPS-Maildienst.
+Stand 2026-10-19, veröffentlicht in Vorschau 0.1.0-preview.4. Die ältere
+Vorschau .2 verwendet noch den privaten HTTPS-Maildienst.
 Ein echter Telekom-/Hetzner-Kontotest dieser neuen Anbindung am Tablet steht aus.
 Simulation, Android-Instrumentierung und echte Anbieteranmeldung werden getrennt
 im [Prüfstand](PRUEFSTAND-ANDROID.md) ausgewiesen.
