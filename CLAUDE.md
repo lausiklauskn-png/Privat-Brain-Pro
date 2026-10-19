@@ -285,3 +285,19 @@ blendet CSS ihn aus. Bis 760 px nur ⬇ (Name im title/aria-label), bis 400 px r
 412 px 205 → 205 · 1280 px 75 → 75, kein Querlaufen, CLS wie vorher; als App beide weg; Tipp ohne Angebot → Meldung
 (Kontrast 4,9); `getInstallabilityErrors` leer. Ohne die enge Leiste bekam 360 px eine zweite Reihe (205 → 251).
 Cache `private-brain-v83`. `npm test` grün (mit `WFPDF_KLON`). ⚠ Am Tablet nicht gemessen.
+
+## Pro-App: Stand 2026-10-19
+
+Dieses Repository ist jetzt **Privat-Brain-Pro**, die unabhängig kopierte Grundlage
+für die native App. Die vorherigen Abschnitte dokumentieren das geerbte Webprojekt;
+die PWA im anderen Repository bleibt unangetastet. Android/Capacitor-Konfiguration
+liegt unter `android/` und `capacitor.config.json`; `npm run sync:android` erzeugt
+nur das explizit ausgewählte öffentliche Webpaket. Details: `docs/ANDROID.md`.
+Geschützte Module bleiben unverändert. Native Brücken nur für notwendige, eng
+begrenzte Operationen und nur für den lokalen App-Ursprung zulassen.
+
+Freibrief des Nutzers gilt: selbstständig implementieren, prüfen, committen und bei
+erfolgreichen relevanten Prüfungen zusammenführen. Nicht nach einer bloßen
+Ankündigung stoppen; nur konkrete externe Voraussetzungen erfordern seine Aktion.
+Kein eigener Desktop-PC beim Nutzer voraussetzen. Keine Geheimnisse oder
+Signierschlüssel in Git oder Chat; Produktion und Vorschau getrennt signieren.
