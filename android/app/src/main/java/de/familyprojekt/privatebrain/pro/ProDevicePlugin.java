@@ -20,7 +20,7 @@ public class ProDevicePlugin extends Plugin {
             call.reject("App version unavailable");
             return;
         }
-        info.put("nativeMail", false);
+        info.put("nativeMail", true);
         info.put("persistentFolders", false);
         call.resolve(info);
     }

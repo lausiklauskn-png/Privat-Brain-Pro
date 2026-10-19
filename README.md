@@ -5,23 +5,23 @@ Die ursprüngliche PWA bleibt unabhängig im Repository `Privat-Brain` bestehen.
 
 **Stand: Erste signierte Android-Grundversion 0.1.0-preview.2 veröffentlicht.**
 [Test-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.2/Private-Brain-Pro-0.1.0-preview.2.apk).
-Suche, Dateiimport, Katalog und Postfachoberfläche
-werden lokal mit Capacitor ausgeliefert. Direkte native IMAP-/SMTP-Verbindungen,
-Keystore für Mailkonten, dauerhafter Geräteordnerzugriff und Hintergrundabruf sind
-noch nicht implementiert. Kein Anspruch auf vollständige Funktionsgleichheit.
-Die vorhandenen Mailprüfer sind kein Virenscanner.
-Der native Starttest einschließlich Java-Brücke ist im hardwarebeschleunigten
-GitHub-Emulator bestanden. Der Sichttest am Tablet steht aus; der historische lokale
-Software-Emulatorfehler ist im [Prüfstand](docs/PRUEFSTAND-ANDROID.md) dokumentiert. Modellgewichte fehlen noch;
-Stichwortsuche ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
+Suche, Dateiimport, Katalog und Postfachoberfläche werden lokal mit Capacitor
+ausgeliefert. Vorschau .2 wurde vom Nutzer auf einem Samsung-Tablet installiert
+und gestartet. Die neue direkte Geräte-Mailanbindung mit Keystore, IMAP/SMTP,
+Anhängen und persistentem Versandstatus wird für Vorschau .4 geprüft; der
+obige Download .2 enthält sie noch nicht. Noch offen sind dauerhafter Geräteordner-
+zugriff, Hintergrundabruf, Gmail OAuth und vollständige Funktionsgleichheit.
+Die Mailprüfer sind kein Virenscanner. Modellgewichte fehlen noch; Stichwortsuche
+ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
+Prüfnachweise und Grenzen: [Prüfstand](docs/PRUEFSTAND-ANDROID.md).
 
 Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die 3D-Bubbles bleiben erhalten. Die Pro-Icons erhalten auf ausdrücklichen
 Nutzerwunsch einen hellen Hintergrund; das unterscheidet sie von der PWA.
 Die geschützten Prüfmodule werden bytegleich mitgeführt.
 
-Die nächste Vorschau 0.1.0-preview.3 ergänzt eine manuell ausgelöste Versionsprüfung
-in den Einstellungen; sie wird separat getestet und veröffentlicht. Die Planung
-für direkten Mailzugriff steht in [Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md).
+Die nächste Vorschau 0.1.0-preview.4 ergänzt direkte Mailverbindungen und die
+manuelle Versionsprüfung. Architektur, Rechte und Grenzen:
+[Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md).
 
 ## Entwicklung ohne eigenen PC
 
@@ -49,12 +49,13 @@ cd android
 öffentlicher Dateien erzeugt; Repository, Mailserver, lokale Daten und Schlüssel
 werden nicht pauschal in die App gepackt. Native Assets aktualisiert Android,
 kein PWA-Service-Worker. Für Release-Builds Web-Debugging deaktiviert, Klartext-HTTP
-und beliebige Navigation mit Plugin-Zugriff nicht freigegeben. Es gibt noch keinen
-privilegierten Mail- oder Dateizugriffs-Adapter.
+und beliebige Navigation mit Plugin-Zugriff nicht freigegeben. Der Mailadapter erlaubt benannte Konto-/Postfachoperationen; ein allgemeiner
+privilegierter Dateizugriffs-Adapter fehlt noch.
 
 Herkunft: [Ausgangsbasis](docs/PRO-AUSGANGSBASIS.md).
 Vorherige PWA-Dokumentation: [PWA-README](docs/PWA-README.md).
 Rechte: [LICENSE](LICENSE), [RECHTE.md](RECHTE.md).
-Capacitor: MIT, Lizenztext im nativen Webpaket. Historische PDF-Testbibliotheken
+Capacitor: MIT, Lizenztext im nativen Webpaket. JavaMail/Activation: unveränderte
+Originaltexte und Quellverweise unter `assets/licenses/mail.html`. Historische PDF-Testbibliotheken
 liegen mit Lizenzen getrennt unter `tests/fixtures/Workflow-PDF` und werden nicht
 in die App gepackt.

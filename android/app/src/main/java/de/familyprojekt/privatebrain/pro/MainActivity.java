@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle state) {
         registerPlugin(ProDevicePlugin.class);
         registerPlugin(ProUpdatesPlugin.class);
+        registerPlugin(ProMailPlugin.class);
         super.onCreate(state);
     }
 }

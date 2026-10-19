@@ -53,7 +53,7 @@ keine Store-Veröffentlichung und keine Kostenfreigabe sind damit verbunden.
 Bei direkter APK-Installation bestätigt der Nutzer Androids Installationsdialog und
 gegebenenfalls die Freigabe der Download-App.
 
-Ab der nächsten Vorschau 0.1.0-preview.3 steht unter Einstellungen „Auf Updates
+Ab der nächsten veröffentlichten Vorschau 0.1.0-preview.4 steht unter Einstellungen „Auf Updates
 prüfen“. Die Prüfung läuft nur nach Antippen, verbindet das Gerät mit der öffentlichen
 GitHub-Release-API und überträgt keine Dokumente, Mailkonten oder Zugriffstokens.
 GitHub sieht dabei technisch die Netzwerkadresse des Geräts. Offline und bei
@@ -77,8 +77,8 @@ Für den erstmaligen Wechsel auf eine neuere Version ist deren Download-Link nö
 ## Nächste native Schritte
 
 1. Storage Access Framework und dauerhafte lokale Kopien über eine enge Plugin-API.
-2. Mailadapter für Telekom/Hetzner direkt vom Gerät, mehrere Konten und Keystore.
-3. Persistente Versandwarteschlange; unklarer SMTP-Ausgang nie automatisch erneut senden.
+2. Implementierten Mailadapter für Telekom/Hetzner, mehrere Konten und Keystore am Gerät prüfen.
+3. Persistente Versandzustände und vorhandene Entwürfe bei Updates am Gerät prüfen.
 4. Anhänge/Ordner/Entwürfe und Betriebssystem-Hintergrundarbeit tatsächlich am Gerät testen.
 5. Gmail OAuth über Systembrowser/PKCE vorbereiten, ohne Client-Geheimnis im Paket.
 6. Modell und Laufzeit lokal bündeln und offline prüfen; Modell-/Fremdlizenzen erhalten.
@@ -89,7 +89,8 @@ Oberfläche und unveränderte Prüfmodule bleiben für spätere iOS-Adapter verw
 
 ## Aktueller Prüfstand
 
-Der gepackte Webteil besteht 26 eigene Browserprüfungen. Acht visuelle Vergleiche
+Der bisherige gepackte Webteil besteht 37 eigene Browserprüfungen; der native
+Mailadapter ergänzt 24 Oberflächenprüfungen mit simulierter Java-Brücke. Acht visuelle Vergleiche
 (16 Screenshots in [design](design/README.md)) bestätigen die ausgewählten
 bestehenden Schrift-, Farb-, Rundungs- und Abstandsregeln. Android-Debugbuild und
 Lint liefen erfolgreich. Das ist kein Nachweis für echte Mailanmeldung,
@@ -115,3 +116,11 @@ der adaptive Android-Hintergrund ist hell. Master unter
 `artwork/private-brain-pro-light.png`, Größenexport über
 `node tools/native/export-pro-icons.mjs`. Der Hell-/Dunkelmodus der Oberfläche
 bleibt erhalten. Die PWA-Icons im anderen Repository bleiben unverändert.
+
+## Direkte Mailanbindung ab Vorschau .4
+
+Der bisherige Dienst-Token-Dialog entfällt in der nativen App. Zugangsdaten werden
+in einem Android-Dialog erfasst und mit einem nicht exportierbaren Keystore-
+Schlüssel verschlüsselt gespeichert. Hintergrundabruf und Gmail sind noch offen.
+Details zu Versandzuständen, Größenlimits und Bibliotheksrechten:
+[NATIVE-MAIL-ARCHITEKTUR.md](NATIVE-MAIL-ARCHITEKTUR.md).

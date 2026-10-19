@@ -23,4 +23,20 @@ expected = [case for case in cases
             and case.get('name') == 'bundledSearchAndNativeBridgeWork']
 if len(expected) != 1:
     raise SystemExit('Expected exactly one executed native startup test')
-print(f'Android startup test executed and passed; {len(cases)} test case(s), no failures/skips.')
+mail_tests = {
+    'vaultEncryptsAndTamperingCannotResetAccounts',
+    'lostKeystoreKeyDoesNotCreateReplacementData',
+    'mimeRoundTripPreservesBinaryAndRejectsHeaderInjection',
+    'defaultTrustRejectsUntrustedTlsBeforeAuthentication',
+    'trustedTestCertificateStillRequiresMatchingHostname',
+    'imapLibraryAuthenticatesOverVerifiedTls',
+    'confirmedSmtpSendIsNotRepeatedAfterReopeningVault',
+    'connectionLossAfterDataDoesNotResend',
+}
+for name in mail_tests:
+    matching = [case for case in cases
+                if case.get('classname') == 'de.familyprojekt.privatebrain.pro.NativeMailTest'
+                and case.get('name') == name]
+    if len(matching) != 1:
+        raise SystemExit(f'Expected exactly one executed native mail test: {name}')
+print(f'Android startup and mail tests passed; {len(cases)} test case(s), no failures/skips.')
