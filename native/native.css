@@ -2,3 +2,7 @@
 body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 #installieren, #install-platz, #install-box { display: none !important; }
 .native-status { margin-top: 1rem; font-size: .85rem; line-height: 1.5; }
+.native-updates { margin-top: 1rem; }
+.native-updates button { margin: .25rem .5rem .25rem 0; }
+.native-updates button[hidden] { display: none; }
+.native-updates p { margin-bottom: 0; }

@@ -40,7 +40,7 @@ jobs:
           npm run sync:android
           npm run test:native-web
       - run: npm test --prefix mail-service
-      - run: ./gradlew --no-daemon --max-workers=2 assembleDebug lintDebug
+      - run: ./gradlew --no-daemon --max-workers=2 testDebugUnitTest assembleDebug lintDebug
         working-directory: android
       - uses: actions/upload-artifact@v7.0.2
         with:

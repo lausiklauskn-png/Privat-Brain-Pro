@@ -52,5 +52,48 @@ try {
   }
   ok('No runtime errors',errors.length===0);
   ok('No service worker registered',await page.evaluate(async()=>(await navigator.serviceWorker.getRegistrations()).length===0));
+  const updatePage = await browser.newPage();
+  await updatePage.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
+  updatePage.on('pageerror',e=>errors.push(e.message));
+  await updatePage.addInitScript(() => {
+    window.updateCalls = 0;
+    window.downloadCalls = 0;
+    window.updateMode = 'available';
+    window.holdUpdate = true;
+    window.Capacitor = {Plugins:{ProUpdates:{
+      async check() {
+        window.updateCalls++;
+        if (window.holdUpdate) await new Promise(resolve=>window.finishUpdate=resolve);
+        if (window.updateMode === 'error') throw new Error('offline');
+        return {status:window.updateMode, version:'0.1.0-preview.10'};
+      },
+      async openDownload() { window.downloadCalls++; }
+    }}};
+  });
+  await updatePage.goto(url);
+  await updatePage.waitForSelector('#native-update-check',{state:'attached'});
+  ok('Update checks never run automatically',await updatePage.evaluate(()=>window.updateCalls===0));
+  await updatePage.locator('[data-tab="settings"]').click();
+  await updatePage.locator('#native-update-check').click();
+  ok('Check prevents duplicate requests while pending',await updatePage.locator('#native-update-check').isDisabled());
+  await updatePage.waitForFunction(()=>typeof window.finishUpdate==='function');
+  await updatePage.evaluate(()=>{window.holdUpdate=false;window.finishUpdate();});
+  await updatePage.locator('#native-update-download').waitFor({state:'visible'});
+  ok('New version notice shown without opening download automatically',await updatePage.locator('.native-updates').textContent().then(t=>t.includes('0.1.0-preview.10')) && await updatePage.evaluate(()=>window.downloadCalls===0));
+  await updatePage.locator('#native-update-download').click();
+  ok('Explicit download invokes the checked native target',await updatePage.evaluate(()=>window.downloadCalls===1));
+  await updatePage.evaluate(()=>window.updateMode='error');
+  await updatePage.locator('#native-update-check').click();
+  await updatePage.waitForFunction(()=>document.querySelector('#native-update-check').disabled===false);
+  ok('Failed recheck removes stale download offer',await updatePage.locator('#native-update-download').isHidden());
+  for (const lang of ['en','ru','pl','de']) {
+    await updatePage.locator(`[data-lang="${lang}"]`).click();
+    ok(`${lang}: update failure is translated`,await updatePage.locator('.native-updates').textContent().then(s=>s.includes({de:'nicht möglich',en:'Unable to check',ru:'Не удалось',pl:'Nie można'}[lang])));
+  }
+  await updatePage.evaluate(()=>window.updateMode='current');
+  await updatePage.locator('#native-update-check').click();
+  await updatePage.waitForFunction(()=>document.querySelector('#native-update-check').disabled===false);
+  ok('Current app has no download offer',await updatePage.locator('#native-update-download').isHidden() && await updatePage.locator('.native-updates').textContent().then(t=>t.includes('aktuelle')));
+  ok('No update UI runtime errors',errors.length===0);
 } finally {await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} native web checks passed`);

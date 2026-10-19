@@ -51,9 +51,28 @@ anpassen. Produktion baut zusätzlich ein AAB zur Vorbereitung auf Google Play;
 keine Store-Veröffentlichung und keine Kostenfreigabe sind damit verbunden.
 
 Bei direkter APK-Installation bestätigt der Nutzer Androids Installationsdialog und
-gegebenenfalls die Freigabe der Download-App. Noch kein Updateprüfer implementiert:
-öffentliche/verifizierte Update-Metadaten und private GitHub-Repositories müssen
-zuerst sauber getrennt werden. Keine Zugriffstokens in eine APK einbetten.
+gegebenenfalls die Freigabe der Download-App.
+
+Ab der nächsten Vorschau 0.1.0-preview.3 steht unter Einstellungen „Auf Updates
+prüfen“. Die Prüfung läuft nur nach Antippen, verbindet das Gerät mit der öffentlichen
+GitHub-Release-API und überträgt keine Dokumente, Mailkonten oder Zugriffstokens.
+GitHub sieht dabei technisch die Netzwerkadresse des Geräts. Offline und bei
+API-Limits erscheint eine verständliche Meldung; die App bleibt nutzbar.
+
+Die native Schnittstelle vergleicht numerische Versions-Tags getrennt für
+Vorschau und Produktion. Entwürfe und unpassende Kanäle werden ausgelassen.
+Es werden die letzten 30 öffentlichen Releases betrachtet. Nur ein Release mit
+passend benannter hochgeladener APK wird angeboten. Entwicklungsbuilds erhalten
+keine Nutzerupdates. Der Download-Link wird fest aus Repository, geprüftem Tag und
+erwartetem Dateinamen erzeugt; von der Webseite übergebene URLs werden ignoriert.
+„APK herunterladen“ öffnet den Browser. Android verlangt weiterhin die Zustimmung
+zur Installation und prüft die APK-Signatur. Die Versionsprüfung lädt und installiert
+selbst keine APK und überprüft deren Inhalt daher nicht vorab. Release-Account und
+Signierschlüssel bleiben sicherheitsrelevant. Ein privates Repository würde eine
+andere Veröffentlichungsstrategie verlangen; keine GitHub-Tokens in die APK einbauen.
+
+Die bereits veröffentlichte Vorschau 0.1.0-preview.2 besitzt diesen Knopf noch nicht.
+Für den erstmaligen Wechsel auf eine neuere Version ist deren Download-Link nötig.
 
 ## Nächste native Schritte
 
@@ -82,7 +101,7 @@ Modellqualität, Benachrichtigungen oder vollständige Funktionsgleichheit.
 Der Job `native-smoke` verwendet einen hardwarebeschleunigten Android-35-Emulator
 und führt `:app:connectedDebugAndroidTest` aus. Der Test prüft die echte gepackte
 Seite, Navigation und Java-Bridge. Die Release-Pipeline verlangt einen erfolgreichen
-Starttest desselben Commits. Lokaler Prüfstand und noch offene Ausführung:
+Starttest desselben Commits. Aktueller und historischer Prüfstand:
 [PRUEFSTAND-ANDROID.md](PRUEFSTAND-ANDROID.md). Ohne KVM den lokalen Software-Emulator
 nicht als verlässlichen Ersatz für diesen Test betrachten.
 
