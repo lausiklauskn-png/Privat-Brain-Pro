@@ -1,0 +1,142 @@
+package de.familyprojekt.privatebrain.pro;
+
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509KeyManager;
+import javax.security.auth.x500.X500Principal;
+
+/** Test-only localhost servers. Ephemeral keys are generated on the emulator, never committed. */
+final class TestMailTlsServer implements AutoCloseable {
+    final AtomicInteger authentications = new AtomicInteger(), deliveries = new AtomicInteger();
+    final java.util.concurrent.atomic.AtomicBoolean leakedBcc = new java.util.concurrent.atomic.AtomicBoolean(false);
+    final SSLSocketFactory trustedClient;
+    final int port;
+    private final String alias;
+    private final SSLServerSocket listener;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Future<?> task;
+
+    TestMailTlsServer(String alias, boolean smtp, boolean loseAcknowledgement) throws Exception {
+        this.alias = alias;
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "AndroidKeyStore");
+        generator.initialize(new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
+            .setKeySize(2048).setDigests(KeyProperties.DIGEST_NONE, KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+            .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1, KeyProperties.SIGNATURE_PADDING_RSA_PSS)
+            .setCertificateSubject(new X500Principal("CN=localhost"))
+            .setCertificateSerialNumber(BigInteger.ONE)
+            .setCertificateNotBefore(new Date(System.currentTimeMillis() - 60000))
+            .setCertificateNotAfter(new Date(System.currentTimeMillis() + 3600000)).build());
+        generator.generateKeyPair();
+        KeyStore keys = KeyStore.getInstance("AndroidKeyStore"); keys.load(null);
+        PrivateKey key = (PrivateKey) keys.getKey(alias, null);
+        X509Certificate certificate = (X509Certificate) keys.getCertificate(alias);
+        X509KeyManager manager = new X509KeyManager() {
+            public String[] getClientAliases(String type, java.security.Principal[] issuers) { return null; }
+            public String chooseClientAlias(String[] types, java.security.Principal[] issuers, Socket socket) { return null; }
+            public String[] getServerAliases(String type, java.security.Principal[] issuers) { return type.contains("RSA") ? new String[] {"test"} : null; }
+            public String chooseServerAlias(String type, java.security.Principal[] issuers, Socket socket) { return type.contains("RSA") ? "test" : null; }
+            public X509Certificate[] getCertificateChain(String name) { return new X509Certificate[] {certificate}; }
+            public PrivateKey getPrivateKey(String name) { return key; }
+        };
+        SSLContext server = SSLContext.getInstance("TLSv1.2"); server.init(new KeyManager[] {manager}, null, null);
+        listener = (SSLServerSocket) server.getServerSocketFactory().createServerSocket(0, 1, InetAddress.getByName("localhost"));
+        listener.setEnabledProtocols(new String[] {"TLSv1.2"});
+        listener.setEnabledCipherSuites(new String[] {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"});
+        listener.setSoTimeout(15000); port = listener.getLocalPort();
+        KeyStore anchors = KeyStore.getInstance(KeyStore.getDefaultType()); anchors.load(null);
+        anchors.setCertificateEntry("only-this-test-server", certificate);
+        TrustManagerFactory trust = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()); trust.init(anchors);
+        SSLContext client = SSLContext.getInstance("TLSv1.2"); client.init(null, trust.getTrustManagers(), null);
+        trustedClient = client.getSocketFactory();
+        task = executor.submit(() -> {
+            try (Socket socket = listener.accept()) {
+                socket.setSoTimeout(15000);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), java.nio.charset.StandardCharsets.US_ASCII));
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), java.nio.charset.StandardCharsets.US_ASCII));
+                if (smtp) smtp(reader, writer, loseAcknowledgement); else imap(reader, writer);
+            } catch (SSLException ignored) { /* Expected when the client refuses this test certificate. */ }
+            catch (java.io.IOException ignored) { /* Expected for rejected hostname or deliberate connection loss. */ }
+        });
+    }
+    private void line(PrintWriter writer, String text) { writer.print(text + "\r\n"); writer.flush(); }
+    private void imap(BufferedReader reader, PrintWriter writer) throws java.io.IOException {
+        line(writer, "* OK localhost test IMAP");
+        String value;
+        while ((value = reader.readLine()) != null) {
+            String[] parts = value.split(" ", 3);
+            if (parts.length < 2) return;
+            String tag = parts[0], command = parts[1].toUpperCase(java.util.Locale.ROOT);
+            switch (command) {
+                case "CAPABILITY": line(writer, "* CAPABILITY IMAP4rev1 AUTH=PLAIN"); line(writer, tag + " OK capability"); break;
+                case "NOOP": line(writer, tag + " OK noop"); break;
+                case "AUTHENTICATE":
+                    if (parts.length < 3 || parts[2].trim().split(" ").length < 2) {
+                        line(writer, "+ "); if (reader.readLine() == null) return;
+                    }
+                    authentications.incrementAndGet(); line(writer, tag + " OK authenticated"); break;
+                case "LOGIN": authentications.incrementAndGet(); line(writer, tag + " OK authenticated"); break;
+                case "LOGOUT": line(writer, "* BYE"); line(writer, tag + " OK logout"); return;
+                default: line(writer, tag + " BAD unsupported test command");
+            }
+        }
+    }
+    private void smtp(BufferedReader reader, PrintWriter writer, boolean loseAcknowledgement) throws java.io.IOException {
+        line(writer, "220 localhost ESMTP test");
+        String value;
+        while ((value = reader.readLine()) != null) {
+            String command = value.toUpperCase(java.util.Locale.ROOT);
+            if (command.startsWith("EHLO") || command.startsWith("HELO")) {
+                line(writer, "250-localhost"); line(writer, "250-AUTH PLAIN LOGIN"); line(writer, "250 SIZE 8388608");
+            } else if (command.startsWith("AUTH PLAIN")) {
+                if (value.trim().split(" ").length < 3) { line(writer, "334 "); if (reader.readLine() == null) return; }
+                authentications.incrementAndGet(); line(writer, "235 authenticated");
+            } else if (command.startsWith("AUTH LOGIN")) {
+                line(writer, "334 VXNlcm5hbWU6"); if (reader.readLine() == null) return;
+                line(writer, "334 UGFzc3dvcmQ6"); if (reader.readLine() == null) return;
+                authentications.incrementAndGet(); line(writer, "235 authenticated");
+            } else if (command.startsWith("MAIL FROM:") || command.startsWith("RCPT TO:") || command.equals("RSET") || command.equals("NOOP")) {
+                line(writer, "250 OK");
+            } else if (command.equals("DATA")) {
+                line(writer, "354 send message");
+                boolean headers = true;
+                while ((value = reader.readLine()) != null && !value.equals(".")) {
+                    if (value.isEmpty()) headers = false;
+                    if (headers && value.toUpperCase(java.util.Locale.ROOT).startsWith("BCC:")) leakedBcc.set(true);
+                }
+                deliveries.incrementAndGet();
+                if (loseAcknowledgement) return;
+                line(writer, "250 accepted");
+            } else if (command.equals("QUIT")) { line(writer, "221 goodbye"); return; }
+            else line(writer, "500 unsupported test command");
+        }
+    }
+    void await() throws Exception { task.get(20, TimeUnit.SECONDS); }
+    String numericHost() { return listener.getInetAddress().getHostAddress(); }
+    public void close() throws Exception {
+        listener.close(); executor.shutdownNow();
+        KeyStore keys = KeyStore.getInstance("AndroidKeyStore"); keys.load(null); keys.deleteEntry(alias);
+    }
+}

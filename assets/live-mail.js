@@ -3,6 +3,7 @@
   "use strict";
   const host = document.getElementById("mailWorkspace"),
     local = host.querySelector(".mail-app");
+  const native = window.PBMailDevice || null;
   const words = {
     serviceHelp: [
       "Privater HTTPS-Mail-Dienst auf deinem Server/NAS. Dienst-Schlüssel nur für diese Sitzung.",
@@ -199,7 +200,7 @@
       "Filtruj folder",
     ],
   };
-  const T = (k) =>
+  const T = (k) => native?.text(k) ||
     (words[k] || [k])[
       Math.max(
         0,
@@ -235,6 +236,8 @@
   switcher.hidden = true;
   localButton.hidden = true;
   bar.append(connect, switcher, localButton);
+  const nativeNotice = native ? el("p", "mail-notice") : null;
+  if (nativeNotice) { nativeNotice.setAttribute("role", "alert"); bar.append(nativeNotice); }
   host.prepend(bar);
   const app = el("div", "mail-app live-mail");
   app.hidden = true;
@@ -263,10 +266,13 @@
     btn("refresh", () => loadFolders()),
     btn("compose", () => compose()),
     btn("account", () => setupAccount()),
+    ...(native ? [btn("saved", () => savedItems())] : []),
     btn("disconnect", disconnect),
     btn("removeAccount", async () => {
       if (!leave() || !account || !confirm(T("removeConfirm"))) return;
       await api("/accounts/" + account, null, "DELETE");
+      dirty = false;
+      draft = null;
       accounts = await api("/accounts");
       await accountList();
     }),
@@ -286,12 +292,14 @@
   async function run(fn) {
     if (busy) return;
     busy = true;
+    if (nativeNotice) nativeNotice.textContent = "";
     app.inert = true;
     app.setAttribute("aria-busy", "true");
     try {
       await fn();
     } catch (e) {
       notice.textContent = T("error") + " " + e.message;
+      if (nativeNotice) nativeNotice.textContent = e.message;
       const d = host.querySelector("dialog[open] form");
       if (d) {
         let error = d.querySelector("[role=alert]");
@@ -309,6 +317,7 @@
     }
   }
   async function api(path, body, method) {
+    if (native) return native.request(path, body, method);
     const r = await fetch(base + "/api/mail" + path, {
       method: method || (body ? "POST" : "GET"),
       headers: {
@@ -359,7 +368,22 @@
     d.showModal();
     return { d, form };
   }
-  function setup() {
+  async function setup() {
+    if (native) {
+      accounts = await native.accounts();
+      if (!accounts.length) {
+        const added = await native.addAccount();
+        if (!added) return;
+        accounts = await native.accounts();
+        account = added.id;
+      }
+      base = native.base;
+      token = "device";
+      connect.hidden = true;
+      switchMode(true);
+      await accountList();
+      return;
+    }
     const { d, form } = dialog(T("connect"));
     form.append(el("p", "mail-muted", T("serviceHelp")));
     const url = field(
@@ -411,9 +435,18 @@
       account = accounts[0]?.id || "";
     accountSelect.value = account;
     if (account) await loadFolders();
+    else if (native) disconnect();
     else setupAccount();
   }
-  function setupAccount() {
+  async function setupAccount() {
+    if (native) {
+      const added = await native.addAccount();
+      if (!added) return;
+      accounts = await native.accounts();
+      account = added.id;
+      await accountList();
+      return;
+    }
     const { d, form } = dialog(T("account")),
       provider = el("select");
     provider.append(
@@ -482,6 +515,23 @@
     connect.hidden = false;
     switcher.hidden = true;
     localButton.hidden = true;
+  }
+  async function savedItems() {
+    if (!native || !leave()) return;
+    dirty = false;
+    draft = null;
+    const records = await native.saved(account);
+    app.dataset.view = "reader";
+    reader.replaceChildren(btn("back", () => { app.dataset.view = "list"; }), el("h3", "", T("saved")));
+    if (!records.length) reader.append(el("p", "mail-muted", T("emptySaved")));
+    for (const record of records) {
+      const row = el("div", "mail-report");
+      const status = el("p", "", T(record.status === "draft" ? "draftStatus" : record.status));
+      status.dataset.nativeStatus = record.status === "draft" ? "draftStatus" : record.status;
+      row.append(el("strong", "", record.subject), el("p", "mail-muted", record.to), status);
+      if (["draft", "queued"].includes(record.status)) row.append(btn("restore", async () => compose(await native.savedDraft(account, record.id))));
+      reader.append(row);
+    }
   }
   async function loadFolders() {
     if (!leave()) return;
@@ -757,7 +807,7 @@
       );
     actions.append(
       btn("download", () =>
-        downloadBlob(
+        native ? native.openOriginal({account,folder,validity,uid:item.uid}) : downloadBlob(
           new Blob(
             [
               mail.sourceBase64
@@ -774,9 +824,9 @@
       btn("catalogOne", () => catalogOne(mail, current)),
     );
     reader.append(actions, el("pre", "mail-text", mail.text));
-    for (const a of mail.attachments) {
+    for (const [index, a] of mail.attachments.entries()) {
       const b = btn("download", () =>
-        downloadBlob(
+        native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
           new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
           a.name,
         ),
@@ -853,7 +903,7 @@
         );
         for (const file of attach.files) {
           total += file.size;
-          if (total > 25 * 1024 * 1024) throw new Error("25 MB");
+          if (total > (native?.attachmentLimit || 25 * 1024 * 1024)) throw new Error(native ? T("nativeLimit") : "25 MB");
           const bytes = new Uint8Array(await file.arrayBuffer());
           let str = "";
           for (let i = 0; i < bytes.length; i += 32768)
@@ -925,6 +975,7 @@
   new MutationObserver(() => {
     for (const b of host.querySelectorAll("[data-live-text]"))
       b.textContent = T(b.dataset.liveText);
+    for (const status of host.querySelectorAll("[data-native-status]")) status.textContent = T(status.dataset.nativeStatus);
   }).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["lang"],

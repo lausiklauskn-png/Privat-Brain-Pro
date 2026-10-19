@@ -314,3 +314,12 @@ unverändert. Vorlage: `artwork/private-brain-pro-light.png`, technische Größe
 über `node tools/native/export-pro-icons.mjs`. Adaptive Android-Icons verwenden
 auch außerhalb des Motivs den hellen Hintergrund. Bestehenden Hell-/Dunkelmodus
 der Oberfläche weiterhin erhalten.
+
+## Native Mailarbeit für Vorschau .4 (2026-10-19)
+
+`ProMail` ist der enge Android-Adapter, `native/native-mail.js` bindet ihn vor dem
+bestehenden `assets/live-mail.js` ein. Passwörter nur im nativen Dialog; keine
+Dienst-Token für direkte Geräteverbindungen. Konten/Entwürfe/Versandnachweise
+AES-GCM/Keystore, keine stillen Ersatzschlüssel. Unklaren SMTP-Ausgang niemals
+automatisch wiederholen. Die .2-APK hat noch den alten Serverdialog. Stand und
+Prüfgrenzen: `docs/NATIVE-MAIL-ARCHITEKTUR.md`, `docs/PRUEFSTAND-ANDROID.md`.

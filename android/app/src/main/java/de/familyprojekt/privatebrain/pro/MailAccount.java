@@ -1,0 +1,72 @@
+package de.familyprojekt.privatebrain.pro;
+
+import java.net.IDN;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.UUID;
+import javax.mail.internet.InternetAddress;
+import org.json.JSONObject;
+
+final class MailAccount {
+    final String id, provider, email, user, password, imap, smtp;
+    MailAccount(JSONObject value) throws Exception {
+        provider = value.getString("provider");
+        if (!provider.equals("telekom") && !provider.equals("hetzner")) throw new MailFailure("INVALID_INPUT");
+        id = value.optString("id", UUID.randomUUID().toString());
+        uuid(id);
+        email = header(value.getString("email").trim(), 254);
+        InternetAddress address = new InternetAddress(email, true);
+        address.validate();
+        if (!email.equals(address.getAddress()) || !email.contains("@")) throw new MailFailure("INVALID_INPUT");
+        user = header(value.optString("user", "").trim().isEmpty() ? email : value.getString("user").trim(), 320);
+        password = value.getString("password");
+        if (password.isEmpty() || password.length() > 4096 || password.indexOf('\0') >= 0) throw new MailFailure("INVALID_INPUT");
+        imap = host(value.getString("imap"));
+        smtp = host(value.getString("smtp"));
+        if (provider.equals("telekom") && (!imap.equals("secureimap.t-online.de") || !smtp.equals("securesmtp.t-online.de")))
+            throw new MailFailure("INVALID_INPUT");
+    }
+    static void uuid(String id) throws MailFailure {
+        if (id == null || !id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) throw new MailFailure("INVALID_INPUT");
+    }
+    static String header(String value, int limit) throws MailFailure {
+        if (value == null || value.length() > limit || value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0 || value.indexOf('\0') >= 0)
+            throw new MailFailure("INVALID_INPUT");
+        return value;
+    }
+    static String host(String value) throws MailFailure {
+        try {
+            String host = IDN.toASCII(value.trim(), IDN.USE_STD3_ASCII_RULES).toLowerCase(Locale.ROOT);
+            if (host.length() > 253 || !host.contains(".") || !host.matches("[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?") || host.contains(".."))
+                throw new IllegalArgumentException();
+            return host;
+        } catch (IllegalArgumentException error) { throw new MailFailure("INVALID_INPUT"); }
+    }
+    JSONObject privateJson() throws Exception {
+        return publicJson().put("user", user).put("password", password);
+    }
+    JSONObject publicJson() throws Exception {
+        return new JSONObject().put("id", id).put("provider", provider).put("email", email).put("imap", imap).put("smtp", smtp);
+    }
+    static Properties properties() {
+        Properties properties = new Properties();
+        for (String protocol : new String[] {"imaps", "smtps"}) {
+            String p = "mail." + protocol + ".";
+            properties.setProperty(p + "ssl.enable", "true");
+            properties.setProperty(p + "ssl.checkserveridentity", "true");
+            properties.setProperty(p + "ssl.protocols", "TLSv1.2");
+            properties.setProperty(p + "connectiontimeout", "15000");
+            properties.setProperty(p + "timeout", "20000");
+            properties.setProperty(p + "writetimeout", "20000");
+        }
+        properties.setProperty("mail.imaps.peek", "true");
+        properties.setProperty("mail.imaps.fetchsize", "65536");
+        properties.setProperty("mail.mime.decodeparameters", "true");
+        properties.setProperty("mail.mime.encodefilename", "true");
+        properties.setProperty("mail.debug", "false");
+        properties.setProperty("mail.debug.auth", "false");
+        properties.setProperty("mail.smtps.auth", "true");
+        properties.setProperty("mail.smtps.sendpartial", "false");
+        return properties;
+    }
+}

@@ -12,16 +12,29 @@
   const settings = document.querySelector('#install-box');
   if (settings) settings.after(status);
   let version = '';
+  let nativeMail = false;
   try {
     const device = await window.Capacitor?.Plugins?.ProDevice?.getInfo();
-    if (device) version = ` · ${device.versionName}`;
+    if (device) { version = ` · ${device.versionName}`; nativeMail = device.nativeMail === true; }
   } catch { /* Browser smoke tests have no Android bridge. */ }
   function render() {
     const t = text[document.documentElement.lang] || text.de;
-    status.textContent = `${t[0]}${version}. ${t[1]}`;
+    const mailNotice = {
+      de: 'Direkte Mailverbindung auf diesem Gerät. Dauerhafter Ordnerzugriff und Hintergrundabruf folgen noch.',
+      en: 'Direct mail on this device. Persistent folder access and background sync are still being added.',
+      ru: 'Прямая почта на устройстве. Постоянный доступ к папкам и фоновая синхронизация ещё разрабатываются.',
+      pl: 'Bezpośrednia poczta na urządzeniu. Trwały dostęp do folderów i synchronizacja w tle są w przygotowaniu.'
+    };
+    status.textContent = `${t[0]}${version}. ${nativeMail ? (mailNotice[document.documentElement.lang] || mailNotice.de) : t[1]}`;
   }
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   render();
+  if (nativeMail) {
+    const licenses = document.createElement('a');
+    licenses.href = 'assets/licenses/mail.html';
+    licenses.textContent = 'JavaMail / Activation · Lizenzen / Licenses';
+    status.after(licenses);
+  }
 
   const updates = window.Capacitor?.Plugins?.ProUpdates;
   if (!updates || !settings) return;

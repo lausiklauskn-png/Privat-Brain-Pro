@@ -98,13 +98,15 @@ jobs:
       - name: Signatur prüfen und Release vorbereiten
         env:
           RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
           variant=preview
           if [[ "$RELEASE_CHANNEL" == stable ]]; then variant=release; fi
           mkdir -p release-files
-          cp "android/app/build/outputs/apk/$variant/app-$variant.apk" release-files/Private-Brain-Pro.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose release-files/Private-Brain-Pro.apk
+          apk="release-files/Private-Brain-Pro-${RELEASE_TAG#v}.apk"
+          cp "android/app/build/outputs/apk/$variant/app-$variant.apk" "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
           if [[ "$RELEASE_CHANNEL" == stable ]]; then
             cp android/app/build/outputs/bundle/release/app-release.aab release-files/Private-Brain-Pro.aab
           fi

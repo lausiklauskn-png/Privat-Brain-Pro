@@ -31,7 +31,7 @@ kein Debug-Flag. Die unabhängige PWA wurde nicht verändert.
   Launcher-Icon sowie 192-/512-Pixel-Exporte konsistent. Die PWA-Icons blieben
   unverändert. UI-Hell-/Dunkelmodus bleibt erhalten.
 
-## Nächste Vorschau 0.1.0-preview.3
+## Versionsprüfung (in Vorschau .4 enthalten)
 
 Die manuell ausgelöste Versionsprüfung ergänzt die Android-Schnittstelle und
 Einstellungen. Test- und Stabilkanal bleiben getrennt. Der Browser wird nur durch
@@ -44,8 +44,9 @@ Sprachen. Drei Java-Tests prüfen numerische Reihenfolge, Kanaltrennung und
 Beschränkung auf die vorgesehenen APK-Dateien. Android-Debugbuild, Lint und
 Kompilation des erweiterten Instrumentierungstests sind erfolgreich. Die native
 Startprüfung verlangt nun zusätzlich die echte Update-Brücke und die Ablehnung
-eines Downloads ohne vorherige erfolgreiche Prüfung. Dieser neue native Lauf
-muss vor dem Merge in GitHub Actions erfolgreich sein.
+eines Downloads ohne vorherige erfolgreiche Prüfung. Der native Lauf und die vollständigen Prüfungen waren vor Merge erfolgreich;
+anschließend bestand auch [Main-Lauf 39295896679](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39295896679).
+Eine Vorschau .3 wurde nicht öffentlich verteilt.
 
 Eine echte Updateprüfung über das Netz auf dem Tablet und die Installation
 einer neuen APK über eine bestehende Installation sind noch nicht bestätigt.
@@ -64,8 +65,9 @@ wurde beendet; die Veröffentlichung stützte sich auf die erfolgreiche native C
 
 ## Offene Funktionen und Signierung
 
-Noch nicht umgesetzt: direkte native Mailanbindung, Keystore für Mailkonten,
-dauerhafte Geräteordner, Benachrichtigungen/Hintergrundabruf und lokales e5-Modell.
+Noch nicht umgesetzt: dauerhafte Geräteordner, Benachrichtigungen/Hintergrundabruf,
+Gmail OAuth und lokales e5-Modell. Die neue direkte Mailanbindung samt Keystore
+wird im folgenden Abschnitt getrennt ausgewiesen.
 Die aktuelle Suche hat ohne Modell einen Stichwort-Rückfall. Keine vollständige
 Funktionsgleichheit behaupten. Tablet/DeX, echte Konten und die tatsächliche
 Update-/Migrationsprobe bleiben gesondert zu prüfen.
@@ -77,3 +79,33 @@ Cloud-Upload an GitHub liefert trotz aktiver Netzfreigabe einen Anmeldefehler;
 die erste Veröffentlichung erfolgte über GitHub Actions mit dessen kurzlebigem
 Token und bereits signierter öffentlicher APK. Dabei wurde kein privater Schlüssel
 hochgeladen. Der temporäre Veröffentlichungszweig wurde danach entfernt.
+
+## Direkte Mailanbindung für Vorschau .4 – aktuelle Prüfung
+
+Vorschau .2 wurde nach Rückmeldung des Nutzers auf dem Samsung-Tablet installiert
+und gestartet; die gezeigte Mailmaske verlangt noch den privaten HTTPS-Dienst.
+Das belegt keinen nativen Telekom-Zugang. Der vom Nutzer übermittelte VirusTotal-
+Bericht zur oben genannten .2-Prüfsumme meldet 0/67 Erkennungen, keine umfassende
+Sicherheitsgarantie. Eine Play-Protect-Entscheidung steht aus.
+
+Neue Implementierung: direkte IMAPS-/SMTPS-Verbindungen, native Kontenerfassung,
+AES-GCM/Android-Keystore, lokale Entwürfe, persistente Versandnachweise und begrenzte
+Anhangsfreigabe. [Architektur und Grenzen](NATIVE-MAIL-ARCHITEKTUR.md).
+
+Lokal erfolgreich: Android-Debug-APK und Lint, Kompilation der Instrumentierung,
+3 Java-Tests, 37 bestehende native Webprüfungen, 24 neue Mail-Oberflächenprüfungen
+mit simulierter Brücke und 26 Regressionstests des bisherigen privaten Maildienst-
+Adapters. Diese UI-Simulationen beweisen keine reale Anbieteranmeldung.
+
+Die neue Android-Instrumentierung prüft Keystore-Wiederöffnung, manipulierte
+verschlüsselte Dateien, fehlenden Schlüssel, MIME/Binäranhänge/Header-Injektion,
+unvertrautes TLS, falschen Hostnamen, echte lokale IMAP-Anmeldung über Test-TLS,
+SMTP-Annahme und Verbindungsabbruch nach DATA ohne Doppelversand. Der Testserver
+und seine flüchtigen Schlüssel entstehen nur auf dem Testgerät. Produktion bleibt
+beim Systemvertrauen; es werden keine realen Zugangsdaten verwendet.
+Vor Veröffentlichung ist der tatsächliche GitHub-Android-Lauf erforderlich.
+
+Noch nicht bestätigt: echte Telekom-/Hetzner-Anmeldung vom Nutzergerät, Empfang/
+Versand/Anhänge mit realen Konten, Provider-Funktionen, DeX-Bedienung der nativen
+Kontomaske und Update mit gespeicherten Mailkonten. Keine vollständige
+Funktionsgleichheit oder vollständige Malware-Erkennung behaupten.
