@@ -1,0 +1,16 @@
+node_modules/
+package-lock.json
+.DS_Store
+*.log
+
+# NIEMALS committen: verschlüsselte Schlüssel-Backups + private Identität.
+# Die öffentliche spore.json (sbkim/spore.json) IST gewollt im Repo — der
+# private Schlüssel + das Backup bleiben ausschließlich auf Klaus' Gerät.
+*.sbkim.json
+*-backup-*.json
+sbkim/node_key*.json
+sbkim/*.enc.json
+
+# Private Mail-Dienst-Zugangsdaten bleiben auf dem eigenen Server.
+mail-service/data/
+mail-service/.env

@@ -1,0 +1,30 @@
+services:
+  mail:
+    build:
+      context: ..
+      dockerfile: mail-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      MAIL_ORIGIN: https://${MAIL_HOST:?HTTPS-Hostname eintragen}
+      MAIL_TOKEN: ${MAIL_TOKEN:?Langen zufälligen Dienst-Schlüssel eintragen}
+      MAIL_ALLOWED_HOSTS: ${MAIL_ALLOWED_HOSTS:-mail.your-server.de,secureimap.t-online.de,securesmtp.t-online.de}
+    volumes:
+      - mail-data:/data
+    networks: [private]
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      MAIL_HOST: ${MAIL_HOST}
+    ports: ["443:443", "80:80"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [private]
+volumes:
+  mail-data:
+  caddy-data:
+  caddy-config:
+networks:
+  private:

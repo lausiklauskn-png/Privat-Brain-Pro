@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+**/data
+**/*.log
+sbkim/*
+!sbkim/spore.json
+tools
+.git*
