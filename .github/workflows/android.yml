@@ -77,7 +77,9 @@ jobs:
           profile: pixel_2
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: cd android && ./gradlew --no-daemon --max-workers=2 :app:connectedDebugAndroidTest
+          script: |
+            cd android && ./gradlew --no-daemon --max-workers=2 :app:connectedDebugAndroidTest
+            python3 tools/native/assert-instrumentation.py
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
