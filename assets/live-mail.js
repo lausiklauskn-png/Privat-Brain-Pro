@@ -566,7 +566,7 @@
       reader.append(row);
     }
   }
-  function folderTitle(path) { return entries.find(entry=>entry.path===path)?.name || path; }
+  function folderTitle(path) { return (entries.find(entry=>entry.id===viewKey&&entry.path===path)||entries.find(entry=>entry.remote&&entry.path===path))?.name || path; }
   function roleFolder(flag) {
     const role = {'\\Trash':'trash','\\Junk':'spam','\\Archive':'archive','\\Drafts':'draft','\\Sent':'sent'}[flag];
     return native ? folderMap.get(role) : folders.find(f=>f.specialUse===flag);
@@ -586,7 +586,7 @@
     if(entry.id==='outbox')return savedCache.filter(r=>!['draft','sent'].includes(r.status)).length;
     if(entry.id==='exported')return shared.exportedEntries().length;
     const localDrafts=entry.id==='draft'?savedCache.filter(r=>r.status==='draft').length:0;
-    if(totals.has(entry.path))return totals.get(entry.path)+localDrafts;
+    if(totals.has(entry.id))return totals.get(entry.id)+localDrafts;
     if(entry.remote)return localDrafts?localDrafts+'+':'–';
     if(entry.id==='sent')return savedCache.filter(r=>r.status==='sent').length;
     return localDrafts;
@@ -654,7 +654,7 @@
     reader.replaceChildren(...(native?[el('p','mail-muted',S('choose'))]:[]));
     notice.textContent=accounts.find(a=>a.id===account)?.email+' · '+(native?folderTitle(folder):folder);
     if(native) {
-      if(Number.isSafeInteger(page.total)&&page.total>=0)totals.set(folder,page.total);
+      if(Number.isSafeInteger(page.total)&&page.total>=0)totals.set(viewKey,page.total);
       if(!entries.find(entry=>entry.id===viewKey)?.remote&&!['outbox','draft','sent','exported'].includes(viewKey))notice.textContent+=' · '+T('folderUnavailable');
       drawFolders();
     }
