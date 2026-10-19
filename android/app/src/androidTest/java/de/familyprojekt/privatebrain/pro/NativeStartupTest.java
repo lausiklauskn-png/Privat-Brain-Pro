@@ -12,6 +12,7 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.RootMatchers.isDialog;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 /** Runs the real bundled page and Java bridge, not a mock browser transport. */
@@ -48,14 +49,14 @@ public class NativeStartupTest {
             evaluate(scenario, "window.PBMailDevice.addAccount().then(value => window.__nativeSetupCancelled = value === null); true");
             long dialogDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
             while (true) {
-                try { onView(withText("Mailkonto verbinden")).check(matches(isDisplayed())); break; }
-                catch (androidx.test.espresso.NoMatchingViewException missing) {
+                try { onView(withText("Mailkonto verbinden")).inRoot(isDialog()).check(matches(isDisplayed())); break; }
+                catch (androidx.test.espresso.NoMatchingViewException | androidx.test.espresso.NoMatchingRootException missing) {
                     if (System.nanoTime() >= dialogDeadline) throw missing;
                     Thread.sleep(100);
                 }
             }
-            onView(withText("Passwort für E-Mail-Programme")).check(matches(isDisplayed()));
-            onView(withText("Abbrechen")).perform(click());
+            onView(withText("Passwort für E-Mail-Programme")).inRoot(isDialog()).check(matches(isDisplayed()));
+            onView(withText("Abbrechen")).inRoot(isDialog()).perform(click());
             awaitTrue(scenario, "window.__nativeSetupCancelled === true");
             evaluate(scenario, "window.Capacitor.Plugins.ProMail.accounts().then(info => window.__afterCancel = info); true");
             awaitTrue(scenario, "Boolean(window.__afterCancel && window.__afterCancel.items.length === 0)");
