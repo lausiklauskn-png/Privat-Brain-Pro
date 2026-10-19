@@ -214,3 +214,53 @@ Die abschließende Dokumentationsänderung ergänzt Prüfnachweise und wartet be
 Bildaufnahmen auf den vorhandenen Theme-Übergang. Keine Laufzeitdatei der APK wird
 geändert; 48 Mail-Oberflächenproben einschließlich neuer Aufnahmen erneut bestanden.
 Die unabhängige PWA bleibt auf `0ac93cd845a93cb67b37b0f4c60726eaed9ed492` sauber.
+
+
+## Einheitliche Postfachansicht – Vorschau .6 (2026-10-20)
+
+Lokales und verbundenes Postfach verwenden dieselben übersetzten Beschriftungen,
+Ordnerknöpfe und Symbole, dieselbe Überschrift und Primäraktion. Posteingang,
+Entwürfe, Postausgang, Gesendet, Archiv, Spam, Papierkorb und Exportiert bleiben
+in gleicher Reihenfolge sichtbar. Eigene Anbieterordner kommen zusätzlich hinzu.
+Suchfeld, Auswahl und Verschiebeleiste bleiben erhalten. [Synthetischer
+Vorher/Nachher-Vergleich](design/mail-preview6/README.md). Die HTML-/CID-
+Originaldarstellung und die vollständige Fensternutzung aus .5 bleiben erhalten.
+
+Anbieterrollen haben Vorrang vor eindeutigen Namenszuordnungen; tatsächliche IMAP-
+Pfade und UIDs ändern sich nicht. Mehrdeutige oder fehlende Zuordnungen werden
+nicht durch automatische Ordneränderungen ersetzt. Geräteentwürfe, Versand-
+versuche und lokale Exporte sind ausdrücklich keine vorgetäuschten IMAP-Ordner.
+Anbieterordner mit Namen wie `@outbox` bleiben getrennt von Geräteansichten.
+Fehlgeschlagene Ordner- oder Nachrichtenabrufe entfernen veraltete Mailaktionen.
+
+Vollständiger [CI-Lauf 39339695794](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39339695794)
+für HEAD `c841f4ececd107f07c3ba0810bf355e3369e0484`: erfolgreich.
+38 vorhandene npm-Prüfbefehle, 57 native Webprüfungen, **72 Mail-Oberflächenproben**,
+14 Maildiensttests, Java-Tests, Android-Build/Lint sowie **10 Android-Tests ohne
+Fehler oder übersprungene Fälle**. Oberflächenproben simulieren den nativen
+Transport; Android-Instrumentierung prüft darunter Standard-WebView-Isolation,
+MIME-Erhalt und die bestehende TLS-/Keystore-/SMTP-Absicherung. Keine echten
+Zugangsdaten in den Proben. 21 geschützte Module bleiben bytegleich.
+
+PR #7 zusammengeführt als `ac1b89a92db8bad1a8907cab5e1c66bb3402f2f4`, gleicher Git-Baum wie der geprüfte HEAD.
+Paketkennung `de.familyprojekt.privatebrain.pro.preview`, VersionCode 6,
+VersionName `0.1.0-preview.6-test`, API 24+, Ziel 36, kein Debug-Flag.
+Vorschau-Zertifikat unverändert:
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+APK-SHA256:
+`d85386067e730de68d163c7c888d3ca4568202e4427ba62ce17b1d744f9dc27a`.
+Aktuelle gepackte Webdateien bytegleich im signierten APK; keine persönlichen
+Dateien, Schlüssel oder synthetischen Designaufnahmen im Webpaket.
+
+[Vorschau .6](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/v0.1.0-preview.6)
+veröffentlicht nach erfolgreicher [signierter Updateprobe und Upload 39340860823](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39340860823).
+Originale öffentliche .5-APK installiert, Englisch gewählt, .6 ohne Deinstallation
+mit `adb install -r` installiert; Sprache erhalten, App gestartet, echter nativer
+Kontodialog geöffnet und abgebrochen. Das prüft keine bereits gespeicherten
+Kontogeheimnisse oder persönlichen Dokumente. Neue Darstellung, mehrere reale
+Konten und Samsung-/DeX-Verhalten bleiben am Nutzergerät zu prüfen.
+
+Direkter öffentlicher Download am 2026-10-20 geprüft: HTTP 200, 4 977 080 Bytes,
+identischer SHA256 und bytegleich zur lokal signierten APK. Als Update über die
+bestehende Test-App installieren; nicht deinstallieren. Die unabhängige PWA
+bleibt sauber auf `0ac93cd845a93cb67b37b0f4c60726eaed9ed492`.

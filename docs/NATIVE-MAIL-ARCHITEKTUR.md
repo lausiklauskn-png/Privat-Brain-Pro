@@ -1,6 +1,7 @@
 # Direkte Mailanbindung auf Android
 
-Stand 2026-10-19: direkte Mail seit Vorschau .4, Originalansicht und Fensterlayout in .5. Die ältere
+Stand 2026-10-20: direkte Mail seit Vorschau .4, Originalansicht/Fensterlayout in .5
+und gemeinsame Postfachgestaltung in .6. Die ältere
 Vorschau .2 verwendet noch den privaten HTTPS-Maildienst.
 Der Nutzer hat direkte Telekom-Anmeldung und Nachrichtenabruf auf seinem Tablet
 bestätigt. Hetzner und tatsächlicher Versand/Anhangsaustausch bleiben gesondert zu prüfen.
@@ -14,6 +15,21 @@ Capacitor liefert die bestehende Oberfläche lokal aus. `native/native-mail.js`
 Die WebView bekommt keinen allgemeinen Socket-/HTTP-Proxy. Nur in der nativen App
 ersetzt dieser Adapter den Serverdialog; die unabhängige PWA und `mail-service/`
 werden nicht verändert oder als Server in die APK eingebaut.
+
+Ab .6 verwendet das verbundene Postfach dieselben Ordnerknöpfe, Symbole und
+übersetzten Standardnamen wie das lokale Postfach (`PBMailUI`). Der native
+Adapter `native/native-mail-folders.js` ordnet Anbieterrollen und danach eindeutige
+bekannte Namen zu; mehrdeutige Zuordnungen bleiben als eigene Ordner erhalten.
+Anzeigenamen ändern keine IMAP-Pfade, Kontokennungen, UIDVALIDITY oder UIDs und
+verleihen keine zusätzlichen Löschrechte. Eigene Anbieterordner bleiben sichtbar,
+auch mit Namen wie `@outbox`; ihre Kennungen sind von Geräteansichten getrennt.
+Fehlende Ordner werden nicht automatisch angelegt. Unbekannte Zähler erscheinen
+als „–“, nach dem Öffnen wird die gesamte Anbieterzahl statt nur der Seitengröße
+angezeigt. Lokale Entwürfe ergänzen Anbieterentwürfe; Postausgang zeigt tatsächliche
+Geräte-Versandversuche. Exportiert und Mailimport bleiben lokale Katalogvorgänge.
+Sammelaktionen betreffen nur ausgewählte, geladene Anbieternachrichten und bleiben
+an Konto, Ordner und UIDVALIDITY gebunden. Fehler beim Ordner-/Nachrichtenabruf
+entfernen veraltete Aktionen. [Designvergleich](design/mail-preview6/README.md).
 
 Android erfasst Passwörter in einem nativen Dialog. Die JavaScript-Brücke erhält
 nur öffentliche Kontodaten und Kontokennungen. Konten, lokale Entwürfe und

@@ -31,9 +31,10 @@ Anbieterzahl kennzeichnet „+“ zusätzliche, noch nicht gezählte Anbieternac
 Auswählen und Verschieben arbeiten auf den geladenen Anbieternachrichten.
 Lokale Entwürfe/Versandnachweise werden nicht als IMAP-Nachrichten vorgetäuscht.
 
-70 native Oberflächenproben bestanden: gleiche Ordner/Primärknopfstile vor/nach
-Aktivierung, Rohpfade bei übersetzten Namen, eigener @-Ordner, UID-gebundene
-Sammelaktion, fehlgeschlagener Ordnerwechsel ohne veraltete Aktionen, Kontenwechsel
+72 native Oberflächenproben bestanden: gleiche Ordner/Primärknopfstile vor/nach
+Aktivierung, Rohpfade bei übersetzten Namen, getrennte Anbieterordner `@not-virtual`/`@outbox`,
+UID-gebundene Sammelaktion, fehlgeschlagener Ordner- oder Nachrichtenabruf ohne
+veraltete Aktionen, Kontenwechsel
 mit geleerter Auswahl und getrenntem Postausgang, vier Sprachen, HTML/CID-
 Originalansicht und 320/768/1280/1920 Pixel. Vorher/Nachher enthält ausschließlich
 synthetische Konten/Nachrichten. Keine Nutzerbilder oder persönlichen Mails in Git.
