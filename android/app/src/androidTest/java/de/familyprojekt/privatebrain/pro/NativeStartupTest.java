@@ -38,6 +38,10 @@ public class NativeStartupTest {
             assertEquals("\"https://localhost\"", evaluate(scenario, "location.origin"));
             evaluate(scenario, "window.Capacitor.Plugins.ProDevice.getInfo().then(info => window.__nativeSmokeInfo = info); true");
             awaitTrue(scenario, "Boolean(window.__nativeSmokeInfo && window.__nativeSmokeInfo.platform === 'android' && window.__nativeSmokeInfo.versionName && window.__nativeSmokeInfo.nativeMail === false)");
+            evaluate(scenario, "window.Capacitor.Plugins.ProUpdates.check().then(info => window.__updateSmokeInfo = info); true");
+            awaitTrue(scenario, "Boolean(window.__updateSmokeInfo && window.__updateSmokeInfo.status === 'unsupported')");
+            evaluate(scenario, "window.Capacitor.Plugins.ProUpdates.openDownload().catch(error => window.__updateOpenError = error.code); true");
+            awaitTrue(scenario, "window.__updateOpenError === 'UPDATE_NOT_CHECKED'");
             evaluate(scenario, "document.querySelector('.main-pages [data-tab=explorer]').click(); true");
             awaitTrue(scenario, "document.querySelector('#panel-explorer').getBoundingClientRect().height > 0 && document.querySelector('#q').getBoundingClientRect().height === 0");
             evaluate(scenario, "document.querySelector('.main-pages [data-tab=search]').click(); true");

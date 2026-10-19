@@ -3,18 +3,25 @@
 Eigenständige native Pro-App auf Basis der bestehenden Private-Brain-Oberfläche.
 Die ursprüngliche PWA bleibt unabhängig im Repository `Privat-Brain` bestehen.
 
-**Stand: Android-Grundversion im Aufbau, noch keine funktional freigegebene Testversion.** Suche, Dateiimport, Katalog und Postfachoberfläche
+**Stand: Erste signierte Android-Grundversion 0.1.0-preview.2 veröffentlicht.**
+[Test-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.2/Private-Brain-Pro-0.1.0-preview.2.apk).
+Suche, Dateiimport, Katalog und Postfachoberfläche
 werden lokal mit Capacitor ausgeliefert. Direkte native IMAP-/SMTP-Verbindungen,
 Keystore für Mailkonten, dauerhafter Geräteordnerzugriff und Hintergrundabruf sind
 noch nicht implementiert. Kein Anspruch auf vollständige Funktionsgleichheit.
 Die vorhandenen Mailprüfer sind kein Virenscanner.
-Der native Starttest im lokalen Software-Emulator scheiterte im WebView-Renderer;
-eine zuverlässige Hardware-/Geräteprüfung steht noch aus. Siehe [Prüfstand](docs/PRUEFSTAND-ANDROID.md). Modellgewichte fehlen noch;
+Der native Starttest einschließlich Java-Brücke ist im hardwarebeschleunigten
+GitHub-Emulator bestanden. Der Sichttest am Tablet steht aus; der historische lokale
+Software-Emulatorfehler ist im [Prüfstand](docs/PRUEFSTAND-ANDROID.md) dokumentiert. Modellgewichte fehlen noch;
 Stichwortsuche ist verfügbar, echte e5-Modellqualität ist nicht nachgewiesen.
 
 Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die 3D-Bubbles bleiben erhalten. Die Pro-Icons erhalten auf ausdrücklichen
 Nutzerwunsch einen hellen Hintergrund; das unterscheidet sie von der PWA.
 Die geschützten Prüfmodule werden bytegleich mitgeführt.
+
+Die nächste Vorschau 0.1.0-preview.3 ergänzt eine manuell ausgelöste Versionsprüfung
+in den Einstellungen; sie wird separat getestet und veröffentlicht. Die Planung
+für direkten Mailzugriff steht in [Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md).
 
 ## Entwicklung ohne eigenen PC
 
@@ -35,7 +42,7 @@ npm test --prefix mail-service
 npm run sync:android
 npm run test:native-web
 cd android
-./gradlew --no-daemon --max-workers=2 assembleDebug lintDebug
+./gradlew --no-daemon --max-workers=2 testDebugUnitTest assembleDebug lintDebug
 ```
 
 `www/` und die Android-Webressourcen werden aus einer ausdrücklichen Liste
