@@ -367,3 +367,11 @@ zu; IMAP-Pfade nie übersetzen/umbenennen. Keine Löschrechte aus Anzeigenamen
 ableiten. Postausgang = gespeicherte Geräte-Versandversuche, Entwürfe zusätzlich
 lokal; kein unklarer Neuversand. Datenformat/Keystore unverändert. Details unter
 docs/design/mail-preview6/. Geschützte Module/Original-PWA weiterhin unverändert.
+
+
+Vorschau .6 am 2026-10-20 veröffentlicht: gemeinsames Postfach vor/nach Kontoaktivierung,
+72 native Mail-Bedienproben und 10 Android-Tests bestanden.
+Signierte Updateprobe .5 → .6 und öffentlicher Download geprüft;
+[Prüfnachweis](docs/PRUEFSTAND-ANDROID.md),
+[APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.6/Private-Brain-Pro-0.1.0-preview.6.apk).
+Über die bestehende Test-App installieren, nicht deinstallieren.
