@@ -147,3 +147,29 @@ Die präzisierte Probe bestand im [Android-Lauf 39325034993](https://github.com/
 9 tatsächlich ausgeführte Tests, 0 Fehler, 0 übersprungen. Geprüfter Test-Quellstand
 `d7d20fb03b43fab03dd6f52f8208f57e2ddc2ff8`; die zusätzliche Dokumentation wird nicht
 in das Laufzeitpaket kopiert.
+
+
+## Originalansicht und Fensterlayout – Vorschau .5
+
+Der Nutzer bestätigt in .4 die direkte Telekom-Anmeldung und den Abruf echter
+Nachrichten am Samsung-Tablet. Die übermittelten Bilder zeigen jedoch bislang
+nur die Textdarstellung; tatsächlicher Versand und Anhangsaustausch sind dadurch
+nicht bestätigt. Persönliche Nachrichten/Bildschirmfotos werden nicht eingecheckt.
+
+Änderungen für .5: Original-HTML samt CID-Bildern in isolierter Ansicht, externe
+HTTPS-Bilder abschaltbar, separate Textansicht. Original-MIME bleibt unverändert.
+Betreff/Absender werden für alle 50 Listeneinträge als ENVELOPE geladen; die Größe
+der gesamten Nachrichten begrenzt nicht mehr den Abruf der kleinen Metadaten.
+Alle nativen Seiten füllen das Fenster. Postfach/Explorer besitzen eigene
+Scrollbereiche; Konten-/Nachrichtenwerkzeuge sind platzsparend erreichbar.
+Schmale Ansichten behalten eine vollständige Nachrichtenseite mit Rücknavigation.
+OS-Titelleiste bleibt erhalten; keine Fullscreen-/Minimierungsfunktion hinzugefügt.
+
+Vorher/Nachher und synthetische Sichtproben: [Designnachweise](design/mail-preview5/README.md).
+Ergänzte Android-Instrumentierung verlangt unveränderte MIME-Bytes, HTML/CID-
+Teile/Binäranhänge und die skriptfreie, fremde Herkunft der Mailansicht in der
+Standard-WebView. Der XML-Wächter verlangt alle zehn Fälle ohne Überspringen.
+Konten-/Keystoreformat und Paketkennung bleiben unverändert, VersionCode steigt
+auf 5. Über die vorhandene Test-App installieren; nicht deinstallieren.
+Die neue HTML-Darstellung und gespeicherte Telekom-Konten beim Update sind
+zusätzlich auf dem Nutzergerät zu kontrollieren.

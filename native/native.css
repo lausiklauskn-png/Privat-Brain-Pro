@@ -6,3 +6,97 @@ body { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 .native-updates button { margin: .25rem .5rem .25rem 0; }
 .native-updates button[hidden] { display: none; }
 .native-updates p { margin-bottom: 0; }
+
+/* Native window workspace, following Sende-Pruefer's full-window pane layout.
+   Keep the OS title bar and original design tokens; no fullscreen API. */
+html,body { height:100%; overflow:hidden; }
+body .wrap { max-width:none; width:100%; height:100dvh; margin:0; padding:10px max(12px,env(safe-area-inset-right)) 48px max(12px,env(safe-area-inset-left)); display:flex; flex-direction:column; }
+header.top { flex:none; padding:4px 2px 8px; }
+.main-pages { position:static; flex:none; margin:0 0 8px; padding:4px 0; }
+.workspace-tools { flex:none; margin:0 0 8px; }
+.wrap>.panel.on { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
+.wrap>footer { flex:none; margin:4px 0 0; padding:2px 0; font-size:.7rem; }
+#panel-mail.on { display:flex; overflow:hidden; }
+#mailWorkspace { display:flex; flex-direction:column; width:100%; min-width:0; min-height:0; }
+#mailWorkspace>.mail-head { flex:none; border:0; padding:0; gap:6px; }
+#mailWorkspace>.mail-head .mail-notice:empty { display:none; }
+#mailWorkspace>.mail-app { display:flex; flex:1; flex-direction:column; min-height:0; margin:6px 0 0; }
+#mailWorkspace .mail-head { flex:none; padding:8px 10px; gap:6px; }
+#mailWorkspace .mail-head select { flex:1 1 240px; width:auto; }
+#mailWorkspace .mail-notice { flex:none; padding:5px 10px; }
+#mailWorkspace .mail-layout { flex:1; min-height:0; grid-template-columns:clamp(130px,13vw,210px) clamp(230px,25vw,400px) minmax(0,1fr); overflow:hidden; }
+#mailWorkspace .mail-folders,#mailWorkspace .mail-list,#mailWorkspace .mail-reader { min-height:0; max-height:none; overflow:auto; overscroll-behavior:contain; }
+#mailWorkspace .mail-reader { grid-column:auto; border-top:0; padding:12px; }
+#mailWorkspace .mail-list { border-right:1px solid var(--line); }
+#mailWorkspace .mail-folder { border-radius:0 999px 999px 0; background:transparent; box-shadow:none; border:0; }
+#mailWorkspace .mail-folder[aria-current=true] { background:var(--mail-soft); }
+.live-mail .mail-item .mail-subject,.live-mail .mail-item .mail-preview,.live-mail .mail-item .mail-date { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.live-mail .mail-item .mail-date { font-size:.75rem; color:var(--mut); }
+.live-mail .mail-item button { border-radius:0; box-shadow:none; background:transparent; }
+.live-mail .mail-item.unread button .mail-subject { color:var(--ink); }
+.mail-html { display:block; width:100%; height:clamp(320px,65dvh,1000px); border:1px solid var(--line); border-radius:10px; background:#fff; }
+.mail-original [hidden] { display:none!important; }
+.mail-reader .mail-report summary { cursor:pointer; min-height:32px; }
+#panel-explorer.on { display:flex; flex-direction:column; }
+#panel-explorer>h2 { margin:0 0 6px; }
+.explorer-toolbar { flex:none; margin:6px 0; }
+#explorerPath { flex:none; margin:4px 0 8px; }
+.explorer-layout { flex:1; min-height:0; overflow:hidden; }
+#explorerTree,#explorerFiles { max-height:none; min-height:0; overflow:auto; overscroll-behavior:contain; }
+@media(max-width:900px) {
+  #mailWorkspace .mail-layout { grid-template-columns:140px minmax(0,1fr); }
+  #mailWorkspace .mail-reader { grid-column:1/-1; }
+  #mailWorkspace .mail-app[data-view=list] .mail-reader { display:none; }
+  #mailWorkspace .mail-app[data-view=reader] .mail-layout { display:block; }
+  #mailWorkspace .mail-app[data-view=reader] .mail-reader { height:100%; }
+  #mailWorkspace .mail-app[data-view=reader] .mail-folders,#mailWorkspace .mail-app[data-view=reader] .mail-list { display:none; }
+  #mailWorkspace .mail-back { display:inline-flex; }
+}
+@media(max-width:650px) {
+  body .wrap { padding-top:6px; padding-left:8px; padding-right:8px; }
+  header.top { gap:6px; }
+  header .brand .sub { font-size:.72rem; }
+  .main-pages { flex-wrap:nowrap; gap:4px; }
+  .main-pages .tab { flex:1; min-width:0; padding:8px 4px; }
+  .workspace-tools { gap:4px; }
+  .workspace-tools .tab { padding:4px; min-height:40px; }
+  #mailWorkspace .mail-layout { display:flex; flex-direction:column; }
+  #mailWorkspace .mail-folders { flex:none; display:flex; max-height:105px; border-right:0; }
+  #mailWorkspace .mail-folder { flex:none; width:auto; border-radius:12px; }
+  #mailWorkspace .mail-list { flex:1; border-right:0; }
+  .explorer-layout { display:flex; flex-direction:column; }
+  #explorerTree { flex:none; max-height:140px; }
+  #explorerFiles { flex:1; }
+}
+
+#mailWorkspace>.mail-head:has(>button:not([hidden])) { margin-bottom:4px; }
+#mailWorkspace>.mail-head:not(:has(>button:not([hidden]))):not(:has(>.mail-notice:not(:empty))) { padding:0; }
+.mail-reader-actions select { width:auto; min-width:150px; max-width:100%; flex:0 1 240px; }
+
+.mail-account-tools { position:relative; flex:none; }
+.mail-account-tools>summary { list-style:none; display:flex; align-items:center; gap:6px; }
+.mail-account-tools>summary::after { content:"▾"; }
+.mail-account-tools>summary::-webkit-details-marker { display:none; }
+.mail-account-menu { position:absolute; z-index:30; right:0; top:100%; width:min(320px,calc(100vw - 40px)); max-height:50dvh; overflow:auto; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }
+.mail-account-menu>.mail-button { display:block; width:100%; text-align:left; margin:4px 0; }
+
+body .wrap { height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); }
+@media(max-width:650px) {
+  .workspace-tools { flex-wrap:nowrap; overflow-x:auto; }
+  .workspace-tools .tab { flex:0 0 auto; padding:4px 8px; }
+}
+
+.mail-message-tools>summary { display:inline-flex; align-items:center; gap:6px; list-style:none; }
+.mail-message-tools>summary::after { content:"▾"; }
+.mail-message-tools>summary::-webkit-details-marker { display:none; }
+.mail-message-tools[open] { flex-basis:100%; }
+.mail-message-menu { display:flex; flex-wrap:wrap; gap:6px; padding:8px 0; }
+@media(min-width:901px) { #mailWorkspace .live-mail .mail-back { display:none; } }
+@media(max-width:650px) {
+  header .logo,header .logo img { width:36px; height:36px; }
+  header .brand { flex:1; min-width:0; }
+  header .brand h1 { font-size:1.2rem; }
+  header .brand .sub { display:none; }
+  header .tools { flex-basis:100%; margin:0; justify-content:space-between; gap:4px; }
+  .main-pages .tab { overflow-wrap:anywhere; font-size:.72rem; }
+}

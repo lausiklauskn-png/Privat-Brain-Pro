@@ -116,16 +116,10 @@ final class MailEngine {
                 profile.add(FetchProfile.Item.FLAGS);
                 profile.add(FetchProfile.Item.SIZE); profile.add(javax.mail.UIDFolder.FetchProfileItem.UID);
                 folder.fetch(messages, profile);
-                java.util.List<Message> summaries = new java.util.ArrayList<>();
-                long summaryBudget = 0;
-                for (Message message : messages) {
-                    int size = message.getSize();
-                    if (size >= 0 && size <= MailMime.MAX_RAW && summaryBudget + size <= 16L * 1024 * 1024) {
-                        summaries.add(message); summaryBudget += size;
-                    }
-                }
+                // ENVELOPE fetches metadata only, never message bodies or attachments.
+                // A page of large newsletters still needs its real subjects and senders.
                 FetchProfile envelopes = new FetchProfile(); envelopes.add(FetchProfile.Item.ENVELOPE);
-                folder.fetch(summaries.toArray(new Message[0]), envelopes);
+                folder.fetch(messages, envelopes);
                 JSONArray items = new JSONArray();
                 long last = 0;
                 for (int i = messages.length - 1; i >= 0; i--) {
@@ -133,13 +127,12 @@ final class MailEngine {
                     JSONArray flags = new JSONArray();
                     if (message.isSet(Flags.Flag.SEEN)) flags.put("\\Seen");
                     if (message.isSet(Flags.Flag.FLAGGED)) flags.put("\\Flagged");
-                    boolean summary = summaries.contains(message);
-                    Date date = summary ? message.getSentDate() : null;
-                    String subject = summary && message.getSubject() != null ? message.getSubject() : "";
-                    String sender = summary ? MailMime.addresses(message.getFrom()) : "";
+                    Date date = message.getSentDate();
+                    String subject = message.getSubject() != null ? message.getSubject() : "";
+                    String sender = MailMime.addresses(message.getFrom());
                     items.put(new JSONObject().put("uid", last).put("subject", subject.substring(0, Math.min(1024, subject.length())))
                         .put("from", sender.substring(0, Math.min(2000, sender.length()))).put("date", date == null ? "" : date.toString())
-                        .put("oversized", message.getSize() > MailMime.MAX_RAW).put("detailsPending", !summary)
+                        .put("oversized", message.getSize() > MailMime.MAX_RAW).put("detailsPending", false)
                         .put("flags", flags).put("size", message.getSize()));
                 }
                 return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("items", items)

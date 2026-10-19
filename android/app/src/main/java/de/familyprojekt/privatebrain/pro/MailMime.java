@@ -16,6 +16,7 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -75,7 +76,10 @@ final class MailMime {
     }
     private static void extract(Part part, Bodies bodies, int depth) throws Exception {
         if (depth > 20 || ++bodies.parts > 150) throw new MailFailure("MESSAGE_TOO_LARGE");
-        boolean attachment = Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition()) || part.getFileName() != null;
+        boolean explicitAttachment = Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition());
+        String[] ids = part.getHeader("Content-ID");
+        String contentId = ids == null || ids.length == 0 ? "" : ids[0].trim().replaceAll("^<|>$", "");
+        boolean attachment = explicitAttachment || part.getFileName() != null;
         if (!attachment && part.isMimeType("multipart/*")) {
             Multipart multipart = (Multipart) part.getContent();
             if (multipart.getCount() > 100) throw new MailFailure("MESSAGE_TOO_LARGE");
@@ -85,14 +89,22 @@ final class MailMime {
             if (!(content instanceof String)) throw new MailFailure("INVALID_MESSAGE");
             String text = (String) content;
             if ((long) bodies.plain.length() + bodies.html.length() + text.length() > MAX_TEXT) throw new MailFailure("MESSAGE_TOO_LARGE");
-            if (part.isMimeType("text/plain")) bodies.plain += text;
-            else bodies.html += text;
+            // A multipart/alternative contains representations, not successive paragraphs.
+            // Keep the first body of each kind; do not concatenate duplicate alternatives.
+            if (part.isMimeType("text/plain") && bodies.plain.isEmpty()) bodies.plain = text;
+            else if (part.isMimeType("text/html") && bodies.html.isEmpty()) bodies.html = text;
         } else {
             byte[] content = read(part.getInputStream(), MAX_ATTACHMENTS - bodies.attachedBytes);
             bodies.attachedBytes += content.length;
             if (bodies.attachments.length() >= 30) throw new MailFailure("MESSAGE_TOO_LARGE");
+            String type;
+            try { type = new ContentType(part.getContentType()).getBaseType().toLowerCase(java.util.Locale.ROOT); }
+            catch (javax.mail.internet.ParseException invalid) { type = "application/octet-stream"; }
+            boolean inline = !explicitAttachment && !contentId.isEmpty() &&
+                type.matches("image/(png|jpeg|gif|webp|avif|bmp)");
             bodies.attachments.put(new JSONObject().put("name", filename(part.getFileName()))
-                .put("type", "application/octet-stream").put("data", Base64.encodeToString(content, Base64.NO_WRAP)));
+                .put("type", type).put("contentId", contentId.substring(0, Math.min(998, contentId.length())))
+                .put("inline", inline).put("data", Base64.encodeToString(content, Base64.NO_WRAP)));
         }
     }
     static JSONObject parse(byte[] raw, Session session) throws Exception {
@@ -100,7 +112,8 @@ final class MailMime {
         MimeMessage message = new MimeMessage(session, new ByteArrayInputStream(raw));
         Bodies bodies = new Bodies();
         extract(message, bodies, 0);
-        // HTML is converted to inert text, never loaded into a WebView or remote image getter.
+        // Separate catalog/reply text from the original HTML representation and raw MIME.
+        // The UI displays HTML only in its script-free, opaque-origin sandbox.
         String text = bodies.plain.isEmpty() ? Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString() : bodies.plain;
         return new JSONObject().put("raw", new String(raw, StandardCharsets.UTF_8))
             .put("sourceBase64", Base64.encodeToString(raw, Base64.NO_WRAP))
@@ -110,7 +123,7 @@ final class MailMime {
             .put("to", addresses(message.getRecipients(Message.RecipientType.TO)))
             .put("cc", addresses(message.getRecipients(Message.RecipientType.CC)))
             .put("bcc", addresses(message.getRecipients(Message.RecipientType.BCC)))
-            .put("text", text).put("attachments", bodies.attachments);
+            .put("text", text).put("html", bodies.html).put("attachments", bodies.attachments);
     }
     static MimeMessage compose(MailAccount account, JSONObject draft, Session session) throws Exception {
         MailAccount.uuid(draft.getString("submission"));

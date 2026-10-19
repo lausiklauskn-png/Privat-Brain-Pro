@@ -5,6 +5,8 @@
   if (!plugin) return;
   const languages = ['de', 'en', 'ru', 'pl'];
   const labels = {
+    messageTools: ["Nachrichtenaktionen", "Message actions", "Действия с письмом", "Działania wiadomości"],
+    tools: ["Weitere Aktionen", "More actions", "Другие действия", "Więcej działań"],
     remote: ['Geräte-Postfach', 'Device mailbox', 'Почта на устройстве', 'Poczta na urządzeniu'],
     disconnect: ['Postfach schließen', 'Close mailbox', 'Закрыть почту', 'Zamknij pocztę'],
     draft: ['Entwurf auf Gerät speichern', 'Save draft on device', 'Сохранить черновик на устройстве', 'Zapisz szkic na urządzeniu'],
@@ -82,7 +84,7 @@
       const params = {account, folder:url.searchParams.get('folder') || body?.folder || 'INBOX', validity:url.searchParams.get('validity') || body?.validity};
       if (kind === 'messages' && parts.length === 2 && verb === 'GET') {
         const result = await invoke('messages',{...params,before:Number(url.searchParams.get('before')) || 0});
-        for (const item of result.items) if (item.oversized || item.detailsPending) item.subject = text(item.oversized ? 'oversized' : 'detailsPending');
+        for (const item of result.items) if (!item.subject && item.detailsPending) item.subject = text('detailsPending');
         return result;
       }
       if (kind === 'messages' && parts.length === 3 && verb === 'GET') return invoke('message',{...params,uid:Number(parts[2])});

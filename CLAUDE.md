@@ -332,3 +332,16 @@ Vollständige CI 39323175775 und signierte Updateprobe 39324803227 bestanden.
 Tatsächliche Anbieteranmeldung auf dem Nutzergerät bleibt offen. Details und
 Prüfsumme: `docs/PRUEFSTAND-ANDROID.md`. Vorschau-Schlüssel außerhalb von Git;
 Langzeitbackup/Produktion weiterhin gesondert absichern, keine Geheimnisse erfragen.
+
+
+## Originalansicht und Fensterfläche (Nutzerwunsch 2026-10-19)
+
+Der Nutzer bestätigt direkte Telekom-Anmeldung und Nachrichtenabruf in .4.
+In .5: Original-HTML/CID-Bilder getrennt von Katalogtext, ausschließlich im
+skriptfreien Sandbox-Frame mit eigener CSP. Original-MIME und Keystoreformat
+bleiben unverändert. Keine `allow-scripts`-/`allow-same-origin`-Freigaben für Mail.
+Externe HTTPS-Bilder auf ausdrücklichen Nutzerwunsch sichtbar, abschaltbar.
+Das native Fensterlayout füllt alle Seiten ohne 1040-px-Grenze. Postfach und
+Explorer besitzen scrollbare Bereiche wie Sende-Pruefer; OS-Fensterknöpfe bleiben.
+Kontowerkzeuge im Menü „Weitere Aktionen“, rechtliche Fußtexte in Einstellungen.
+Schutzmodule/Original-PWA unverändert. Prüfnachweise: docs/design/mail-preview5/.

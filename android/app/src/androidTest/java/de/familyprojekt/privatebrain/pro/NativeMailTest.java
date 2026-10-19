@@ -95,6 +95,31 @@ public class NativeMailTest {
         try { MailMime.parse(new byte[MailMime.MAX_RAW + 1], session); fail("Oversized message accepted"); }
         catch (MailFailure error) { assertEquals("MESSAGE_TOO_LARGE", error.code); }
     }
+    @Test public void originalHtmlAndCidSurviveMimeParsing() throws Exception {
+        String html = "<html><body bgcolor=\"#fff5dc\"><table><tr><td><h1>Herbstangebote</h1>"
+            + "<img src=\"cid:logo@example.invalid\"></td></tr></table></body></html>";
+        String image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBv8AAAAASUVORK5CYII=";
+        String eml = "From: newsletter@example.invalid\r\nTo: reader@example.invalid\r\nSubject: Herbstangebote\r\n"
+            + "MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=related\r\n\r\n"
+            + "--related\r\nContent-Type: multipart/alternative; boundary=alternative\r\n\r\n"
+            + "--alternative\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\nAngebote als Text\r\n"
+            + "--alternative\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" + html + "\r\n--alternative--\r\n"
+            + "--related\r\nContent-Type: image/png; name=logo.png\r\nContent-ID: <logo@example.invalid>\r\n"
+            + "Content-Disposition: inline; filename=logo.png\r\nContent-Transfer-Encoding: base64\r\n\r\n" + image + "\r\n"
+            + "--related\r\nContent-Type: application/octet-stream\r\nContent-Disposition: attachment; filename=test.bin\r\n"
+            + "Content-Transfer-Encoding: base64\r\n\r\nAAH/QQ==\r\n--related--\r\n";
+        byte[] original = eml.getBytes(StandardCharsets.UTF_8);
+        JSONObject parsed = MailMime.parse(original, Session.getInstance(MailAccount.properties()));
+        assertEquals(html, parsed.getString("html"));
+        assertEquals("Angebote als Text", parsed.getString("text"));
+        assertArrayEquals(original, Base64.decode(parsed.getString("sourceBase64"), Base64.NO_WRAP));
+        JSONObject inline = parsed.getJSONArray("attachments").getJSONObject(0);
+        assertEquals("logo@example.invalid", inline.getString("contentId"));
+        assertEquals("image/png", inline.getString("type")); assertTrue(inline.getBoolean("inline"));
+        assertEquals(image, inline.getString("data"));
+        JSONObject attachment = parsed.getJSONArray("attachments").getJSONObject(1);
+        assertFalse(attachment.getBoolean("inline")); assertEquals("AAH/QQ==", attachment.getString("data"));
+    }
     @Test public void defaultTrustRejectsUntrustedTlsBeforeAuthentication() throws Exception {
         try (TestMailTlsServer server = new TestMailTlsServer(alias + "-tls", false, false)) {
             Properties properties = MailAccount.properties();

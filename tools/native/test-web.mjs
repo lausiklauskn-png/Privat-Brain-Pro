@@ -29,11 +29,12 @@ try {
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
   ok('Native bundle starts on search',await page.locator('#q').isVisible());
   ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Android-Testversion')));
-  for(const width of [320,768,1280]) {
+  for(const width of [320,768,1280,1920]) {
     await page.setViewportSize({width,height:900});
-    for(const tab of ['search','intake','explorer','mail']) {
-      await page.click(`.main-pages [data-tab="${tab}"]`);
-      ok(`${width}px: ${tab} reachable without page overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
+      await page.click(`.tab[data-tab="${tab}"]`);
+      ok(`${width}px: ${tab} fills available window without global page overflow`,await page.evaluate(()=>{const r=document.querySelector('.panel.on').getBoundingClientRect();return r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;}));
+      if(process.env.PB_CAPTURE_DESIGN==='1'&&width===1280&&['search','explorer'].includes(tab))await page.screenshot({path:`docs/design/mail-preview5/nachher-${tab}-1280.png`});
     }
   }
   await page.click('.main-pages [data-tab="search"]');

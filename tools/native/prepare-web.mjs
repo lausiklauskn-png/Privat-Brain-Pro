@@ -26,12 +26,13 @@ if (!html.includes(worker)) throw new Error('Review native service-worker adapta
 html = html.replace(worker, '// Native assets are updated by Android; no service worker.');
 html = html.replace(/<script src="assets\/installieren\.js[^>]*><\/script>/, '');
 html = html.replace(/<link[^>]*rel="manifest"[^>]*>/g, '');
-const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'";
-html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<link rel="stylesheet" href="native.css">`);
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
+html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">`);
+html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
 html = html.replace('</body>', '<script src="native.js"></script>\n</body>');
 if (!html.includes('<script src="assets/live-mail.js')) throw new Error('Review native mail adapter injection after source changes');
-html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="assets/live-mail.js');
+html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="assets/live-mail.js');
 await writeFile(join(out, 'index.html'), html);
-for (const name of ['native.js', 'native.css', 'native-mail.js']) await cp(join(root, 'native', name), join(out, name));
+for (const name of ['native.js', 'native.css', 'native-mail.js', 'native-mail-view.js']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 console.log('Native web bundle prepared from explicit public inputs.');

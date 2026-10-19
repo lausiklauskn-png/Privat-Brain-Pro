@@ -2,7 +2,8 @@
 
 Stand 2026-10-19, veröffentlicht in Vorschau 0.1.0-preview.4. Die ältere
 Vorschau .2 verwendet noch den privaten HTTPS-Maildienst.
-Ein echter Telekom-/Hetzner-Kontotest dieser neuen Anbindung am Tablet steht aus.
+Der Nutzer hat direkte Telekom-Anmeldung und Nachrichtenabruf auf seinem Tablet
+bestätigt. Hetzner und tatsächlicher Versand/Anhangsaustausch bleiben gesondert zu prüfen.
 Simulation, Android-Instrumentierung und echte Anbieteranmeldung werden getrennt
 im [Prüfstand](PRUEFSTAND-ANDROID.md) ausgewiesen.
 
@@ -50,8 +51,22 @@ werden für diese direkte Verbindung nicht benötigt.
   noch nicht mit dem Entwürfe-Ordner des Anbieters synchronisiert.
 
 Die geschützten Text-, Format-, HTML- und Anhangsprüfer bleiben bytegleich und
-laufen im vorhandenen Postfach weiter. Empfangs-HTML wird nativ in inerten Text
-umgewandelt, ohne externe Bilder zu laden. Diese Prüfungen sind kein vollständiger
+laufen im vorhandenen Postfach weiter. Ab Vorschau .5 werden Text für Suche/Antworten,
+Original-HTML für die Ansicht und unveränderte MIME-Bytes getrennt gehalten.
+`native/native-mail-view.js` stellt HTML in einem `srcdoc`-Frame ohne Sandbox-
+Freigaben dar: keine Skripte, gleicher Ursprung, Formulare, Popups oder App-Brücke.
+Eine zusätzliche CSP sperrt Skripte, Verbindungen, Frames und Objekte. Eine HTML-
+Positivliste entfernt aktive Elemente/Ereignisse und unsichere Links; Formatierung,
+Tabellen, Farben und Inline-Stile bleiben innerhalb dieses Rahmens erhalten.
+CID-Rasterbilder werden aus MIME-Teilen als Datenbilder eingebettet. Externe
+HTTPS-Bilder werden beim Öffnen geladen (dadurch kann der Absender den Abruf
+bemerken); „Externe Bilder ausblenden“ speichert die Wahl für folgende Mails.
+Eingebettete Bilder bleiben dann sichtbar. HTTP-Bilder werden nicht geladen;
+Skripte, aktive Formulare, SVG, externe Stylesheets/Schriften bleiben gesperrt.
+Das ist eine geschützte Originaldarstellung, keine pixelgenaue Browser-Ausführung
+beliebiger HTML-Mails. Das Original zum Teilen/Sichern wird nie aus der bereinigten
+Darstellung rekonstruiert. Der optionale alte HTTPS-Dienstpfad erhält weiterhin
+seine bestehende Textansicht. Diese Prüfungen sind kein vollständiger
 Virenscanner. Ein zusätzlicher Malware-Dienst müsste vertrauliche Anhänge und
 Datenschutz gesondert berücksichtigen.
 
@@ -87,7 +102,7 @@ Unklare Versuche nur beim Anbieter prüfen, niemals blind nochmals senden.
 Temporär freigegebene Anhangskopien liegen im privaten Cache, werden nach 24 Stunden
 bei späterem Öffnen bereinigt und sind insgesamt auf 32 MiB begrenzt.
 
-Echte Telekom-/Hetzner-Anmeldung, Anhänge mit externen Android-Apps, mehrere reale
+Hetzner-Anmeldung, tatsächlicher SMTP-Versand, Anhänge mit externen Android-Apps, mehrere reale
 Konten, DeX-Tastatur/Touch und Updates mit bereits gespeicherten Konten müssen am
 Gerät geprüft werden. Der Nutzer gibt seine Kontogeheimnisse ausschließlich in der
 App ein, niemals in Chat, Git oder Terminalausgaben.
