@@ -4,6 +4,8 @@
   const host = document.getElementById("mailWorkspace"),
     local = host.querySelector(".mail-app");
   const native = window.PBMailDevice || null;
+  const shared = native ? window.PBMailUI : null;
+  const S = key => shared.text(key);
   const words = {
     serviceHelp: [
       "Privater HTTPS-Mail-Dienst auf deinem Server/NAS. Dienst-Schlüssel nur für diese Sitzung.",
@@ -229,6 +231,8 @@
     draft = null,
     dirty = false,
     busy = false;
+  let viewKey = 'inbox', lastAccount = '', savedCache = [], folderMap = new Map(), entries = [], filterText = '';
+  const selected = new Set(), totals = new Map();
   const bar = el("div", "mail-head"),
     connect = btn("connect", setup),
     switcher = btn("remote", () => switchMode(true)),
@@ -259,9 +263,11 @@
         return;
       }
       account = accountSelect.value;
+      if (native) switchMode(true);
       await loadFolders();
     });
-  head.append(
+  const accountTools = native ? el("div", "mail-app mail-head mail-account-bar") : head;
+  accountTools.append(
     accountSelect,
     btn("refresh", () => loadFolders()),
     btn("compose", () => compose()),
@@ -282,11 +288,22 @@
     summary.dataset.liveText = "tools";
     tools.append(summary, menu);
     for (const key of ["account", "saved", "disconnect", "removeAccount"])
-      menu.append(head.querySelector('[data-live-text="' + key + '"]'));
+      menu.append(accountTools.querySelector('[data-live-text="' + key + '"]'));
     menu.append(localButton);
     menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
-    head.append(tools);
+    accountTools.append(tools);
     document.addEventListener("click", event => { if (!tools.contains(event.target)) tools.open = false; });
+  }
+  if (native) {
+    const heading = el('h2', '', S('mail')); heading.dataset.sharedText = 'mail';
+    const composeButton = accountTools.querySelector('[data-live-text="compose"]');
+    composeButton.classList.add('mail-primary');
+    const importButton = el('button','mail-button',S('import')); importButton.type='button'; importButton.dataset.sharedText='import';
+    importButton.onclick=()=>{if(leave()){dirty=false;draft=null;shared.importMail();}};
+    head.append(heading,composeButton,importButton);
+    accountTools.hidden=true; host.insertBefore(accountTools,app);
+    const catalog = btn('catalog',catalogPage); accountTools.querySelector('.mail-account-menu').append(catalog);
+    nav.setAttribute('aria-label',S('mail'));
   }
   layout.append(nav, list, reader);
   app.append(head, notice, layout);
@@ -306,6 +323,7 @@
     busy = true;
     if (nativeNotice) nativeNotice.textContent = "";
     app.inert = true;
+    if (native) accountTools.inert = true;
     app.setAttribute("aria-busy", "true");
     try {
       await fn();
@@ -325,6 +343,7 @@
     } finally {
       busy = false;
       app.inert = false;
+      if (native) accountTools.inert = false;
       app.removeAttribute("aria-busy");
     }
   }
@@ -446,6 +465,7 @@
     if (!accounts.some((a) => a.id === account))
       account = accounts[0]?.id || "";
     accountSelect.value = account;
+    if (native) accountTools.hidden = !account;
     if (account) await loadFolders();
     else if (native) disconnect();
     else setupAccount();
@@ -523,6 +543,7 @@
     list.replaceChildren();
     nav.replaceChildren();
     app.hidden = true;
+    if (native) { accountTools.hidden=true; lastAccount=""; totals.clear(); selected.clear(); }
     local.hidden = false;
     connect.hidden = false;
     switcher.hidden = true;
@@ -545,20 +566,54 @@
       reader.append(row);
     }
   }
+  function folderTitle(path) { return (entries.find(entry=>entry.id===viewKey&&entry.path===path)||entries.find(entry=>entry.remote&&entry.path===path))?.name || path; }
+  function roleFolder(flag) {
+    const role = {'\\Trash':'trash','\\Junk':'spam','\\Archive':'archive','\\Drafts':'draft','\\Sent':'sent'}[flag];
+    return native ? folderMap.get(role) : folders.find(f=>f.specialUse===flag);
+  }
+  function updateEntries() {
+    const resolved = PBMailFolders.resolve(folders); folderMap=resolved.roles;
+    entries=shared.standard.map(id=>({id,name:S(id),path:folderMap.get(id)?.path || '@'+id,remote:folderMap.has(id)}));
+    entries.push(...resolved.custom.map(f=>({id:'provider:'+f.path,name:f.name,path:f.path,remote:true})));
+  }
+  function historyRows() {
+    if(viewKey==='draft')return savedCache.filter(r=>r.status==='draft');
+    if(viewKey==='outbox')return savedCache.filter(r=>!['draft','sent'].includes(r.status));
+    if(viewKey==='sent'&&!entries.find(entry=>entry.id===viewKey)?.remote)return savedCache.filter(r=>r.status==='sent');
+    return [];
+  }
+  function folderCount(entry) {
+    if(entry.id==='outbox')return savedCache.filter(r=>!['draft','sent'].includes(r.status)).length;
+    if(entry.id==='exported')return shared.exportedEntries().length;
+    const localDrafts=entry.id==='draft'?savedCache.filter(r=>r.status==='draft').length:0;
+    if(totals.has(entry.id))return totals.get(entry.id)+localDrafts;
+    if(entry.remote)return localDrafts?localDrafts+'+':'–';
+    if(entry.id==='sent')return savedCache.filter(r=>r.status==='sent').length;
+    return localDrafts;
+  }
   async function loadFolders() {
     if (!leave()) return;
-    draft = null;
-    dirty = false;
-    folders = await api(prefix() + "/folders");
-    if (!folders.some((f) => f.path === folder))
-      folder =
-        folders.find((f) => f.path === "INBOX")?.path ||
-        folders[0]?.path ||
-        "INBOX";
-    drawFolders();
-    await loadList();
+    draft=null; dirty=false;
+    folders=await api(prefix()+'/folders');
+    if(native) {
+      if(lastAccount!==account){totals.clear();viewKey='inbox';lastAccount=account;}
+      savedCache=await native.saved(account); updateEntries();
+      const entry=entries.find(e=>e.id===viewKey)||entries[0];viewKey=entry.id;folder=entry.path;
+    } else if(!folders.some(f=>f.path===folder))folder=folders.find(f=>f.path==='INBOX')?.path||folders[0]?.path||'INBOX';
+    drawFolders();await loadList();
   }
   function drawFolders() {
+    if (native) {
+      nav.replaceChildren();
+      for(const entry of entries) {
+        const button=shared.folderButton(entry.id,entry.name,folderCount(entry),viewKey===entry.id,()=>run(async()=>{
+          if(!leave())return;dirty=false;draft=null;viewKey=entry.id;folder=entry.path;drawFolders();await loadList();
+        }));
+        button.dataset.liveFolder=entry.path;nav.append(button);
+      }
+      const button=btn('folder',async()=>{const name=prompt(T('folder'));if(name){await api(prefix()+'/folders',{name});await loadFolders();}});
+      nav.append(button);return;
+    }
     nav.replaceChildren();
     for (const f of folders) {
       const b = btn("remote", async () => {
@@ -587,24 +642,78 @@
     );
   }
   async function loadList(more = false) {
-    const page = await api(
-      prefix() +
-        "/messages?folder=" +
-        encodeURIComponent(folder) +
-        (more && next ? "&before=" + next : ""),
-    );
-    validity = page.validity;
-    items = more ? [...items, ...page.items] : page.items;
-    next = page.next;
-    current = null;
-    mail = null;
-    app.dataset.view = "list";
-    reader.replaceChildren();
-    notice.textContent =
-      accounts.find((a) => a.id === account)?.email + " · " + folder;
+    if(native&&!more){current=null;mail=null;items=[];validity='';selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));}
+    let page;
+    if(native && !entries.find(entry=>entry.id===viewKey)?.remote) {
+      page={validity:'',items:[],next:null,total:0};
+      savedCache=await native.saved(account);
+      if(viewKey==='exported')page.items=shared.exportedEntries().map(r=>({uid:r.hash,local:true,subject:r.name,from:r.mail.from||'',flags:r.mailRead?['\\Seen']:[],date:r.date}));
+    } else page=await api(prefix()+'/messages?folder='+encodeURIComponent(folder)+(more&&next?'&before='+next:''));
+    validity=page.validity;items=more?[...items,...page.items]:page.items;next=page.next;current=null;mail=null;
+    selected.clear();filterText='';app.dataset.view='list';
+    reader.replaceChildren(...(native?[el('p','mail-muted',S('choose'))]:[]));
+    notice.textContent=accounts.find(a=>a.id===account)?.email+' · '+(native?folderTitle(folder):folder);
+    if(native) {
+      if(Number.isSafeInteger(page.total)&&page.total>=0)totals.set(viewKey,page.total);
+      if(!entries.find(entry=>entry.id===viewKey)?.remote&&!['outbox','draft','sent','exported'].includes(viewKey))notice.textContent+=' · '+T('folderUnavailable');
+      drawFolders();
+    }
     drawList();
+    if(native)accountTools.querySelector('[data-live-text=catalog]').disabled=!entries.find(e=>e.id===viewKey)?.remote||!items.length;
+  }
+  async function batchAction(type,target) {
+    const chosen=items.filter(item=>!item.local&&selected.has(item.uid));if(!chosen.length)return;
+    if(!leave()||(type==='delete'&&!confirm(T('remove')+' ('+chosen.length+')?')))return;
+    const context={account,folder,validity};let failed=null;
+    try{for(const item of chosen)await api('/'+encodeURIComponent(context.account)+'/messages/'+item.uid+'/action',{folder:context.folder,validity:context.validity,action:type,...(target?{target}:{})});}
+    catch(error){failed=error;}
+    finally{await loadList();}
+    if(failed)throw failed;
+  }
+  function drawNativeList() {
+    list.replaceChildren();
+    const search=el('input');search.type='search';search.placeholder=S('filter');search.setAttribute('aria-label',S('filter'));search.value=filterText;
+    const actions=el('div','mail-list-actions'), rows=el('div'), count=el('p','mail-count');
+    const all=el('button','mail-button',S('all')), trash=el('button','mail-button',S('delete')), move=el('select');
+    all.type=trash.type='button';all.disabled=!items.some(item=>!item.local);all.dataset.nativeSelection='all';trash.dataset.nativeSelection='trash';
+    move.setAttribute('aria-label',S('move'));move.append(new Option(S('move'),''),...folders.filter(f=>f.path!==folder).map(f=>new Option(folderTitle(f.path),f.path)));
+    const filtered=()=>items.filter(item=>(item.subject+' '+item.from).toLocaleLowerCase().includes(filterText.toLocaleLowerCase()));
+    const isTrash=folderMap.get('trash')?.path===folder, trashFolder=folderMap.get('trash');
+    if(isTrash)trash.textContent=T('remove');
+    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?!folders.some(f=>f.path===folder&&f.specialUse==='\\Trash'):!trashFolder);move.disabled=!selected.size;}
+    all.onclick=()=>{const candidates=filtered().filter(item=>!item.local),on=candidates.some(item=>!selected.has(item.uid));for(const item of candidates)on?selected.add(item.uid):selected.delete(item.uid);drawNativeList();};
+    trash.onclick=()=>run(()=>batchAction(isTrash?'delete':'move',isTrash?null:trashFolder.path));
+    move.onchange=()=>{const target=move.value;move.value='';if(target)run(()=>batchAction('move',target));};
+    function drawRows(){
+      rows.replaceChildren();
+      for(const record of historyRows().filter(record=>(record.subject+' '+record.to).toLocaleLowerCase().includes(filterText.toLocaleLowerCase()))) {
+        const row=el('div','mail-item'), button=el('button');button.type='button';button.dataset.nativeSaved=record.id;
+        const status=el('span','mail-preview',T(record.status==='draft'?'draftStatus':record.status));status.dataset.nativeStatus=record.status==='draft'?'draftStatus':record.status;
+        button.append(el('span','mail-avatar','✉'),el('span','mail-subject',record.subject),status);button.onclick=()=>run(()=>showSavedRecord(record));row.append(el('span'),button);rows.append(row);
+      }
+      for(const item of filtered()) {
+        const row=el('div','mail-item'+(!item.flags.includes('\\Seen')?' unread':'')),check=el('input'),button=el('button');
+        check.type='checkbox';check.checked=selected.has(item.uid);check.disabled=Boolean(item.local);check.setAttribute('aria-label',item.subject);
+        check.onchange=()=>{check.checked?selected.add(item.uid):selected.delete(item.uid);selection();};
+        button.type='button';button.dataset.liveUid=item.uid;button.setAttribute('aria-current',String(current?.uid===item.uid));
+        button.append(el('span','mail-avatar',(item.from||item.subject||'?').slice(0,1).toUpperCase()),el('span','mail-subject',(item.flags.includes('\\Flagged')?'★ ':'')+item.subject),el('span','mail-preview',item.from),el('time','mail-date',item.date?new Date(item.date).toLocaleString(document.documentElement.lang,{dateStyle:'short',timeStyle:'short'}):''));
+        button.onclick=()=>run(async()=>{if(item.local){if(!leave())return;switchMode(false);await shared.openMessage(item.uid);}else{selected.clear();await open(item);}});
+        row.append(check,button);rows.append(row);
+      }
+      if(!rows.childElementCount)rows.append(el('p','mail-muted',S('empty')));
+    }
+    search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
+    actions.append(all,trash,move);list.append(search,actions,count,rows);drawRows();selection();
+    if(next)list.append(btn('more',()=>loadList(true)));
+  }
+  async function showSavedRecord(record) {
+    if(!leave())return;dirty=false;draft=null;app.dataset.view='reader';
+    const status=el('p','',T(record.status==='draft'?'draftStatus':record.status));status.dataset.nativeStatus=record.status==='draft'?'draftStatus':record.status;
+    reader.replaceChildren(btn('back',()=>{app.dataset.view='list';}),el('h3','',record.subject),el('p','mail-muted',record.to),status);
+    if(['draft','queued'].includes(record.status))reader.append(btn('restore',async()=>compose(await native.savedDraft(account,record.id))));
   }
   function drawList() {
+    if (native) return drawNativeList();
     list.replaceChildren();
     const filter = el("input");
     filter.type = "search";
@@ -737,8 +846,11 @@
     if (!leave()) return;
     draft = null;
     dirty = false;
-    current = item;
+    current = null;
+    mail = null;
+    reader.replaceChildren(el("p", "mail-muted", native ? S("choose") : T("body")));
     mail = await fetchMail(item);
+    current = item;
     await api(prefix() + "/messages/" + item.uid + "/action", {
       folder,
       validity,
@@ -783,7 +895,7 @@
       ["spam", "\\Junk"],
       ["archive", "\\Archive"],
     ]) {
-      const f = folders.find((f) => f.specialUse === use);
+      const f = roleFolder(use);
       if (f && f.path !== folder)
         actions.append(btn(key, () => action("move", f.path)));
     }
@@ -957,6 +1069,7 @@
       btn("draft", async () => {
         await api(prefix() + "/draft", draft);
         dirty = false;
+        if (native) { savedCache=await native.saved(account);drawFolders(); }
         notice.textContent = "✓ " + T("draft");
       }),
       btn("send", async () => {
@@ -989,6 +1102,7 @@
             ),
           );
         }
+        if (native) { savedCache=await native.saved(account);drawFolders(); }
         notice.textContent = "SMTP · " + data.status;
       }),
     );
@@ -997,6 +1111,12 @@
   new MutationObserver(() => {
     for (const b of host.querySelectorAll("[data-live-text]"))
       b.textContent = T(b.dataset.liveText);
+    if(native) {
+      for(const node of host.querySelectorAll('[data-shared-text]'))node.textContent=S(node.dataset.sharedText);
+      updateEntries();drawFolders();drawList();
+      if(!current&&!draft&&!reader.querySelector('[data-native-status]')&&!reader.querySelector('[data-live-text=restore]'))reader.replaceChildren(el('p','mail-muted',S('choose')));
+      if(account&&!draft&&!reader.querySelector("[data-native-status]"))notice.textContent=accounts.find(a=>a.id===account)?.email+" · "+folderTitle(folder);
+    }
     for (const status of host.querySelectorAll("[data-native-status]")) status.textContent = T(status.dataset.nativeStatus);
   }).observe(document.documentElement, {
     attributes: true,

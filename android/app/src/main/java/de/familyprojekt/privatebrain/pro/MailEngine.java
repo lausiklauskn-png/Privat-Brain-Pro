@@ -135,7 +135,7 @@ final class MailEngine {
                         .put("oversized", message.getSize() > MailMime.MAX_RAW).put("detailsPending", false)
                         .put("flags", flags).put("size", message.getSize()));
                 }
-                return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("items", items)
+                return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("total", folder.getMessageCount()).put("items", items)
                     .put("next", start > 1 && last > 0 ? last : JSONObject.NULL);
             } finally { folder.close(false); }
         }

@@ -356,3 +356,14 @@ vollständig geprüfter f327154c8d8e78214858bc131c85097053500828. CI 39331444809
 39332888607 erfolgreich; direkter Download HTTP 200 und SHA256 geprüft.
 Bestehende App aktualisieren, nicht deinstallieren. Echter Telekom-Abruf bestätigt;
 neue HTML-Ansicht und Update mit gespeicherten Konten durch Nutzer noch prüfen.
+
+
+## Verbindliches gemeinsames Postfach (2026-10-20)
+
+Nutzer: Die lokale Ansicht ist auch nach Aktivierung eines Kontos verbindlich.
+Standardnamen/Symbole/Reihenfolge, Titel und Primärknöpfe werden gemeinsam über
+PBMailUI gepflegt. `native-mail-folders.js` ordnet ausschließlich die Darstellung
+zu; IMAP-Pfade nie übersetzen/umbenennen. Keine Löschrechte aus Anzeigenamen
+ableiten. Postausgang = gespeicherte Geräte-Versandversuche, Entwürfe zusätzlich
+lokal; kein unklarer Neuversand. Datenformat/Keystore unverändert. Details unter
+docs/design/mail-preview6/. Geschützte Module/Original-PWA weiterhin unverändert.
