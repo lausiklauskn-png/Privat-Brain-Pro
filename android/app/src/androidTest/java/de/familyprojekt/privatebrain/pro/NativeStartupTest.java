@@ -120,6 +120,10 @@ public class NativeStartupTest {
             awaitTrue(scenario,"Boolean(window.PBMailView && window.PBNavigation)");
             evaluate(scenario,"PBWorkspace.navigate('mail');window.__browserSentinel='kept';const host=document.createElement('div');host.id='browser-link-fixture';host.style='position:fixed;inset:0;padding:20px;background:white;z-index:2147483647';host.append(PBMailView.render({text:'Browserprobe https://example.com/mail-test',html:'<a href=\"https://example.com/mail-test\">Browserprobe</a>',attachments:[]}));document.body.append(host);host.querySelector('iframe').style.height='180px';true");
             awaitTrue(scenario,"document.querySelector('#browser-link-fixture iframe').dataset.linksReady==='true'");
+            evaluate(scenario,"window.__linkFrameLoaded=false;window.__linkScript=false;const f=document.querySelector('#browser-link-fixture iframe');f.onload=()=>window.__linkFrameLoaded=true;f.srcdoc+='<script>parent.__linkScript=true</script>';true");
+            awaitTrue(scenario,"window.__linkFrameLoaded===true");
+            assertEquals("false",evaluate(scenario,"window.__linkScript"));
+            assertEquals("true",evaluate(scenario,"(()=>{try{document.querySelector('#browser-link-fixture iframe').contentWindow.document;return false;}catch(e){return e.name==='SecurityError';}})()"));
             String local = evaluate(scenario,"document.querySelector('#browser-link-fixture iframe').srcdoc.match(/https:\\/\\/localhost\\/_pb_mail_link\\/[a-f0-9-]+/)[0]");
             final android.net.Uri route=android.net.Uri.parse((String)new org.json.JSONTokener(local).nextValue());
             scenario.onActivity(activity -> {
