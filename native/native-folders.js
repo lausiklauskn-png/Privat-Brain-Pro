@@ -12,7 +12,10 @@
   const choose=document.getElementById('chooseLibrary'),pause=document.getElementById('pauseLibrary'),connect=document.getElementById('pickDir'),status=document.getElementById('libraryStatus');
   let state={enabled:false,name:''},busy=false,problem='',reading='';
   function refresh(){
-    choose.hidden=pause.hidden=false;choose.disabled=pause.disabled=connect.disabled=busy||Boolean(signing);
+    choose.hidden=pause.hidden=connect.hidden=false;
+    // The PWA bootstrap hides this when showDirectoryPicker is absent in WebView.
+    // Native SAF is independent of that browser feature detection.
+    connect.style.display='';choose.disabled=pause.disabled=connect.disabled=busy||Boolean(signing);
     pause.disabled=busy||Boolean(signing)||!state.enabled;
     for(const [node,key] of [[choose,state.name?1:0],[pause,2],[connect,3]]){node.textContent=t(key);node.title=t(key);}
     document.querySelector('[data-ws=libraryHelp]').textContent=t(4);
@@ -57,6 +60,8 @@
   window.PBFolders={refresh,async copy(hash,name){try{await api.copyOriginal({hash,name});}catch{problem=t(12);refresh();throw new Error(problem);}}};
   // Browser handles cannot represent Android SAF grants; the native copy operation checks access.
   window.PBWorkspace.prepareImport=async()=>true;
+  const browserHint=window.renderFsHint;
+  window.renderFsHint=()=>{browserHint?.();refresh();};
   new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   api.state().then(value=>{state=value;refresh();}).catch(()=>{problem=t(12);refresh();});refresh();
 })();

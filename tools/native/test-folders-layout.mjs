@@ -27,7 +27,7 @@ try{
   if(method==='readOriginal')return{data:saved.get(args.hash).bytes.subarray(args.offset,args.offset+262144).toString('base64')};
   throw new Error('Unknown fixture method '+method);
  });
- await page.addInitScript(()=>{const methods=['state','pause','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
+ await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
  for(const [lang,labels]of [['de',['Suchen','Dateien','Explorer','Mail']],['en',['Search','Files','Explorer','Mail']],['ru',['Поиск','Файлы','Проводник','Почта']],['pl',['Szukaj','Pliki','Eksplorator','Poczta']]]){
   await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
@@ -40,6 +40,8 @@ try{
  ok('Compact dashboard buttons open all catalog files, categories and duplicate contents',await page.locator('#panel-dash .native-dashboard-link').count()===3);
  for(const [id,target]of [['kpiFiles','explorer'],['kpiCats','order'],['kpiDupes','dupes']]){await page.click('[data-tab=dash]');await page.locator('#'+id).click();ok(`${id}: metric activates the actual ${target} view`,await page.locator('#panel-'+target).evaluate(e=>e.classList.contains('on')));}
  await page.click('[data-tab=intake]');
+ await page.evaluate(()=>renderFsHint());
+ ok('Android folder actions remain visible after the browser fallback runs without showDirectoryPicker',await page.locator('#pickDir').isVisible()&&await page.locator('#chooseLibrary').isVisible()&&await page.evaluate(()=>!('showDirectoryPicker' in window)));
  ok('Import reassurance stays below the drop zone instead of three giant cards',await page.locator('#panel-intake .pillars').count()===0&&await page.locator('.native-import-reassurance').textContent().then(t=>t.includes('Liest nur')&&t.includes('Schlägt vor')&&t.includes('Bewegt nichts'))&&await page.locator('.native-import-reassurance').evaluate(e=>e.previousElementSibling.id==='drop'));
  await page.click('#pickDir');await page.locator('.native-folder-consent').waitFor();await page.getByRole('button',{name:'Abbrechen',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#pickDir').disabled);
  ok('Cancelling the explanation leaves both folder actions usable',chooseCalls===0&&await page.locator('#chooseLibrary').isEnabled()&&await page.locator('#pickDir').isEnabled());

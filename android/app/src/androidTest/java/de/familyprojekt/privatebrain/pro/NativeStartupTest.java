@@ -45,7 +45,9 @@ public class NativeStartupTest {
         instrumentation.addMonitor(monitor);
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
             awaitTrue(scenario,"Boolean(window.PBFolders && window.Capacitor.Plugins.ProFolders)");
-            evaluate(scenario,"localStorage.setItem('pb_fs_ok','1');PBWorkspace.navigate('intake');document.querySelector('#pickDir').click();true");
+            evaluate(scenario,"localStorage.setItem('pb_fs_ok','1');PBWorkspace.navigate('intake');true");
+            awaitTrue(scenario,"!('showDirectoryPicker' in window) && document.querySelector('#pickDir').getBoundingClientRect().width > 0 && document.querySelector('#chooseLibrary').getBoundingClientRect().width > 0");
+            evaluate(scenario,"document.querySelector('#pickDir').click();true");
             awaitTrue(scenario,"!document.querySelector('#pickDir').disabled");
             assertEquals(1,monitor.getHits());
             evaluate(scenario,"document.querySelector('#chooseLibrary').click();true");
