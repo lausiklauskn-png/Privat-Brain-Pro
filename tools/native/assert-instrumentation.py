@@ -28,7 +28,7 @@ navigation = [case for case in cases
               and case.get('name') == 'fileViewerAndTwelveAndroidBackStepsKeepAppAlive']
 if len(navigation) != 1:
     raise SystemExit('Expected exactly one executed native file/back-navigation test')
-for name in ('mailLinkGestureOpensExternalBrowserWithoutLeavingMail', 'googleChoiceUsesConsentAndHidesPasswordFields', 'googleAccountPickerCancellationCanRetryWithoutChangingAccounts', 'pdfPagesAndAndroidBackUseRealNativeBridge'):
+for name in ('mailLinkGestureOpensExternalBrowserWithoutLeavingMail', 'googleChoiceUsesConsentAndHidesPasswordFields', 'googleAccountPickerCancellationCanRetryWithoutChangingAccounts', 'providerChoicesClearPasswordsUseFixedServersAndKeepMicrosoftOutOfPasswordLogin', 'pdfPagesAndAndroidBackUseRealNativeBridge'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeStartupTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native link/OAuth form test: {name}')
 for name in ('originalsSurviveStoreReopeningAndProviderSharesExactBytes', 'incompleteOrWrongHashImportsNeverPublishAndAbortKeepsCompleteCopies', 'browserPolicyRejectsActiveLocalAndCredentialUrls', 'gmailAddsNoPasswordAndOldAccountFormatStillLoads', 'googleGrantReuseExpiresAndInvalidationKeepsOtherAccountsIsolated'):
@@ -40,6 +40,9 @@ for name in ('scannedPdfRendersBothPagesWithoutChangingOriginal', 'openAndShareO
 for name in ('silentGoogleCancellationRequiresConsentWithoutPretendingUserCancelledSetup', 'validGoogleGrantWithoutLegacyAccountUsesNativeVerifiedIdentity', 'incompleteGrantAndDifferentAccountNeverBecomeUsableCredentials', 'identityLookupUsesOnlyFixedHttpsAndRejectsRedirectsUnverifiedAndOversizedReplies'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeGmailGrantTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native Google grant test: {name}')
+for name in ('allSevenTemplatesSurviveEncryptedReopeningWithoutChangingExistingAccountsOrDrafts', 'fixedProviderServersCannotBeRedirectedAndMicrosoftNeverFallsBackToPassword'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeProviderTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native provider test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

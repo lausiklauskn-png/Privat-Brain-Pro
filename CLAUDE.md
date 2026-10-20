@@ -1,13 +1,16 @@
 # Private Brain — Sitzungs-Anker
 
-**Aktuell, 2026-10-20: Vorschau .10 veröffentlicht.** Google-Konsole vom Nutzer
-bereits eingerichtet; .9 meldete weiter einen allgemeinen Fehler. .10 behandelt
-fehlende SDK-Kontodaten, Gmail-/Googlemail-Aliase und getrennte Fehlerstellen.
-26 native Fälle und signierte Updateprobe .9→.10 bestanden; echter Gmail-Login
-am Tablet bleibt unbestätigt. Bei erneutem Fehler Foto des sicheren Fehlercodes
-aus .10 auswerten; Projekt/Client nicht pauschal neu erstellen lassen.
-[Google-Rückgabe/Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md),
-[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-10--2026-10-20),
+**Aktuell, 2026-10-20: Vorschau .11 veröffentlicht; .12 mit weiteren Anbietern in Prüfung.**
+.11 erhält die gewählte Googlemail-Adresse und behandelt fehlgeschlagene Postfach-
+antworten/Kontowechsel. 28 native Fälle und signiertes Update .10→.11 bestanden.
+Der Nutzer hat ein gespeichertes Google-Konto und eigene Serverordner gezeigt;
+Nachrichtenabruf und Versand am Gerät sind weiterhin offen. Nicht pauschal ein
+neues Google-Projekt oder Konto anlegen lassen. Neu: WEB.DE, GMX, Yahoo und IONOS
+als native Vorlagen ergänzen; Microsoft mangels eigener Registrierung zunächst
+nur vorbereiten, ohne Passwortlogin oder behauptete fertige Verbindung.
+[Anbietervorlagen/Microsoft](docs/MAIL-ANBIETER.md),
+[Google-Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20),
 [Übergabe](BRIEF_NACHFOLGE_2026-10-20_gmail.md). Ältere Zwischenstände unten historisch.
 
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
@@ -472,3 +475,12 @@ vorhandenes Googlemail-Konto erneut freigeben, Abruf und ausdrücklich ausgelös
 Versand prüfen. Google-Cloud-Projekt/Client bereits eingerichtet; akzeptierten
 Gmail-Testnutzereintrag bestehen lassen. Konto nicht entfernen, nicht automatisch
 neu senden. Aktueller [Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20).
+
+## Erweiterte Anbieterauswahl — Vorschau .12 in Prüfung
+
+Auf Nutzerauftrag sind WEB.DE, GMX, Yahoo und 1&1/IONOS als native Vorlagen ergänzt.
+Telekom, Hetzner und Google/Googlemail bleiben erhalten. Microsoft hat laut Nutzer
+noch keine eigene Entra-Registrierung; zunächst weitere Anbieter und Microsoft-
+Vorbereitung bestätigt. Microsoft-Auswahl öffnet nur einen Einrichtungsplan und
+verbindet kein Konto. Kein Microsoft-Passwortweg vortäuschen. Zentrale Vorlagen,
+Prüfgrenzen und konkrete nächste OAuth-Schritte: [MAIL-ANBIETER](docs/MAIL-ANBIETER.md).
