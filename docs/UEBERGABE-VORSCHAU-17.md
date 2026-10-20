@@ -1,3 +1,14 @@
+# Originalidentität wiederhergestellt
+
+Original-Keystore unverändert gefunden, per PR #37 importiert und per PR #38
+als AES-256-GCM-Paket auf main gesichert. Identitätsworkflow 39482529491 auf main
+erfolgreich. Für Veröffentlichungen brauchen Sitzungen weder lokale Kopie noch
+Passwörter; maßgeblich ist [SIGNIERUNG-UND-GITHUB.md](SIGNIERUNG-UND-GITHUB.md).
+Die früheren Such- und Wiederherstellungsanweisungen unten sind erledigte Historie.
+Alte Secrets erst nach erfolgreichem Release und öffentlicher Downloadprüfung löschen.
+
+---
+
 # Aktuelle Übergabe: verschlüsselter Vorschau-Schlüssel
 
 Stand 2026-10-20: Der neue Auftrag ersetzt die frühere Wiederherstellung der vier

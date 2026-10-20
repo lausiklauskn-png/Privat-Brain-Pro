@@ -13,11 +13,13 @@ ist `PB_SIGNING_UNLOCK` im GitHub-Environment `android-preview`. Sie verlässt
 GitHub Actions nicht. [Einzelschritte, Originalschlüssel-Suche und sicherer
 Einweg-Import](SIGNIERUNG-UND-GITHUB.md).
 
-In dieser Umgebung fehlt der Original-Keystore. Ohne ihn kann kein echtes
-`signing/import.age` erzeugt und kein Release signiert werden. Keinen neuen
-Vorschau-Schlüssel erzeugen; der Entwicklungs-Debug-Schlüssel ist ungeeignet.
+Die Originalidentität wurde unverändert wiedergefunden und über PR #37/#38
+verschlüsselt auf main gesichert. Der Identitätsworkflow auf main war erfolgreich
+([39482529491](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482529491)).
+Eine lokale Kopie oder Kenntnis der Passwörter ist für Veröffentlichungen nicht
+mehr erforderlich. Keinen neuen Vorschau-Schlüssel erzeugen.
 
-Nach erfolgreichem Import enthält das Repo `signing/android-release.enc.json`
+Das Repo enthält nach dem erfolgreichen Import `signing/android-release.enc.json`
 (AES-256-GCM, Keystore samt beiden Passwörtern und Alias verschlüsselt) und den
 öffentlichen Zertifikats-Pin. Release und Import verwenden ausschließlich
 Actions. Beide Sitzungen benötigen für weitere Veröffentlichungen nur Push-
@@ -82,11 +84,12 @@ Aus einer APK kann das öffentliche Zertifikat gelesen werden, **nicht** der
 private Schlüssel. Das fehlerhafte Secret oder eine verlorene Sitzungsdatei lässt
 sich dadurch nicht ersetzen. Keinen neuen Vorschau-Schlüssel erzeugen.
 
-## Noch zu bestätigender Ausgangsstand
+## Historische Signierfehler und Wiederherstellung
 
 Der ursprüngliche .17-Lauf `39461965718` scheiterte beim Lesen des Keystores
 („Tag number over 30 is not supported“). Die spätere Diagnose `39467301186`
 meldete alle vier alten Secrets als nicht verfügbar. Der neue verschlüsselte
 Weg ersetzt diese fehlerhafte Übergabe, kann den fehlenden privaten Schlüssel
-aber nicht rekonstruieren. Ein erfolgreicher Original-Import, ein grüner
-`check`-Lauf und die signierte .16-auf-.17-Updateprobe stehen noch aus.
+aber nicht rekonstruieren. Der Original-Import und der anschließende Identitätsworkflow auf main sind
+erfolgreich. Die tatsächliche signierte Updateprobe wird im jeweiligen
+Veröffentlichungslauf gesondert nachgewiesen.
