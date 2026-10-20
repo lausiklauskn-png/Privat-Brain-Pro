@@ -385,8 +385,10 @@ Dienste oder öffentliche Store-Veröffentlichung ohne gesonderte Abstimmung.
 Ein paralleler Kontrolllauf 39351619966 bestand zunächst 18/19 Fälle und erreichte
 beim Google-Dialog nach „Abbrechen“ einmal das erwartete JavaScript-Abbruchsignal
 nicht. Derselbe Quellstand bestand im vollständigen Push-Lauf alle 19 Fälle.
-Die Ursache dieses einzelnen Abbruchproblems ist nicht nachgewiesen; der gezielte
-Wiederholungslauf läuft noch. Nicht als bestätigten produktiven Gmail-Betrieb ausgeben.
+Die gezielte Wiederholung desselben Stands (Versuch 2 von 39351619966) besteht
+alle 19 Fälle ohne Fehler oder Überspringen. Die Ursache des einzelnen vorherigen
+Abbruchproblems ist nicht nachgewiesen; Google-Auswahl und Abbrechen am Tablet
+zusätzlich prüfen. Nicht als bestätigten produktiven Gmail-Betrieb ausgeben.
 
 Am Tablet als Nächstes: neue Datei importieren → App neu starten → Original öffnen;
 altes fehlendes Original passend erneut auswählen; Link in Newsletter öffnen und

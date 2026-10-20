@@ -438,6 +438,6 @@ Mail-Links verwenden registrierte Brokeradressen und echte Benutzergesten; nur d
 Gmail-Autorisierung/XOAUTH2 implementiert; echte Anmeldung mangels eigenem
 Google-Cloud-Projekt noch unbestätigt. Projekt/OAuth-Client jetzt mit Nutzer einrichten;
 keine Geheimnisse im Chat anfordern. Der parallele Kontrolllauf 39351619966 zeigte
-einmal ein fehlendes JavaScript-Abbruchsignal im Google-Dialog; gezielte Wiederholung
-läuft, Ursache nicht nachgewiesen. Siehe Prüfstand und Nachfolgebrief, keine vollständige
+einmal ein fehlendes JavaScript-Abbruchsignal im Google-Dialog; Versuch 2 besteht
+alle 19 Fälle. Ursache nicht nachgewiesen, am Tablet zusätzlich prüfen. Siehe Prüfstand und Nachfolgebrief, keine vollständige
 Gmail-Funktionsgleichheit behaupten. PWA und geschützte Module unverändert.
