@@ -1,14 +1,32 @@
 # Brief: eigener Speicherort auf der SD-Karte, Quarantäne für Mail-Anhänge, Bedeutungssuche, Sicherheitspaket
 
-Stand: 2026-10-20, gegen `origin/main` 5757d5d (Vorschau .12). Analyse-Sitzung, kein Code geändert.
+Stand: 2026-10-20, **aktualisiert gegen `origin/main` 78e93b5 (Vorschau .16)** und gegen die vom Nutzer
+gelieferte APK `Private-Brain-Pro-0.1.0-preview.16.apk`. Analyse-Sitzung, kein Code geändert.
+
+**Abgleich APK ⟷ Repo (gemessen):** 74 Web-Dateien unter `assets/public/`; 73 byte-gleich mit
+`origin/main`, eine verschieden: `assets/schutz-init.js` — der Bau (`tools/native/prepare-web.mjs`)
+ergänzt `https://localhost` in `ALLOWED_ORIGINS`. Das ist gewollt. Die APK ist also aus diesem Repo gebaut.
 Dieser Brief ist der Arbeitsauftrag für die folgenden Bau-Sitzungen in `lausiklauskn-png/Privat-Brain-Pro`.
 
 ## Erledigt seit dem letzten Brief
 
 `BRIEF_NACHFOLGE_2026-10-20_gmail.md` ist abgearbeitet: Original öffnen und Mail-Links (#14),
 PDF-Originale anzeigen (#16), Gmail (#16–#21), weitere Anbieter WEB.DE, GMX, Yahoo, IONOS (#22).
-Nutzer 2026-10-20: *„Die E-Mails funktionieren … in jede Richtung, auch mit Anhang."* Der Antrag
-bei Google zur Freigabe der App läuft (Nutzerauskunft, nicht nachgeprüft).
+Nutzer 2026-10-20: *„Die E-Mails funktionieren … in jede Richtung, auch mit Anhang."* und, nach .16,
+*„jetzt … die Google-Mail-Geschichte hat funktioniert und auch das Design wurde etwas angepasst."*
+Der Antrag bei Google zur Freigabe der App läuft (Nutzerauskunft, nicht nachgeprüft).
+
+Seit .13–.16 außerdem da (nicht neu bauen, darauf aufsetzen):
+- **App-Offline-Schalter** (`AppNetwork.java`, `ProNetworkPlugin`, `native/native-network.js`): sperrt
+  `fetch`, `WebSocket`, `EventSource`, `RTCPeerConnection` zu fremden Herkünften. Mycel braucht WebSocket —
+  bei „offline" ist das Netz-Fenster bewusst tot und muss das **sagen**.
+- **Ordnerauswahl über Android** (`FolderStore.java`, `ProFoldersPlugin`): `ACTION_OPEN_DOCUMENT_TREE`,
+  `takePersistableUriPermission`, Bibliotheks-Kopien bis 80 MB je Datei / 512 MB je Lauf, **unverschlüsselt**.
+  → Grundlage für den Speicherort in Abschnitt 1, nicht daneben neu bauen.
+- Kompakte Symbolleisten und beschriftete Navigation (`native/native-toolbar.js`, #27–#31).
+
+**Design:** Nutzer 2026-10-20: *„so wie der Aufbau in dieser Version ist, ist er vorerst gut … nicht
+großartig davon abweichen, vorläufig."* Neue Teile fügen sich in .16 ein, kein Umbau.
 
 ## Verbindlich
 
@@ -40,6 +58,7 @@ SD-Karte gespeichert werden. Gleich von Beginn."* **Verschlüsselung mit eigenem
 | `MailMime.java` `MAX_RAW` | 8 MB je abgerufener Mail, ganz im Speicher gelesen |
 | `MailMime.java` `MAX_ATTACHMENTS` | 5 MB Anhänge beim Senden |
 | `EncryptedMailStore.java` | 24 MB je Mail, 256 MB gesamt, Schlüssel im **Android-Keystore** |
+| `FolderStore.java` | gewählter Android-Ordner (SAF), 80 MB je Datei, 512 MB je Lauf, unverschlüsselt — schon dauerhaft gewählt |
 | `OriginalFileStore.java` | 256 MB je Datei, 2 GB gesamt, `getFilesDir()/originals-v1`, 256-KB-Stücke, Prüfsumme, nach Fingerabdruck abgelegt — **nur für „Dateien hinzufügen", nicht für Mail-Anhänge** |
 
 Anhänge laufen heute als base64 durch die Brücke in die WebView. Das ist der Grund der Grenze.
@@ -71,6 +90,8 @@ Anhänge laufen heute als base64 durch die Brücke in die WebView. Das ist der G
 
 ### Aufgaben
 
+0. **Auf `FolderStore`/`ProFoldersPlugin` aufbauen:** dieselbe Ordnerauswahl, dauerhafte Freigabe schon da.
+   Neu sind Verschlüsselung, Anhänge, Grenzen (1 GB) und der feste Ordnerbau.
 1. **Erster Start / Einstellungen:** „Speicherort wählen" — Tablet oder SD-Karte (Ordnerauswahl),
    Passwort festlegen (zweimal, Mindestlänge), Warnung „Passwort vergessen = Daten verloren".
    Bestehende Daten aus `originals-v1` und `EncryptedMailStore` auf Wunsch hinüberziehen.
@@ -103,6 +124,8 @@ langsamer · Microsoft-Einrichtung ist offen (#23), nicht Teil dieses Abschnitts
 ## Bauabschnitt 2: Bedeutungssuche, die wirklich läuft
 
 ### Befund
+
+**In der APK .16 bestätigt:** dieselbe CSP im `index.html`, `models/` nur `PLATZHALTER.md`.
 
 - **Kein Modell wird geladen.** Modul 03 holt transformers.js per `import()` von
   `cdn.jsdelivr.net`. Die CSP aus `tools/native/prepare-web.mjs` erlaubt `script-src 'self'
@@ -141,6 +164,8 @@ Modell **fest ins APK** (*„die App kann ruhig ein paar mehr Megabyte schlucken
 
 ## Bauabschnitt 3: Sicherheitspaket wie Workflow PDF / Auslieferungsprüfer
 
+**In der APK .16 bestätigt:** kein pdf.js, keine Texterkennung im Paket.
+
 1. **pdf.js fehlt im APK.** `modules/ki-reinigung.js` lädt `/Workflow-PDF/vendor/pdfjs/` — in der
    App (`https://localhost`) nicht vorhanden; pdf.js liegt nur unter `tests/fixtures/`. Folge:
    PDF ohne Textebene geht nicht an Mistral OCR, „🔗 KI zu einer Datei" prüft versteckten Text
@@ -155,18 +180,79 @@ Modell **fest ins APK** (*„die App kann ruhig ein paar mehr Megabyte schlucken
    Hinausgehen und Systemkanal wie Sende-Prüfer. Das Verdecken mit Modul 25 ist unabhängig vom
    Mailanbieter (Telekom, Google, Hetzner …).
 
-## Bauabschnitt 4: Mycel und Siegel mit eigener Identität
+## Bauabschnitt 4: Mycel und Siegel — aktueller Kanon, oben verankert, eigene Identität
 
-- `sbkim/spore.json` ist byte-gleich die signierte Spore der PWA (Name „Private Brain", Endpunkt
-  `…github.io/Privat-Brain/`, Schlüssel der PWA) und wird mit ins APK gepackt.
-- `assets/siegel-inhalt.js` und `modules/rendezvous-init.js` tragen `nodeName: "Private Brain"` und
-  den PWA-Endpunkt; `_CR.repo` heißt `Privat-Brain`.
-- Die App erzeugt am Gerät eine **eigene** Identität → mitgelieferte Spore passt nicht; zwei
-  Knoten gleichen Namens.
-- `assets/schutz-init.js`: `ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io"]`, die App läuft
-  unter `https://localhost`.
-- → Eigener Name (z. B. „Private Brain Pro"), keine PWA-Spore im APK, erste Spore am Gerät im
-  Andock-Wizard, Membran für die App-Herkunft. Verbinden, Siegel, Wizard **am Gerät** messen.
+### Nutzerwunsch (2026-10-20)
+
+*„Das Mycel und auch das Siegel sind nicht aktuell im Private Brain und PBP. Sie sollen auch verankert
+werden können oben, minimiert werden und auch weggeschaltet werden können, so wie das jetzt der Fall ist
+bei den anderen Apps. Das soll dann auch in der nativen App möglich sein. Das prüfen wir noch, ob wir
+damit einen Knoten einrichten können."*
+
+### Befund (gemessen in Repo und APK .16)
+
+- **Die Netz-Bausteine sind die alte Bauart.** PB/PBP tragen das app-eigene `modules/net-widget.js`
+  plus Modul 17. Es fehlen `23_rendezvous_ui.js` (Netz-Fenster des Kanons: oben in einen
+  Leisten-Platz andocken, zur Pille minimieren, „Ausblenden (kommt beim Neuladen zurück)", Netz-Box
+  öffentlich/eigenes Netz) und `23b_netzverwaltung.js`. Verbindliche Liste:
+  `Sage-Protokol/docs/PFLICHT_MODULE.md`. Vorbild für eine feste Leiste oben: Sende-Prüfer
+  (`#netzleiste`, Lampen, `#siegel-platz`, `[data-sbkim-mycel-platz]`, am Handy nur Lampen zum Aufklappen).
+- Die übrigen Kanon-Module (01 … 23, 16, 16b-Wizard, noble) sind byte-gleich mit Sage.
+- **Identität ist die der PWA:** `sbkim/spore.json` (im APK) ist byte-gleich die signierte Spore der PWA
+  (Name „Private Brain", Endpunkt `…github.io/Privat-Brain/`, deren Schlüssel). `assets/siegel-inhalt.js`
+  und `modules/rendezvous-init.js` tragen `nodeName: "Private Brain"` und den PWA-Endpunkt;
+  `_CR.repo` heißt `Privat-Brain`. Die App erzeugt am Gerät eine eigene Identität → Spore passt nicht.
+- Membran: im APK seit dem Bau `https://localhost` erlaubt (siehe oben) — erledigt.
+
+### Aufgaben
+
+1. **Entscheiden mit dem Nutzer:** feste Leiste oben (Sende-Prüfer-Bauart, kein Modul 17) **oder**
+   Flieger mit Andocken oben (23-UI + 17). Beide müssen *verankern · minimieren · ausblenden* können.
+   Vorschlag: wie die übrigen aktuellen Apps des Netzes — vorher dort nachsehen, welche Bauart sie heute tragen.
+2. `23_rendezvous_ui.js` (und `23b`, falls Pflicht) byte-1:1 aus Sage, Drift-Guard-Pin, `net-widget.js`
+   ablösen oder auf den Kanon zurückführen; Gerätename weiter per Glue (`rendezvous-init.js`).
+3. **Eigener Knoten:** Name „Private Brain Pro", eigener Endpunkt/Beschreibung, **keine** PWA-Spore im APK
+   (`prepare-web.mjs` nimmt `sbkim/spore.json` heraus); erste Spore am Gerät im Andock-Wizard.
+4. Mit dem **Offline-Schalter** zusammenspielen: offline → Lampen und Fenster sagen „App vom Internet
+   getrennt", kein stilles Scheitern.
+5. Im Design von .16 bleiben (Kopf-/Symbolleiste aus `native-toolbar.js`), DE/EN wie der Kanon.
+6. **Am Gerät messen:** andocken, minimieren, ausblenden, Neuladen, ein echter Knoten-Kontakt.
+   Ob PBP als Knoten erreichbar ist, solange die App im Hintergrund liegt, ist offen (Android stoppt
+   WebViews im Hintergrund) — benennen, nicht versprechen.
+
+## Bauabschnitt 5: Vorbereitung für Viren-, Spam- und Scam-Schutz
+
+### Nutzerwunsch (2026-10-20)
+
+*„Vorbereitung für Virenscans innerhalb der App … verschiedene Virenscanner oder auch Virenmodelle …
+muss immer aktualisiert werden. Auch Datei, Schadsoftware, Spams, Schutz und auch Scam-Schutz … vielleicht
+auch über eine Hilfs-App. Ein Link zu einer Hilfs-App."*
+
+### Was ehrlich gilt (aus Wissen, vor dem Bau nachsehen)
+
+- Android gibt einer App **keinen** Zugang zum Virenscanner des Systems oder eines anderen Herstellers.
+  Ein Scan in der App braucht eine **eigene** Prüfmaschine mit eigener, aktualisierter Datenbank.
+- Der vorhandene Prüfkern (Auslieferungsprüfer) findet Täuschung (versteckter Text, Makros, getarnte
+  Programme, KI-Anweisungen) — **keine Viren**. So weiter benennen.
+
+### Bauweise: eine Scanner-Schnittstelle, Anbieter als Einschübe
+
+Erst die **Schnittstelle** bauen, dann Einschübe. Jeder Einschub meldet: Name, Version,
+**Stand der Datenbank (Datum)**, Ergebnis `befund · unauffällig laut <Name> · unbekannt · nicht geprüft`
+— nie „virenfrei". Läuft im Quarantäne-Ordner (Abschnitt 1), nur auf Tipp oder nach Wahl automatisch beim
+Abruf; Aktualisieren der Datenbanken achtet auf den Offline-Schalter.
+
+| Einschub | was | Netz | zu klären |
+|---|---|---|---|
+| Fingerabdruck-Listen auf dem Gerät | SHA-256 gegen bekannte Schaddateien (z. B. MalwareBazaar von abuse.ch) | nur zum Aktualisieren | Lizenz, Größe, Update-Takt |
+| Signatur-/Regelscan auf dem Gerät | YARA-Regeln oder ClamAV-Signaturen | nur zum Aktualisieren | ClamAV ist GPL (Verkauf!), Datenbank groß; Rechenzeit am Tablet messen |
+| VirusTotal / MetaDefender | Fingerabdruck an ~70 Scanner; Hochladen nur mit Warnung | ja, auf Tipp | Bedingungen, Schlüssel je Nutzer, Einsatz in verkaufter App |
+| Link-/Phishing-Prüfung | Mail-Links gegen Listen (Google Safe Browsing / Web Risk, URLhaus, PhishTank) | ja, nur die Adresse | Safe Browsing ist für nicht-kommerziell; für Verkauf Web Risk (kostenpflichtig) |
+| Spam-/Scam-Hinweise | eigene Regeln am Mailkopf: `Authentication-Results` (SPF/DKIM/DMARC des Anbieters), Absender ⟷ Antwortadresse, ähnliche Domains, Linktext ⟷ Ziel, Druck-/Geld-Wendungen | nein | als Hinweis, nie als Urteil; Teile stecken schon im Prüfkern |
+| **Hilfs-App** | „Mit Virenscanner-App prüfen": Datei per Teilen/„Öffnen mit" an eine installierte App (z. B. eines bekannten AV-Herstellers) | je nach App | ⚠ Datei verlässt dabei die Quarantäne — vorher deutlich sagen; Link zum Store nur als Empfehlung |
+
+Reihenfolge: Schnittstelle + Spam-/Scam-Hinweise (ohne Netz) → VirusTotal-Fingerabdruck → Link-Prüfung →
+Geräte-Datenbank (nach Größen- und Lizenzklärung) → Hilfs-App-Übergabe.
 
 ---
 
@@ -175,7 +261,8 @@ Modell **fest ins APK** (*„die App kann ruhig ein paar mehr Megabyte schlucken
 1. Abschnitt 1 (Speicherort, Verschlüsselung, Anhänge, Wiederherstellen) — Nutzer: „das Wichtigste".
 2. Abschnitt 2 (Bedeutungssuche) — nach der Größenmessung.
 3. Abschnitt 3 (Sicherheitspaket); 3.3 kann mit 1.6 zusammen gebaut werden.
-4. Abschnitt 4 (Mycel/Siegel).
+4. Abschnitt 4 (Mycel/Siegel: Kanon 23-UI, oben verankert, eigene Identität).
+5. Abschnitt 5 (Scanner-Schnittstelle, dann Einschübe) — braucht den Ordner aus Abschnitt 1.
 
 ## Offen / nicht gemessen
 

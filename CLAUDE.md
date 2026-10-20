@@ -90,7 +90,7 @@ nur vorbereiten, ohne Passwortlogin oder behauptete fertige Verbindung.
 [Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-12--2026-10-20),
 [Übergabe](BRIEF_NACHFOLGE_2026-10-20_gmail.md). Ältere Zwischenstände unten historisch.
 
-**Nächster Auftrag (2026-10-20):** eigener Speicherort (SD-Karte/Tablet, Passwort-verschlüsselt), Quarantäne für Mail-Anhänge bis 1 GB, Bedeutungssuche mit Modell im APK, Sicherheitspaket, eigene Mycel-/Siegel-Identität — [Brief](docs/BRIEF_2026-10-20_speicherort-quarantaene-suche-sicherheit.md). Nutzer 2026-10-20: Mailabruf und -versand funktionieren am Gerät in jede Richtung, auch mit Anhang.
+**Nächster Auftrag (2026-10-20):** eigener Speicherort (SD-Karte/Tablet, Passwort-verschlüsselt), Quarantäne für Mail-Anhänge bis 1 GB, Bedeutungssuche mit Modell im APK, Sicherheitspaket, Mycel/Siegel nach aktuellem Kanon (oben verankern, minimieren, ausblenden) mit eigener Identität, Vorbereitung Viren-/Spam-/Scam-Schutz (Scanner-Schnittstelle) — Stand .16 abgeglichen — [Brief](docs/BRIEF_2026-10-20_speicherort-quarantaene-suche-sicherheit.md). Nutzer 2026-10-20: Mailabruf und -versand funktionieren am Gerät in jede Richtung, auch mit Anhang.
 
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
 Sitzung wissen muss, **bevor** sie hier etwas anfasst.
