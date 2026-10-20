@@ -1,5 +1,15 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Private Brain Pro .13 veröffentlicht**, ohne „Test“ im Appnamen.
+[APK .13](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.13/Private-Brain-Pro-0.1.0-preview.13.apk) über die bestehende App installieren, nicht deinstallieren.
+Anwendungscommit `a5440d3bb01977a762f4e40ab2c170a8f14c37e6` (PR24), vollständige CI 39415063064
+mit 31 Android-Fällen erfolgreich; signiertes Update .12 → .13 39415186477
+mit Pro-Namen, erhaltener Spracheinstellung und Rückwegen bestanden.
+Veröffentlichung 39416838139, öffentlicher Download bytegleich geprüft.
+Google-Branding bereits Pro laut Nutzerbildern; vorhandener Client und Testnutzer
+bleiben gültig. [Name und Google](docs/APP-NAME.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-13--2026-10-20).
+
 **Nutzerauftrag ab Version .13:** App sichtbar **Private Brain Pro**, ohne „Test“.
 Paketkennung und Signatur unverändert lassen, bestehende App aktualisieren.
 Google-Branding heißt laut Bildern bereits Pro; keine neue Registrierung nötig.
