@@ -105,3 +105,11 @@ Am Tablet danach prüfen: neue Datei importieren, App neu starten, Original öff
 altes Original passend erneut auswählen; Newsletterlink öffnen und ins Postfach
 zurückwechseln; Telekom weiter abrufen. Google erst nach eigener OAuth-Einrichtung
 mit echtem Konto testen. Vollständige Funktionsgleichheit ist nicht bestätigt.
+
+
+## Ausführung und Download
+
+Die .8-APK ist veröffentlicht, der Download wurde bytegleich geprüft. Vollständiger
+CI-Nachweis, signierte Updateprobe, Prüfsumme und der einzelne abweichende
+Google-Abbruchtest stehen im [aktuellen Prüfstand](PRUEFSTAND-ANDROID.md).
+Für die nächste Sitzung bleibt die echte Google-OAuth-Einrichtung erforderlich.

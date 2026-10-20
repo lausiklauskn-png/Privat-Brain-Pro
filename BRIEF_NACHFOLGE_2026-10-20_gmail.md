@@ -287,3 +287,56 @@ Google-Cloud-Konfiguration: [docs/ORIGINALE-LINKS-GMAIL.md](docs/ORIGINALE-LINKS
 Frühere „noch nicht implementiert“-Aussagen beschreiben den Ausgangsstand.
 Noch keine echte Google-Anmeldung oder neue veröffentlichte APK behaupten; erst
 aktuelle CI-/Release-Nachweise prüfen. Bestehende Konten und die PWA erhalten.
+
+## Veröffentlicht: Vorschau .8 — 2026-10-20
+
+[APK .8 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.8/Private-Brain-Pro-0.1.0-preview.8.apk).
+Über die vorhandene App installieren und **Aktualisieren** wählen, nicht deinstallieren.
+Originale und Konten liegen im privaten App-Speicher; Deinstallation/Daten löschen
+entfernt diese Daten. Beim normalen Update bleiben sie erhalten.
+
+- App-Quellstand: `484b5dde3d0ad0a488f2a003f098f59069ed0867` (PR #14), identischer
+  Git-Baum wie geprüfter HEAD `57126939358445940b5f225de401480646382888`.
+- APK: 5.550.462 Bytes; Paket `de.familyprojekt.privatebrain.pro.preview`,
+  VersionCode 8, `0.1.0-preview.8-test`, kein Debug-Flag.
+- SHA-256: `bc3704395b7709ed1d2a2e88358f0b719c26a2e1e466afb02e27e1264b4a6a0f`.
+- Vorschau-Zertifikat unverändert: SHA-256
+  `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+- [Vollständige CI 39351614148](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39351614148):
+  Web-/Drift-Kette, 177 native Browserproben (57 + 72 + 22 + 14 + 12), 14 Diensttests,
+  Android-Build/Lint und **19 native Android-Tests ohne Fehler oder Überspringen**.
+- [Signierte Updateprobe .7 → .8, 39352342121](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39352342121):
+  tatsächliches `adb install -r`, Sprache EN erhalten, native Kontomaske geöffnet und
+  abgebrochen, sichtbares Zurück und Android-Zurück erfolgreich. Keine echten Konten
+  oder Dokumentmigration in dieser Updateprobe; getrennte native Tresor-/Dateiproben
+  prüfen synthetischen Bestandserhalt.
+- [Veröffentlichung 39352837471](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39352837471)
+  verlangt beide erfolgreichen, exakt gepinnten Nachweise sowie passende APK-Signatur,
+  Prüfsumme, Paketkennung und denselben Quellbaum. Öffentlicher Download anschließend
+  HTTP 200; Bytezahl, SHA-256 und Bytevergleich mit signierter Datei stimmen überein.
+
+Neue Originalimporte bleiben nach Neustart erreichbar. Ältere fehlende Originale
+lassen sich mit derselben Datei hashgeprüft wieder zuordnen. HTML-/Text-Mail-Links
+öffnen nach echtem Klick den Android-Browserweg; Skript- und Origin-Sperren bleiben
+aktiv. Speichergrenzen und Sicherheitsgrenzen: `docs/ORIGINALE-LINKS-GMAIL.md`.
+
+Gmail-Autorisierung/XOAUTH2 ist implementiert, **ein echter Google-Login ist noch
+nicht bestätigt**. Der Nutzer hat bisher kein Google-Cloud-Projekt eingerichtet.
+Als nächsten Schritt eigenes Projekt „Private Brain Pro“, Zustimmungsbildschirm,
+Testnutzer und Android-OAuth-Client für das Vorschau-Paket/Zertifikat einrichten.
+Keine Passwörter, Tokens oder Client-Secrets im Chat anfordern. Keine kostenpflichtigen
+Dienste oder öffentliche Store-Veröffentlichung ohne gesonderte Abstimmung.
+
+Ein paralleler Kontrolllauf 39351619966 bestand zunächst 18/19 Fälle und erreichte
+beim Google-Dialog nach „Abbrechen“ einmal das erwartete JavaScript-Abbruchsignal
+nicht. Derselbe Quellstand bestand im vollständigen Push-Lauf alle 19 Fälle.
+Die gezielte Wiederholung desselben Stands (Versuch 2 von 39351619966) besteht
+alle 19 Fälle ohne Fehler oder Überspringen. Die Ursache des einzelnen vorherigen
+Abbruchproblems ist nicht nachgewiesen; Google-Auswahl und Abbrechen am Tablet
+zusätzlich prüfen. Nicht als bestätigten produktiven Gmail-Betrieb ausgeben.
+
+Am Tablet als Nächstes: neue Datei importieren → App neu starten → Original öffnen;
+altes fehlendes Original passend erneut auswählen; Link in Newsletter öffnen und
+zum Postfach zurückkehren; vorhandenes Telekom-/Hetzner-Konto weiter prüfen.
+Google-Auswahl und Abbrechen zusätzlich am Gerät prüfen. Die unabhängige PWA
+`Privat-Brain` blieb unverändert; die geschützten Module bleiben bytegleich.

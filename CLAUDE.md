@@ -423,3 +423,21 @@ Google-Cloud-Konfiguration: [docs/ORIGINALE-LINKS-GMAIL.md](docs/ORIGINALE-LINKS
 Frühere „noch nicht implementiert“-Aussagen beschreiben den Ausgangsstand.
 Noch keine echte Google-Anmeldung oder neue veröffentlichte APK behaupten; erst
 aktuelle CI-/Release-Nachweise prüfen. Bestehende Konten und die PWA erhalten.
+
+## Vorschau .8 veröffentlicht (2026-10-20)
+
+App-Quellstand `484b5dde3d0ad0a488f2a003f098f59069ed0867`, PR #14.
+CI 39351614148: 19 Android-Tests und sämtliche Web-/Mailprüfungen bestanden.
+Signiertes Update .7 → .8: 39352342121; Veröffentlichung: 39352837471.
+Öffentlicher APK-Download bytegleich geprüft. Details/Prüfsumme:
+[docs/PRUEFSTAND-ANDROID.md](docs/PRUEFSTAND-ANDROID.md).
+
+Native Originalkopien und Wiederzuordnung älterer fehlender Originale implementiert.
+Mail-Links verwenden registrierte Brokeradressen und echte Benutzergesten; nur dafür
+`allow-top-navigation-by-user-activation`, keine Skript-/Origin-/Popup-Freigabe.
+Gmail-Autorisierung/XOAUTH2 implementiert; echte Anmeldung mangels eigenem
+Google-Cloud-Projekt noch unbestätigt. Projekt/OAuth-Client jetzt mit Nutzer einrichten;
+keine Geheimnisse im Chat anfordern. Der parallele Kontrolllauf 39351619966 zeigte
+einmal ein fehlendes JavaScript-Abbruchsignal im Google-Dialog; Versuch 2 besteht
+alle 19 Fälle. Ursache nicht nachgewiesen, am Tablet zusätzlich prüfen. Siehe Prüfstand und Nachfolgebrief, keine vollständige
+Gmail-Funktionsgleichheit behaupten. PWA und geschützte Module unverändert.
