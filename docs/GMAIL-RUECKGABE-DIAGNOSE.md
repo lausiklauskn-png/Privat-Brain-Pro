@@ -56,9 +56,9 @@ keine Redirects, ungeprüfte/überlange Antworten und sichere vier Sprachtexte.
 Der bestehende Wiederanmeldungstest verlangt außerdem denselben Kontenschlüssel
 und erhaltene Entwürfe bei Wechsel zwischen Gmail-/Googlemail-Domain.
 
-Nach erfolgreicher vollständiger CI, signierter Updateprobe und Veröffentlichung
-werden die endgültigen Nachweise im [Android-Prüfstand](PRUEFSTAND-ANDROID.md)
-ergänzt. Am Gerät einmal erneut anmelden. Bei erneutem Fehler genügt ein Foto
+Vorschau .10 ist nach erfolgreicher vollständiger CI mit 26 nativen Fällen und
+signierter Updateprobe veröffentlicht. Nachweise im
+[Android-Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-10--2026-10-20). Am Gerät einmal erneut anmelden. Bei erneutem Fehler genügt ein Foto
 des neuen stabilen Fehlercodes, niemals Tokens, Passwörter oder Gerätecodes.
 Ein echter Google-Login sowie echter Gmail-Empfang und Versand bleiben bis zur
 entsprechenden Geräteprüfung offen. Keine öffentliche Google-Prüfung oder

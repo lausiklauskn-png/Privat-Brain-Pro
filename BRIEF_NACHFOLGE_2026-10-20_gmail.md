@@ -1,3 +1,15 @@
+> **Neuester Stand: Vorschau .10 veröffentlicht**, 2026-10-20.
+> [APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.10/Private-Brain-Pro-0.1.0-preview.10.apk),
+> als Aktualisierung über die vorhandene Test-App installieren.
+> 26 native Fälle und signiertes Update .9→.10 bestanden;
+> [Nachweise](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-10--2026-10-20).
+> Google-Projekt, Android-Client und Testnutzer sind inzwischen angelegt;
+> drei Scopes wurden gezeigt. .9 scheiterte weiterhin mit allgemeinem Fehler.
+> .10 behandelt fehlende SDK-Kontodaten und Domain-Aliase und zeigt genaue
+> Fehlerstellen. Nächster Schritt: tatsächlicher Login am Tablet; gegebenenfalls
+> den sicheren Fehlercode als Foto auswerten. Echten Gmail-Betrieb nicht behaupten.
+> Keine Tokens/Passwörter anfordern, vorhandene Konten und Kataloge behalten.
+
 > **Neu: Google-Einrichtung erfolgt, Gmail noch nicht verbunden.** Projekt,
 > Android-Client, akzeptierter Gmail-Testnutzer und drei Scopes wurden in der
 > Konsole gezeigt. Vorschau .9 meldet weiter einen allgemeinen Google-Fehler.

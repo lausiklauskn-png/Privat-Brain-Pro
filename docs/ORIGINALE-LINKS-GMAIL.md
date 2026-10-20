@@ -1,5 +1,9 @@
 # Originaldateien, Mail-Links und Gmail — Vorschau .8
 
+> **Aktueller Google-Rückweg in .10:** [SDK-Kontodaten, Domain-Aliase und
+> getrennte Fehlerdiagnose](GMAIL-RUECKGABE-DIAGNOSE.md). Die Google-Konsole wurde
+> inzwischen eingerichtet; echter Gmail-Zugang bleibt am Tablet zu prüfen.
+
 > Ergänzungen in **Vorschau .9**: [PDF-Seitenansicht/Scans, Öffnen/Teilen und
 > Google-Rückkehr](PDF-ANSICHT-UND-GOOGLE.md). Die folgende Architektur beschreibt
 > den Ausgangsstand .8; aktuelle Nachweise stehen im [Android-Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-9--2026-10-20).

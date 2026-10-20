@@ -1,11 +1,13 @@
 # Private Brain — Sitzungs-Anker
 
-**Aktuell, 2026-10-20:** Vorschau .9 veröffentlicht; der Nutzer hat danach die
-Google-Konsole eingerichtet (Projekt, Android-Client, Gmail-Testnutzer, Scopes).
-Die Gmail-Anmeldung ist noch nicht bestätigt. Der neue Reparaturstand behandelt
+**Aktuell, 2026-10-20: Vorschau .10 veröffentlicht.** Google-Konsole vom Nutzer
+bereits eingerichtet; .9 meldete weiter einen allgemeinen Fehler. .10 behandelt
 fehlende SDK-Kontodaten, Gmail-/Googlemail-Aliase und getrennte Fehlerstellen.
+26 native Fälle und signierte Updateprobe .9→.10 bestanden; echter Gmail-Login
+am Tablet bleibt unbestätigt. Bei erneutem Fehler Foto des sicheren Fehlercodes
+aus .10 auswerten; Projekt/Client nicht pauschal neu erstellen lassen.
 [Google-Rückgabe/Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md),
-[Prüfstand](docs/PRUEFSTAND-ANDROID.md),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-10--2026-10-20),
 [Übergabe](BRIEF_NACHFOLGE_2026-10-20_gmail.md). Ältere Zwischenstände unten historisch.
 
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
