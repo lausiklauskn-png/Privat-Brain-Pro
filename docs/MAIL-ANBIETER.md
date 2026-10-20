@@ -1,6 +1,6 @@
 # Anbietervorlagen — 2026-10-20
 
-## Native Auswahl in Vorschau .12 (in Prüfung)
+## Native Auswahl in veröffentlichter Vorschau .12
 
 Der Nutzer wünscht mehrere bekannte Anbieter statt manueller Servereingabe.
 Der native Kontodialog enthält sieben verbindbare Vorlagen und einen deutlich
@@ -98,4 +98,7 @@ Umleitung und die technische Sperre vor Microsoft-Passwortverbindungen.
 Der echte Kontodialog prüft Anbieterwechsel, gesetzte/gesperrte Server, gelöschte
 Passwörter, Wiederbedienbarkeit nach Eingabefehler und den Microsoft-Einrichtungsplan.
 Die Probe sendet keine Mail und meldet sich bei keinem echten Anbieter an.
-Veröffentlichung erst nach vollständiger CI und signierter Updateprobe.
+Vorschau .12 ist nach vollständiger CI mit 31 nativen Fällen und signierter
+Updateprobe .11 → .12 veröffentlicht. Öffentlicher Download bytegleich geprüft.
+[Nachweis und APK](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-12--2026-10-20).
+Echte Anmeldung und Versand bei den neuen Anbietern bleiben am Gerät offen.

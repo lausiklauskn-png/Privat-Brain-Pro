@@ -546,3 +546,55 @@ Nächster Geräteschritt: .11 installieren, über Weitere Aktionen → Konto hin
 Google/Gmail erneut wählen und das bisherige Android-Googlemail-Konto freigeben.
 Bestehende Verbindung nicht entfernen. Der akzeptierte Gmail-Testnutzereintrag
 in der Cloud-Konsole kann bleiben. Keine Passwörter, Tokens oder Secrets anfordern.
+
+
+## Veröffentlichte Vorschau .12 — 2026-10-20
+
+[APK .12 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.12/Private-Brain-Pro-0.1.0-preview.12.apk).
+**Über die bestehende Test-App installieren, nicht deinstallieren.**
+Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 12,
+`0.1.0-preview.12-test`, min24/target36, kein Debug-Flag.
+5.565.723 Bytes; APK-SHA256
+`e2ef47acaa411d773cc703b9a4a48ba7747bccf088622131a6e00c87000766ed`.
+Vorschau-Zertifikat weiterhin SHA256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+Vorhandene Google-Clientregistrierung bleibt passend.
+
+- Quellstand `130b5f9347ae97e6e90368bf86c6323f8eb113dd`:
+  [vollständige CI 39412237956](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39412237956)
+  und [parallele PR-CI 39412342209](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39412342209)
+  erfolgreich: 38 bestehende npm-Befehle, 211 native Browserproben,
+  14 Maildiensttests, Android-Build/Lint und **31 native Instrumentierungsfälle
+  ohne Fehler oder Überspringen**. Vorschau-Lint: 0 Fehler, 8 bestehende Warnungen.
+  Die drei neuen Fälle prüfen sieben verschlüsselt gespeicherte Anbieter mit
+  erhaltenem Entwurf nach Wiederöffnung, feste Host-/Benutzerbindung,
+  Microsoft-Sperre vor Passwortlogin und den echten nativen Anbieterdialog.
+- [PR22](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/22) nach vollständiger
+  CI und signierter Updateprobe zusammengeführt: Anwendungscommit
+  `4fb2a9a3f2be196fb259cc43a2f77c1f7ab4cf7e`; Quellbaum exakt identisch mit dem
+  geprüften HEAD. Unabhängige PWA und geschützte Module unverändert.
+- [Signiertes Update .11 → .12, 39413230433](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39413230433),
+  Prüfcommit `0d6ff59ce910cc98a2174b82c867e5abc4b01c83`: tatsächlich dieselbe APK
+  mittels `adb install -r` installiert, Englisch-Einstellung erhalten. Yahoo-
+  Vorlage ausgewählt, Microsoft-Einrichtungsplan ohne Passwortfelder geöffnet,
+  native Kontomaske/Abbrechen und sichtbarer sowie Android-Zurück-Weg geprüft.
+  Keine echten Anbieterzugänge, Dokumentmigration oder Samsung-spezifische Prüfung.
+- Die vorherige [Updateprobe 39412634782](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39412634782)
+  installierte erfolgreich, scheiterte aber beim Prüfer an Androids Großschreibung
+  `SHOW SETUP PLAN` gegenüber erwartetem `Show setup plan`. Der dokumentierte
+  Emulatorbaum zeigte die korrekte Microsoft-Auswahl. Nur der Prüfer wurde auf
+  groß-/kleinschreibungsunabhängigen Textvergleich korrigiert; App und APK blieben
+  unverändert. Die vollständige erneute Probe ist erfolgreich.
+- [Veröffentlichung 39413729351](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39413729351),
+  Prüfcommit `8948b19630913a698b828a8940bb2936915390fb`: genaue CI-/Updatebelege,
+  gleicher Quellbaum, Signatur und APK-Hash vor Veröffentlichung verlangt.
+  Öffentlicher Download anschließend HTTP 200, korrekte Bytezahl/SHA256 und
+  Bytevergleich mit der signierten Build-Datei erfolgreich.
+
+Native Auswahl: Telekom, Hetzner, Google/Gmail, WEB.DE, GMX, Yahoo und 1&1/IONOS.
+Vorgegebene Server, anbieterbezogene Hilfen und gelöschte Passwörter bei Wechsel.
+Bestehende Konten und Geräteentwürfe bleiben erhalten; kein automatischer Versand.
+Microsoft ist mangels eigener Registrierung und noch folgender OAuth-/STARTTLS-
+Integration nur als klarer Einrichtungsplan enthalten. Anmeldung bei den neuen
+Anbietern sowie Googlemail-Empfang/-Versand bleiben am Nutzergerät zu bestätigen.
+Details und Microsoft-Arbeitsauftrag: [Anbietervorlagen](MAIL-ANBIETER.md).

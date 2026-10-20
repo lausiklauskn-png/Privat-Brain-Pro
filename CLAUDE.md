@@ -1,16 +1,16 @@
 # Private Brain — Sitzungs-Anker
 
-**Aktuell, 2026-10-20: Vorschau .11 veröffentlicht; .12 mit weiteren Anbietern in Prüfung.**
-.11 erhält die gewählte Googlemail-Adresse und behandelt fehlgeschlagene Postfach-
-antworten/Kontowechsel. 28 native Fälle und signiertes Update .10→.11 bestanden.
+**Aktuell, 2026-10-20: Vorschau .12 mit sieben Anbietervorlagen veröffentlicht.**
+.12 enthält sieben native Vorlagen und erhält die Googlemail-/Kontowechsel-Reparatur
+aus .11. 31 native Fälle und signiertes Update .11→.12 bestanden.
 Der Nutzer hat ein gespeichertes Google-Konto und eigene Serverordner gezeigt;
 Nachrichtenabruf und Versand am Gerät sind weiterhin offen. Nicht pauschal ein
 neues Google-Projekt oder Konto anlegen lassen. Neu: WEB.DE, GMX, Yahoo und IONOS
-als native Vorlagen ergänzen; Microsoft mangels eigener Registrierung zunächst
+sind als native Vorlagen verfügbar; Microsoft mangels eigener Registrierung zunächst
 nur vorbereiten, ohne Passwortlogin oder behauptete fertige Verbindung.
 [Anbietervorlagen/Microsoft](docs/MAIL-ANBIETER.md),
 [Google-Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md),
-[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-12--2026-10-20),
 [Übergabe](BRIEF_NACHFOLGE_2026-10-20_gmail.md). Ältere Zwischenstände unten historisch.
 
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
@@ -476,7 +476,7 @@ Versand prüfen. Google-Cloud-Projekt/Client bereits eingerichtet; akzeptierten
 Gmail-Testnutzereintrag bestehen lassen. Konto nicht entfernen, nicht automatisch
 neu senden. Aktueller [Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20).
 
-## Erweiterte Anbieterauswahl — Vorschau .12 in Prüfung
+## Erweiterte Anbieterauswahl — Vorschau .12 veröffentlicht
 
 Auf Nutzerauftrag sind WEB.DE, GMX, Yahoo und 1&1/IONOS als native Vorlagen ergänzt.
 Telekom, Hetzner und Google/Googlemail bleiben erhalten. Microsoft hat laut Nutzer
@@ -484,3 +484,14 @@ noch keine eigene Entra-Registrierung; zunächst weitere Anbieter und Microsoft-
 Vorbereitung bestätigt. Microsoft-Auswahl öffnet nur einen Einrichtungsplan und
 verbindet kein Konto. Kein Microsoft-Passwortweg vortäuschen. Zentrale Vorlagen,
 Prüfgrenzen und konkrete nächste OAuth-Schritte: [MAIL-ANBIETER](docs/MAIL-ANBIETER.md).
+
+
+Vorschau .12 veröffentlicht: Anwendungscommit `4fb2a9a3f2be196fb259cc43a2f77c1f7ab4cf7e`,
+CI 39412237956/39412342209 mit 31 nativen Fällen erfolgreich; signiertes Update
+.11 → .12 39413230433, Veröffentlichung 39413729351, öffentlicher Download bytegleich.
+Die zuerst am Knopf-Großtext gescheiterte Probe 39412634782 betraf nur den Prüfer;
+dessen Vergleich wurde korrigiert, dieselbe APK erneut vollständig geprüft.
+[APK .12](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.12/Private-Brain-Pro-0.1.0-preview.12.apk),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-12--2026-10-20).
+Über bestehende App aktualisieren. Für Microsoft gilt weiterhin: Registrierung
+und anschließende OAuth-/STARTTLS-Integration fehlen; nur Einrichtungsplan aktiv.
