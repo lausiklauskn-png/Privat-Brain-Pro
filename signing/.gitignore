@@ -1,0 +1,7 @@
+# Only encrypted packages and public metadata may live here.
+*
+!.gitignore
+!README.md
+!android-release.enc.json
+!android-certificate.json
+!import.age

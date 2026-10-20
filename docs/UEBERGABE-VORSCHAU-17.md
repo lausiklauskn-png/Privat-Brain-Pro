@@ -1,3 +1,18 @@
+# Aktuelle Übergabe: verschlüsselter Vorschau-Schlüssel
+
+Stand 2026-10-20: Der neue Auftrag ersetzt die frühere Wiederherstellung der vier
+alten Secrets durch das verschlüsselte Paket wie bei Workflow-PDF-Pro.
+**Maßgeblich sind jetzt [SIGNIERUNG-UND-GITHUB.md](SIGNIERUNG-UND-GITHUB.md)**
+mit Einzelschritten für Klaus und kopierbarem Auftrag an die Sitzung, die das
+Original tatsächlich besitzt. Die frühere Anleitung unten ist nur Historie.
+
+Der ursprüngliche Keystore wurde in der aktuellen zugänglichen Codex-Umgebung
+nicht gefunden. `PB_SIGNING_UNLOCK` wurde laut Klaus angelegt; sein Wert wird
+nicht benötigt und darf nicht an eine Sitzung gegeben werden. .17 ist noch nicht
+veröffentlicht. Alte Secrets erst nach erfolgreichem Release löschen.
+
+---
+
 # Übergabe an die Sitzung mit dem bisherigen Vorschau-Keystore
 
 2026-10-20 · Repository `lausiklauskn-png/Privat-Brain-Pro`
