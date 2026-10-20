@@ -452,7 +452,7 @@ einmal ein fehlendes JavaScript-Abbruchsignal im Google-Dialog; Versuch 2 besteh
 alle 19 Fälle. Ursache nicht nachgewiesen, am Tablet zusätzlich prüfen. Siehe Prüfstand und Nachfolgebrief, keine vollständige
 Gmail-Funktionsgleichheit behaupten. PWA und geschützte Module unverändert.
 
-## Googlemail und Kontowechsel — Vorschau .11 in Prüfung
+## Googlemail und Kontowechsel — Vorschau .11 veröffentlicht
 
 Neuester Gerätebefund: Google-Konto gespeichert, danach null/items-Fehler;
 Testnachricht weiterhin unversandt. Googlemail-Schreibweise bei Systemkontenauswahl
@@ -461,3 +461,14 @@ XOAUTH2-Benutzernamen. Nur ausdrückliches Abbrechen der Kontomaske darf im JS-A
 null liefern. Keine alten Nachrichten/UIDs/Zähler unter einem anderen Konto zeigen.
 Lokale Entwürfe und unklare Versandversuche nicht automatisch senden oder neu anlegen.
 Details: [Google-Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md).
+
+
+Vorschau .11 veröffentlicht: Anwendungscommit `83cb8e3c7072c2af2c5d5e0e5f9b329464be9796`,
+CI 39364267954 mit 28 nativen Fällen ohne Fehler/Überspringen, signiertes Update
+.10 → .11 39364425049, Veröffentlichung 39365299765. Öffentlicher Download bytegleich.
+[APK .11](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.11/Private-Brain-Pro-0.1.0-preview.11.apk).
+Über bestehende Installation aktualisieren. Nächster echter Geräteversuch:
+vorhandenes Googlemail-Konto erneut freigeben, Abruf und ausdrücklich ausgelösten
+Versand prüfen. Google-Cloud-Projekt/Client bereits eingerichtet; akzeptierten
+Gmail-Testnutzereintrag bestehen lassen. Konto nicht entfernen, nicht automatisch
+neu senden. Aktueller [Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20).

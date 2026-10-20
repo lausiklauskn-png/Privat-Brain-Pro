@@ -1,4 +1,48 @@
 > **Neuester Stand: Vorschau .10 veröffentlicht**, 2026-10-20.
+
+## Aktuell: Vorschau .11 veröffentlicht — 2026-10-20
+
+Die folgenden älteren Abschnitte dokumentieren frühere Stände. Aktuell existieren
+Google-Cloud-Projekt, externe OAuth-Grundkonfiguration und Android-Client für das
+unveränderte Vorschau-Zertifikat. Der Nutzer hat den Mail-Scope und Identitäts-Scopes
+konfiguriert; ein Gmail-Testnutzereintrag ist akzeptiert. Seine bisherige Adresse
+verwendet Googlemail. Für dasselbe Konto sind beide Domain-Schreibweisen Aliase.
+Keine Nutzeradresse, IP, Client-ID oder Freigabe aus Bildern ins Repository übernehmen.
+
+Die neuesten Bilder zeigen ein gespeichertes Google-Konto und eigene Serverordner,
+danach `Cannot read properties of null (reading 'items')`. Die sichtbare Testmail
+ist „Noch nicht übermittelt“. Speichern setzt erfolgreiche IMAP-/SMTP-Anmeldung
+voraus; echter Nachrichtenempfang/-versand ist dadurch noch nicht bestätigt.
+
+[APK .11](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.11/Private-Brain-Pro-0.1.0-preview.11.apk)
+über die bestehende Test-App installieren, nicht deinstallieren. .11 erhält den
+gewählten, gegen Googles Freigabe bestätigten Android-Kontonamen; die Gmail-
+Normalisierung dient nur Vergleich, Cache und XOAUTH2-Benutzernamen. Erneute Freigabe
+aktualisiert die Schreibweise unter derselben Kontenkennung samt erhaltenen Entwürfen.
+Der Adapter schluckt keine abgebrochenen Leseaufrufe mehr als null, prüft Listenantworten
+und entfernt alte Nachrichten/UIDs/Zähler vor dem Laden eines anderen Kontos.
+Lokale Geräteentwürfe und Versandversuche bleiben bei Serverfehlern erreichbar.
+Kein automatischer Neuversand.
+
+Anwendungscommit `83cb8e3c7072c2af2c5d5e0e5f9b329464be9796` (PR20),
+CI 39364267954/39364311623: 211 native Browserproben, 28 native Android-Fälle,
+alle übrigen Web-/Dienst-/Buildprüfungen erfolgreich. Signiertes Update .10 → .11
+39364425049; Veröffentlichung 39365299765. Öffentliche APK bytegleich geprüft,
+SHA256 `3d0744b83ff6304f6509f4621c582178d016429ab86c0843454d13cf74601ca0`.
+[Details](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20),
+[Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md).
+
+Nächster Geräteversuch: Weitere Aktionen → Konto hinzufügen → Google/Gmail →
+Mit Google anmelden, bisheriges Googlemail-Konto in der Android-Auswahl wählen und
+Google-Freigabe abschließen. Konto nicht entfernen, Cloud-Projekt nicht neu anlegen,
+akzeptierten Gmail-Testnutzer behalten. Danach Posteingang aktualisieren; vorhandene
+Testmail nur ausdrücklich senden, sofern ihr Status weiterhin „Noch nicht übermittelt“
+lautet. Bei unklarem Versand erst beim Anbieter prüfen. Bei Fehlern genügt sichtbarer
+Fehlercode; niemals Passwort, Token oder Gerätecode anfordern. Originalbilder/PDF,
+Mail-Links und Rückwege aus den vorigen Vorschauen am Gerät weiter prüfen; keine
+vollständige Samsung-/Anbieterprüfung aus Emulatorproben ableiten.
+
+---
 > [APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.10/Private-Brain-Pro-0.1.0-preview.10.apk),
 > als Aktualisierung über die vorhandene Test-App installieren.
 > 26 native Fälle und signiertes Update .9→.10 bestanden;

@@ -64,7 +64,7 @@ Ein echter Google-Login sowie echter Gmail-Empfang und Versand bleiben bis zur
 entsprechenden Geräteprüfung offen. Keine öffentliche Google-Prüfung oder
 Store-Veröffentlichung aus der privaten Testkonfiguration ableiten.
 
-## Fortsetzung: Googlemail und Kontowechsel (.11, noch in Prüfung)
+## Fortsetzung: Googlemail und Kontowechsel (.11 veröffentlicht)
 
 Die neuesten Gerätebilder zeigen erstmals das gespeicherte Google-Konto mit
 kanonischer Gmail-Adresse und eigenen Serverordnern. Das Speichern erfolgt erst
@@ -102,5 +102,6 @@ unversandten Entwurf. Android-Prüfungen verlangen die alte Domain im From-Heade
 dieselbe Kontenkennung nach erneuter Freigabe und erhaltenen Entwurf nach Wiederöffnung.
 Die Systemkontenauswahl wird mit einem abgefangenen Android-Aktivitätsergebnis auf
 Abbrechen und erneutes Öffnen geprüft. Echter Google-Zugriff benötigt weiterhin den
-anschließenden Geräteversuch. Veröffentlichungsnachweis folgt erst nach bestandenen
-Prüfungen und signiertem Update.
+anschließenden Geräteversuch. Vorschau .11 ist nach vollständiger CI mit 28 nativen Fällen und signierter
+Updateprobe .10 → .11 veröffentlicht; der öffentliche APK-Download ist bytegleich
+geprüft. [Prüfstand und Download](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-11--2026-10-20).
