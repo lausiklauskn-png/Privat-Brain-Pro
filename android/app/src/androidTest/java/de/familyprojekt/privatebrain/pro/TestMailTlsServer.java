@@ -40,8 +40,14 @@ final class TestMailTlsServer implements AutoCloseable {
     private final Future<?> task;
     private volatile String state = "accepting";
     private volatile Exception failure;
+    private final boolean oauth;
+    static final String OAUTH_USER = "fixture@gmail.com", OAUTH_TOKEN = "fixture-token-not-a-real-credential";
 
     TestMailTlsServer(String alias, boolean smtp, boolean loseAcknowledgement) throws Exception {
+        this(alias, smtp, loseAcknowledgement, false);
+    }
+    TestMailTlsServer(String alias, boolean smtp, boolean loseAcknowledgement, boolean oauth) throws Exception {
+        this.oauth = oauth;
         this.alias = alias;
         KeyPairGenerator generator = KeyPairGenerator.getInstance("EC", "AndroidKeyStore");
         generator.initialize(new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
@@ -100,14 +106,22 @@ final class TestMailTlsServer implements AutoCloseable {
             String tag = parts[0], command = parts[1].toUpperCase(java.util.Locale.ROOT);
             state = "IMAP " + command;
             switch (command) {
-                case "CAPABILITY": line(writer, "* CAPABILITY IMAP4rev1 AUTH=PLAIN"); line(writer, tag + " OK capability"); break;
+                case "CAPABILITY": line(writer, "* CAPABILITY IMAP4rev1 AUTH=" + (oauth ? "XOAUTH2" : "PLAIN")); line(writer, tag + " OK capability"); break;
                 case "NOOP": line(writer, tag + " OK noop"); break;
                 case "AUTHENTICATE":
+                    if (oauth) {
+                        String[] auth = parts[2].trim().split(" ", 2);
+                        if (!auth[0].equalsIgnoreCase("XOAUTH2")) { line(writer, tag + " NO OAuth required");break; }
+                        String data = auth.length == 2 ? auth[1] : null;
+                        if (data == null) { line(writer, "+ ");data = reader.readLine(); }
+                        if (!validOAuth(data)) { line(writer, tag + " NO Invalid OAuth");break; }
+                        authentications.incrementAndGet();line(writer, tag + " OK authenticated");break;
+                    }
                     if (parts.length < 3 || parts[2].trim().split(" ").length < 2) {
                         line(writer, "+ "); if (reader.readLine() == null) return;
                     }
                     authentications.incrementAndGet(); line(writer, tag + " OK authenticated"); break;
-                case "LOGIN": authentications.incrementAndGet(); line(writer, tag + " OK authenticated"); break;
+                case "LOGIN": if (oauth) { line(writer, tag + " NO OAuth required");break; } authentications.incrementAndGet(); line(writer, tag + " OK authenticated"); break;
                 case "LOGOUT": line(writer, "* BYE"); line(writer, tag + " OK logout"); return;
                 default: line(writer, tag + " BAD unsupported test command");
             }
@@ -121,7 +135,14 @@ final class TestMailTlsServer implements AutoCloseable {
             // Only protocol verbs, never AUTH arguments or message data.
             state = "SMTP " + command.split(" ", 2)[0];
             if (command.startsWith("EHLO") || command.startsWith("HELO")) {
-                line(writer, "250-localhost"); line(writer, "250-AUTH PLAIN LOGIN"); line(writer, "250 SIZE 8388608");
+                line(writer, "250-localhost"); line(writer, "250-AUTH " + (oauth ? "XOAUTH2" : "PLAIN LOGIN")); line(writer, "250 SIZE 8388608");
+            } else if (command.startsWith("AUTH XOAUTH2") && oauth) {
+                String[] auth = value.split(" ", 3);String data = auth.length == 3 ? auth[2] : null;
+                if (data == null) { line(writer, "334 ");data = reader.readLine(); }
+                if (!validOAuth(data)) { line(writer, "535 Invalid OAuth");continue; }
+                authentications.incrementAndGet();line(writer, "235 authenticated");
+            } else if (command.startsWith("AUTH ") && oauth) {
+                line(writer, "535 OAuth required");
             } else if (command.startsWith("AUTH PLAIN")) {
                 if (value.trim().split(" ").length < 3) { line(writer, "334 "); if (reader.readLine() == null) return; }
                 authentications.incrementAndGet(); line(writer, "235 authenticated");
@@ -144,6 +165,12 @@ final class TestMailTlsServer implements AutoCloseable {
             } else if (command.equals("QUIT")) { line(writer, "221 goodbye"); return; }
             else line(writer, "500 unsupported test command");
         }
+    }
+    private boolean validOAuth(String data) {
+        try {
+            String value = new String(android.util.Base64.decode(data, android.util.Base64.NO_WRAP), java.nio.charset.StandardCharsets.UTF_8);
+            return value.equals("user=" + OAUTH_USER + "\u0001auth=Bearer " + OAUTH_TOKEN + "\u0001\u0001");
+        } catch (Exception error) { return false; }
     }
     void await() throws Exception { task.get(20, TimeUnit.SECONDS); }
     String diagnostics() { return "Local test server state=" + state + "; failure=" + (failure == null ? "none" : failure.toString()); }

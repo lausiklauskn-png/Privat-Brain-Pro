@@ -5,12 +5,34 @@ import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private GmailAuthorization google;
+    GmailAuthorization google() { return google; }
     @Override public void onCreate(Bundle state) {
         registerPlugin(ProDevicePlugin.class);
         registerPlugin(ProUpdatesPlugin.class);
         registerPlugin(ProMailPlugin.class);
         registerPlugin(ProFilesPlugin.class);
+        registerPlugin(ProLinksPlugin.class);
         super.onCreate(state);
+        google = new GmailAuthorization(this);
+        bridge.setWebViewClient(new com.getcapacitor.BridgeWebViewClient(bridge) {
+            @Override public boolean shouldOverrideUrlLoading(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+                if (request.getUrl().getPath() != null && request.getUrl().getPath().startsWith(BrowserLinks.PREFIX)) {
+                    String link = BrowserLinks.resolve(request.getUrl());
+                    if (request.hasGesture() && link != null) {
+                        try { BrowserLinks.open(MainActivity.this, link); }
+                        catch (Exception error) { android.widget.Toast.makeText(MainActivity.this, "Browser nicht verfügbar / Browser unavailable", android.widget.Toast.LENGTH_SHORT).show(); }
+                    }
+                    return true;
+                }
+                return super.shouldOverrideUrlLoading(view, request);
+            }
+            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+                if (request.getUrl().getPath() != null && request.getUrl().getPath().startsWith(BrowserLinks.PREFIX))
+                    return new android.webkit.WebResourceResponse("text/plain", "UTF-8", new java.io.ByteArrayInputStream(new byte[0]));
+                return super.shouldInterceptRequest(view, request);
+            }
+        });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() {
                 if (bridge == null) { moveTaskToBack(true); return; }
@@ -23,4 +45,5 @@ public class MainActivity extends BridgeActivity {
             }
         });
     }
+    @Override public void onDestroy() { if (google != null) google.close();super.onDestroy(); }
 }

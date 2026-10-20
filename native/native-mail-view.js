@@ -7,7 +7,8 @@
     hideImages: ['Externe Bilder ausblenden', 'Hide external images', 'Скрыть внешние изображения', 'Ukryj obrazy zewnętrzne'],
     showImages: ['Externe Bilder laden', 'Load external images', 'Загрузить внешние изображения', 'Wczytaj obrazy zewnętrzne'],
     imageHint: ['Externe Bilder werden vom Absender geladen.', 'External images are loaded from the sender.', 'Внешние изображения загружаются у отправителя.', 'Obrazy zewnętrzne są pobierane od nadawcy.'],
-    body: ['E-Mail im Original-Layout', 'Email in its original layout', 'Письмо в оригинальном оформлении', 'Wiadomość w oryginalnym układzie']
+    body: ['E-Mail im Original-Layout', 'Email in its original layout', 'Письмо в оригинальном оформлении', 'Wiadomość w oryginalnym układzie'],
+    linkError: ['Link konnte nicht geöffnet werden. Prüfe, ob ein Browser verfügbar ist.', 'Unable to open the link. Check that a browser is available.', 'Не удалось открыть ссылку. Проверьте наличие браузера.', 'Nie można otworzyć linku. Sprawdź dostępność przeglądarki.']
   };
   const T = key => labels[key][Math.max(0, ['de','en','ru','pl'].indexOf(document.documentElement.lang))];
   const tags = new Set('a abbr address article b bdi bdo big blockquote br caption center cite code col colgroup dd del details div dl dt em figcaption figure font footer h1 h2 h3 h4 h5 h6 header hr i img ins li main mark ol p picture pre q s section small source span strike strong style sub summary sup table tbody td th thead time tr tt u ul wbr'.split(' '));
@@ -16,13 +17,14 @@
   // No app origin, device files, custom intent schemes, userinfo or local-network links.
   function webUrl(value) {
     try {
+      if(typeof value!=='string'||value.length>8192)return '';
       const url = new URL(value);
       if (!['https:','http:'].includes(url.protocol) || url.username || url.password) return '';
-      if (!url.hostname.includes('.') || /(^localhost$|\.localhost$|\.local$|\.internal$|^\d+\.\d+\.\d+\.\d+$)/i.test(url.hostname)) return '';
+      if (!url.hostname.includes('.') || url.hostname.includes(':') || url.hostname.endsWith('.') || /(^localhost$|\.localhost$|\.local$|\.internal$|^\d+\.\d+\.\d+\.\d+$)/i.test(url.hostname)) return '';
       return url.href;
     } catch { return ''; }
   }
-  function displayHtml(html, attachments, external) {
+  function displayHtml(html, attachments, external, links=null, targets=null) {
     const cids = new Map();
     for (const file of attachments || []) {
       if (file.contentId && raster.test(file.type) && /^[A-Za-z0-9+/]*={0,2}$/.test(file.data))
@@ -48,7 +50,13 @@
       const src = node.localName === 'img' ? image(node.getAttribute('src') || '') : '';
       const background = image(node.getAttribute('background') || '');
       for (const attr of [...node.attributes]) if (!attrs.has(attr.name)) node.removeAttribute(attr.name);
-      if (href) { node.setAttribute('href', href); node.setAttribute('rel','noreferrer noopener'); }
+      if (href) {
+        if(links)links.push(href);
+        const target=links?(targets?.get(href)||''):href;
+        if(target)node.setAttribute('href',target);
+        node.setAttribute('rel','noreferrer noopener');
+        if(!node.hasAttribute('title'))node.setAttribute('title',href);
+      }
       if (src) { node.setAttribute('src',src); node.setAttribute('referrerpolicy','no-referrer'); }
       if (background) node.setAttribute('background',background);
       // CID backgrounds used by newsletters, including inline CSS and <style> rules.
@@ -65,6 +73,23 @@
     render(mail) {
       const root = document.createElement('div'); root.className = 'mail-original';
       const text = document.createElement('pre'); text.className = 'mail-text'; text.textContent = mail.text || '';
+      const nativeLinks=window.Capacitor?.Plugins?.ProLinks;
+      if(typeof nativeLinks?.open==='function'){
+        const value=mail.text||'',pattern=/https?:\/\/[^\s<>"'\u0000-\u001f]+/gi;let offset=0;const fragment=document.createDocumentFragment();
+        for(const match of value.matchAll(pattern)){
+          let raw=match[0].replace(/[.,;!?]+$/g,'');
+          for(const [open,close] of [['(',')'],['[',']']])
+            while(raw.endsWith(close)&&raw.split(close).length>raw.split(open).length)raw=raw.slice(0,-1);
+          const url=webUrl(raw);if(!url)continue;
+          fragment.append(document.createTextNode(value.slice(offset,match.index)));
+          const link=document.createElement('a');link.textContent=raw;link.href=url;
+          link.onclick=async event=>{event.preventDefault();if(!event.isTrusted)return;
+            try{await nativeLinks.open({url});}catch{const notice=document.createElement('p');notice.setAttribute('role','status');notice.textContent=T('linkError');root.append(notice);}
+          };
+          fragment.append(link);offset=match.index+raw.length;
+        }
+        fragment.append(document.createTextNode(value.slice(offset)));text.replaceChildren(fragment);
+      }
       if (!mail.html) { root.append(text); return root; }
       const controls = document.createElement('div'); controls.className = 'mail-reader-actions';
       const toggle = document.createElement('button'), images = document.createElement('button');
@@ -74,13 +99,24 @@
       frame.setAttribute('referrerpolicy','no-referrer'); frame.title = T('body');
       const hint = document.createElement('span'); hint.className = 'mail-muted';
       let showText = false, external = localStorage.getItem('pb_mail_external_images') !== 'off';
+      let generation=0;
       function refresh() {
         toggle.textContent = T(showText ? 'original' : 'text');
         toggle.setAttribute('aria-pressed',String(showText));
         images.textContent = T(external ? 'hideImages' : 'showImages');
         images.hidden = showText; hint.hidden = showText || !external; hint.textContent = T('imageHint');
         frame.hidden = showText; text.hidden = !showText;
-        frame.srcdoc = displayHtml(mail.html,mail.attachments,external);
+        const version=++generation,links=typeof nativeLinks?.prepare==='function'?[]:null;
+        frame.srcdoc = displayHtml(mail.html,mail.attachments,external,links);
+        frame.dataset.linksReady=links?.length?'false':'true';
+        if(links?.length){
+          const urls=[...new Set(links)].slice(0,200);
+          nativeLinks.prepare({urls}).then(result=>{
+            if(generation!==version)return;
+            const targets=new Map();urls.forEach((url,index)=>{const ticket=result.tickets[index];if(/^[a-f0-9-]{36}$/.test(ticket||''))targets.set(url,location.origin+'/_pb_mail_link/'+ticket);});
+            frame.srcdoc=displayHtml(mail.html,mail.attachments,external,[],targets);frame.dataset.linksReady='true';
+          }).catch(()=>{if(generation===version){hint.textContent=T('linkError');hint.hidden=false;frame.dataset.linksReady='error';}});
+        }
       }
       toggle.onclick = () => { showText = !showText; refresh(); };
       images.onclick = () => { external = !external; localStorage.setItem('pb_mail_external_images',external ? 'on' : 'off'); refresh(); };

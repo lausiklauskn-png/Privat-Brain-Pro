@@ -412,3 +412,14 @@ Weiterer Folgeauftrag: Links aus E-Mails öffnen nach Nutzerrückmeldung nicht i
 Browser. Sichere ausdrückliche Browserübergabe prüfen/implementieren, ohne die
 Mail-Sandbox oder Skriptsperre aufzuheben. Details im Nachfolgebrief. Insgesamt
 drei Aufträge: Originalbilder, Mail-Links, Gmail; Reparaturen noch offen.
+
+
+## Fortschreibung 2026-10-20: Arbeiten an Vorschau .8
+
+Die drei Folgeaufträge sind jetzt in Implementierung: dauerhafte native Originalkopien
+mit Wiederzuordnung älterer Dateien, explizite Browserübergabe aus Text-/HTML-Mail
+und native Gmail-Autorisierung/XOAUTH2. Aktuelle Architektur, Grenzen und nötige
+Google-Cloud-Konfiguration: [docs/ORIGINALE-LINKS-GMAIL.md](docs/ORIGINALE-LINKS-GMAIL.md).
+Frühere „noch nicht implementiert“-Aussagen beschreiben den Ausgangsstand.
+Noch keine echte Google-Anmeldung oder neue veröffentlichte APK behaupten; erst
+aktuelle CI-/Release-Nachweise prüfen. Bestehende Konten und die PWA erhalten.

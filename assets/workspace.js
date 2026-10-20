@@ -73,6 +73,7 @@
     toast(text('permission'),6000); return false;
   }
   async function storeItem(item) {
+    if(window.PBOriginals)return window.PBOriginals.storeItem(item);
     return navigator.locks ? navigator.locks.request('private-brain-local-library-write',()=>writeItem(item)) : writeItem(item);
   }
   async function writeItem(item) {
@@ -110,6 +111,7 @@
     return out;
   }
   async function openEntry(entry) {
+    if(window.PBOriginals)return openFile(entry.r.hash);
     if (!entry.dirId) return openFile(entry.r.hash);
     try {
       const handle = DIR_HANDLES.get(entry.dirId) || (await idbGet('dirs',entry.dirId))?.handle;
@@ -148,7 +150,7 @@
       const row=document.createElement('article');row.className='explorer-row';
       const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('div');
       name.textContent=(e.r.mail?'✉️ ':'📄 ')+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
-      meta.textContent=e.path+' · '+fmtKB(e.r.size||0)+' · '+(e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog'));
+      meta.textContent=e.path+' · '+fmtKB(e.r.size||0)+' · '+(window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog'));
       info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));files.append(row);
     }
     if(!visible.length){const p=document.createElement('p');p.className='explorer-empty';p.textContent=text('empty');files.append(p);}
@@ -165,8 +167,9 @@
     el('libraryStatus').textContent=library?text('active')+': '+library.name:window.showDirectoryPicker?text('noFolder'):text('unsupported');
     el('searchMailCount').textContent=CATALOG.filter(r=>r.mail).length+' '+text('emails');
     el('searchDocCount').textContent=CATALOG.filter(r=>!r.mail).length+' '+text('documents');
-    el('searchLocalCount').textContent=entries().filter(e=>e.dirId || SESSION_FILES.has(e.r.hash)).length+' '+text('stored');
+    el('searchLocalCount').textContent=entries().filter(e=>e.dirId || SESSION_FILES.has(e.r.hash) || window.PBOriginals?.stored.has(e.r.hash)).length+' '+text('stored');
     renderExplorer();
+    window.PBOriginals?.notice();
   }
   el('chooseLibrary').onclick=chooseLibrary;
   el('pauseLibrary').onclick=()=>{if(signing)return;library=null;localStorage.setItem('pb_library_enabled','0');refresh();};

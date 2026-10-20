@@ -91,9 +91,10 @@
   previous.onclick=close.onclick=back;next.onclick=forward;
   external.onclick=async()=>{
     const entry=active;if(!entry)return;
-    if(entry.file.size>16*1024*1024){body.append(make('p','',t(7)));return;}
+    if(!entry.file.pbOriginalHash&&entry.file.size>16*1024*1024){body.append(make('p','',t(7)));return;}
     external.disabled=true;
     try{
+      if(entry.file.pbOriginalHash){await window.Capacitor.Plugins.ProFiles.open({hash:entry.file.pbOriginalHash});return;}
       const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(entry.file);});
       await window.Capacitor.Plugins.ProFiles.open({name:entry.name,data});
     }catch{if(active===entry)body.append(make('p','',t(5)));}

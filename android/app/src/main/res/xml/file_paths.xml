@@ -3,4 +3,5 @@
     <!-- Only camera captures and explicitly staged exports may be shared. -->
     <external-files-path name="camera_images" path="Pictures/" />
     <cache-path name="exports" path="exports/" />
+    <files-path name="originals" path="originals-v1/" />
 </paths>

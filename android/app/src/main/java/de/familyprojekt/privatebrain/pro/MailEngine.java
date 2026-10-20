@@ -18,17 +18,29 @@ import org.json.JSONObject;
 
 /** Direct device sockets, no Private-Brain server and no general network bridge. */
 final class MailEngine {
+    interface OAuthProvider { String token(String email) throws Exception; void invalidate(String token); }
     private final EncryptedMailStore store;
-    MailEngine(EncryptedMailStore store) { this.store = store; }
+    private final OAuthProvider oauth;
+    MailEngine(EncryptedMailStore store) { this(store, null); }
+    MailEngine(EncryptedMailStore store, OAuthProvider oauth) { this.store = store;this.oauth = oauth; }
     private Session session() { return Session.getInstance(MailAccount.properties()); }
+    private Session session(MailAccount account) { return Session.getInstance(MailAccount.properties(account.authType)); }
+    private String credential(MailAccount account) throws Exception {
+        if (!account.authType.equals("oauth2")) return account.password;
+        if (oauth == null) throw new MailFailure("GMAIL_AUTH_REQUIRED");return oauth.token(account.email);
+    }
     private IMAPStore imap(MailAccount account) throws Exception {
-        IMAPStore connection = (IMAPStore) session().getStore("imaps");
-        try { connection.connect(account.imap, 993, account.user, account.password); return connection; }
+        IMAPStore connection = (IMAPStore) session(account).getStore("imaps");
+        String credential = credential(account);
+        try { connection.connect(account.imap, 993, account.user, credential); return connection; }
+        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_AUTH_REQUIRED"); }throw error; }
         catch (Exception error) { try { connection.close(); } catch (Exception ignored) { } throw error; }
     }
     private SMTPTransport smtp(MailAccount account) throws Exception {
-        SMTPTransport connection = (SMTPTransport) session().getTransport("smtps");
-        try { connection.connect(account.smtp, 465, account.user, account.password); return connection; }
+        SMTPTransport connection = (SMTPTransport) session(account).getTransport("smtps");
+        String credential = credential(account);
+        try { connection.connect(account.smtp, 465, account.user, credential); return connection; }
+        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_AUTH_REQUIRED"); }throw error; }
         catch (Exception error) { try { connection.close(); } catch (Exception ignored) { } throw error; }
     }
     void verify(MailAccount account) throws Exception {
@@ -54,6 +66,10 @@ final class MailEngine {
     JSONObject saveAccount(MailAccount account) throws Exception {
         JSONObject root = store.read("accounts");
         JSONArray values = root == null ? new JSONArray() : root.getJSONArray("items");
+        if (account.provider.equals("gmail")) for (int n = 0; n < values.length(); n++) {
+            MailAccount existing = new MailAccount(values.getJSONObject(n));
+            if (existing.provider.equals("gmail") && existing.email.equalsIgnoreCase(account.email)) return existing.publicJson();
+        }
         if (values.length() >= 20) throw new MailFailure("ACCOUNT_LIMIT");
         values.put(account.privateJson());
         store.write("accounts", new JSONObject().put("items", values));
