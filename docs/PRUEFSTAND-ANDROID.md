@@ -493,3 +493,56 @@ unbestätigt. Der nächste Nachweis ist ein einzelner Anmeldeversuch am Tablet
 mit .10 und gegebenenfalls Foto des neuen Fehlercodes. Nicht wieder pauschal
 zur Neuerstellung von Projekt/Client/Testnutzer auffordern. Bestehende Konten
 und Kataloge behalten. Die PWA und alle 21 geschützten Module sind unverändert.
+
+
+## Veröffentlichte Vorschau .11 — 2026-10-20
+
+[APK .11 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.11/Private-Brain-Pro-0.1.0-preview.11.apk).
+**Über die bestehende Test-App installieren, nicht deinstallieren.**
+Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 11,
+`0.1.0-preview.11-test`, min24/target36, kein Debug-Flag.
+5.560.619 Bytes; APK-SHA256
+`3d0744b83ff6304f6509f4621c582178d016429ab86c0843454d13cf74601ca0`.
+Zertifikat unverändert: SHA256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+Der vorhandene Android-OAuth-Client passt weiterhin.
+
+- Geprüfter Quellstand `1321e10e7835e930e8cf56cb913d2175165f9e30`:
+  [vollständige CI 39364267954](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39364267954)
+  und [parallele PR-CI 39364311623](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39364311623)
+  erfolgreich. 38 npm-Prüfbefehle, 211 native Browserproben
+  (57 + 72 + 22 Konto-/Fehlerfälle + 22 Navigation + 14 Originale + 12 Links + 12 PDF),
+  14 Maildiensttests, Android-Build und Lint erfolgreich.
+  **28 native Instrumentierungsfälle ohne Fehler oder Überspringen**.
+  Vorschau-Lint: 0 Fehler, 8 bestehende Warnungen.
+- [PR20](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/20)
+  nach erfolgreicher CI zusammengeführt, Anwendungscommit
+  `83cb8e3c7072c2af2c5d5e0e5f9b329464be9796`; Git-Baum exakt gleich dem geprüften
+  Quellstand. Geschützte Module und unabhängige PWA unverändert.
+- [Signierte Updateprobe .10 → .11, 39364425049](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39364425049),
+  Prüfcommit `4e5e59b847e9144fcfd0c7e6c0aebc913d5f5c9a`: erfolgreiches
+  `adb install -r` derselben signierten APK, Englisch-Einstellung erhalten,
+  native Kontomaske samt Abbrechen und sichtbarer/Android-Zurück-Weg geprüft.
+  Keine echten Anbieterzugänge oder Dokumentmigration in dieser Updateprobe.
+- [Veröffentlichung 39365299765](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39365299765),
+  Prüfcommit `c133a2c96a350f37c986090dc335e2af92185123`: exakt gepinnte CI- und
+  Updatebelege, gleicher Anwendungsbaum, Zertifikat und APK-Hash verlangt.
+  Öffentlicher Download danach HTTP 200, Größe und SHA256 korrekt, bytegleich
+  mit der signierten Build-Datei.
+
+Googlemail-Kontoname bleibt nach nativer Auswahl und bestätigter Wiederanmeldung
+erhalten; vorhandene Kontenkennung und Entwürfe bleiben bestehen. Stille Google-
+Abbrüche werden als erforderliche Zustimmung gemeldet. Der JS-Adapter verschluckt
+nur das ausdrückliche Abbrechen der Kontoeinrichtung, prüft Listenantworten und
+entfernt alte UID-/Reader-/Zählerzustände vor einem Kontowechsel. Gespeicherte
+Geräteentwürfe und Versandversuche bleiben bei fehlgeschlagenem Serverzugriff
+verfügbar. Kein automatischer Versand.
+
+Die neuesten Gerätebilder belegen ein gespeichertes Google-Konto und geladene
+Serverordner; die Kontospeicherung setzt IMAP-/SMTP-Authentifizierung voraus.
+Der fotografierte Nachrichtenabruf scheiterte anschließend; echter Nachrichteneingang
+und Versand sind weiterhin offen. Die Testmail ist noch nicht übermittelt.
+Nächster Geräteschritt: .11 installieren, über Weitere Aktionen → Konto hinzufügen
+Google/Gmail erneut wählen und das bisherige Android-Googlemail-Konto freigeben.
+Bestehende Verbindung nicht entfernen. Der akzeptierte Gmail-Testnutzereintrag
+in der Cloud-Konsole kann bleiben. Keine Passwörter, Tokens oder Secrets anfordern.
