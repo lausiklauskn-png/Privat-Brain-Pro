@@ -1,4 +1,4 @@
-# Prüfstand Android – 2026-10-19
+# Prüfstand Android – 2026-10-20
 
 ## Veröffentlichte Grundversion 0.1.0-preview.2
 
@@ -395,3 +395,53 @@ altes fehlendes Original passend erneut auswählen; Link in Newsletter öffnen u
 zum Postfach zurückkehren; vorhandenes Telekom-/Hetzner-Konto weiter prüfen.
 Google-Auswahl und Abbrechen zusätzlich am Gerät prüfen. Die unabhängige PWA
 `Privat-Brain` blieb unverändert; die geschützten Module bleiben bytegleich.
+
+## Veröffentlichte Vorschau .9 — 2026-10-20
+
+[APK .9 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.9/Private-Brain-Pro-0.1.0-preview.9.apk).
+Über die vorhandene Test-App installieren: **Aktualisieren, nicht deinstallieren**.
+Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 9,
+`0.1.0-preview.9-test`, min24/target36, kein Debug-Flag. Größe 5.554.259 Bytes,
+SHA-256 `f26f374857372ea2cf0518026e4a418db65dc5399ce9fd3ad20b5904acd498f1`.
+Vorschau-Zertifikat unverändert:
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+
+- Quell-HEAD `4800c044b859dec5ca5c44fb415ec7be15ee5708`.
+  [Vollständige CI 39354700156](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39354700156)
+  und paralleler [PR-Lauf 39354747517](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39354747517)
+  bestanden: 38 bestehende npm-Prüfbefehle, 189 native Browserproben,
+  14 Maildiensttests, Java-/Android-Build und Lint sowie **23 native
+  Instrumentierungsfälle ohne Fehler oder Überspringen**. Darunter echte
+  PDF-Seiten mit Scan-Bitmaps, unveränderte Bytes, Dateiname/MIME/Lesefreigaben,
+  WebView-PDF und Android Zurück. Vorschau-Lint: 0 Fehler, 8 Warnungen in
+  Bestandsressourcen/-code; keine neue PDF-/Cache-Warnung.
+- [PR16](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/16)
+  nach erfolgreicher vollständiger CI zusammengeführt:
+  `613c8c7d5aaeb61bff909a48f6b292962ddfb56e`.
+  Git-Baum exakt identisch mit dem geprüften Quellstand.
+- [Signierte Updateprobe .8 → .9, 39354882781, Versuch 2](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39354882781/attempts/2)
+  bestand: tatsächliches `adb install -r`, erhaltene englische Einstellung,
+  native Kontomaske/Abbrechen sowie sichtbarer und Android-Zurück-Weg.
+  Versuch 1 scheiterte vor App-Ausführung am SDK-Download
+  „Android Emulator: Error on ZipFile unknown archive“. Der frische Runner
+  konnte das offizielle Paket laden. Kein App-Fehler daraus abgeleitet.
+- [Veröffentlichung 39355744841](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39355744841)
+  verlangte beide erfolgreichen Nachweise, identische Bäume, Paketversion,
+  APK-Hash und Zertifikat. Öffentlicher Download: HTTP200, Größe und SHA-256
+  stimmen; heruntergeladene APK bytegleich mit der signierten Datei.
+
+PDF-Seitenanzeige einschließlich Scans, Zoom, „Öffnen mit …“ und „Teilen …“
+(auch Rechtsklick) sind enthalten. Workfloh PDF erscheint nur bei passender
+Registrierung auf dem Gerät. Geschützte/defekte PDFs können externe Anzeige
+benötigen. Tatsächlicher Workfloh-Empfang und Samsung-DeX-Eingaben bleiben
+am Tablet zu prüfen. Die unabhängige PWA und 21 geschützte Module blieben
+unverändert; kein Datenbankschema geändert.
+
+Die gemeldete Google-Auswahlschleife ist **am Nutzergerät noch nicht erklärt
+oder als behoben bestätigt**. Ein unnötiger erneuter Autorisierungsaufruf nach
+erfolgreicher Zustimmung wurde durch kontogebundene, maximal 120 Sekunden gültige
+native RAM-Wiederverwendung beseitigt. Kein Token in JavaScript, Dateien oder
+Logs. Echte Google-Zustimmung und Gmail-IMAP/SMTP weiterhin unbestätigt;
+Google-Cloud-Projekt/Android-OAuth-Client und Testnutzer müssen geklärt werden.
+Telekom-Konto und lokale Daten behalten, keinen privaten Dienst-Token neu erzeugen.
+Details: [PDF-Ansicht und Google](PDF-ANSICHT-UND-GOOGLE.md).

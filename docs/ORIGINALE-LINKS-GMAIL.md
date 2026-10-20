@@ -1,5 +1,9 @@
 # Originaldateien, Mail-Links und Gmail — Vorschau .8
 
+> Ergänzungen in **Vorschau .9**: [PDF-Seitenansicht/Scans, Öffnen/Teilen und
+> Google-Rückkehr](PDF-ANSICHT-UND-GOOGLE.md). Die folgende Architektur beschreibt
+> den Ausgangsstand .8; aktuelle Nachweise stehen im [Android-Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-9--2026-10-20).
+
 Stand: 2026-10-20. Diese Änderungen betreffen ausschließlich die native Pro-App.
 Die bestehende PWA bleibt unverändert. Die zuvor bestätigte Telekom-Anmeldung,
 das Postfachlayout und die Rücknavigation bleiben Ausgangsbasis.

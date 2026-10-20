@@ -1,3 +1,14 @@
+> **Neuester veröffentlichter Stand: Vorschau .9**, 2026-10-20.
+> [Direkte APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.9/Private-Brain-Pro-0.1.0-preview.9.apk).
+> **Aktualisieren, nicht deinstallieren.** PDF-Seiten/Scans, Öffnen/Teilen und
+> ein vermiedener erneuter Google-Autorisierungsaufruf sind enthalten.
+> [Nachweise: 23 native Fälle, signiertes Update und Veröffentlichung](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-9--2026-10-20).
+> Als Nächstes: Google-Cloud-Projekt und Android-OAuth-Client mit dem Nutzer
+> im Tablet-Browser einrichten bzw. den aktuellen Stand klären. Echten Google-
+> Login noch nicht behaupten. Die gemeldete Auswahlschleife bleibt am Gerät
+> zu prüfen. Außerdem ein PDF intern öffnen/zurückgehen und an Workfloh PDF
+> teilen/öffnen. Bestehendes Telekom-Konto und lokale Daten behalten.
+
 > **Aktueller Zusatzauftrag, 2026-10-20:** PDF-Seitenansicht einschließlich Scans,
 > Öffnen/Teilen an Workfloh PDF und andere Apps sowie gemeldete Google-Auswahlschleife.
 > Umsetzung und offene Geräte-/Google-Prüfungen stehen in
