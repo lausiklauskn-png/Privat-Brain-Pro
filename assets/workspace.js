@@ -140,6 +140,10 @@
       const b=button('📁 '+path,()=>openFolder(path));
       b.setAttribute('aria-current',path===folderPath?'location':'false');tree.append(b);
     }
+    // App-specific folders (Android: encrypted mail attachments) render their own contents.
+    const extra=window.PBExplorerExtra;
+    extra?.tree(tree,folderPath,openFolder,button);
+    if(extra?.owns(folderPath)){el('explorerPath').textContent=extra.label();el('explorerUp').disabled=false;extra.files(files,el('explorerFilter').value,el('explorerSort').value);return;}
     el('explorerPath').textContent=folderPath || text('all');
     el('explorerUp').disabled=!folderPath;
     const filter=el('explorerFilter').value.toLocaleLowerCase();

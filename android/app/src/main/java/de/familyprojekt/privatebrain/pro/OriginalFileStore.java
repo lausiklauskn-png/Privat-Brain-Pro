@@ -81,7 +81,7 @@ final class OriginalFileStore {
         try (FileOutputStream output = new FileOutputStream(new File(item.directory, "data"), true)) { output.write(bytes); }
         item.written += bytes.length;
     }
-    synchronized void finish(String ticket) throws Exception {
+    synchronized String finish(String ticket) throws Exception {
         Pending item = pending(ticket);
         File data = new File(item.directory, "data");
         if (item.written != item.size || !digest(data).equals(item.hash)) throw new IOException("ORIGINAL_HASH_MISMATCH");
@@ -93,6 +93,7 @@ final class OriginalFileStore {
         if (target.exists()) throw new IOException("ORIGINAL_UNAVAILABLE");
         if (!item.directory.renameTo(target)) throw new IOException("ORIGINAL_UNAVAILABLE");
         pending.remove(ticket);
+        return item.hash;
     }
     synchronized void abort(String ticket) {
         Pending item = pending.remove(ticket); if (item == null) return;

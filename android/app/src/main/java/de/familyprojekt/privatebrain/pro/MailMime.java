@@ -69,10 +69,21 @@ final class MailMime {
         name = name.replaceAll("[\\\\/\\p{Cntrl}\\p{Cf}]", "_");
         return name.substring(0, Math.min(200, name.length()));
     }
+    /** Receives attachment parts as streams; used for the password-encrypted folder. */
+    interface Sink { JSONObject store(Part part, int index, String name, String type, JSONObject head) throws Exception; }
     private static final class Bodies {
         String plain = "", html = "";
-        int parts = 0, attachedBytes = 0;
+        int parts = 0, attachedBytes = 0, index = 0;
         final JSONArray attachments = new JSONArray();
+        Sink sink; JSONObject head;
+    }
+    private static String type(Part part) throws Exception {
+        try { return new ContentType(part.getContentType()).getBaseType().toLowerCase(java.util.Locale.ROOT); }
+        catch (javax.mail.internet.ParseException invalid) { return "application/octet-stream"; }
+    }
+    private static void store(Part part, Bodies bodies, String name) throws Exception {
+        if (bodies.attachments.length() >= 200) throw new MailFailure("MESSAGE_TOO_LARGE");
+        bodies.attachments.put(bodies.sink.store(part, bodies.index++, name, type(part), bodies.head));
     }
     private static void extract(Part part, Bodies bodies, int depth) throws Exception {
         if (depth > 20 || ++bodies.parts > 150) throw new MailFailure("MESSAGE_TOO_LARGE");
@@ -85,6 +96,10 @@ final class MailMime {
             if (multipart.getCount() > 100) throw new MailFailure("MESSAGE_TOO_LARGE");
             for (int i = 0; i < multipart.getCount(); i++) extract(multipart.getBodyPart(i), bodies, depth + 1);
         } else if (!attachment && (part.isMimeType("text/plain") || part.isMimeType("text/html"))) {
+            // Streaming mode: a giant text part is kept as a file instead of being read into memory.
+            if (bodies.sink != null && (part.getSize() < 0 || (long) bodies.plain.length() + bodies.html.length() + part.getSize() > MAX_TEXT)) {
+                store(part, bodies, part.isMimeType("text/html") ? "text.html" : "text.txt"); return;
+            }
             Object content = part.getContent();
             if (!(content instanceof String)) throw new MailFailure("INVALID_MESSAGE");
             String text = (String) content;
@@ -94,6 +109,13 @@ final class MailMime {
             if (part.isMimeType("text/plain") && bodies.plain.isEmpty()) bodies.plain = text;
             else if (part.isMimeType("text/html") && bodies.html.isEmpty()) bodies.html = text;
         } else {
+            if (bodies.sink != null) {
+                boolean inline = !explicitAttachment && !contentId.isEmpty() && type(part).matches("image/(png|jpeg|gif|webp|avif|bmp)");
+                // Small inline pictures stay with the HTML view; every attachment goes to the folder.
+                if (!inline || part.getSize() < 0 || (long) bodies.attachedBytes + part.getSize() > MAX_ATTACHMENTS) {
+                    store(part, bodies, filename(part.getFileName())); return;
+                }
+            }
             byte[] content = read(part.getInputStream(), MAX_ATTACHMENTS - bodies.attachedBytes);
             bodies.attachedBytes += content.length;
             if (bodies.attachments.length() >= 30) throw new MailFailure("MESSAGE_TOO_LARGE");
@@ -124,6 +146,35 @@ final class MailMime {
             .put("cc", addresses(message.getRecipients(Message.RecipientType.CC)))
             .put("bcc", addresses(message.getRecipients(Message.RecipientType.BCC)))
             .put("text", text).put("html", bodies.html).put("attachments", bodies.attachments);
+    }
+    static final int MAX_HEADERS = 64 * 1024;
+    /**
+     * Parses a downloaded message file without loading it: parts are views onto the file
+     * (SharedFileInputStream) and attachments are streamed into the sink.
+     */
+    static JSONObject parseFile(java.io.File file, Session session, Sink sink) throws Exception {
+        try (javax.mail.util.SharedFileInputStream input = new javax.mail.util.SharedFileInputStream(file)) {
+            MimeMessage message = new MimeMessage(session, input);
+            Date date = message.getSentDate();
+            JSONObject head = new JSONObject().put("subject", message.getSubject() == null ? "" : message.getSubject())
+                .put("from", addresses(message.getFrom())).put("date", date == null ? "" : Long.toString(date.getTime()));
+            Bodies bodies = new Bodies();
+            bodies.sink = sink; bodies.head = head;
+            extract(message, bodies, 0);
+            String text = bodies.plain.isEmpty() ? Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString() : bodies.plain;
+            // The check report reads headers and text; the complete source stays with the provider.
+            StringBuilder headers = new StringBuilder();
+            java.util.Enumeration<?> lines = message.getAllHeaderLines();
+            while (lines.hasMoreElements() && headers.length() < MAX_HEADERS) headers.append(lines.nextElement()).append("\r\n");
+            return new JSONObject().put("raw", headers.append("\r\n").append(text).toString())
+                .put("subject", head.getString("subject"))
+                .put("messageId", message.getMessageID() == null ? "" : message.getMessageID())
+                .put("replyTo", addresses(message.getReplyTo())).put("from", head.getString("from"))
+                .put("to", addresses(message.getRecipients(Message.RecipientType.TO)))
+                .put("cc", addresses(message.getRecipients(Message.RecipientType.CC)))
+                .put("bcc", addresses(message.getRecipients(Message.RecipientType.BCC)))
+                .put("text", text).put("html", bodies.html).put("attachments", bodies.attachments).put("vault", true);
+        }
     }
     static MimeMessage compose(MailAccount account, JSONObject draft, Session session) throws Exception {
         MailAccount.uuid(draft.getString("submission"));

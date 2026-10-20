@@ -41,6 +41,11 @@ großartig davon abweichen, vorläufig."* Neue Teile fügen sich in .16 ein, kei
 
 ## Bauabschnitt 1 (wichtigster): eigener Speicherort + Quarantäne für Mail-Anhänge
 
+> **Stand 2026-10-20 (Vorschau .17):** Aufgaben 0–5 und 8 (Warnung vor „Öffnen mit …“)
+> gebaut, siehe [SPEICHERORT-UND-TRESOR.md](SPEICHERORT-UND-TRESOR.md). Offen aus diesem
+> Abschnitt: 6 (Prüfen im Ordner), 7 (VirusTotal), Senden großer Anhänge, Passwortwechsel.
+> Am Tablet nicht gemessen.
+
 ### Nutzerwunsch (2026-10-20, wörtlich zusammengefasst)
 
 *„Kriege ich mal von einem Rechtsanwalt ein Schreiben, dann ist das sehr wenig an Speicher"* —

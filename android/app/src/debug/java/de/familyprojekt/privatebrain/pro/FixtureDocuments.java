@@ -20,14 +20,14 @@ public class FixtureDocuments extends DocumentsProvider {
     @Override public Cursor queryDocument(String id,String[] projection)throws FileNotFoundException{MatrixCursor c=new MatrixCursor(projection==null?DEFAULT:projection);row(c,id);return c;}
     @Override public Cursor queryChildDocuments(String parent,String[] projection,String sort)throws FileNotFoundException{MatrixCursor c=new MatrixCursor(projection==null?DEFAULT:projection);File[] list=file(parent).listFiles();if(list==null)throw new FileNotFoundException();for(File f:list)row(c,parent+"/"+f.getName());return c;}
     @Override public ParcelFileDescriptor openDocument(String id,String mode,CancellationSignal signal)throws FileNotFoundException{return ParcelFileDescriptor.open(file(id),ParcelFileDescriptor.parseMode(mode));}
-    @Override public String createDocument(String parent,String mime,String name)throws FileNotFoundException{if(broken||name.contains("/")||name.contains("\\"))throw new FileNotFoundException();String id=parent+"/"+name;File f=file(id);try{if(!f.createNewFile())throw new IOException();}catch(Exception error){throw new FileNotFoundException();}return id;}
+    @Override public String createDocument(String parent,String mime,String name)throws FileNotFoundException{if(broken||name.contains("/")||name.contains("\\"))throw new FileNotFoundException();String id=parent+"/"+name;File f=file(id);try{if(Document.MIME_TYPE_DIR.equals(mime)?!f.mkdir():!f.createNewFile())throw new IOException();}catch(Exception error){throw new FileNotFoundException();}return id;}
     @Override public void deleteDocument(String id)throws FileNotFoundException{if(!file(id).delete())throw new FileNotFoundException();}
     @Override public boolean isChildDocument(String parent,String child){return child.startsWith(parent+"/");}
     private void clear(File f){File[] children=f.listFiles();if(children!=null)for(File child:children)clear(child);f.delete();}
     @Override public Bundle call(String method,String arg,Bundle extras){
         if(method.equals("fixture-reset")){
             clear(root);root.mkdirs();broken=false;
-            try{for(String dir:new String[]{"sourceA","sourceB","libraryA","libraryB"})new File(root,dir).mkdirs();
+            try{for(String dir:new String[]{"sourceA","sourceB","libraryA","libraryB","vaultA"})new File(root,dir).mkdirs();
                 try(FileOutputStream output=new FileOutputStream(new File(root,"sourceA/one.txt"))){byte[] bytes=new byte[300000];for(int i=0;i<bytes.length;i++)bytes[i]=(byte)(i%251);output.write(bytes);}
                 try(FileOutputStream output=new FileOutputStream(new File(root,"sourceB/two.txt"))){output.write("second folder".getBytes(java.nio.charset.StandardCharsets.UTF_8));}
             }catch(Exception error){throw new IllegalStateException(error);}return Bundle.EMPTY;

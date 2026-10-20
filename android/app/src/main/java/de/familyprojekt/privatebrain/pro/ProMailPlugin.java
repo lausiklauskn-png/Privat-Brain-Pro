@@ -39,11 +39,20 @@ public class ProMailPlugin extends Plugin {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private MailEngine engine;
     private EncryptedMailStore storage;
+    private Vault vault;
     @Override public void load() {
         storage = new EncryptedMailStore(getContext());
+        vault = Vault.get(getContext());
         engine = new MailEngine(storage, new MailEngine.OAuthProvider() {
             public String token(String email) throws Exception { return ((MainActivity)getActivity()).google().token(email); }
             public void invalidate(String token) { ((MainActivity)getActivity()).google().invalidate(token); }
+        }, vault);
+    }
+    /** Accounts, drafts and send records follow into the chosen folder; failure never blocks mail. */
+    private void backup() {
+        worker.execute(() -> {
+            try { if (vault.configured() && vault.unlocked()) vault.backupMailStore(storage); }
+            catch (Exception ignored) { /* The next change or "Jetzt sichern" writes the snapshot again. */ }
         });
     }
     private interface Work { JSONObject run() throws Exception; }
@@ -58,6 +67,8 @@ public class ProMailPlugin extends Plugin {
         for (int i = 0; i < 15 && current != null; i++) {
             if (current instanceof AppNetwork.Blocked) return "APP_OFFLINE";
             if (current instanceof MailFailure) return ((MailFailure) current).code;
+            if (current instanceof VaultCrypto.Failure) return current.getMessage();
+            if (current instanceof SecurityException) return "VAULT_FOLDER_UNAVAILABLE";
             if (current instanceof SSLException) return "TLS_FAILED";
             if (current instanceof AuthenticationFailedException) return "AUTH_FAILED";
             if (current instanceof java.security.GeneralSecurityException) return "VAULT_UNAVAILABLE";
@@ -82,7 +93,7 @@ public class ProMailPlugin extends Plugin {
         return value;
     }
     @PluginMethod public void accounts(PluginCall call) { perform(call, () -> new JSONObject().put("items", engine.accounts())); }
-    @PluginMethod public void removeAccount(PluginCall call) { perform(call, () -> { engine.removeAccount(required(call, "account")); return new JSONObject().put("ok", true); }); }
+    @PluginMethod public void removeAccount(PluginCall call) { perform(call, () -> { engine.removeAccount(required(call, "account")); return new JSONObject().put("ok", true); }); backup(); }
     @PluginMethod public void folders(PluginCall call) { perform(call, () -> new JSONObject().put("items", engine.folders(account(call)))); }
     @PluginMethod public void createFolder(PluginCall call) { perform(call, () -> { engine.createFolder(account(call), required(call, "name")); return new JSONObject().put("ok", true); }); }
     @PluginMethod public void messages(PluginCall call) { perform(call, () -> engine.messages(account(call), required(call, "folder"), call.getData().optLong("before", 0))); }
@@ -91,8 +102,9 @@ public class ProMailPlugin extends Plugin {
         engine.action(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1), required(call, "action"), call.getString("target", ""));
         return new JSONObject().put("ok", true);
     }); }
-    @PluginMethod public void send(PluginCall call) { perform(call, () -> engine.send(account(call), draft(call))); }
-    @PluginMethod public void saveDraft(PluginCall call) { perform(call, () -> { engine.saveDraft(account(call), draft(call)); return new JSONObject().put("ok", true); }); }
+    @PluginMethod public void send(PluginCall call) { perform(call, () -> engine.send(account(call), draft(call))); backup(); }
+    @PluginMethod public void saveDraft(PluginCall call) { perform(call, () -> { engine.saveDraft(account(call), draft(call)); return new JSONObject().put("ok", true); }); backup(); }
+    @PluginMethod public void forgetMessage(PluginCall call) { perform(call, () -> { engine.forgetMessage(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1)); return new JSONObject().put("ok", true); }); }
     @PluginMethod public void saved(PluginCall call) { perform(call, () -> new JSONObject().put("items", engine.saved(required(call, "account")))); }
     @PluginMethod public void savedDraft(PluginCall call) { perform(call, () -> engine.savedDraft(required(call, "account"), required(call, "id"))); }
 
@@ -270,6 +282,7 @@ public class ProMailPlugin extends Plugin {
                     if (finished.get()) return;
                     saved = engine.saveAccount(account);finished.set(true);
                 }
+                backup();
                 activity.runOnUiThread(() -> {
                     try { call.resolve(JSObject.fromJSONObject(saved)); }
                     catch (Exception error) { call.reject("Device storage unavailable", "VAULT_UNAVAILABLE"); }

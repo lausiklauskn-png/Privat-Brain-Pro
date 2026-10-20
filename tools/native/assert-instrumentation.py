@@ -49,6 +49,9 @@ for name in ('offlineClosesExistingMailSocketAndBlocksNewTransportBeforeConnect'
 for name in ('changingSourceAndLibraryKeepsOriginalsAndCopiesAfterRestart', 'lostDestinationDoesNotOverwriteExistingFilesOrRemoveOriginal'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeFoldersTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native folder test: {name}')
+for name in ('passwordFolderRestoresOnNewDeviceAndRejectsWrongPassword', 'largeAttachmentStreamsIntoFolderAndClearingMarksMailDeleted', 'damagedNewestCatalogFallsBackToThePreviousBackup'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeVaultTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native vault test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

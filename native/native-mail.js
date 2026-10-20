@@ -62,13 +62,17 @@
     MOVE_UNSUPPORTED: ['Dieser Server unterstützt kein sicheres direktes Verschieben. Bitte Anbieter-Webmail verwenden.', 'This server does not support safe direct moves. Use provider webmail.', 'Сервер не поддерживает безопасное перемещение. Используйте веб-почту.', 'Serwer nie obsługuje bezpiecznego przenoszenia. Użyj poczty WWW.'],
     DELETE_UNSUPPORTED: ['Endgültiges Löschen nur im bestätigten Papierkorb und mit gezieltem Server-Löschen möglich.', 'Permanent deletion requires the confirmed Trash folder and targeted server deletion.', 'Удаление возможно только в подтверждённой корзине с адресным удалением на сервере.', 'Trwałe usunięcie wymaga potwierdzonego kosza i precyzyjnego usuwania na serwerze.'],
     FILE_UNAVAILABLE: ['Anhang konnte nicht bereitgestellt werden. Gerätespeicher prüfen oder später erneut versuchen.', 'Attachment unavailable. Check device storage or try again later.', 'Вложение недоступно. Проверьте память или повторите позже.', 'Załącznik niedostępny. Sprawdź pamięć lub spróbuj później.'],
-    ACCOUNT_LIMIT: ['Höchstens 20 Konten in dieser App.', 'Up to 20 accounts in this app.', 'До 20 аккаунтов в приложении.', 'Do 20 kont w aplikacji.']
+    ACCOUNT_LIMIT: ['Höchstens 20 Konten in dieser App.', 'Up to 20 accounts in this app.', 'До 20 аккаунтов в приложении.', 'Do 20 kont w aplikacji.'],
+    VAULT_LOCKED: ['Der Speicherort ist gesperrt. Bitte entsperren; die Mail wurde nicht geladen.', 'The storage location is locked. Please unlock; the email was not loaded.', 'Хранилище заблокировано. Разблокируйте; письмо не загружено.', 'Miejsce zapisu jest zablokowane. Odblokuj; wiadomości nie wczytano.'],
+    VAULT_FOLDER_UNAVAILABLE: ['Der Speicherort ist nicht erreichbar. SD-Karte eingesteckt? Sonst in den Einstellungen den Ordner erneut öffnen.', 'The storage location is unavailable. Is the SD card inserted? Otherwise open the folder again in Settings.', 'Хранилище недоступно. Вставлена ли SD-карта? Иначе откройте папку снова в настройках.', 'Miejsce zapisu niedostępne. Czy karta SD jest włożona? W przeciwnym razie otwórz folder ponownie w ustawieniach.'],
+    VAULT_DAMAGED: ['Eine Datei im Speicherort ist beschädigt oder wurde verändert und wurde nicht verwendet.', 'A file in the storage location is damaged or was changed and was not used.', 'Файл в хранилище повреждён или изменён и не использован.', 'Plik w miejscu zapisu jest uszkodzony lub zmieniony i nie został użyty.'],
+    STORAGE_FULL: ['Nicht genug freier Speicher für diese Mail. Platz schaffen oder einen anderen Speicherort wählen.', 'Not enough free storage for this email. Free up space or choose another location.', 'Недостаточно места для этого письма. Освободите место или выберите другое хранилище.', 'Za mało miejsca na tę wiadomość. Zwolnij miejsce lub wybierz inne miejsce zapisu.']
   };
   function text(key) {
     const values = labels[key] || messages[key];
     return values?.[Math.max(0, languages.indexOf(document.documentElement.lang))] || null;
   }
-  async function invoke(method, args = {}) {
+  async function invoke(method, args = {}, retried = false) {
     try {
       const result=await plugin[method](args);
       if(!result||typeof result!=='object'||Array.isArray(result))throw {code:'BRIDGE_RESPONSE_INVALID'};
@@ -76,6 +80,8 @@
     }
     catch (error) {
       if (error?.code === 'CANCELLED' && method === 'addAccount') return null;
+      // Folder mode: ask once for the folder password (native dialog), then repeat the same request.
+      if (error?.code === 'VAULT_LOCKED' && !retried && window.PBVault && await window.PBVault.unlock().catch(() => false)) return invoke(method, args, true);
       const known=Object.hasOwn(messages,error?.code);
       throw new Error((known?text(error.code):text('CONNECTION_FAILED'))+(known?' ('+error.code+')':''));
     }
@@ -102,6 +108,7 @@
     savedDraft: (account,id) => invoke('savedDraft',{account,id}),
     openAttachment: args => invoke('openAttachment', args),
     openOriginal: args => invoke('openOriginal', args),
+    forgetMessage: args => invoke('forgetMessage', args),
     async request(path, body, method) {
       const url = new URL(path, 'https://mail.invalid');
       const verb = method || (body ? 'POST' : 'GET');

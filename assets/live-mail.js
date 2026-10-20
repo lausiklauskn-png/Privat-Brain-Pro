@@ -824,6 +824,12 @@
       container.append(el("p", "", finding.kennung + " · " + finding.satz));
     }
     for (const a of data.attachments || []) {
+      // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
+      if (!a.data && window.PBVault) {
+        risky = true;
+        container.append(el("p", "", a.name + " · " + PBVault.uncheckedText()));
+        continue;
+      }
       let result;
       try {
         result = await PrueferAnhang.pruefe(a.name, attachmentBytes(a));
@@ -891,11 +897,11 @@
           text: "\n\n---\n" + mail.text,
         }),
       ),
-      btn("forward", () =>
+      btn("forward", async () =>
         compose({
           subject: "Fwd: " + mail.subject,
           text: mail.from + "\n" + mail.text,
-          attachments: mail.attachments,
+          attachments: window.PBVault ? await PBVault.forwardable(mail.attachments, native?.attachmentLimit || 25 * 1024 * 1024) : mail.attachments,
         }),
       ),
       btn("read", () =>
@@ -927,14 +933,14 @@
     actions.append(move);
     if (folders.find((f) => f.path === folder)?.specialUse === "\\Drafts")
       actions.append(
-        btn("compose", () =>
+        btn("compose", async () =>
           compose({
             to: mail.to,
             cc: mail.cc,
             bcc: mail.bcc || "",
             subject: mail.subject,
             text: mail.text,
-            attachments: mail.attachments,
+            attachments: window.PBVault ? await PBVault.forwardable(mail.attachments, native?.attachmentLimit || 25 * 1024 * 1024) : mail.attachments,
           }),
         ),
       );
@@ -972,6 +978,13 @@
     reader.append(actions, window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
     for (const [index, a] of mail.attachments.entries()) {
       if (a.inline) continue; // Still present in raw MIME and attachment checks.
+      if (!a.data && window.PBVault) {
+        reader.append(PBVault.attachmentRow(a, () => run(async () => {
+          await native.forgetMessage({ account, folder, validity, uid: item.uid });
+          await open(item);
+        })));
+        continue;
+      }
       const b = btn("download", () =>
         native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
           new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
