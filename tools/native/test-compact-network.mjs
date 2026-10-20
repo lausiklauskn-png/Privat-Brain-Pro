@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict';
+import {readFile,mkdir} from 'node:fs/promises';
+import {resolve,extname} from 'node:path';
+import {chromium} from 'playwright-core';
+const root=resolve('www'),origin='https://localhost/';
+const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.json':'application/json','.woff2':'font/woff2'};
+let browser,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
+try{
+  browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
+  const page=await browser.newPage({viewport:{width:320,height:640},hasTouch:true,isMobile:true}),errors=[],requests=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/*',async route=>{
+    const url=route.request().url();
+    if(!url.startsWith(origin)){requests.push(url);return route.fulfill({status:200,contentType:'text/plain',body:'remote fixture'});}
+    const path=resolve(root,'.'+new URL(url).pathname.replace(/\/$/,'/index.html'));
+    if(!path.startsWith(root+'/'))return route.abort();
+    try{return route.fulfill({contentType:types[extname(path)]||'application/octet-stream',body:await readFile(path)});}catch{return route.fulfill({status:404,body:''});}
+  });
+  await page.addInitScript(()=>{
+    window.networkChanges=[];window.socketCount=0;window.socketCloses=0;window.streamAborted=0;window.mailCalls=[];
+    const nativeFetch=window.fetch;
+    window.fetch=(url,options)=>{
+      if(String(url)==='https://stream.example.invalid/held')return Promise.resolve(new Response(new ReadableStream({start(stream){options.signal.addEventListener('abort',()=>{window.streamAborted++;stream.error(new DOMException('Aborted','AbortError'));});}})));
+      return nativeFetch(url,options);
+    };
+    window.WebSocket=class extends EventTarget {static OPEN=1;static CLOSED=3;readyState=1;constructor(){super();window.socketCount++;}close(){this.readyState=3;window.socketCloses++;this.dispatchEvent(new Event('close'));}};
+    const account={id:'11111111-1111-4111-8111-111111111111',email:'fixture@example.invalid',provider:'telekom'};
+    window.Capacitor={isNativePlatform:()=>true,Plugins:{
+      ProNetwork:{async getState(){return{offline:localStorage.getItem('fixture-offline')==='true'};},async setOffline({offline}){networkChanges.push(offline);localStorage.setItem('fixture-offline',String(offline));return{offline};}},
+      ProDevice:{async getInfo(){return{versionName:'fixture',nativeMail:true};}},
+      ProMail:{async accounts(){return{items:[account]};},async folders(){return{items:[{path:'INBOX',name:'INBOX',specialUse:'\\Inbox'},{path:'Sent',name:'Sent',specialUse:'\\Sent'}]};},async messages(){return{items:[{uid:7,subject:'Compact message',from:'fixture@example.invalid',flags:[],size:100}],validity:'123',total:1,next:null};},async message(){return{subject:'Compact message',from:'fixture@example.invalid',to:account.email,text:'Original message',html:'<h1>Original newsletter</h1><p>More room for the message.</p>',attachments:[]};},async action(args){mailCalls.push(args);return{ok:true};},async saved(){return{items:[]};},async addAccount(){return account;}}
+    }};
+  });
+  await page.goto(origin);await page.waitForFunction(()=>window.PBNetwork?.ready&&window.PBWorkspace&&typeof db!=='undefined'&&db&&document.querySelector('.native-toolbar-row'));
+  await page.click('[data-tab=mail]');await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('[data-live-uid="7"]').click();
+  await page.locator('.live-mail .mail-html').waitFor();
+  ok('320px touch: Pro name fits and the green offline information is removed',await page.locator('.brand h1').textContent()==='Private Brain Pro'&&await page.locator('.badge-off').count()===0&&await page.locator('.brand h1').evaluate(e=>e.getBoundingClientRect().right<=document.querySelector('header .tools').getBoundingClientRect().left));
+  ok('Native status lamps are mounted at the actual app origin and remain clickable',await page.locator('.native-toolbar-row #sbkim-widget-slot-lebt').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget-slot-verkehr').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget-slot-fremd').isVisible());
+  for(const width of [320,390,768,1280]){
+    await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
+    ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
+      const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
+      return row.height<=44&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=100;
+    }));
+    if(process.env.PB_CAPTURE_DESIGN==='1'){
+      await mkdir('docs/design/compact14',{recursive:true});await page.screenshot({path:`docs/design/compact14/mail-${width}.png`});
+    }
+  }
+  await page.setViewportSize({width:320,height:640});
+  await page.locator('.native-more>summary').click();ok('Phone menu exposes named secondary views; keyboard Escape returns focus',await page.locator('[data-tab=settings]').isVisible());await page.keyboard.press('Escape');ok('Phone view menu closes with focus on its opener',await page.locator('.native-more>summary').evaluate(e=>document.activeElement===e)&&await page.locator('[data-tab=settings]').isHidden());
+  for(const [lang,word]of [['en','More views'],['ru','Другие разделы'],['pl','Więcej widoków'],['de','Weitere Ansichten']]){
+    await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
+    ok(`${lang}: icon tooltip follows the selected language and has the same accessible name`,await page.locator('.native-more>summary').getAttribute('title')===word&&await page.locator('.native-more>summary').getAttribute('aria-label')===word);
+  }
+  ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=36&&r.width>=36&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
+  await page.evaluate(()=>{window.fixtureSocket=new WebSocket('wss://socket.example.invalid');fetch('https://stream.example.invalid/held').then(r=>r.text()).catch(e=>{window.streamError=e.name;window.streamErrorMessage=e.message;});});
+  await page.waitForTimeout(30);
+  ok('Streaming fetch body remains pending before the switch',await page.evaluate(()=>streamAborted===0&&typeof window.streamError==='undefined'));
+  await page.locator('.native-options>summary').click();await page.getByRole('switch').click();
+  await page.waitForFunction(()=>PBNetwork.offline&&window.streamAborted===1&&window.socketCloses===1&&typeof window.streamError==='string');
+  ok('Offline switch closes a running socket and a fetch whose body is still streaming',await page.evaluate(()=>['AbortError','TypeError'].includes(streamError)&&fixtureSocket.readyState===WebSocket.CLOSED));
+  const before=requests.length;
+  ok('Offline blocks fetch, XHR, WebSocket and beacon before their transport is invoked',await page.evaluate(async()=>{
+    const rejected=await fetch('https://network.example.invalid/blocked').then(()=>false,e=>e.message==='APP_OFFLINE');let xhr=false,socket=false;
+    try{const r=new XMLHttpRequest();r.open('GET','https://network.example.invalid/xhr');r.send();}catch(e){xhr=e.message==='APP_OFFLINE';}
+    try{new WebSocket('wss://socket.example.invalid/blocked');}catch(e){socket=e.message==='APP_OFFLINE';}
+    return rejected&&xhr&&socket&&navigator.sendBeacon('https://network.example.invalid/beacon','x')===false&&socketCount===1;
+  })&&requests.length===before);
+  ok('Offline leaves local bundled assets, catalog and mailbox state available',await page.evaluate(async()=>{localStorage.setItem('layout-sentinel','kept');return(await fetch('native.css')).ok&&Array.isArray(await PBMailDevice.accounts())&&document.querySelector('.live-mail .mail-reader h3').textContent==='Compact message';}));
+  await page.reload();await page.waitForFunction(()=>window.PBNetwork?.ready&&PBNetwork.offline&&window.PBWorkspace);
+  ok('Offline state and local data survive a restart without a logout',await page.evaluate(()=>localStorage.getItem('layout-sentinel')==='kept'&&networkChanges.length===0));
+  await page.locator('.native-options>summary').click();await page.getByRole('switch').click();await page.waitForFunction(()=>!PBNetwork.offline);
+  ok('The same switch restores internet access without sending queued mail',await page.evaluate(async()=>(await fetch('https://network.example.invalid/resumed')).ok&&networkChanges.join(',')==='false'&&mailCalls.length===0)&&requests.some(url=>url.endsWith('/resumed')));
+  ok('Compact menus and app-only internet switching have no unhandled runtime errors',errors.length===0);
+}finally{await browser?.close();}
+console.log(`${count} compact toolbar and app-only network checks passed (native transport tested on Android).`);

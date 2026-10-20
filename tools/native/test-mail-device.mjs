@@ -3,6 +3,11 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
+async function clickControl(page,selector) {
+  const control=page.locator(selector);
+  if(!await control.isVisible())await control.locator('xpath=ancestor::details[1]').locator(':scope>summary').click();
+  await control.click();
+}
 const root=resolve('www');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
@@ -141,7 +146,7 @@ try{
   await mail.getByRole('button',{name:'Originalansicht',exact:true}).click();
   await mail.getByRole('button',{name:'Externe Bilder laden',exact:true}).click();
   for(const width of [320,768,1280,1920]) {
-    await page.setViewportSize({width,height:1000});
+    await page.setViewportSize({width,height:width===320?640:900});
     await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: mailbox fills available width and page height without scrolling the whole app`,await page.evaluate(()=>{const r=document.querySelector('#mailWorkspace').getBoundingClientRect();return r.width>=innerWidth-40&&r.bottom<=innerHeight&&r.top>0&&Math.abs(document.querySelector(".wrap").getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollHeight<=innerHeight+1&&document.documentElement.scrollWidth<=innerWidth;}));
     ok(`${width}px: original message remains reachable`,await frame.isVisible());
@@ -149,12 +154,12 @@ try{
     await mail.locator('.live-mail .mail-reader').evaluate(e=>e.scrollTop=0);
     if(process.env.PB_CAPTURE_DESIGN==='1') { await page.waitForTimeout(600); await page.screenshot({path:`docs/design/mail-preview6/nachher-postfach-${width}.png`}); }
   }
-  await page.locator('#themeToggle').click();
+  await clickControl(page,'#themeToggle');
   if(process.env.PB_CAPTURE_DESIGN==='1') { await page.waitForTimeout(600); await page.screenshot({path:'docs/design/mail-preview6/nachher-postfach-dunkel-1920.png'}); }
   await page.evaluate(()=>PBMailDevice.addAccount());
   ok('Native account dialog receives the existing dark theme',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='addAccount').at(-1).args.dark===true));
   ok('Dark app keeps newsletter colors in its isolated original view',await body.locator('h1').evaluate(e=>getComputedStyle(e).color)==='rgb(19, 107, 114)');
-  await page.locator('#themeToggle').click();
+  await clickControl(page,'#themeToggle');
   await page.setViewportSize({width:1280,height:900});
   await button('compose').first().click();
   await page.fill('#pb-live-to','receiver@example.invalid');await page.fill('#pb-live-subject','Native draft');await page.fill('#pb-live-text','Native draft body');
@@ -174,7 +179,7 @@ try{
   await mail.locator('.live-mail [data-mail-folder=outbox]').click();
   ok('Outbox shows uncertain attempts without retry',await mail.locator('[data-native-saved="outbox-fixture"]').isVisible()&&await mail.locator('[data-live-text=restore]').count()===0);
   for(const lang of ['en','ru','pl','de']){
-    await page.locator(`[data-lang="${lang}"]`).click();
+    await clickControl(page,`[data-lang="${lang}"]`);
     ok(`${lang}: connected folders match the local mailbox labels`,await page.evaluate(()=>[...document.querySelectorAll('.live-mail .mail-folders [data-mail-folder]')].slice(0,8).every(b=>b.firstChild.textContent===PBMailUI.icons[b.dataset.mailFolder]+' '+PBMailUI.text(b.dataset.mailFolder))));
     ok(`${lang}: outbox status follows language selector`,await mail.locator('[data-native-status]').textContent()==={de:'Versand unklar – nicht erneut senden',en:'Send result unclear – do not resend',ru:'Отправка не подтверждена — не отправляйте повторно',pl:'Wynik nieznany — nie wysyłaj ponownie'}[lang]);
   }

@@ -3,6 +3,11 @@ import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { chromium } from 'playwright-core';
+async function clickControl(page,selector) {
+  const control=page.locator(selector);
+  if(!await control.isVisible())await control.locator('xpath=ancestor::details[1]').locator(':scope>summary').click();
+  await control.click();
+}
 const root = resolve('www');
 const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.png':'image/png', '.json':'application/json', '.woff2':'font/woff2' };
 const server = createServer(async (req, res) => {
@@ -32,7 +37,7 @@ try {
   for(const width of [320,768,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
-      await page.click(`.tab[data-tab="${tab}"]`);
+      await clickControl(page,`.tab[data-tab="${tab}"]`);
       ok(`${width}px: ${tab} fills available window without global page overflow`,await page.evaluate(()=>{const r=document.querySelector('.panel.on').getBoundingClientRect();return r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;}));
       if(process.env.PB_CAPTURE_DESIGN==='1'&&width===1280&&['search','explorer'].includes(tab))await page.screenshot({path:`docs/design/mail-preview5/nachher-${tab}-1280.png`});
     }
@@ -45,10 +50,10 @@ try {
   ok('Imported document is searchable in native bundle',true);
   await page.reload();await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
   ok('Catalog survives reload',await page.locator('#stFiles').textContent()==='1');
-  const before=await page.locator('html').getAttribute('data-theme');await page.click('#themeToggle');
+  const before=await page.locator('html').getAttribute('data-theme');await clickControl(page,'#themeToggle');
   ok('Existing theme toggle works',await page.locator('html').getAttribute('data-theme')!==before);
   for(const lang of ['en','ru','pl','de']) {
-    await page.locator(`[data-lang="${lang}"]`).click();
+    await clickControl(page,`[data-lang="${lang}"]`);
     ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes({de:'Direkte Mailverbindung',en:'Direct mail',ru:'Прямая почта',pl:'Bezpośrednia poczta'}[lang])));
   }
   ok('No runtime errors',errors.length===0);
@@ -74,7 +79,7 @@ try {
   await updatePage.goto(url);
   await updatePage.waitForSelector('#native-update-check',{state:'attached'});
   ok('Update checks never run automatically',await updatePage.evaluate(()=>window.updateCalls===0));
-  await updatePage.locator('[data-tab="settings"]').click();
+  await clickControl(updatePage,'[data-tab="settings"]');
   await updatePage.locator('#native-update-check').click();
   ok('Check prevents duplicate requests while pending',await updatePage.locator('#native-update-check').isDisabled());
   await updatePage.waitForFunction(()=>typeof window.finishUpdate==='function');
@@ -88,7 +93,7 @@ try {
   await updatePage.waitForFunction(()=>document.querySelector('#native-update-check').disabled===false);
   ok('Failed recheck removes stale download offer',await updatePage.locator('#native-update-download').isHidden());
   for (const lang of ['en','ru','pl','de']) {
-    await updatePage.locator(`[data-lang="${lang}"]`).click();
+    await clickControl(updatePage,`[data-lang="${lang}"]`);
     ok(`${lang}: update failure is translated`,await updatePage.locator('.native-updates').textContent().then(s=>s.includes({de:'nicht möglich',en:'Unable to check',ru:'Не удалось',pl:'Nie można'}[lang])));
   }
   await updatePage.evaluate(()=>window.updateMode='current');

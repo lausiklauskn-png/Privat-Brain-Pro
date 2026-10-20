@@ -16,9 +16,12 @@ final class GmailUserInfo {
     GmailUserInfo(Connection connection){this.connection=connection;}
     String email(String token)throws Exception{
         if(token==null||token.isEmpty()||token.indexOf('\r')>=0||token.indexOf('\n')>=0)throw new MailFailure("GMAIL_TOKEN_MISSING");
-        HttpsURLConnection request=null;
+        AppNetwork.check();
+        HttpsURLConnection request=null;AutoCloseable cancellation=null;
         try{
-            request=connection.open(new URL(ENDPOINT));request.setInstanceFollowRedirects(false);request.setUseCaches(false);
+            request=connection.open(new URL(ENDPOINT));
+            HttpsURLConnection active=request;cancellation=AppNetwork.track(active::disconnect);
+            request.setInstanceFollowRedirects(false);request.setUseCaches(false);
             request.setConnectTimeout(15000);request.setReadTimeout(20000);request.setRequestMethod("GET");
             request.setRequestProperty("Authorization","Bearer "+token);request.setRequestProperty("Accept","application/json");
             int status=request.getResponseCode();
@@ -33,8 +36,9 @@ final class GmailUserInfo {
             JSONObject info=new JSONObject(output.toString(StandardCharsets.UTF_8.name()));
             if(!Boolean.TRUE.equals(info.opt("verified_email")))throw new MailFailure("GMAIL_ACCOUNT_UNAVAILABLE");
             return GmailIdentity.checked(info.optString("email",null));
-        }catch(MailFailure failure){throw failure;}
+        }catch(AppNetwork.Blocked failure){throw failure;}
+        catch(MailFailure failure){throw failure;}
         catch(Exception failure){throw new MailFailure("GMAIL_ACCOUNT_UNAVAILABLE");}
-        finally{if(request!=null)request.disconnect();}
+        finally{if(cancellation!=null)AppNetwork.release(cancellation);if(request!=null)request.disconnect();}
     }
 }

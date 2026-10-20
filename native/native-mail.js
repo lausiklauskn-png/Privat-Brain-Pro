@@ -26,6 +26,7 @@
     download: ['Original teilen / sichern', 'Share / save original', 'Поделиться / сохранить оригинал', 'Udostępnij / zapisz oryginał']
   };
   const messages = {
+    APP_OFFLINE: ['Die App ist vom Internet getrennt. Im App-Menü den Internetzugriff wieder erlauben.', 'The app is disconnected from the internet. Allow internet access again in the app menu.', 'Приложение отключено от интернета. Разрешите доступ в меню приложения.', 'Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu aplikacji.'],
     BRIDGE_RESPONSE_INVALID: ['Die App hat keine gültige Postfachantwort erhalten. Bitte aktualisieren.', 'The app received no valid mailbox response. Please refresh.', 'Приложение не получило корректный ответ почты. Обновите список.', 'Aplikacja nie otrzymała poprawnej odpowiedzi poczty. Odśwież.'],
     CANCELLED: ['Der Postfachaufruf wurde abgebrochen. Bitte erneut versuchen.', 'The mailbox operation was cancelled. Please try again.', 'Почтовая операция прервана. Повторите попытку.', 'Operacja pocztowa anulowana. Spróbuj ponownie.'],
     GMAIL_SCOPE_MISSING: ["Google hat den erforderlichen Mail-Zugriff nicht freigegeben. Mail-Berechtigung und Testnutzer prüfen.", "Google has not granted mail access. Check mail permission and test users.", "Google не разрешил доступ к почте. Проверьте разрешение и тестовых пользователей.", "Google nie przyznał dostępu do poczty. Sprawdź uprawnienia i użytkowników testowych."],

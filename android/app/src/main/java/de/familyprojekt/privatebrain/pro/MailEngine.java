@@ -26,10 +26,12 @@ final class MailEngine {
     private Session session() { return Session.getInstance(MailAccount.properties()); }
     private Session session(MailAccount account) { return Session.getInstance(MailAccount.properties(account.authType)); }
     private String credential(MailAccount account) throws Exception {
+        AppNetwork.check();
         if (!account.authType.equals("oauth2")) return account.password;
         if (oauth == null) throw new MailFailure("GMAIL_AUTH_REQUIRED");return oauth.token(account.email);
     }
     private IMAPStore imap(MailAccount account) throws Exception {
+        AppNetwork.check();
         IMAPStore connection = (IMAPStore) session(account).getStore("imaps");
         String credential = credential(account);
         try { connection.connect(account.imap, 993, account.authType.equals("oauth2")?GmailIdentity.key(account.user):account.user, credential); return connection; }
@@ -37,6 +39,7 @@ final class MailEngine {
         catch (Exception error) { try { connection.close(); } catch (Exception ignored) { } throw error; }
     }
     private SMTPTransport smtp(MailAccount account) throws Exception {
+        AppNetwork.check();
         SMTPTransport connection = (SMTPTransport) session(account).getTransport("smtps");
         String credential = credential(account);
         try { connection.connect(account.smtp, 465, account.authType.equals("oauth2")?GmailIdentity.key(account.user):account.user, credential); return connection; }
@@ -211,6 +214,7 @@ final class MailEngine {
         }
     }
     JSONObject send(MailAccount account, JSONObject draft) throws Exception {
+        AppNetwork.check();
         Session session = session();
         byte[] mime = MailMime.bytes(MailMime.compose(account, draft, session));
         MailOutbox.Delivery delivery = new MailOutbox.Delivery() {

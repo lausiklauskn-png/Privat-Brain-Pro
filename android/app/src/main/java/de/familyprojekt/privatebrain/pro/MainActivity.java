@@ -8,6 +8,8 @@ public class MainActivity extends BridgeActivity {
     private GmailAuthorization google;
     GmailAuthorization google() { return google; }
     @Override public void onCreate(Bundle state) {
+        AppNetwork.initialize(this);
+        registerPlugin(ProNetworkPlugin.class);
         registerPlugin(ProDevicePlugin.class);
         registerPlugin(ProUpdatesPlugin.class);
         registerPlugin(ProMailPlugin.class);
@@ -15,6 +17,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProLinksPlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);
+        bridge.getWebView().getSettings().setBlockNetworkLoads(AppNetwork.isOffline());
+        bridge.getWebView().setNetworkAvailable(!AppNetwork.isOffline());
         bridge.setWebViewClient(new com.getcapacitor.BridgeWebViewClient(bridge) {
             @Override public boolean shouldOverrideUrlLoading(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
                 if (request.getUrl().getPath() != null && request.getUrl().getPath().startsWith(BrowserLinks.PREFIX)) {
@@ -28,6 +32,9 @@ public class MainActivity extends BridgeActivity {
                 return super.shouldOverrideUrlLoading(view, request);
             }
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+                if (AppNetwork.isOffline() && AppNetwork.external(request.getUrl().toString()))
+                    return new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "App offline",
+                        java.util.Collections.emptyMap(), new java.io.ByteArrayInputStream(new byte[0]));
                 if (request.getUrl().getPath() != null && request.getUrl().getPath().startsWith(BrowserLinks.PREFIX))
                     return new android.webkit.WebResourceResponse("text/plain", "UTF-8", new java.io.ByteArrayInputStream(new byte[0]));
                 return super.shouldInterceptRequest(view, request);

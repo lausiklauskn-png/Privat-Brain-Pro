@@ -43,6 +43,9 @@ for name in ('silentGoogleCancellationRequiresConsentWithoutPretendingUserCancel
 for name in ('allSevenTemplatesSurviveEncryptedReopeningWithoutChangingExistingAccountsOrDrafts', 'fixedProviderServersCannotBeRedirectedAndMicrosoftNeverFallsBackToPassword'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeProviderTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native provider test: {name}')
+for name in ('offlineClosesExistingMailSocketAndBlocksNewTransportBeforeConnect', 'offlineKeepsAccountsAndDraftsAndDoesNotResendInterruptedSubmission', 'nativeSwitchSurvivesRestartKeepsLocalAssetsAndCanBeEnabledAgain'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeNetworkTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed app-only network test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

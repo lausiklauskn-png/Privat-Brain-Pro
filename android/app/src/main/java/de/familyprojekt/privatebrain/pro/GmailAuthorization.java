@@ -55,14 +55,18 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         if (pending != null) { callback.failure("GMAIL_AUTH_BUSY");return; }
         pending = callback;expected = email;
         try {
+            AppNetwork.check();
             if(email==null)accountPicker.launch(AccountManager.newChooseAccountIntent(null,(java.util.List<Account>)null,new String[]{"com.google"},null,null,null,null));
             else authorize(callback);
         } catch(Exception error){fail(code(error));}
     }
     private void authorize(Callback callback) {
+        try { AppNetwork.check(); } catch(Exception error) { fail("APP_OFFLINE");return; }
+        final long started=AppNetwork.epoch();
         client.authorize(request(expected)).addOnSuccessListener(result -> {
             if (pending != callback) return;
             try {
+                AppNetwork.check(started);
                 if (result.hasResolution()) launcher.launch(new IntentSenderRequest.Builder(result.getPendingIntent()).build());
                 else complete(result);
             } catch (Exception error) { fail(code(error)); }
@@ -72,7 +76,9 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         Callback callback=pending;String requested=expected;if(callback==null)return;
         identityWorker.execute(()->{
             try{
+                AppNetwork.check();
                 GmailGrant grant=grant(result,requested);
+                AppNetwork.check();
                 main.post(()->{
                     if(pending!=callback)return;
                     tokens.put(grant.email,grant.token);pending=null;expected=null;callback.success(grant.email);
@@ -89,6 +95,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     }
     private void fail(String code) { Callback callback = pending;pending = null;expected = null;if (callback != null) callback.failure(code); }
     @Override public String token(String email) throws Exception {
+        AppNetwork.check();
         String cached=tokens.get(email);if(cached!=null)return cached;
         try {
             AuthorizationResult result = Tasks.await(client.authorize(request(email)), 20, TimeUnit.SECONDS);
@@ -98,6 +105,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     }
     @Override public void invalidate(String token) {
         tokens.invalidate(token);
+        if(AppNetwork.isOffline())return;
         try { Tasks.await(client.clearToken(ClearTokenRequest.builder().setToken(token).build()), 5, TimeUnit.SECONDS); }
         catch (Exception ignored) { /* Explicit reauthorization remains required; never resend automatically. */ }
     }
@@ -108,6 +116,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         return code.equals("CANCELLED")?"GMAIL_CONSENT_REQUIRED":code;
     }
     static String code(Exception error) {
+        if(error instanceof AppNetwork.Blocked)return "APP_OFFLINE";
         if (error instanceof MailFailure) return ((MailFailure) error).code;
         Throwable source = error;while (source.getCause() != null && source.getCause() != source) source = source.getCause();
         if (source instanceof ApiException) {

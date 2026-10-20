@@ -131,3 +131,104 @@ body .wrap { height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-i
 .native-file-menu button { display:block;min-height:44px;width:100%;text-align:left; }
 
 .native-pdf-page[hidden] { display:none; }
+
+/* Compact native toolbars: reserve the window for messages, not navigation cards. */
+.compact-tool { display:inline-flex!important;align-items:center;justify-content:center;flex:none;gap:6px;box-sizing:border-box;position:relative;min-width:36px;min-height:36px!important;width:36px;height:36px;padding:6px!important;line-height:1!important;font-size:.85rem;white-space:nowrap; }
+.compact-tool .compact-label { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap!important; }
+.compact-icon { width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none; }
+.compact-tool:focus-visible { outline:2px solid var(--acc);outline-offset:2px; }
+.compact-tool:disabled { opacity:.45; }
+body .wrap { padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+header.top { display:flex;align-items:center;flex-wrap:nowrap;gap:8px;padding:0 0 4px;min-height:36px; }
+header .logo,header .logo img { width:28px;height:28px;flex:none; }
+header .brand { flex:1;min-width:0; }
+header .brand h1 { font-size:1.25rem;line-height:1.25;margin:0;white-space:nowrap; }
+header .brand .sub { display:none; }
+header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;gap:4px;margin:0;max-width:none; }
+.native-navigation { display:flex;flex-wrap:nowrap;gap:2px; }
+.native-toolbar-row { display:flex;align-items:center;flex:none;gap:8px;margin:0 0 4px;min-height:36px;position:relative;z-index:31; }
+.native-toolbar-row .main-pages { display:flex;flex:none;gap:4px;margin:0;padding:0; }
+.native-toolbar-row .tab { flex:none;min-width:36px;min-height:36px;text-align:center;border-radius:8px;box-shadow:none; }
+.native-toolbar-row .workspace-tools { display:flex;flex:none;flex-wrap:nowrap;gap:4px;margin:0;padding:0;overflow:visible; }
+.native-more,.native-options { position:relative;flex:none; }
+.native-more>summary,.native-options>summary { list-style:none;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px; }
+.native-more>summary::-webkit-details-marker,.native-options>summary::-webkit-details-marker { display:none; }
+.native-more>summary { display:none!important; }
+.native-options-panel { position:absolute;right:0;top:calc(100% + 6px);z-index:65;display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:min(300px,calc(100vw - 24px));max-height:60dvh;overflow:auto;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow); }
+.native-options-panel .langsw { margin:0; }
+.native-options-panel .langsw button { min-width:36px;min-height:36px;padding:4px; }
+.native-options-panel .badge-off { font-size:.8rem; }
+.native-options-panel [hidden] { display:none!important; }
+#mailWorkspace .mail-head { gap:4px;padding:4px 6px;min-width:0; }
+#mailWorkspace .mail-head h2 { font-size:1.2rem;line-height:1.25; }
+#mailWorkspace>.mail-app { margin-top:2px; }
+#mailWorkspace .mail-app { border-radius:10px; }
+#mailWorkspace .live-mail>.mail-head { display:flex;flex-wrap:nowrap; }
+#mailWorkspace .live-mail>.mail-head>h2 { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+#mailWorkspace .mail-account-bar { display:flex;flex:1;flex-direction:row;flex-wrap:nowrap;gap:4px;min-width:0;margin:0;padding:0;border:0;border-radius:0;overflow:visible;background:transparent; }
+#mailWorkspace .mail-account-bar select { flex:1 1 0;min-width:0;width:0;min-height:36px;height:36px;padding:4px 6px;font-size:.85rem; }
+#mailWorkspace .mail-notice { font-size:.75rem;line-height:1.4;padding:4px 8px;overflow-wrap:anywhere; }
+#mailWorkspace .mail-list { padding:8px; }
+#mailWorkspace .mail-list input[type=search] { min-height:36px;height:36px;padding:4px 8px;font-size:.85rem;margin-bottom:4px; }
+#mailWorkspace .mail-list-actions,#mailWorkspace .mail-reader-actions { gap:4px;margin:4px 0;align-items:center; }
+#mailWorkspace .mail-list-actions select { flex:1 1 110px;min-width:0;width:auto;min-height:36px;height:36px;padding:4px 6px;font-size:.8rem; }
+#mailWorkspace .mail-count { margin:4px 0;font-size:.75rem; }
+#mailWorkspace .mail-folders { padding:4px; }
+#mailWorkspace .mail-folder { min-height:36px;padding:6px 8px;font-size:.85rem;gap:6px; }
+#mailWorkspace .mail-reader { padding:8px; }
+#mailWorkspace .mail-reader h3 { font-size:1.1rem;line-height:1.35;margin:4px 0; }
+#mailWorkspace .mail-reader>p.mail-muted { margin:4px 0;font-size:.8rem; }
+#mailWorkspace .mail-reader-actions>.mail-muted { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+#mailWorkspace .mail-original>.mail-reader-actions:empty { display:none; }
+#mailWorkspace .mail-message-tools[open] { flex-basis:auto;position:relative; }
+#mailWorkspace .mail-message-menu { position:absolute;z-index:40;top:100%;left:0;width:min(300px,calc(100vw - 40px));max-height:50dvh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:var(--shadow); }
+#mailWorkspace .mail-message-menu .compact-tool,#mailWorkspace .mail-account-menu .compact-tool { justify-content:flex-start;width:100%;height:auto;min-height:36px; }
+#mailWorkspace .mail-message-menu .compact-label,#mailWorkspace .mail-account-menu .compact-label { position:static!important;width:auto!important;height:auto!important;margin:0!important;clip-path:none;white-space:normal!important; }
+#mailWorkspace .mail-html { margin-top:4px;min-height:240px;height:max(360px,calc(100dvh - 220px));border-radius:6px; }
+.explorer-toolbar { gap:4px;margin:4px 0;align-items:center; }
+.explorer-toolbar input,.explorer-toolbar select { min-height:36px;height:36px;padding:4px 6px;font-size:.85rem; }
+#explorerPath { margin:4px 0;font-size:.75rem; }
+@media(max-width:650px) {
+  body .wrap { padding:4px 6px max(8px,env(safe-area-inset-bottom)); }
+  header.top { gap:5px; }
+  header .brand h1 { font-size:1rem; }
+  header .logo,header .logo img { width:24px;height:24px; }
+  header.top .tools { flex-basis:auto;justify-content:flex-end;gap:2px; }
+  .native-toolbar-row { gap:4px;justify-content:space-between; }
+  .native-toolbar-row .main-pages { flex:1;justify-content:space-between; }
+  .native-more>summary { display:inline-flex!important; }
+  .native-more>.workspace-tools { position:absolute;right:0;top:calc(100% + 4px);display:flex;flex-direction:column;align-items:stretch;width:min(260px,calc(100vw - 24px));padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow); }
+  .native-more .workspace-tools .tab { width:100%;justify-content:flex-start; }
+  .native-more .workspace-tools .compact-label { position:static!important;width:auto!important;height:auto!important;margin:0!important;clip-path:none;white-space:normal!important; }
+  .native-more .workspace-tools .compact-icon { display:none; }
+  #mailWorkspace .mail-head { padding:2px; }
+  #mailWorkspace .mail-head h2 { font-size:1rem; }
+  #mailWorkspace .mail-account-bar { gap:2px; }
+  #mailWorkspace .mail-account-bar select { font-size:.75rem; }
+  #mailWorkspace .mail-folders { max-height:44px;min-height:40px;align-items:center;gap:4px;padding:2px; }
+  #mailWorkspace .mail-folder { flex:none;white-space:nowrap;font-size:.8rem; }
+  #mailWorkspace .mail-reader { padding:6px; }
+  .mail-account-tools>summary::after,.mail-message-tools>summary::after { display:none; }
+}
+@media(pointer:coarse) {
+  .compact-tool { min-width:40px;min-height:40px!important;width:40px;height:40px; }
+  #mailWorkspace .mail-account-bar select { height:40px;min-height:40px; }
+  header .brand h1 { font-size:.95rem; }
+}
+.native-options-panel .native-offline-switch { display:block;width:100%;min-height:40px;padding:6px 8px;font:inherit;font-size:.8rem;text-align:left;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--field); }
+.native-offline-switch[aria-checked=true] { border-color:var(--acc); }
+.native-network-error { color:var(--ink);font-size:.8rem;margin:0; }
+.native-options-panel>#pbNetBtn,.native-options-panel>#pbPinBtn { position:static!important;inset:auto!important;z-index:auto!important;touch-action:auto!important;width:100%!important;height:auto!important;min-height:36px!important;justify-content:flex-start!important;padding:6px!important;font-size:.8rem!important;box-shadow:none!important; }
+.native-options-panel>#pbNetBtn .compact-label,.native-options-panel>#pbPinBtn .compact-label { position:static!important;width:auto!important;height:auto!important;margin:0!important;clip-path:none;white-space:normal!important; }
+.native-toolbar-row>#sbkim-widget { position:static!important;inset:auto!important;transform:none!important;flex:none;touch-action:auto!important;padding:0 4px!important;gap:0!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:auto!important; }
+.native-toolbar-row #sbkim-widget .sbkim-widget-label { display:none; }
+.native-toolbar-row #sbkim-widget .sbkim-widget-slot { min-height:36px!important;min-width:24px!important;width:24px!important;max-width:24px!important;padding:4px!important;justify-content:center!important; }
+.native-toolbar-row #sbkim-widget .sbkim-widget-btn { display:none; }
+#mailWorkspace .mail-item button { min-height:64px;padding:6px 4px; }
+@media(max-width:650px) {
+  .native-toolbar-row { gap:2px; }
+  .native-toolbar-row .main-pages { gap:0; }
+  .native-toolbar-row>#sbkim-widget { padding:0!important; }
+}
+.native-toolbar-row>#sbkim-widget { --sbkim-widget-lamp-bg:var(--mut); }
+@media(min-width:901px) { #mailWorkspace .live-mail .mail-back { display:none!important; } }
