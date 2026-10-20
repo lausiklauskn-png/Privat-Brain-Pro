@@ -395,7 +395,7 @@ final class Vault {
 
     // ---------- Mail attachments ----------
     synchronized JSONArray attachments() throws IOException {
-        bind();
+        requireUnlocked();
         if (attachmentIndex == null) {
             byte[] data = readLatest(ATTACHMENTS, "verzeichnis", "idx", 64L * 1024 * 1024);
             try { attachmentIndex = data == null ? new JSONArray() : new JSONObject(new String(data, StandardCharsets.UTF_8)).getJSONArray("items"); }
@@ -468,7 +468,7 @@ final class Vault {
         };
     }
     synchronized JSONObject clearAttachments() throws Exception {
-        bind();
+        requireUnlocked();
         JSONArray items = attachments();
         long bytes = 0; int count = items.length();
         for (int i = 0; i < items.length(); i++) bytes += items.getJSONObject(i).optLong("size");
@@ -515,7 +515,7 @@ final class Vault {
     }
     JSONObject loadMail(String key) throws Exception {
         Entry file;
-        synchronized (this) { bind(); file = child(dir(MAILS), key + ".pbv"); }
+        synchronized (this) { requireUnlocked(); file = child(dir(MAILS), key + ".pbv"); }
         if (file == null) return null;
         try (VaultCrypto.Reader r = reader(file.id, "mail/" + key)) {
             return new JSONObject(new String(VaultCrypto.readAll(r, 64L * 1024 * 1024), StandardCharsets.UTF_8));
@@ -532,7 +532,7 @@ final class Vault {
         commit(p);
     }
     synchronized void forgetMail(String key) throws IOException {
-        bind();
+        requireUnlocked();
         for (Entry e : children(dir(MAILS))) if (e.name.equals(key + ".pbv")) delete(e.id);
     }
     /** Marks references whose files were removed ("Ganzen Ordner leeren"). */
@@ -579,7 +579,7 @@ final class Vault {
     /** Adds missing accounts, drafts and send records. Existing local data is never replaced. */
     JSONObject restoreMailStore(EncryptedMailStore store) throws Exception {
         byte[] data;
-        synchronized (this) { bind(); data = readLatest(MAILS, "konten", "acc", 64L * 1024 * 1024); }
+        synchronized (this) { requireUnlocked(); data = readLatest(MAILS, "konten", "acc", 64L * 1024 * 1024); }
         int accounts = 0, records = 0;
         if (data == null) return new JSONObject().put("accounts", 0).put("records", 0);
         JSONObject all = new JSONObject(new String(data, StandardCharsets.UTF_8)).getJSONObject("records");
@@ -600,7 +600,7 @@ final class Vault {
 
     // ---------- Catalog backup (written in pieces by the page) ----------
     synchronized String catalogBegin() throws Exception {
-        bind();
+        requireUnlocked();
         Pending p = beginVersion(CATALOG, "katalog", "cat", 512L * 1024 * 1024);
         String ticket = UUID.randomUUID().toString();
         if (pending.size() >= 2) { abort(p); throw fail("VAULT_BUSY"); }
@@ -621,7 +621,7 @@ final class Vault {
     }
     synchronized void catalogAbort(String ticket) { Pending p = pending.remove(ticket); if (p != null) abort(p); }
     synchronized JSONObject catalogInfo() throws Exception {
-        bind();
+        requireUnlocked();
         for (Entry e : versions(CATALOG, "katalog")) {
             try (VaultCrypto.Reader r = reader(e.id, "cat/" + number(e.name))) {
                 r.chunk(r.size() == 0 ? 0 : (r.size() - 1) / VaultCrypto.CHUNK);
@@ -641,7 +641,7 @@ final class Vault {
 
     // ---------- Originals ("Dateien hinzufügen") ----------
     synchronized JSONArray originals() throws IOException {
-        bind();
+        requireUnlocked();
         if (originalIndex == null) {
             byte[] data = readLatest(ORIGINALS, "verzeichnis", "oidx", 64L * 1024 * 1024);
             try { originalIndex = data == null ? new JSONArray() : new JSONObject(new String(data, StandardCharsets.UTF_8)).getJSONArray("items"); }
