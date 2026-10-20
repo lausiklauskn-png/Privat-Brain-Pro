@@ -803,3 +803,16 @@ Engine-Prüfungen unter Linux belegen keine echten iOS-/Windows-/macOS-Geräte.
 Android-Emulator ist kein Samsung-/DeX-Gerät. Installierbar bleibt die Android-APK;
 native iOS-/Windows-/macOS-/Linux-Ausgaben sind noch nicht vorhanden. Die
 unabhängige PWA und die Google-Registrierung bleiben unverändert.
+
+## Vorschau .17 – Veröffentlichung noch ausstehend (2026-10-20)
+
+Geplanter unveränderter Quellstand `eb800faf25676055a19a49eea83d0ba158e896ec`,
+versionCode 17, versionName `0.1.0-preview.17`. Laut übermitteltem Auftrag ist die
+Quell-CI `39458924438` grün; der Release-Versuch `39461965718` scheiterte beim
+Lesen des Keystores. Diese beiden Laufstände sind Angaben aus der Übergabe.
+
+Der gemeinsame [Veröffentlichungsweg](VEROEFFENTLICHEN.md) wird vorbereitet.
+Noch kein Nachweis für reparierte Secrets, signiertes Update .16 → .17,
+Veröffentlichung oder bytegleichen öffentlichen .17-Download. Deshalb noch kein
+Abschnitt „Veröffentlichte Version .17“ und keine erfundene APK-Prüfsumme.
+Am Tablet ist Bauabschnitt 1 weiterhin nicht gemessen.

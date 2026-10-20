@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="Isolated signed upgrade probe" />
+    <instrumentation android:name=".UpgradeProbe"
+        android:targetPackage="${probeTarget}"
+        android:functionalTest="true" />
+</manifest>

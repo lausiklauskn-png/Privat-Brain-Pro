@@ -100,6 +100,11 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           script: |
             bash tools/native/run-instrumentation.sh
+            # Test the probe itself without accessing the preview signing key.
+            # This uses the SAME debug APK twice, so it is not a release update proof.
+            ./android/gradlew --no-daemon --max-workers=2 -p tools/native/upgrade-probe -PprobeTarget=de.familyprojekt.privatebrain.pro.preview.debug assembleDebug
+            adb uninstall de.familyprojekt.privatebrain.pro.preview.debug
+            PB_UPGRADE_TEST_PACKAGE=de.familyprojekt.privatebrain.pro.preview.debug bash tools/native/run-signed-upgrade.sh android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/app-debug.apk tools/native/upgrade-probe/build/outputs/apk/debug/*.apk
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

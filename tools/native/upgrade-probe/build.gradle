@@ -1,0 +1,24 @@
+plugins { id 'com.android.application' version '8.13.0' }
+android {
+    namespace 'de.familyprojekt.privatebrain.upgradeprobe'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'de.familyprojekt.privatebrain.upgradeprobe'
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName '1'
+        manifestPlaceholders = [probeTarget: project.findProperty('probeTarget') ?: 'de.familyprojekt.privatebrain.pro.preview']
+    }
+    signingConfigs {
+        preview {
+            if (System.getenv('PB_KEYSTORE_FILE')) {
+                storeFile file(System.getenv('PB_KEYSTORE_FILE'))
+                storePassword System.getenv('PB_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('PB_KEY_ALIAS')
+                keyPassword System.getenv('PB_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes { release { signingConfig signingConfigs.preview } }
+}
