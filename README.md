@@ -26,9 +26,11 @@ einen hellen Hintergrund.
 ## Entwicklung ohne eigenen PC
 
 GitHub Actions prüft den Code und erstellt Android-Build-Artefakte. Der Ablauf
-„Signierte Android-Testversion oder stabile Version“ veröffentlicht nur nach
-manuellem Start und mit sicher hinterlegtem Signierschlüssel. Kein automatisches
-Verteilen jedes Commits. Details: [Android-Build und Signierung](docs/ANDROID.md).
+„Signierte Android-Testversion oder stabile Version“ veröffentlicht nach manuellem
+Start oder einem Vorschau-Versions-Tag und nur mit dem sicher in GitHub
+hinterlegten bisherigen Signierschlüssel. Kein automatisches Verteilen jedes
+Commits. [Gemeinsamer Veröffentlichungsweg für Claude und Codex](docs/VEROEFFENTLICHEN.md),
+[Android-Build und Signierung](docs/ANDROID.md).
 
 Für eine Build-Umgebung mit Node 22+, JDK 21 und Android SDK 36:
 

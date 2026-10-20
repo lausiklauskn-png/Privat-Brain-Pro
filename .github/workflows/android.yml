@@ -34,7 +34,7 @@ jobs:
           else
             code=$?
             cat "$RUNNER_TEMP/layout.log"
-            python3 -c 'import os; from pathlib import Path; t=(Path(os.environ["RUNNER_TEMP"])/"layout.log").read_text(errors="replace")[-6000:]; print("::error title=Browser layout::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+            python3 -c 'import os; from pathlib import Path; t=(Path(os.environ["RUNNER_TEMP"])/"layout.log").read_bytes()[-2800:].decode(errors="replace"); print("::error title=Browser layout::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
             exit "$code"
           fi
         env:
@@ -69,7 +69,7 @@ jobs:
           report_failure() {
             code=$?
             if [[ "$code" -ne 0 ]]; then
-              python3 -c 'import os; from pathlib import Path; p=Path(os.environ["RUNNER_TEMP"])/"web-tests.log"; t=p.read_text(errors="replace")[-6000:] if p.exists() else "No test log"; print("::error title=Web regression::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+              python3 -c 'import os; from pathlib import Path; p=Path(os.environ["RUNNER_TEMP"])/"web-tests.log"; t=p.read_bytes()[-2800:].decode(errors="replace") if p.exists() else "No test log"; print("::error title=Web regression::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
             fi
             exit "$code"
           }
@@ -172,7 +172,7 @@ jobs:
           build=Path(os.environ['RUNNER_TEMP'])/'probe-build.log'
           if build.exists(): paths.append(build)
           for path in paths:
-              text=path.read_text(errors='replace')[-6000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              text=path.read_bytes()[-2800:].decode(errors='replace').replace('%','%25').replace('\r','%0D').replace('\n','%0A')
               print('::error title=Upgrade probe::'+text)
           PYERROR
       - uses: actions/upload-artifact@v7.0.2

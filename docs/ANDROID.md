@@ -47,7 +47,11 @@ vor öffentlicher Verteilung muss die Wiederherstellung geprüft sein. Für Prod
 keinen flüchtigen Debugschlüssel verwenden. Ein lokal erstellter Vorschau-Schlüssel
 ist ausschließlich für Tests und kein nachgewiesenes langfristiges Backup.
 
-Manueller Ablauf **Signierte Android-Testversion oder stabile Version** auf `main`:
+Der Ablauf **Signierte Android-Testversion oder stabile Version** kann für
+Vorschauen durch einen Versions-Tag auf einem geprüften main-Commit ausgelöst
+werden. Signatur- und Versionsprüfung sowie signierte Emulator-Updateprobe müssen
+vor der Veröffentlichung bestehen. [Vollständige Anleitung für beide Sitzungen](VEROEFFENTLICHEN.md).
+Manueller Start auf `main` bleibt verfügbar:
 `test` + Tag passend zur `versionName` (z. B. `v0.1.0-preview.1`). Die APK wird als
 GitHub-Prerelease bereitgestellt, mit überprüfter Signatur und SHA-256. Stabile Tags
 haben keinen Vorschauzusatz. `versionName` und `versionCode` vor jeder neuen Version
