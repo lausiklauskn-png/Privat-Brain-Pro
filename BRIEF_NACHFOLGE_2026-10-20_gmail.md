@@ -1,6 +1,6 @@
 > **Neuester Stand: Vorschau .10 veröffentlicht**, 2026-10-20.
 
-## Neuer Folgeauftrag: weitere Anbieter und Microsoft vorbereiten (.12 in Prüfung)
+## Aktuell: sieben Anbieter und Microsoft-Vorbereitung (.12 veröffentlicht)
 
 Nutzer wünscht mehrere bekannte Anbieter. Vier native Vorlagen sind ergänzt:
 WEB.DE, GMX, Yahoo Mail und 1&1/IONOS; mit Telekom, Hetzner und Google sieben
@@ -19,9 +19,26 @@ Konkreter Plan mit Paket/Zertifikat, Zielgruppe und delegierten Berechtigungen:
 Keine fremden Client-IDs, Client-Secrets oder unbestätigten 465-Passwortvorlagen.
 Die frühere Googlemail-Nachprüfung am Tablet bleibt parallel offen.
 
+
+[APK .12](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.12/Private-Brain-Pro-0.1.0-preview.12.apk)
+über die bestehende Test-App installieren. App-Commit
+`4fb2a9a3f2be196fb259cc43a2f77c1f7ab4cf7e` (PR22), Quellstand
+`130b5f9347ae97e6e90368bf86c6323f8eb113dd`, vollständige CI
+39412237956/39412342209 mit 31 nativen Fällen und allen übrigen Prüfungen erfolgreich.
+Signiertes Update .11 → .12 39413230433 erfolgreich: Spracheinstellung erhalten,
+Yahoo-Auswahl und Microsoft-Einrichtungsplan ohne Passwortfelder sowie Rückwege
+geprüft. Vorherige Probe 39412634782 scheiterte allein am großgeschriebenen
+Android-Knopftext; Vergleich im Prüfer korrigiert, App/APK unverändert.
+Veröffentlichung 39413729351, öffentlicher Download bytegleich geprüft:
+5.565.723 Bytes, SHA256
+`e2ef47acaa411d773cc703b9a4a48ba7747bccf088622131a6e00c87000766ed`.
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-12--2026-10-20).
+Neue Anbieter müssen am echten Konto geprüft werden; Yahoo-App-Passwort und
+WEB.DE-/GMX-IMAP-Freischaltung beachten. Keine echten Zugangsdaten im Chat anfordern.
+
 ---
 
-## Aktuell: Vorschau .11 veröffentlicht — 2026-10-20
+## Vorheriger Stand: Vorschau .11 — 2026-10-20
 
 Die folgenden älteren Abschnitte dokumentieren frühere Stände. Aktuell existieren
 Google-Cloud-Projekt, externe OAuth-Grundkonfiguration und Android-Client für das
