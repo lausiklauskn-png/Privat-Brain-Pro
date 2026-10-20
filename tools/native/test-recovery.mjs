@@ -17,6 +17,16 @@ try{
  });
  await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>window.PBTresor&&window.PBRecoveryExport&&window.PBWorkspace);
  await page.click('.tab[data-tab=settings]');await page.click('#tresorSetup');
+ await page.evaluate(()=>{
+  window.originalSplit=JasonLib.splitSecret;
+  JasonLib.splitSecret=async pw=>{const result=await originalSplit(pw);return new Promise(resolve=>window.finishGeneration=()=>resolve(result));};
+ });
+ await page.fill('#tzPw','synthetic-cancelled-generation');await page.fill('#tzPw2','synthetic-cancelled-generation');await page.click('#tzMk');
+ await page.waitForFunction(()=>typeof window.finishGeneration==='function');
+ ok('Pending generation prevents password edits and duplicate generation',await page.locator('#tzPw').isDisabled()&&await page.locator('#tzMk').isDisabled());
+ await page.click('#tresorModalBg button[data-tclose]');await page.click('#tresorSetup');
+ await page.evaluate(async()=>{JasonLib.splitSecret=originalSplit;finishGeneration();await new Promise(r=>setTimeout(r,0));});
+ ok('Closing a pending generation cannot export keys or enable a reopened dialog',await page.evaluate(()=>exports.length===0&&document.querySelector('#tzFinish').disabled&&document.querySelector('#tzSaved').disabled));
  await page.fill('#tzPw','short');await page.fill('#tzPw2','short');await page.click('#tzMk');
  ok('Short password does not generate or export keys',await page.evaluate(()=>exports.length===0));
  const pw='synthetic-recovery-fixture-2026';
