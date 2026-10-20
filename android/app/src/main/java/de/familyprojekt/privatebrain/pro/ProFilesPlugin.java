@@ -99,7 +99,7 @@ public class ProFilesPlugin extends Plugin {
     }
 
     private void launch(PluginCall call, File file, String name) {
-        var uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
+        var uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file, MailMime.filename(name));
         String extension = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT) : "";
         String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type == null ? "application/octet-stream" : type)

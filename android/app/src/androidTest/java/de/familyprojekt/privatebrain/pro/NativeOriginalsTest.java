@@ -36,7 +36,10 @@ public class NativeOriginalsTest {
         ByteArrayOutputStream read = new ByteArrayOutputStream();
         for (int offset=0;offset<original.length;offset+=OriginalFileStore.CHUNK) read.write(reopened.read(hash,offset));
         assertArrayEquals(original,read.toByteArray());
-        var uri=FileProvider.getUriForFile(context,context.getPackageName()+".fileprovider",reopened.file(hash));
+        var uri=FileProvider.getUriForFile(context,context.getPackageName()+".fileprovider",reopened.file(hash),"original.bin");
+        try (android.database.Cursor cursor=context.getContentResolver().query(uri,new String[]{android.provider.OpenableColumns.DISPLAY_NAME},null,null,null)) {
+            assertNotNull(cursor);assertTrue(cursor.moveToFirst());assertEquals("original.bin",cursor.getString(0));
+        }
         try (InputStream stream=context.getContentResolver().openInputStream(uri)) {
             ByteArrayOutputStream result=new ByteArrayOutputStream();byte[] buffer=new byte[8192];int count;
             while ((count=stream.read(buffer))!=-1) result.write(buffer,0,count);
