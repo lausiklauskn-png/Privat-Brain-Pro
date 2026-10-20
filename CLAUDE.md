@@ -1,5 +1,15 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Private Brain Pro .14 veröffentlicht:** kompakte Symbolleisten und echter
+App-Internetschalter im App-Menü, in beide Richtungen und nach Neustart erhalten.
+[APK .14](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.14/Private-Brain-Pro-0.1.0-preview.14.apk) über die vorhandene App installieren, nicht deinstallieren.
+Anwendungscommit `31a27eeba707cad4f4752ceccfd3c0e0b49a50e1` (PR27), vollständige CI 39425363587
+mit 231 Browser- und 34 Android-Fällen erfolgreich. Signiertes Update .13 → .14
+39425723720 einschließlich Offline-Kaltstart und erneutem Einschalten bestanden.
+Veröffentlichung 39427132118, öffentlicher Download bytegleich geprüft.
+[Bedienung](docs/KOMPAKTE-ANSICHT-UND-OFFLINE.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-14--2026-10-20).
+
 **Neuer Stand .14:** Kompakte Symbolleisten nach Outlook-Vorbild, auch in der
 Handyansicht. Offline-Informationshinweis entfernt. Echten App-Internetschalter im
 App-Menü in beide Richtungen implementiert; Konten/Entwürfe und Betriebssystemnetz

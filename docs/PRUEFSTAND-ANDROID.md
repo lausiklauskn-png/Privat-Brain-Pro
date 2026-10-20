@@ -644,3 +644,57 @@ Google-Projekt/Client passen weiter, Googlemail-Adresse behalten. Googles Test-
 oder Produktionsstatus ist getrennt vom Appnamen und wurde nicht umgestellt.
 [Anleitung](APP-NAME.md). Microsoft bleibt vorbereitet, noch ohne eigene Registrierung
 oder fertige native Anmeldung.
+
+
+## Veröffentlichte Version .14 — 2026-10-20
+
+Kompakte Symbolleisten nach Outlook-Vorbild: Hauptseiten als Symbole, weitere
+Ansichten auf kleinen Fenstern hinter „…“, Sprache/Anzeige/Mycel/Pinnwand im
+App-Menü. Einzeilige Konto-/Mailaktionen, lesbare Ordner/Betreff/Dateinamen,
+übersetzte Tooltips und zugängliche Namen. Der grüne Offline-Informationshinweis
+entfällt. Die vorhandenen Statuslampen bleiben in der schmalen Leiste; nur die
+app-eigene Startkonfiguration im gepackten Webteil akzeptiert zusätzlich den
+nativen Ursprung. PWA-Quelle, anderes PWA-Repo und 21 geschützte Module unverändert.
+
+Der zusätzliche Nutzerauftrag ist ein echter App-Internetschalter in beide
+Richtungen, einschließlich persistentem Offlinezustand nach Neustart. WebView-
+Ressourcen, Browsertransporte und native Mail-/Google-/Updateaufrufe werden
+abgesichert; rohe Mail-Sockets vor dem Verbinden registriert und beim Abschalten
+geschlossen. JavaMail verwendet weiterhin die bisherige TLS-/Hostnamenprüfung.
+Konten, Geräteentwürfe, lokale Originale und Versandquittungen bleiben erhalten.
+Keine WLAN- oder Betriebssystemumschaltung, kein automatischer Neuversand.
+
+- Quellstand `93a6659d9b826d5a4211e0467898f66bf6ea2b71`; Anwendungscommit
+  `31a27eeba707cad4f4752ceccfd3c0e0b49a50e1` (PR27), Quellbäume identisch.
+  Der vorherige Brief aus PR26 bleibt erhalten.
+- Vollständige [CI 39425363587](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39425363587)
+  erfolgreich: 38 Web-Befehle, 231 native Browserprüfungen (211 bisherige + 20
+  kompakte Bedienungs-/Offlinefälle), 14 Maildienstfälle, Android-Unitprüfungen,
+  Build/Lint und 34 echte Instrumentierungsfälle ohne Fehler/Überspringen.
+  Drei neue native Fälle: aktiven Socket schließen und neue Verbindungen vor
+  TCP-Aufbau sperren; verschlüsselte Konten/Entwürfe und unklare Versandquittung
+  erhalten; echte WebView offline neu starten und Internet wieder erlauben.
+- [Signiertes Update .13 → .14 39425723720](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39425723720)
+  erfolgreich, Probecommit `e3a3d52479d9759ae741b22b5130bffb4b29f24f`.
+  Tatsächliche APK-Installation über .13, Pro-Name, erhaltene Spracheinstellung,
+  Offline-Kaltstart, erneutes Erlauben des Internets, native Yahoo-Auswahl,
+  Microsoft-Einrichtungsplan und sichtbare/Android-Zurück-Wege bestanden.
+- [Veröffentlichung 39427132118](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39427132118)
+  erfolgreich, Veröffentlichungscommit `35d1f187fa1acfdcfbafb6782dae541296613a88`.
+  [Öffentlicher APK-Download](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.14/Private-Brain-Pro-0.1.0-preview.14.apk):
+  HTTP 200, 5.576.269 Bytes, SHA256
+  `93e731ef091b542b5cfe8ed5301a2a7627bdf6c1c90f5ad5d22f73041e68f1bd`; bytegleich mit der signierten geprüften APK.
+
+Version `0.1.0-preview.14`, Code 14, Appname **Private Brain Pro**.
+Paket `de.familyprojekt.privatebrain.pro.preview`, unverändertes Zertifikat SHA256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`,
+SHA1 `14:A1:59:A6:26:CA:0F:D8:7A:B0:A0:BF:9D:55:C3:9B:D4:A6:31:A4`,
+kein Debug-Flag. Bestehender Google-Client bleibt gültig.
+
+Lokale Browser-/Build-/Unit-/Lintprüfungen bestanden. Kleine Touch-Fenster
+320×640 und 390×640, Tablet/Desktop 768×900 und 1280×900 visuell geprüft;
+mindestens 300 px Lesebereich im kleinen Fenster und einzeilige Kopfaktionen.
+[Bilder](design/compact14/README.md), [Bedienung und Grenzen](KOMPAKTE-ANSICHT-UND-OFFLINE.md).
+Kein echter Providerlogin/-versand, kein realer Samsung-/DeX-Lauf, keine vollständige
+Nutzerdatenmigration mit Nutzerbestand nachgewiesen. Browser-Netzwerkantworten und
+Konten synthetisch; native Socket-Abbruch-/Neustartprüfungen tatsächlich ausgeführt.
