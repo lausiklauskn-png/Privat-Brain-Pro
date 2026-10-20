@@ -23,10 +23,20 @@ public final class UpgradeProbe extends Instrumentation {
     private static final String PREFIX = "de.familyprojekt.privatebrain.pro.";
     private static final String ID = "10b7ec23-2089-4cbd-95a3-64f0dd7a20b1";
     private String phase;
-    private WebView web;
-    private final CountDownLatch paused=new CountDownLatch(1);
-    @Override public void onCreate(Bundle args) { super.onCreate(args); phase=args.getString("phase"); start(); }
-    @Override public void callActivityOnPause(Activity activity) { super.callActivityOnPause(activity);paused.countDown(); }
+    private boolean recreate;
+    private volatile Activity active;
+    private volatile Activity recreatedFrom;
+    private volatile CountDownLatch paused=new CountDownLatch(1);
+    @Override public void onCreate(Bundle args) { super.onCreate(args); phase=args.getString("phase");recreate="1".equals(args.getString("recreate","0"));start(); }
+    @Override public void callActivityOnResume(Activity activity) {
+        super.callActivityOnResume(activity);
+        if ((PREFIX+"MainActivity").equals(activity.getClass().getName())) active=activity;
+    }
+    @Override public void callActivityOnPause(Activity activity) { super.callActivityOnPause(activity);if(activity==active)paused.countDown(); }
+    @Override public void callActivityOnDestroy(Activity activity) {
+        if(activity==active)active=null;
+        super.callActivityOnDestroy(activity);
+    }
     private static void require(boolean value, String message) {
         if (!value) throw new AssertionError(message);
     }
@@ -40,7 +50,13 @@ public final class UpgradeProbe extends Instrumentation {
     /** Null when the WebView has not answered within the given time. */
     private String evaluate(String script, long seconds) throws Exception {
         CountDownLatch done=new CountDownLatch(1); AtomicReference<String> value=new AtomicReference<>();
-        runOnMainSync(()->web.evaluateJavascript(script,result->{value.set(result);done.countDown();}));
+        runOnMainSync(()->{
+            Activity current=active;
+            if(current==null || current==recreatedFrom || current.isDestroyed()){done.countDown();return;}
+            WebView web=find(current.getWindow().getDecorView());
+            if(web==null){done.countDown();return;}
+            web.evaluateJavascript(script,result->{value.set(result);done.countDown();});
+        });
         return done.await(seconds,TimeUnit.SECONDS) ? value.get() : null;
     }
     private String js(String script) throws Exception {
@@ -75,10 +91,15 @@ public final class UpgradeProbe extends Instrumentation {
             require("seed".equals(phase)||"baseline".equals(phase)||"verify".equals(phase),"Unknown probe phase");
             Intent launch=new Intent(Intent.ACTION_MAIN).setClassName(getTargetContext().getPackageName(),PREFIX+"MainActivity")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            Activity activity=startActivitySync(launch);
-            runOnMainSync(()->web=find(activity.getWindow().getDecorView()));
-            require(web!=null,"Missing actual app WebView");
-            await("window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
+            startActivitySync(launch);
+            await("document.readyState === 'complete' && window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
+            if(recreate){
+                runOnMainSync(()->{
+                    require(active!=null && !active.isDestroyed(),"Missing resumed main activity");
+                    recreatedFrom=active;active.recreate();
+                });
+                await("document.readyState === 'complete' && window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
+            }
             if("seed".equals(phase)) {
                 Object engine=engine();
                 JSONObject fixture=new JSONObject().put("id",ID).put("provider","webde")
@@ -95,7 +116,10 @@ public final class UpgradeProbe extends Instrumentation {
                 // normal Activity background lifecycle before killing its process.
                 // The separate baseline cold start below proves durability BEFORE
                 // installing an update; no preservation assertion is relaxed.
-                runOnMainSync(()->activity.moveTaskToBack(true));
+                runOnMainSync(()->{
+                    require(active!=null && !active.isDestroyed(),"Missing seed activity");
+                    paused=new CountDownLatch(1);active.moveTaskToBack(true);
+                });
                 require(paused.await(10,TimeUnit.SECONDS),"Seed app did not background");
                 Thread.sleep(10000);
             } else {
@@ -132,7 +156,8 @@ public final class UpgradeProbe extends Instrumentation {
                 await("!document.querySelector('#pickDir').disabled && window.PBVault.active() === false");
                 }
             }
-            result.putString("stream","SIGNED_UPGRADE_"+phase.toUpperCase(java.util.Locale.ROOT)+"_PASS\n");
+            String name="SIGNED_UPGRADE_"+phase.toUpperCase(java.util.Locale.ROOT);
+            result.putString("stream",(recreate?name+"_RECREATE_READY\n":"")+name+"_PASS\n");
             finish(Activity.RESULT_OK,result);
         } catch(Throwable failure) {
             java.io.StringWriter trace=new java.io.StringWriter();
