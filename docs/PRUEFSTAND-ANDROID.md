@@ -831,3 +831,16 @@ Debug-Build der getrennten Update-Instrumentierung sowie `actionlint`. Die
 öffentliche .16 wurde heruntergeladen und mit dem erwarteten Vorschau-Zertifikat
 verifiziert; APK-SHA-256: `2e3e6b4d6e8e8307648359b55fca12b5cc205940e78406eeca3f28e5da010eab`.
 Diese Erfolge ersetzen die noch fehlende signierte .16→.17-Updateprobe nicht.
+
+Die unabhängige Debug-Funktionsprobe der Update-Instrumentierung bestand im
+Job `upgrade-probe-smoke` von Lauf `39465837921`; dieser Lauf wurde später wegen
+eines Folgecommits insgesamt abgebrochen. Das erfolgreiche Einzelergebnis bleibt
+belegt und ist ausdrücklich keine signierte .16→.17-Probe.
+
+Weitere Signierdiagnose `39467024662`: Mindestens ein erforderliches GitHub-Secret
+fehlt im Job; der Ablauf bricht vor Prüfung des Schlüsseldateiformats ab. Das
+Environment `android-preview` hat laut API keine Freigabe-/Branchschutzregeln.
+Auch die Prüfung auf eine einzelne zusätzliche Base64-Schicht kann ohne die
+erforderlichen Secrets nicht ausgeführt werden. Sechs lokale Positiv-/Negativfälle
+mit dem vorhandenen **Entwicklungs**-Keystore bestanden; dabei wurde kein neuer
+Vorschau-Schlüssel erzeugt und der echte Vorschau-Fingerabdruck bleibt fest gepinnt.

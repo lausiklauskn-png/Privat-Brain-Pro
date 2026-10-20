@@ -36,6 +36,15 @@ verbleibende Ablage sein.
   „Resource not accessible by integration“. Die allgemeinen Repository-Rechte
   und ein erfolgreicher Workflow-Start ändern diese getrennte Beschränkung nicht.
 
+- Präzisere Diagnose `39467024662`: Mindestens eines der vier Signier-Secrets
+  fehlt im Job. `android-preview` hat laut API keine Freigabe- oder Branchregeln.
+  Zunächst die vier Secret-Einträge und deren Verfügbarkeit wiederherstellen.
+  Der Workflow diagnostiziert danach gegebenenfalls eine einzelne zusätzliche
+  Base64-Schicht innerhalb GitHubs, mit zwingender Zertifikats-/Privatschlüsselprüfung.
+- Der Job `upgrade-probe-smoke` in Lauf `39465837921` bestand mit der Debug-App;
+  der Gesamtlauf wurde später durch einen Folgecommit abgebrochen. Das bestätigt
+  die Instrumentierung, keinen signierten .16→.17-Versionswechsel.
+
 ## Gemeinsamer Veröffentlichungsweg
 
 [PR #35](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/35) ergänzt den

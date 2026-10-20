@@ -28,9 +28,15 @@ def keytool(path, operation, extra=()):
 
 
 def main():
-    for name in ("PB_KEYSTORE_BASE64", "PB_KEYSTORE_PASSWORD", "PB_KEY_ALIAS", "PB_KEY_PASSWORD"):
-        if not os.environ.get(name):
-            sys.exit("::error::A required GitHub signing secret is missing; no values were printed.")
+    bindings = {
+        "PB_KEYSTORE_BASE64": "ANDROID_KEYSTORE_BASE64",
+        "PB_KEYSTORE_PASSWORD": "ANDROID_KEYSTORE_PASSWORD",
+        "PB_KEY_ALIAS": "ANDROID_KEY_ALIAS",
+        "PB_KEY_PASSWORD": "ANDROID_KEY_PASSWORD",
+    }
+    missing = [secret for name, secret in bindings.items() if not os.environ.get(name)]
+    if missing:
+        sys.exit("::error::Missing GitHub signing secret(s): " + ", ".join(missing) + ". No values were printed.")
     path = Path(os.environ["RUNNER_TEMP"]) / "private-brain.jks"
     preview = os.environ.get("RELEASE_CHANNEL", "test") == "test"
     try:
