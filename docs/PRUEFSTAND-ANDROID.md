@@ -842,5 +842,5 @@ fehlt im Job; der Ablauf bricht vor Prüfung des Schlüsseldateiformats ab. Das
 Environment `android-preview` hat laut API keine Freigabe-/Branchschutzregeln.
 Auch die Prüfung auf eine einzelne zusätzliche Base64-Schicht kann ohne die
 erforderlichen Secrets nicht ausgeführt werden. Sechs lokale Positiv-/Negativfälle
-mit dem vorhandenen **Entwicklungs**-Keystore bestanden; dabei wurde kein neuer
+mit einem temporären **Test**-Keystore bestanden; dabei wurde kein neuer
 Vorschau-Schlüssel erzeugt und der echte Vorschau-Fingerabdruck bleibt fest gepinnt.

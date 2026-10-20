@@ -21,7 +21,7 @@ Es werden vier Secrets benötigt:
 JKS und PKCS12 sind zulässig. Der Ablauf diagnostiziert zusätzlich eine einzelne
 versehentliche zweite Base64-Schicht direkt in GitHub. Eine so wiedergewonnene
 Arbeitskopie darf nur mit dem fest vorgegebenen Vorschau-Zertifikat und einem
-verwendbaren privaten Schlüssel weiterlaufen; kein Schlüssel wird neu erzeugt
+verwendbaren privaten Schlüssel weiterlaufen; kein Vorschau-Schlüssel wird neu erzeugt
 oder in die Sitzung heruntergeladen. Eine Warnung weist darauf hin, dass das
 persistierte Secret weiterhin auf eine einzige Base64-Schicht korrigiert werden
 muss. Diese Diagnose ist noch kein Nachweis, dass das aktuelle Secret reparierbar ist. Vor dem Hinterlegen müssen Datei und Alias mit

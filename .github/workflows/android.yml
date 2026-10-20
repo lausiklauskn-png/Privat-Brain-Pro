@@ -144,6 +144,7 @@ jobs:
       - name: Test-App und getrennte Instrumentierung bauen
         run: |
           set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/probe-build.log") 2>&1
           ./android/gradlew --no-daemon --max-workers=2 -p android assembleDebug
           python3 tools/native/test-signing-key.py
           ./android/gradlew --no-daemon --max-workers=2 -p tools/native/upgrade-probe -PprobeTarget=de.familyprojekt.privatebrain.pro.preview.debug assembleDebug
@@ -164,14 +165,16 @@ jobs:
       - name: Fehler der Probe auch als API-lesbare Annotation ausgeben
         if: failure()
         run: |
-          if [[ -d upgrade-results ]]; then
-            python3 - <<'PYERROR'
+          python3 - <<'PYERROR'
+          import os
           from pathlib import Path
-          for path in Path('upgrade-results').glob('*.txt'):
-              text=path.read_text()[-6000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+          paths=list(Path('upgrade-results').glob('*.txt'))
+          build=Path(os.environ['RUNNER_TEMP'])/'probe-build.log'
+          if build.exists(): paths.append(build)
+          for path in paths:
+              text=path.read_text(errors='replace')[-6000:].replace('%','%25').replace('\r','%0D').replace('\n','%0A')
               print('::error title=Upgrade probe::'+text)
           PYERROR
-          fi
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
