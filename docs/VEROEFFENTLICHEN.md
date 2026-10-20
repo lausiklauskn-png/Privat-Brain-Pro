@@ -18,7 +18,13 @@ Es werden vier Secrets benötigt:
 - `ANDROID_KEY_ALIAS`: vorhandener Alias des Vorschau-Schlüssels.
 - `ANDROID_KEY_PASSWORD`: Passwort dieses privaten Schlüssels.
 
-JKS und PKCS12 sind zulässig. Vor dem Hinterlegen müssen Datei und Alias mit
+JKS und PKCS12 sind zulässig. Der Ablauf diagnostiziert zusätzlich eine einzelne
+versehentliche zweite Base64-Schicht direkt in GitHub. Eine so wiedergewonnene
+Arbeitskopie darf nur mit dem fest vorgegebenen Vorschau-Zertifikat und einem
+verwendbaren privaten Schlüssel weiterlaufen; kein Schlüssel wird neu erzeugt
+oder in die Sitzung heruntergeladen. Eine Warnung weist darauf hin, dass das
+persistierte Secret weiterhin auf eine einzige Base64-Schicht korrigiert werden
+muss. Diese Diagnose ist noch kein Nachweis, dass das aktuelle Secret reparierbar ist. Vor dem Hinterlegen müssen Datei und Alias mit
 `keytool` lesbar sein und das obige Zertifikat liefern. Keine Passwortwerte in
 Befehlszeilen, Chat, Git oder Logs eintragen. Die kodierte Datei ist genauso
 geheim wie das Original. Eine getrennte, sichere **Offline-Sicherung** von

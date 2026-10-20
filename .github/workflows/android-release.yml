@@ -46,7 +46,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Geprüfte Release-Werkzeuge vor historischem Quellcheckout sichern
-        run: cp -R tools/native/upgrade-probe "$RUNNER_TEMP/upgrade-probe"
+        run: |
+          cp -R tools/native/upgrade-probe "$RUNNER_TEMP/upgrade-probe"
+          cp tools/native/prepare-signing-key.py "$RUNNER_TEMP/prepare-signing-key.py"
       - name: main-Zugehörigkeit, Tag und Quellcommit prüfen
         id: source
         env:
@@ -98,14 +100,11 @@ jobs:
           set -euo pipefail
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
       - name: Vorhandenen Signierschlüssel laden und Alias prüfen
+        env:
+          RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
         run: |
           set -euo pipefail
-          test -n "$PB_KEYSTORE_BASE64" && test -n "$PB_KEYSTORE_PASSWORD"
-          test -n "$PB_KEY_ALIAS" && test -n "$PB_KEY_PASSWORD"
-          umask 077
-          printf '%s' "$PB_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/private-brain.jks"
-          keytool -list -keystore "$RUNNER_TEMP/private-brain.jks" -storepass:env PB_KEYSTORE_PASSWORD -alias "$PB_KEY_ALIAS" > /dev/null
-          echo "PB_KEYSTORE_FILE=$RUNNER_TEMP/private-brain.jks" >> "$GITHUB_ENV"
+          python3 "$RUNNER_TEMP/prepare-signing-key.py"
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix mail-service --ignore-scripts
       - run: npx playwright-core install --with-deps chromium

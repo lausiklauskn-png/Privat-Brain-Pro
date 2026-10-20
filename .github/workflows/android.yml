@@ -136,6 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           ./android/gradlew --no-daemon --max-workers=2 -p android assembleDebug
+          python3 tools/native/test-signing-key.py
           ./android/gradlew --no-daemon --max-workers=2 -p tools/native/upgrade-probe -PprobeTarget=de.familyprojekt.privatebrain.pro.preview.debug assembleDebug
       - name: KVM aktivieren
         run: |
