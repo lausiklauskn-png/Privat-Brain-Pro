@@ -231,7 +231,7 @@
     draft = null,
     dirty = false,
     busy = false;
-  let viewKey = 'inbox', lastAccount = '', savedCache = [], folderMap = new Map(), entries = [], filterText = '';
+  let viewKey = 'inbox', lastAccount = '', savedCache = [], folderMap = new Map(), entries = [], filterText = '', foldersReady = false;
   const selected = new Set(), totals = new Map();
   const bar = el("div", "mail-head"),
     connect = btn("connect", setup),
@@ -585,6 +585,7 @@
   function folderCount(entry) {
     if(entry.id==='outbox')return savedCache.filter(r=>!['draft','sent'].includes(r.status)).length;
     if(entry.id==='exported')return shared.exportedEntries().length;
+    if(!foldersReady)return entry.id==='draft'?savedCache.filter(r=>r.status==='draft').length+'+':'–';
     const localDrafts=entry.id==='draft'?savedCache.filter(r=>r.status==='draft').length:0;
     if(totals.has(entry.id))return totals.get(entry.id)+localDrafts;
     if(entry.remote)return localDrafts?localDrafts+'+':'–';
@@ -594,9 +595,19 @@
   async function loadFolders() {
     if (!leave()) return;
     draft=null; dirty=false;
+    if(native){current=null;mail=null;items=[];validity='';next=null;selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));accountTools.querySelector('[data-live-text=catalog]').disabled=true;}
+    if(native&&lastAccount!==account) {
+      // Clear account-bound server state before the first await, including failure paths.
+      lastAccount=account;viewKey='inbox';folder='INBOX';folders=[];savedCache=[];foldersReady=false;
+      totals.clear();selected.clear();folderMap.clear();entries=[];items=[];current=null;mail=null;validity='';next=null;filterText='';
+      nav.replaceChildren();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));
+      notice.textContent=accounts.find(a=>a.id===account)?.email||'';app.dataset.view='list';
+      accountTools.querySelector('[data-live-text=catalog]').disabled=true;
+      savedCache=await native.saved(account);updateEntries();drawFolders();
+    }
     folders=await api(prefix()+'/folders');
     if(native) {
-      if(lastAccount!==account){totals.clear();viewKey='inbox';lastAccount=account;}
+      foldersReady=true;
       savedCache=await native.saved(account); updateEntries();
       const entry=entries.find(e=>e.id===viewKey)||entries[0];viewKey=entry.id;folder=entry.path;
     } else if(!folders.some(f=>f.path===folder))folder=folders.find(f=>f.path==='INBOX')?.path||folders[0]?.path||'INBOX';
@@ -643,6 +654,7 @@
   }
   async function loadList(more = false) {
     if(native&&!more){current=null;mail=null;items=[];validity='';selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));}
+    if(native&&!foldersReady&&!['outbox','draft','exported'].includes(viewKey))throw new Error(T('foldersUnavailable'));
     let page;
     if(native && !entries.find(entry=>entry.id===viewKey)?.remote) {
       page={validity:'',items:[],next:null,total:0};

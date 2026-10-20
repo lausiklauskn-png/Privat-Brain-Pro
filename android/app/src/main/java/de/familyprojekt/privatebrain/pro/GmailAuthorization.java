@@ -1,6 +1,7 @@
 package de.familyprojekt.privatebrain.pro;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -17,6 +18,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     interface Callback { void success(String email); void failure(String code); }
     private final AuthorizationClient client;
     private final ActivityResultLauncher<IntentSenderRequest> launcher;
+    private final ActivityResultLauncher<android.content.Intent> accountPicker;
     private Callback pending;
     private String expected;
     private final GmailTokenCache tokens = new GmailTokenCache();
@@ -32,6 +34,16 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
                 complete(client.getAuthorizationResultFromIntent(result.getData()));
             } catch (Exception error) { fail(code(error)); }
         });
+        accountPicker = activity.registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (pending == null) return;
+            if (result.getResultCode() != android.app.Activity.RESULT_OK) { fail("CANCELLED");return; }
+            try {
+                android.content.Intent data=result.getData();
+                if(data==null||!"com.google".equals(data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE)))throw new MailFailure("GMAIL_ACCOUNT_UNAVAILABLE");
+                expected=GmailIdentity.checked(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
+                authorize(pending);
+            } catch(Exception error){fail(code(error));}
+        });
     }
     private AuthorizationRequest request(String email) {
         AuthorizationRequest.Builder builder = AuthorizationRequest.builder().setRequestedScopes(Arrays.asList(
@@ -42,7 +54,13 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     void consent(String email, Callback callback) {
         if (pending != null) { callback.failure("GMAIL_AUTH_BUSY");return; }
         pending = callback;expected = email;
-        client.authorize(request(email)).addOnSuccessListener(result -> {
+        try {
+            if(email==null)accountPicker.launch(AccountManager.newChooseAccountIntent(null,(java.util.List<Account>)null,new String[]{"com.google"},null,null,null,null));
+            else authorize(callback);
+        } catch(Exception error){fail(code(error));}
+    }
+    private void authorize(Callback callback) {
+        client.authorize(request(expected)).addOnSuccessListener(result -> {
             if (pending != callback) return;
             try {
                 if (result.hasResolution()) launcher.launch(new IntentSenderRequest.Builder(result.getPendingIntent()).build());
@@ -76,7 +94,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
             AuthorizationResult result = Tasks.await(client.authorize(request(email)), 20, TimeUnit.SECONDS);
             GmailGrant grant=grant(result,email);tokens.put(grant.email,grant.token);return grant.token;
         } catch (MailFailure error) { throw error; }
-        catch (Exception error) { throw new MailFailure(code(error)); }
+        catch (Exception error) { throw new MailFailure(backgroundCode(error)); }
     }
     @Override public void invalidate(String token) {
         tokens.invalidate(token);
@@ -84,6 +102,11 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         catch (Exception ignored) { /* Explicit reauthorization remains required; never resend automatically. */ }
     }
     void close() { tokens.clear();fail("CANCELLED");identityWorker.shutdownNow(); }
+    static String backgroundCode(Exception error) {
+        String code=code(error);
+        // No user dialog was open: a cancelled silent request needs explicit reauthorization.
+        return code.equals("CANCELLED")?"GMAIL_CONSENT_REQUIRED":code;
+    }
     static String code(Exception error) {
         if (error instanceof MailFailure) return ((MailFailure) error).code;
         Throwable source = error;while (source.getCause() != null && source.getCause() != source) source = source.getCause();

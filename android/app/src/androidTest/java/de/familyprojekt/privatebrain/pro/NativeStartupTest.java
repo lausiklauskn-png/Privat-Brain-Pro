@@ -166,6 +166,38 @@ public class NativeStartupTest {
         }
     }
 
+    @Test public void googleAccountPickerCancellationCanRetryWithoutChangingAccounts() throws Exception {
+        var instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
+        var picked=new java.util.concurrent.CopyOnWriteArrayList<android.content.Intent>();
+        var monitor=new android.app.Instrumentation.ActivityMonitor(){
+            @Override public android.app.Instrumentation.ActivityResult onStartActivity(android.content.Intent intent){
+                if(intent.hasExtra("allowableAccountTypes")){
+                    picked.add(new android.content.Intent(intent));
+                    return new android.app.Instrumentation.ActivityResult(android.app.Activity.RESULT_CANCELED,null);
+                }
+                return null;
+            }
+        };
+        instrumentation.addMonitor(monitor);
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            awaitTrue(scenario,"Boolean(window.PBMailDevice)");
+            evaluate(scenario,"window.__pickerDone=false;PBMailDevice.accounts().then(items=>window.__beforePicker=items.length);PBMailDevice.addAccount().then(value=>window.__pickerDone=value===null);true");
+            onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog()).perform(click());
+            androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo("Google / Gmail")).inRoot(androidx.test.espresso.matcher.RootMatchers.isPlatformPopup()).perform(click());
+            for(int attempt=1;attempt<=2;attempt++){
+                onView(withText("Mit Google anmelden")).inRoot(isDialog()).perform(click());
+                instrumentation.waitForIdleSync();
+                onView(withText(org.hamcrest.Matchers.containsString("(CANCELLED)"))).inRoot(isDialog()).check(matches(isDisplayed()));
+                assertEquals(attempt,picked.size());
+                assertArrayEquals(new String[]{"com.google"},picked.get(attempt-1).getStringArrayExtra("allowableAccountTypes"));
+            }
+            onView(withText("Abbrechen")).inRoot(isDialog()).perform(click());
+            awaitTrue(scenario,"window.__pickerDone===true");
+            evaluate(scenario,"PBMailDevice.accounts().then(items=>window.__afterPicker=items.length);true");
+            awaitTrue(scenario,"window.__afterPicker===window.__beforePicker");
+        }finally{instrumentation.removeMonitor(monitor);}
+    }
+
     @Test public void pdfPagesAndAndroidBackUseRealNativeBridge() throws Exception {
         java.io.File file=NativePdfTest.fixture(androidx.test.core.app.ApplicationProvider.getApplicationContext());
         String data=android.util.Base64.encodeToString(java.nio.file.Files.readAllBytes(file.toPath()),android.util.Base64.NO_WRAP);
