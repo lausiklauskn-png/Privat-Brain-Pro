@@ -331,3 +331,14 @@ Erhaltung von Originalkopien über Neustart und Update. Diagnose, geeigneter
 nativer Originalzugriff und Wiederzuordnung fehlender Quellen sind als zusätzlicher
 Auftrag neben Gmail im [Nachfolgebrief](../BRIEF_NACHFOLGE_2026-10-20_gmail.md)
 hinterlegt. In diesem Nachtrag wird keine neue APK oder Reparatur behauptet.
+
+
+### Neue Nutzerrückmeldung zu E-Mail-Links (2026-10-20)
+
+Der Nutzer meldet zusätzlich, dass Links aus E-Mails nicht geöffnet beziehungsweise
+nicht im Browser geöffnet werden können. Noch keine Gerätediagnose oder Reparatur.
+Die bestandenen HTML-/Sandboxproben belegen keinen Browserstart bei Linkbetätigung.
+Sichere explizite Browserübergabe, Erhalt der Nachricht beim Zurück und negative
+Schema-/Skriptproben sind im [Nachfolgebrief](../BRIEF_NACHFOLGE_2026-10-20_gmail.md)
+als dritter Auftrag neben Originalbildern und Gmail ergänzt. In diesem Nachtrag
+wurde ausschließlich dokumentiert; keine neue APK veröffentlicht.

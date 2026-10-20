@@ -407,3 +407,8 @@ und Zurück, meldet aber bei „Original öffnen“: „Original nicht erreichba
 nicht verbunden). Der Katalog-Eintrag bleibt.“ Diagnose/Behebung und dauerhaften
 Originalzugriff prüfen; Vorschau nicht als Original ausgeben. Im Nachfolgebrief
 ergänzt. Gmail-Auftrag bleibt bestehen; Fehler bislang nicht behoben.
+
+Weiterer Folgeauftrag: Links aus E-Mails öffnen nach Nutzerrückmeldung nicht im
+Browser. Sichere ausdrückliche Browserübergabe prüfen/implementieren, ohne die
+Mail-Sandbox oder Skriptsperre aufzuheben. Details im Nachfolgebrief. Insgesamt
+drei Aufträge: Originalbilder, Mail-Links, Gmail; Reparaturen noch offen.
