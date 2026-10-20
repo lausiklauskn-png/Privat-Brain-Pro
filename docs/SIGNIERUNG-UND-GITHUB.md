@@ -18,14 +18,27 @@ Produktionsschlüssels. Der Produktions-Pin lässt sich nicht per Parameter erse
 
 ## Aktueller Stand und Voraussetzung
 
-Klaus meldet, dass die Freigabe bereits angelegt und getrennt gesichert ist.
-Ihr Wert muss keiner KI mitgeteilt werden. In der aktuell zugänglichen Codex-
-Umgebung wurde der ursprüngliche Vorschau-Keystore nicht gefunden; vorhanden ist
-nur ein unpassender Entwicklungs-Debug-Schlüssel. Die Aussage „der Schlüssel liegt
-bei Codex“ ist damit für diese Umgebung nicht bestätigt. Eine frühere Sitzung
-oder sichere Sicherung muss die Originaldatei und ihre bisherigen Passwörter
-bereitstellen. Aus der öffentlichen APK lässt sich der private Schlüssel nicht
-wiederherstellen. Ohne Original bleibt die Veröffentlichung gesperrt.
+Der ursprüngliche Vorschau-Keystore wurde am 2026-10-20 in der älteren
+Codex-Umgebung gefunden. Das Zertifikat entspricht dem oben festgelegten Pin;
+auch der private Schlüssel wurde mit den vorhandenen Zugangsdaten geprüft.
+Die Originaldatei blieb unverändert. Es wurde keine neue Signieridentität erzeugt.
+
+Der öffentliche Empfänger stammt aus dem erfolgreichen
+[recipient-Lauf 39481762663](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39481762663)
+auf main. Ausschließlich die age-verschlüsselte Importdatei wurde über
+[PR #37](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/37) übertragen.
+Im [Importlauf 39482128805](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482128805)
+waren Entschlüsselung, Original-Pin-/Privatschlüsselprüfung, Versiegelung und
+unabhängige Wiederherstellung erfolgreich. Der Gesamtlauf ist rot, weil GitHub
+Actions keine PR anlegen darf; deshalb wird der bereits erzeugte, geprüfte
+Übernahmezweig gemäß Ersatzweg durch die autorisierte Sitzung übernommen.
+Nach dem Merge ist weiterhin die Operation **check auf main** auszuführen.
+
+`signing/android-release.enc.json` enthält ausschließlich das verschlüsselte
+Identitätspaket; `signing/android-certificate.json` den öffentlichen Pin.
+Die Freigabe bleibt im Environment `android-preview` und muss keiner KI mitgeteilt
+werden. Keystore und Zugangsdaten liegen nicht im Klartext im Repository.
+Aus einer öffentlichen APK lässt sich der private Schlüssel nicht wiederherstellen.
 
 ## Einmalige Übernahme: Einzelschritte für Klaus
 
@@ -116,13 +129,14 @@ Testschlüssel unter anderem Standard-age-Import, AES-GCM-Authentifizierung,
 getrennte Passwörter, JKS/PKCS12, Manipulationen, falsche Freigabe, Pin und
 Aufräumen. Für positive Tests wird nur eine temporäre Modulkopie an den
 Test-Pin gebunden; der echte Produktionsweg weist diesen Testschlüssel ab.
-Diese Tests bestätigen noch keinen Import des fehlenden Originals.
+Die Tests allein ersetzen keine Prüfung des tatsächlichen Originals; diese wurde
+im oben verlinkten Importlauf zusätzlich ausgeführt.
 
 Lokal am 2026-10-20 ausgeführt: Installation des festgelegten Wheels mit
 `pip --require-hashes --only-binary=:all: --no-deps` erfolgreich; alle **11**
 Signierprüfungen bestanden, keine übersprungen. `actionlint` prüfte die drei
-betroffenen Workflows ohne Fehler. Ein GitHub-Importlauf und die echte
-signierte .16-auf-.17-Updateprobe sind weiterhin offen.
+betroffenen Workflows ohne Fehler. Der GitHub-Import mit dem tatsächlichen Original ist oben dokumentiert. Die echte
+signierte .16-auf-.17-Updateprobe ist separat vor der Veröffentlichung zu prüfen.
 
 Die Freigabe getrennt vom verschlüsselten Repo sichern. Zusätzlich eine sichere
 Offline-Sicherung des ursprünglichen Keystores und beider Passwörter behalten.
