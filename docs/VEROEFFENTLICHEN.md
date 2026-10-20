@@ -7,34 +7,24 @@ Stand: 2026-10-20. [Übergabe zur Schlüsselwiederherstellung](UEBERGABE-VORSCHA
 
 ## Einmalige sichere Einrichtung
 
-Der **vorhandene** Vorschau-Keystore gehört in GitHub unter diesem Repository →
-Settings → Environments → `android-preview` → Environment secrets. Er gehört
-nicht in eine eingecheckte Datei, einen Anhang, einen Sitzungsbericht oder ein Log.
-Es werden vier Secrets benötigt:
+Der vorhandene Vorschau-Schlüssel wird nach dem Vorbild Workflow-PDF-Pro
+**ausschließlich verschlüsselt** im Repository gesichert. Die einzige Freigabe
+ist `PB_SIGNING_UNLOCK` im GitHub-Environment `android-preview`. Sie verlässt
+GitHub Actions nicht. [Einzelschritte, Originalschlüssel-Suche und sicherer
+Einweg-Import](SIGNIERUNG-UND-GITHUB.md).
 
-- `ANDROID_KEYSTORE_BASE64`: unveränderte Schlüsseldatei, einmal Base64-kodiert,
-  eine Zeile ohne Kopf-/Fußzeilen (`base64 -w0 private-brain.jks` unter Linux).
-- `ANDROID_KEYSTORE_PASSWORD`: Passwort dieser Schlüsseldatei.
-- `ANDROID_KEY_ALIAS`: vorhandener Alias des Vorschau-Schlüssels.
-- `ANDROID_KEY_PASSWORD`: Passwort dieses privaten Schlüssels.
+In dieser Umgebung fehlt der Original-Keystore. Ohne ihn kann kein echtes
+`signing/import.age` erzeugt und kein Release signiert werden. Keinen neuen
+Vorschau-Schlüssel erzeugen; der Entwicklungs-Debug-Schlüssel ist ungeeignet.
 
-JKS und PKCS12 sind zulässig. Der Ablauf diagnostiziert zusätzlich eine einzelne
-versehentliche zweite Base64-Schicht direkt in GitHub. Eine so wiedergewonnene
-Arbeitskopie darf nur mit dem fest vorgegebenen Vorschau-Zertifikat und einem
-verwendbaren privaten Schlüssel weiterlaufen; kein Vorschau-Schlüssel wird neu erzeugt
-oder in die Sitzung heruntergeladen. Eine Warnung weist darauf hin, dass das
-persistierte Secret weiterhin auf eine einzige Base64-Schicht korrigiert werden
-muss. Diese Diagnose ist noch kein Nachweis, dass das aktuelle Secret reparierbar ist. Vor dem Hinterlegen müssen Datei und Alias mit
-`keytool` lesbar sein und das obige Zertifikat liefern. Keine Passwortwerte in
-Befehlszeilen, Chat, Git oder Logs eintragen. Die kodierte Datei ist genauso
-geheim wie das Original. Eine getrennte, sichere **Offline-Sicherung** von
-Keystore, Alias und Passwörtern für Klaus aufbewahren und die Wiederherstellbarkeit
-prüfen. Ein GitHub-Secret lässt sich nach dem Speichern nicht wieder auslesen.
-
-Der Signierschlüssel bleibt bei der Veröffentlichung in GitHub Actions. Sitzungen
-mit Push-Recht benötigen keine lokale Schlüsselkopie. Repository-/Environment-
-Regeln und gegebenenfalls Freigaben gelten weiterhin; Schreibrecht allein umgeht
-keine geschützten Tags oder Environment-Reviewer.
+Nach erfolgreichem Import enthält das Repo `signing/android-release.enc.json`
+(AES-256-GCM, Keystore samt beiden Passwörtern und Alias verschlüsselt) und den
+öffentlichen Zertifikats-Pin. Release und Import verwenden ausschließlich
+Actions. Beide Sitzungen benötigen für weitere Veröffentlichungen nur Push-
+Recht; Environment-/Tag-Schutz und gegebenenfalls Reviewer bleiben verbindlich.
+Die alten vier Secrets erst nach erfolgreichem Release löschen. Dieses Paket
+ist ausschließlich für die Vorschau freigegeben; ein stabiler Kanal wird damit
+abgewiesen und braucht seine eigene geprüfte Signieridentität.
 
 ## Jede weitere Vorschau
 
@@ -94,8 +84,9 @@ sich dadurch nicht ersetzen. Keinen neuen Vorschau-Schlüssel erzeugen.
 
 ## Noch zu bestätigender Ausgangsstand
 
-Der Nutzer meldete für .17 einen Fehler beim Lesen des GitHub-Keystores
-(Lauf `39461965718`, „Tag number over 30 is not supported“). Das beweist allein
-noch keine bestimmte Ursache wie doppelte Kodierung. Die Wiederherstellung der
-vier Secrets und ein erfolgreicher signierter Lauf sind erforderlich. Ein
-vorbereiteter Workflow oder bestandene Webprüfungen belegen dies nicht.
+Der ursprüngliche .17-Lauf `39461965718` scheiterte beim Lesen des Keystores
+(„Tag number over 30 is not supported“). Die spätere Diagnose `39467301186`
+meldete alle vier alten Secrets als nicht verfügbar. Der neue verschlüsselte
+Weg ersetzt diese fehlerhafte Übergabe, kann den fehlenden privaten Schlüssel
+aber nicht rekonstruieren. Ein erfolgreicher Original-Import, ein grüner
+`check`-Lauf und die signierte .16-auf-.17-Updateprobe stehen noch aus.

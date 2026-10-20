@@ -3,7 +3,10 @@
 **Veröffentlichungsweg in Vorbereitung:** [Gemeinsamer Release-Ablauf für Claude und Codex](docs/VEROEFFENTLICHEN.md).
 Vorschau .17 ist hier noch nicht als veröffentlicht bestätigt; APK-Link, Prüfsumme
 und Lauf-IDs erst nach erfolgreicher Signierung, Updateprobe und Downloadprüfung ergänzen.
-Der bisherige Vorschau-Schlüssel gehört in GitHub-Environment-Secrets, niemals in Git.
+Der bisherige Vorschau-Schlüssel darf nur als verschlüsseltes Paket im Repo liegen;
+Freigabe ausschließlich `PB_SIGNING_UNLOCK` im Environment `android-preview`.
+[Sicherer Einweg-Import und aktueller Originalschlüssel-Blocker](docs/SIGNIERUNG-UND-GITHUB.md).
+In der aktuellen Codex-Umgebung ist das Original nicht vorhanden; keinen Ersatz erzeugen.
 
 **Bauabschnitt 1 (Vorschau .17, 2026-10-20): eigener Speicherort mit Passwort.**
 Einstellungen → „🔐 Speicherort und Verschlüsselung“: Tablet oder SD-Karte über die

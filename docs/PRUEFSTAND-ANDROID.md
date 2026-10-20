@@ -1,3 +1,9 @@
+> Signierung, Stand 2026-10-20: Vorbereitung auf AES-256-GCM-Paket im Repo und
+> `PB_SIGNING_UNLOCK` ausschließlich in Actions; siehe
+> [sichere Übernahme](SIGNIERUNG-UND-GITHUB.md). Original-Keystore in der aktuellen
+> Umgebung nicht gefunden. Kein echter Import-/Release-/Update-Nachweis für .17;
+> APK-Link und SHA-256 werden erst nach tatsächlichem Release ergänzt.
+
 # Prüfstand Android – 2026-10-20
 
 ## Veröffentlichte Grundversion 0.1.0-preview.2

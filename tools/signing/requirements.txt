@@ -1,0 +1,2 @@
+# Rust age implementation; fixed Linux x86_64 ABI3 wheel used by ubuntu-24.04.
+pyrage==1.3.0 --hash=sha256:ab066b22925c5a0ec5fead2e21e4586b21d5da730055c7e46caa978bd99de936

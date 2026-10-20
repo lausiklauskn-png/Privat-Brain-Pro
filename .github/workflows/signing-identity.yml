@@ -1,0 +1,87 @@
+name: Vorschau-Schlüssel sicher übernehmen
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Empfänger anzeigen, Original importieren oder vorhandenes Paket prüfen
+        required: true
+        type: choice
+        default: recipient
+        options: [recipient, import, check]
+permissions:
+  contents: read
+concurrency:
+  group: preview-signing-import
+  cancel-in-progress: false
+jobs:
+  identity:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: android-preview
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: age-Implementierung mit festem Wheel-Prüfwert installieren
+        if: inputs.operation != 'check'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pb-age"
+          "$RUNNER_TEMP/pb-age/bin/python" -m pip install --require-hashes --only-binary=:all: --no-deps -r tools/signing/requirements.txt
+      - name: Nur öffentlichen Import-Empfänger anzeigen
+        if: inputs.operation == 'recipient'
+        env:
+          PB_SIGNING_UNLOCK: ${{ secrets.PB_SIGNING_UNLOCK }}
+          PB_SIGNING_PYTHON: ${{ runner.temp }}/pb-age/bin/python
+        run: node tools/signing/cli.mjs recipient
+      - name: Vorhandenes Original entschlüsseln, prüfen und neu versiegeln
+        if: inputs.operation == 'import'
+        env:
+          PB_SIGNING_UNLOCK: ${{ secrets.PB_SIGNING_UNLOCK }}
+          PB_SIGNING_PYTHON: ${{ runner.temp }}/pb-age/bin/python
+          TMPDIR: ${{ runner.temp }}
+        run: node tools/signing/cli.mjs import
+      - name: Paket unabhängig wiederherstellen und privaten Schlüssel prüfen
+        if: inputs.operation == 'check' || inputs.operation == 'import'
+        env:
+          PB_SIGNING_UNLOCK: ${{ secrets.PB_SIGNING_UNLOCK }}
+          TMPDIR: ${{ runner.temp }}
+        run: node tools/signing/cli.mjs check
+      - name: Ausschließlich versiegeltes Paket zur sicheren Übernahme aufbewahren
+        if: inputs.operation == 'import' && success()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: sealed-preview-identity
+          path: |
+            signing/android-release.enc.json
+            signing/android-certificate.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: PR mit verschlüsseltem Paket anlegen und Importdatei entfernen
+        if: inputs.operation == 'import'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch=signing/preview-identity
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo 'Importzweig vorhanden; nicht überschreiben.' >&2
+            exit 1
+          fi
+          git switch -c "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm signing/import.age
+          git add signing/android-release.enc.json signing/android-certificate.json
+          git commit -m 'Bestehenden Vorschau-Schlüssel ausschließlich verschlüsselt sichern'
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title 'Bestehende Vorschau-Signieridentität dauerhaft verschlüsselt sichern' \
+            --body 'Original-Zertifikat 362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80 und privater Schlüssel in Actions geprüft. AES-256-GCM-Paket unabhängig wiederhergestellt. Keine neue Identität; Importdatei entfernt. Freigabe bleibt ausschließlich im Environment android-preview. Vor Release vollständige CI abwarten.'
