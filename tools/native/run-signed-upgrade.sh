@@ -25,10 +25,13 @@ diagnostics() {
 }
 trap diagnostics EXIT
 probe() {
-  adb shell am instrument -w -e phase "$1" "$component" > "upgrade-results/$1.txt"
+  adb shell am instrument -w -e phase "$1" -e recreate "${PB_UPGRADE_RECREATE:-0}" "$component" > "upgrade-results/$1.txt"
   cat "upgrade-results/$1.txt"
   grep -q "SIGNED_UPGRADE_${1^^}_PASS" "upgrade-results/$1.txt"
   ! grep -q 'SIGNED_UPGRADE_FAIL' "upgrade-results/$1.txt"
+  if [[ "${PB_UPGRADE_RECREATE:-0}" == 1 ]]; then
+    grep -q "SIGNED_UPGRADE_${1^^}_RECREATE_READY" "upgrade-results/$1.txt"
+  fi
 }
 # A pre-existing installation would invalidate the controlled initial state.
 if adb shell pm path "$package" | grep -q '^package:'; then
