@@ -3,6 +3,11 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
+async function clickControl(page,selector) {
+  const control=page.locator(selector);
+  if(!await control.isVisible())await control.locator('xpath=ancestor::details[1]').locator(':scope>summary').click();
+  await control.click();
+}
 const root=resolve('www'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
   const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));
@@ -78,7 +83,7 @@ try{
   await page.locator('.native-file-text').waitFor();await page.evaluate(()=>window.dispatchEvent(new MouseEvent('mousedown',{button:3,cancelable:true})));
   await page.locator('.native-file-viewer').waitFor({state:'hidden'});ok('Mouse Back closes file view',true);
   for(const [lang,word] of [['en','← Back'],['ru','← Назад'],['pl','← Wstecz'],['de','← Zurück']]){
-    await page.locator(`[data-lang=${lang}]`).click();ok(lang+': navigation follows app language',await page.locator('.native-navigation button').first().textContent()===word);
+    await clickControl(page,`[data-lang=${lang}]`);ok(lang+': navigation follows app language',await page.locator('.native-navigation button').first().textContent()===word);
   }
   for(const width of [320,768,1920]){
     await page.setViewportSize({width,height:900});await page.evaluate(()=>showBlob(new File(['width'],'width.txt',{type:'text/plain'})));await page.locator('.native-file-text').waitFor();

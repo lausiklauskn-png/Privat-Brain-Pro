@@ -93,6 +93,7 @@
       if (!mail.html) { root.append(text); return root; }
       const controls = document.createElement('div'); controls.className = 'mail-reader-actions';
       const toggle = document.createElement('button'), images = document.createElement('button');
+      toggle.dataset.nativeTool = 'view'; images.dataset.nativeTool = 'images';
       toggle.type = images.type = 'button'; toggle.className = images.className = 'mail-button';
       const frame = document.createElement('iframe'); frame.className = 'mail-html';
       frame.setAttribute('sandbox',''); // No scripts, same-origin, forms, popups or bridge access.

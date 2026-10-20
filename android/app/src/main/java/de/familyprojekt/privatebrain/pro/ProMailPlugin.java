@@ -56,6 +56,7 @@ public class ProMailPlugin extends Plugin {
     static String code(Exception error) {
         Throwable current = error;
         for (int i = 0; i < 15 && current != null; i++) {
+            if (current instanceof AppNetwork.Blocked) return "APP_OFFLINE";
             if (current instanceof MailFailure) return ((MailFailure) current).code;
             if (current instanceof SSLException) return "TLS_FAILED";
             if (current instanceof AuthenticationFailedException) return "AUTH_FAILED";

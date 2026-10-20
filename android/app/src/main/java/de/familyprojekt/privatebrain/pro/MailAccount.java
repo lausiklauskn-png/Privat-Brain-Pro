@@ -75,6 +75,10 @@ final class MailAccount {
             properties.setProperty(p + "timeout", "20000");
             properties.setProperty(p + "writetimeout", "20000");
         }
+        for (String protocol : new String[] {"imaps", "smtps"}) {
+            properties.put("mail." + protocol + ".socketFactory", new AppSocketFactory());
+            properties.setProperty("mail." + protocol + ".socketFactory.fallback", "false");
+        }
         properties.setProperty("mail.imaps.peek", "true");
         properties.setProperty("mail.imaps.fetchsize", "65536");
         properties.setProperty("mail.mime.decodeparameters", "true");

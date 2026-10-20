@@ -1,5 +1,11 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Neuer Stand .14:** Kompakte Symbolleisten nach Outlook-Vorbild, auch in der
+Handyansicht. Offline-Informationshinweis entfernt. Echten App-Internetschalter im
+App-Menü in beide Richtungen implementiert; Konten/Entwürfe und Betriebssystemnetz
+unverändert lassen, niemals automatisch Mails erneut senden. Details und Grenzen:
+[Kompakte Ansicht und Offline](docs/KOMPAKTE-ANSICHT-UND-OFFLINE.md).
+
 **Private Brain Pro .13 veröffentlicht**, ohne „Test“ im Appnamen.
 [APK .13](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.13/Private-Brain-Pro-0.1.0-preview.13.apk) über die bestehende App installieren, nicht deinstallieren.
 Anwendungscommit `a5440d3bb01977a762f4e40ab2c170a8f14c37e6` (PR24), vollständige CI 39415063064

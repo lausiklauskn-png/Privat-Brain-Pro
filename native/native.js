@@ -68,7 +68,7 @@
     download.hidden = state !== 'available' && state !== 'openError';
     download.disabled = busy;
     message.textContent = state === 'available' ? t[4] + latest :
-      t[{idle:1, checking:2, current:3, error:6, unsupported:7, openError:8}[state]];
+      state==='offline'?({de:'Die App ist vom Internet getrennt. Internetzugriff im App-Menü wieder erlauben.',en:'The app is offline. Allow internet access in the app menu.',ru:'Приложение отключено от интернета. Разрешите доступ в меню.',pl:'Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu.'}[document.documentElement.lang]||'App offline'):t[{idle:1, checking:2, current:3, error:6, unsupported:7, openError:8}[state]];
   }
   check.addEventListener('click', async () => {
     if (busy) return;
@@ -79,7 +79,7 @@
       const result = await updates.check();
       state = ['current', 'available', 'unsupported'].includes(result?.status) ? result.status : 'error';
       latest = typeof result?.version === 'string' ? result.version : '';
-    } catch { state = 'error'; }
+    } catch (error) { state = error?.code==='APP_OFFLINE'?'offline':'error'; }
     finally { busy = false; renderUpdates(); }
   });
   download.addEventListener('click', async () => {

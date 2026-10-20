@@ -5,6 +5,7 @@ final class GmailMessages {
     static String error(String code,int language){
         String[] message;
         switch(code){
+            case "APP_OFFLINE":message=new String[]{"Die App ist vom Internet getrennt. Internetzugriff im App-Menü wieder erlauben.","The app is offline. Allow internet access in the app menu.","Приложение отключено от интернета. Разрешите доступ в меню.","Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu."};break;
             case "CANCELLED":message=new String[]{"Google-Anmeldung abgebrochen.","Google sign-in cancelled.","Вход Google отменён.","Anulowano logowanie Google."};break;
             case "GMAIL_CONFIGURATION_REQUIRED":message=new String[]{"Google-Registrierung für Paket und App-Zertifikat prüfen.","Check Google's registration for this package and signing certificate.","Проверьте регистрацию пакета и сертификата приложения в Google.","Sprawdź rejestrację pakietu i certyfikatu aplikacji w Google."};break;
             case "GMAIL_SCOPE_MISSING":message=new String[]{"Google hat den erforderlichen Mail-Zugriff nicht freigegeben. Mail-Berechtigung und Testnutzer prüfen.","Google has not granted mail access. Check mail permission and test users.","Google не разрешил доступ к почте. Проверьте разрешение и тестовых пользователей.","Google nie przyznał dostępu do poczty. Sprawdź uprawnienia i użytkowników testowych."};break;

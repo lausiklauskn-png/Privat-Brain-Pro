@@ -34,6 +34,7 @@ public class ProUpdatesPlugin extends Plugin {
         worker.execute(() -> {
             updateUrl = null;
             try {
+                AppNetwork.check();
                 String appId = getContext().getPackageName();
                 boolean preview = appId.equals("de.familyprojekt.privatebrain.pro.preview");
                 if (!preview && !appId.equals("de.familyprojekt.privatebrain.pro")) {
@@ -73,7 +74,7 @@ public class ProUpdatesPlugin extends Plugin {
                 call.resolve(result);
             } catch (Exception error) {
                 // No account data or exception/network diagnostics are exposed to the page.
-                call.reject("Update check unavailable", "UPDATE_UNAVAILABLE");
+                call.reject("Update check unavailable", error instanceof AppNetwork.Blocked ? "APP_OFFLINE" : "UPDATE_UNAVAILABLE");
             } finally {
                 checking.set(false);
             }
@@ -82,7 +83,9 @@ public class ProUpdatesPlugin extends Plugin {
 
     private JSONArray fetchReleases() throws Exception {
         URL url = new URL("https://api.github.com/repos/" + UpdatePolicy.REPOSITORY + "/releases?per_page=30");
+        AppNetwork.check();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        AutoCloseable cancellation=AppNetwork.track(connection::disconnect);
         connection.setConnectTimeout(8000);
         connection.setReadTimeout(8000);
         connection.setInstanceFollowRedirects(false);
@@ -104,6 +107,7 @@ public class ProUpdatesPlugin extends Plugin {
                 return new JSONArray(body.toString(StandardCharsets.UTF_8.name()));
             }
         } finally {
+            AppNetwork.release(cancellation);
             connection.disconnect();
         }
     }
