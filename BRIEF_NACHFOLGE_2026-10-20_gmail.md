@@ -1,11 +1,20 @@
-> **Neuester Auftrag: Private Brain Pro ohne „Test“**, 2026-10-20.
+> **Neuester Stand: Private Brain Pro .13 veröffentlicht**, 2026-10-20.
 
 Die neue Version .13 übernimmt den Namen in Android, App-Kopf und Hinweisen in
 allen vier Sprachen. Technische Update-Linie und Signatur bleiben erhalten;
 über die vorhandene App installieren. Googles Branding heißt laut Nutzerbildern
 bereits Private Brain Pro. Kein neuer Client, keine neue Mail-Adresse und keine
 automatische Veröffentlichung der Google-App. Details: [APP-NAME](docs/APP-NAME.md).
-Veröffentlichungsnachweis folgt im [Prüfstand](docs/PRUEFSTAND-ANDROID.md).
+**Private Brain Pro .13 veröffentlicht**, ohne „Test“ im Appnamen.
+[APK .13](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.13/Private-Brain-Pro-0.1.0-preview.13.apk) über die bestehende App installieren, nicht deinstallieren.
+Anwendungscommit `a5440d3bb01977a762f4e40ab2c170a8f14c37e6` (PR24), vollständige CI 39415063064
+mit 31 Android-Fällen erfolgreich; signiertes Update .12 → .13 39415186477
+mit Pro-Namen, erhaltener Spracheinstellung und Rückwegen bestanden.
+Veröffentlichung 39416838139, öffentlicher Download bytegleich geprüft.
+Google-Branding bereits Pro laut Nutzerbildern; vorhandener Client und Testnutzer
+bleiben gültig. [Name und Google](docs/APP-NAME.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-13--2026-10-20).
+
 
 ## Aktuell: sieben Anbieter und Microsoft-Vorbereitung (.12 veröffentlicht)
 

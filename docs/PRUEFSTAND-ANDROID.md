@@ -598,3 +598,49 @@ Microsoft ist mangels eigener Registrierung und noch folgender OAuth-/STARTTLS-
 Integration nur als klarer Einrichtungsplan enthalten. Anmeldung bei den neuen
 Anbietern sowie Googlemail-Empfang/-Versand bleiben am Nutzergerät zu bestätigen.
 Details und Microsoft-Arbeitsauftrag: [Anbietervorlagen](MAIL-ANBIETER.md).
+
+
+## Veröffentlichte Version .13 — 2026-10-20
+
+Die Android-App heißt **Private Brain Pro**, ohne „Test“. Android-Launcher und
+Fenstertitel verwenden die bestehenden Pro-Ressourcen. Der native Packer passt
+Überschrift/Seitentitel an; die PWA-Quelle und das separate PWA-Repo sind unverändert.
+Hinweise in DE/EN/RU/PL sind neutral benannt, ohne Grenzwerte oder Anbieterfähigkeiten
+zu ändern. Keine zusätzlichen Testfälle für die Textänderung: die bestehenden
+Startprüfungen kontrollieren den Namen mit.
+
+- Quellstand `56cb175c3da3bff149d1420ca61da874e642bd94`; Anwendungscommit
+  `a5440d3bb01977a762f4e40ab2c170a8f14c37e6` (PR24), Quellbäume identisch.
+- Vollständige [CI 39415063064](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39415063064)
+  erfolgreich: alle 38 Web-Befehle, 211 native Browserprüfungen, 14 Maildienstfälle,
+  Android-Unitprüfungen, Build/Lint und 31 echte Instrumentierungsfälle ohne
+  Fehler oder Überspringen. Lokal 211 Browserprüfungen und Android-Build/Unit/Lint
+  erfolgreich; Vorschau-Lint 0 Fehler, 8 vorbestehende Warnungen.
+- Erster Lauf [39415002739](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39415002739)
+  scheiterte beim unveränderten `tools/e2e-workspace.mjs:77` nach Neuladen am
+  Warten auf den gespeicherten Ablageordner. Ursache nicht abschließend bestimmt;
+  lokale gezielte Gegenprüfung 51/51 und vollständiger zweiter Lauf desselben
+  Commits bestanden. Kein App-Code oder Prüfziel dafür geändert; Ausfall bleibt dokumentiert.
+- [Signiertes Update .12 → .13 39415186477](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39415186477)
+  erfolgreich, Probecommit `ce640f14b21919d27336d81767e500feb97abe45`.
+  Tatsächliche APK-Installation mit `adb install -r`, Pro-Name und erhaltener
+  Spracheinstellung. Native Yahoo-Auswahl, Microsoft-Einrichtungsplan ohne
+  Passwortfelder, Abbrechen und sichtbare/Android-Zurück-Wege bestanden.
+- [Veröffentlichung 39416838139](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39416838139)
+  erfolgreich, Veröffentlichungscommit `ce4084ffb46d6504830d1742ba9aa6523d4840b5`.
+  [Öffentlicher APK-Download](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.13/Private-Brain-Pro-0.1.0-preview.13.apk)
+  HTTP 200, 5.565.671 Bytes, SHA256
+  `ceea91654c4697569ac632e8a3eea8a792dd491d9b3d0921d211b973025e08b4`; bytegleich mit der signierten geprüften APK.
+
+Version `0.1.0-preview.13`, Code 13, ohne `-test`-Zusatz. Paket
+`de.familyprojekt.privatebrain.pro.preview`, Zertifikat SHA256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`
+und SHA1 `14:A1:59:A6:26:CA:0F:D8:7A:B0:A0:BF:9D:55:C3:9B:D4:A6:31:A4`
+unverändert, kein Debug-Flag. Technischer Updatekanal bleibt Vorschau.
+
+Keine echte Provideranmeldung, kein echter Versand, keine vollständige
+Nutzerdatenmigration und kein Samsung-/DeX-Lauf mit dieser Version nachgewiesen.
+Google-Projekt/Client passen weiter, Googlemail-Adresse behalten. Googles Test-
+oder Produktionsstatus ist getrennt vom Appnamen und wurde nicht umgestellt.
+[Anleitung](APP-NAME.md). Microsoft bleibt vorbereitet, noch ohne eigene Registrierung
+oder fertige native Anmeldung.

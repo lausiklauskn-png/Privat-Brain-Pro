@@ -46,4 +46,6 @@ keine neue E-Mail-Adresse anlegen und das vorhandene Konto nicht entfernen.
 Die vorhandenen Browser- und Android-Startprüfungen kontrollieren jetzt den
 Appnamen und die Pro-Überschrift. Kein zusätzlicher Testfall für die Textänderung.
 Build-, Signatur- und tatsächliche Update-Nachweise:
-[Android-Prüfstand](PRUEFSTAND-ANDROID.md).
+[Android-Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-version-13--2026-10-20).
+
+[APK .13](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.13/Private-Brain-Pro-0.1.0-preview.13.apk) ist veröffentlicht und als Update über .12 geprüft.
