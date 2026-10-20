@@ -54,7 +54,7 @@ public class ProVaultPlugin extends Plugin {
     /** Stable codes only; unknown storage problems never pretend to be network failures. */
     static String vaultCode(Exception error) {
         if (error instanceof SecurityException) return "VAULT_FOLDER_UNAVAILABLE";
-        String code = vaultCode(error);
+        String code = ProMailPlugin.code(error);
         return code.equals("CONNECTION_FAILED") ? "VAULT_UNAVAILABLE" : code;
     }
 
