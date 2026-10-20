@@ -222,7 +222,9 @@ final class MailEngine {
             result.put("noticeCode", "SENT_COPY_UNCONFIRMED");
             try {
                 // Record 'sent' before this optional copy. A failure here must never resend SMTP.
-                try (IMAPStore connection = imap(account)) {
+                // Gmail's SMTP service saves its own Sent copy. Appending again would
+                // duplicate that message in Gmail even though SMTP was sent only once.
+                if (!account.provider.equals("gmail")) try (IMAPStore connection = imap(account)) {
                     Folder sent = null;
                     for (Folder folder : connection.getDefaultFolder().list("*")) if (special(folder).equals("\\Sent")) { sent = folder; break; }
                     if (sent == null) {

@@ -58,7 +58,9 @@ bisherigen Passwortweg. Abgelaufene/widerrufene Berechtigung erfordert erneute
 Google-Anmeldung über „Konto hinzufügen → Google / Gmail“. Ein vorhandenes
 Google-Konto wird dabei anhand der Adresse wiederverwendet; Kennung, Entwürfe
 und Versandnachweise bleiben bestehen. Ein unklarer Versand wird nie automatisch
-wiederholt. Google-Mail benötigt den weitreichenden Scope `https://mail.google.com/`
+wiederholt. Gmail erstellt die Gesendet-Kopie selbst; die App hängt dort keine
+zweite Kopie per IMAP an. Das ist nach der OAuth-Einrichtung auch mit einem echten
+Konto zu prüfen. Google-Mail benötigt den weitreichenden Scope `https://mail.google.com/`
 und für die Kontozuordnung `https://www.googleapis.com/auth/userinfo.email`.
 
 **Echte Google-Anmeldung noch nicht nachgewiesen.** Im verfügbaren Umfeld gibt es
