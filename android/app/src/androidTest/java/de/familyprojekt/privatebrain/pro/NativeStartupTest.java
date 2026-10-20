@@ -58,9 +58,14 @@ public class NativeStartupTest {
         };
         instrumentation.addMonitor(monitor);
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
-            awaitTrue(scenario,"Boolean(window.PBRecoveryExport && window.PBTresor && window.PBWorkspace)");
-            evaluate(scenario,"localStorage.removeItem('pb_tresor_verify');PBTresor.lock();PBWorkspace.navigate('settings');document.querySelector('#tresorSetup').click();document.querySelector('#tzPw').value='synthetic-recovery-fixture-2026';document.querySelector('#tzPw2').value='synthetic-recovery-fixture-2026';document.querySelector('#tzMk').click();true");
-            awaitTrue(scenario,"document.querySelector('#tzErr').textContent.includes('abgebrochen')");
+            // Component globals exist before DOMContentLoaded wires the setup button.
+            awaitTrue(scenario,"document.readyState === 'complete' && Boolean(window.PBRecoveryExport && window.PBTresor && window.PBWorkspace && window.JasonLib && typeof window.Capacitor?.Plugins?.ProFiles?.saveRecoveryKeys === 'function')");
+            assertEquals("true",evaluate(scenario,"localStorage.removeItem('pb_tresor_verify');PBTresor.lock();PBWorkspace.navigate('settings');document.querySelector('#tresorSetup').click();document.querySelector('#tzPw').value='synthetic-recovery-fixture-2026';document.querySelector('#tzPw2').value='synthetic-recovery-fixture-2026';document.querySelector('#tzMk').click();true"));
+            try {
+                awaitTrue(scenario,"document.querySelector('#tzErr').textContent.includes('abgebrochen')");
+            } catch (AssertionError failure) {
+                throw new AssertionError("Recovery export state (no credentials): "+evaluate(scenario,"JSON.stringify({ready:document.readyState,language:document.documentElement.lang,message:document.querySelector('#tzErr')?.textContent,modal:document.querySelector('#tresorModalBg')?.classList.contains('on'),disabled:document.querySelector('#tzSaved')?.disabled})")+"; native chooser calls="+intents.size(),failure);
+            }
             assertEquals(1,intents.size());
             assertEquals("text/plain",intents.get(0).getType());
             assertTrue(intents.get(0).hasCategory(android.content.Intent.CATEGORY_OPENABLE));
