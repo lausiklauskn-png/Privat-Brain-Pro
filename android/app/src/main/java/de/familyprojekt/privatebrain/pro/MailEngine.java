@@ -32,15 +32,15 @@ final class MailEngine {
     private IMAPStore imap(MailAccount account) throws Exception {
         IMAPStore connection = (IMAPStore) session(account).getStore("imaps");
         String credential = credential(account);
-        try { connection.connect(account.imap, 993, account.user, credential); return connection; }
-        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_AUTH_REQUIRED"); }throw error; }
+        try { connection.connect(account.imap, 993, account.authType.equals("oauth2")?GmailIdentity.key(account.user):account.user, credential); return connection; }
+        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_IMAP_AUTH_FAILED"); }throw error; }
         catch (Exception error) { try { connection.close(); } catch (Exception ignored) { } throw error; }
     }
     private SMTPTransport smtp(MailAccount account) throws Exception {
         SMTPTransport connection = (SMTPTransport) session(account).getTransport("smtps");
         String credential = credential(account);
-        try { connection.connect(account.smtp, 465, account.user, credential); return connection; }
-        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_AUTH_REQUIRED"); }throw error; }
+        try { connection.connect(account.smtp, 465, account.authType.equals("oauth2")?GmailIdentity.key(account.user):account.user, credential); return connection; }
+        catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_SMTP_AUTH_FAILED"); }throw error; }
         catch (Exception error) { try { connection.close(); } catch (Exception ignored) { } throw error; }
     }
     void verify(MailAccount account) throws Exception {
@@ -68,7 +68,7 @@ final class MailEngine {
         JSONArray values = root == null ? new JSONArray() : root.getJSONArray("items");
         if (account.provider.equals("gmail")) for (int n = 0; n < values.length(); n++) {
             MailAccount existing = new MailAccount(values.getJSONObject(n));
-            if (existing.provider.equals("gmail") && existing.email.equalsIgnoreCase(account.email)) return existing.publicJson();
+            if (existing.provider.equals("gmail") && GmailIdentity.same(existing.email,account.email)) return existing.publicJson();
         }
         if (values.length() >= 20) throw new MailFailure("ACCOUNT_LIMIT");
         values.put(account.privateJson());

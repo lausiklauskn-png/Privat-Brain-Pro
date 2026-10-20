@@ -37,6 +37,9 @@ for name in ('originalsSurviveStoreReopeningAndProviderSharesExactBytes', 'incom
 for name in ('scannedPdfRendersBothPagesWithoutChangingOriginal', 'openAndShareOfferReadOnlyPdfWithOriginalNameAndBytes'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativePdfTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native PDF test: {name}')
+for name in ('validGoogleGrantWithoutLegacyAccountUsesNativeVerifiedIdentity', 'incompleteGrantAndDifferentAccountNeverBecomeUsableCredentials', 'identityLookupUsesOnlyFixedHttpsAndRejectsRedirectsUnverifiedAndOversizedReplies'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeGmailGrantTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native Google grant test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

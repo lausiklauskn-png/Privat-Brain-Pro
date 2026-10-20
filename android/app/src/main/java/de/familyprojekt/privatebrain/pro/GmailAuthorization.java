@@ -20,6 +20,9 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     private Callback pending;
     private String expected;
     private final GmailTokenCache tokens = new GmailTokenCache();
+    private final GmailUserInfo userInfo = new GmailUserInfo();
+    private final java.util.concurrent.ExecutorService identityWorker = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final android.os.Handler main = new android.os.Handler(android.os.Looper.getMainLooper());
     GmailAuthorization(MainActivity activity) {
         client = Identity.getAuthorizationClient(activity);
         launcher = activity.registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result -> {
@@ -40,32 +43,38 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         if (pending != null) { callback.failure("GMAIL_AUTH_BUSY");return; }
         pending = callback;expected = email;
         client.authorize(request(email)).addOnSuccessListener(result -> {
-            if (pending == null) return;
+            if (pending != callback) return;
             try {
                 if (result.hasResolution()) launcher.launch(new IntentSenderRequest.Builder(result.getPendingIntent()).build());
                 else complete(result);
             } catch (Exception error) { fail(code(error)); }
-        }).addOnFailureListener(error -> fail(code(error)));
+        }).addOnFailureListener(error -> { if(pending==callback)fail(code(error)); });
     }
-    private void complete(AuthorizationResult result) throws Exception {
-        String email = result.toGoogleSignInAccount().getEmail();
-        if (result.getAccessToken() == null || !result.getGrantedScopes().contains(MAIL_SCOPE) || email == null ||
-            (expected != null && !expected.equalsIgnoreCase(email))) throw new MailFailure("GMAIL_AUTH_REQUIRED");
-        tokens.put(email,result.getAccessToken());
-        Callback callback = pending;pending = null;expected = null;
-        if (callback != null) callback.success(email);
+    private void complete(AuthorizationResult result) {
+        Callback callback=pending;String requested=expected;if(callback==null)return;
+        identityWorker.execute(()->{
+            try{
+                GmailGrant grant=grant(result,requested);
+                main.post(()->{
+                    if(pending!=callback)return;
+                    tokens.put(grant.email,grant.token);pending=null;expected=null;callback.success(grant.email);
+                });
+            }catch(Exception error){main.post(()->{if(pending==callback)fail(code(error));});}
+        });
+    }
+    private GmailGrant grant(AuthorizationResult result,String requested)throws Exception{
+        try{return GmailGrant.read(result,requested,userInfo::email);}
+        catch(MailFailure error){
+            if(error.code.equals("GMAIL_TOKEN_REJECTED")&&result!=null&&result.getAccessToken()!=null)invalidate(result.getAccessToken());
+            throw error;
+        }
     }
     private void fail(String code) { Callback callback = pending;pending = null;expected = null;if (callback != null) callback.failure(code); }
     @Override public String token(String email) throws Exception {
         String cached=tokens.get(email);if(cached!=null)return cached;
         try {
             AuthorizationResult result = Tasks.await(client.authorize(request(email)), 20, TimeUnit.SECONDS);
-            if (result.hasResolution() || result.getAccessToken() == null || !result.getGrantedScopes().contains(MAIL_SCOPE))
-                throw new MailFailure("GMAIL_AUTH_REQUIRED");
-            String selected = result.toGoogleSignInAccount().getEmail();
-            if (selected == null || !email.equalsIgnoreCase(selected)) throw new MailFailure("GMAIL_AUTH_REQUIRED");
-            tokens.put(email,result.getAccessToken());
-            return result.getAccessToken();
+            GmailGrant grant=grant(result,email);tokens.put(grant.email,grant.token);return grant.token;
         } catch (MailFailure error) { throw error; }
         catch (Exception error) { throw new MailFailure(code(error)); }
     }
@@ -74,7 +83,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         try { Tasks.await(client.clearToken(ClearTokenRequest.builder().setToken(token).build()), 5, TimeUnit.SECONDS); }
         catch (Exception ignored) { /* Explicit reauthorization remains required; never resend automatically. */ }
     }
-    void close() { tokens.clear();fail("CANCELLED"); }
+    void close() { tokens.clear();fail("CANCELLED");identityWorker.shutdownNow(); }
     static String code(Exception error) {
         if (error instanceof MailFailure) return ((MailFailure) error).code;
         Throwable source = error;while (source.getCause() != null && source.getCause() != source) source = source.getCause();
@@ -83,6 +92,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
             if (code == 10) return "GMAIL_CONFIGURATION_REQUIRED";
             if (code == 16 || code == 12501) return "CANCELLED";
             if (code == 7) return "NETWORK_FAILED";
+            return "GMAIL_API_"+code;
         }
         if (source instanceof java.util.concurrent.TimeoutException) return "NETWORK_FAILED";
         if (source instanceof java.util.concurrent.CancellationException) return "CANCELLED";

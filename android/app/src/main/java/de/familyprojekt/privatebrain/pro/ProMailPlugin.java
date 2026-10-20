@@ -237,13 +237,7 @@ public class ProMailPlugin extends Plugin {
     }
     private static final String[] GOOGLE_SIGN_IN = {"Mit Google anmelden", "Sign in with Google", "Войти через Google", "Zaloguj się przez Google"};
     private static final String[] GOOGLE_HELP = {"Google fragt dich selbst nach deiner Zustimmung. Dein Google-Passwort wird nicht in dieser App eingegeben.", "Google asks for your consent. Your Google password is not entered in this app.", "Google запросит ваше согласие. Пароль Google не вводится в этом приложении.", "Google poprosi o zgodę. Hasła Google nie wpisuje się w tej aplikacji."};
-    private static final String[] GOOGLE_REQUIRED = {"Google hat die Mail-Freigabe nicht abgeschlossen. Bitte die Google-Einrichtung prüfen. Das bestehende Konto nicht entfernen.", "Google mail authorization did not complete. Check the Google setup. Keep the existing account.", "Google не завершил разрешение доступа к почте. Проверьте настройку Google. Не удаляйте существующий аккаунт.", "Google nie ukończył autoryzacji poczty. Sprawdź konfigurację Google. Zachowaj istniejące konto."};
-    private static final String[] GOOGLE_CONFIG = {"Google-Anmeldung ist für diese Test-App noch nicht freigeschaltet. Die Google-Einrichtung muss abgeschlossen werden.", "Google authorization is not enabled for this test app yet. Complete the Google setup first.", "Вход Google ещё не настроен для этой тестовой версии. Требуется настройка Google.", "Logowanie Google nie jest jeszcze skonfigurowane dla tej wersji testowej."};
-    private static String googleError(String code, int language) {
-        if (code.equals("GMAIL_CONFIGURATION_REQUIRED")) return GOOGLE_CONFIG[language];
-        if (code.equals("CANCELLED")) return WORDS[language][5];
-        return GOOGLE_REQUIRED[language];
-    }
+    private static String googleError(String code, int language) { return GmailMessages.error(code,language); }
     private static void showField(EditText field, boolean visible) {
         android.view.ViewGroup parent = (android.view.ViewGroup)field.getParent();int index = parent.indexOfChild(field);
         field.setVisibility(visible ? View.VISIBLE : View.GONE);
