@@ -92,13 +92,13 @@ public final class UpgradeProbe extends Instrumentation {
             Intent launch=new Intent(Intent.ACTION_MAIN).setClassName(getTargetContext().getPackageName(),PREFIX+"MainActivity")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivitySync(launch);
-            await("window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
+            await("document.readyState === 'complete' && window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
             if(recreate){
                 runOnMainSync(()->{
                     require(active!=null && !active.isDestroyed(),"Missing resumed main activity");
                     recreatedFrom=active;active.recreate();
                 });
-                await("window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
+                await("document.readyState === 'complete' && window.PBWorkspace && window.Capacitor && typeof db !== 'undefined' && db && window.PBNetwork?.ready");
             }
             if("seed".equals(phase)) {
                 Object engine=engine();
