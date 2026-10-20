@@ -1,16 +1,24 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Vorschau .17: Signierung repariert, Updateprobe noch offen.**
-Originalsignierer über PR #37/#38 ausschließlich verschlüsselt auf main gesichert;
-Identitätsworkflow 39482529491 und vollständige Main-CI 39482528010 grün.
-Tag `v0.1.0-preview.17` auf `39e8fae98671870962e70d5263416acd21502e37`
-hat Release 39484440521 ausgelöst. Build, Original-Zertifikat, Paket, VersionCode
-17 und nicht debuggable geprüft; `signed-upgrade` 118844398526 fehlgeschlagen,
-Veröffentlichung korrekt übersprungen. Noch keine öffentliche .17 oder APK-Prüfsumme.
-Ergebnisartefakt `signed-upgrade-results` zur Diagnose auswerten; aktuelle Cloud-
-Netzregel blockiert `api.github.com`. Alte Secrets bis nach erfolgreichem Release behalten.
-[Prüfstand](docs/PRUEFSTAND-ANDROID.md), [gemeinsamer Release-Ablauf](docs/VEROEFFENTLICHEN.md),
-[Signierung und Sicherung](docs/SIGNIERUNG-UND-GITHUB.md). Keine lokale Schlüsselkopie nötig.
+**Vorschau .17 veröffentlicht (2026-10-20).**
+[APK .17](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.17/Private-Brain-Pro-0.1.0-preview.17.apk)
+über die vorhandene .16 installieren, nicht deinstallieren. Unveränderter Tag
+`v0.1.0-preview.17` auf `39e8fae98671870962e70d5263416acd21502e37`;
+vollständige Main-CI 39482528010 und Identitätsprüfung 39482529491 grün.
+Release 39484440521, Versuch 2: signiertes Update .16 → .17 (Job 118867063256)
+mit Daten, Sprache, Offline-Kaltstart, Speicherort-Einstellung und Android-Ordnerauswahl
+bestanden; Veröffentlichung 118868309640 erfolgreich. Öffentlicher Download mit
+`cmp` bytegleich zum ursprünglichen signierten Artefakt geprüft (5.634.429 Bytes).
+SHA-256: `859c0b16c3517527a21deff909767e572603f7818e2c5ce9e8424dfa3ade097c`.
+Der erste Versuch scheiterte schon beim .16-Start an einem WebView-Antworttimeout;
+unveränderte APKs und Probe bestanden im Diagnoselauf 39491051454 und im Release-Wiederanlauf.
+Keine belegte tiefere Ursache und kein geänderter App-Code; keine Prüfung abgeschwächt.
+Originalsignierer bleibt ausschließlich verschlüsselt auf main; Freigabe nur in Actions.
+Die alten vier Signier-Secrets sind nach Release und Downloadprüfung zur Löschung
+freigegeben, wurden von dieser Sitzung aber nicht gelöscht. `PB_SIGNING_UNLOCK` behalten.
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-17--2026-10-20),
+[Release-Ablauf](docs/VEROEFFENTLICHEN.md), [Signierung](docs/SIGNIERUNG-UND-GITHUB.md).
+PWA und geschützte Drift-Guard-Module unverändert. Noch keine Messung an Klaus' Tablet.
 
 **Bauabschnitt 1 (Vorschau .17, 2026-10-20): eigener Speicherort mit Passwort.**
 Einstellungen → „🔐 Speicherort und Verschlüsselung“: Tablet oder SD-Karte über die

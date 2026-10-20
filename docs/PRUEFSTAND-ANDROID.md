@@ -1,9 +1,6 @@
-> Signierung, Stand 2026-10-20: Originalsignierer per PR #37/#38 wiederhergestellt
-> und ausschließlich AES-256-GCM-verschlüsselt auf main gesichert. Identitätsworkflow
-> 39482529491 grün. Tag `v0.1.0-preview.17` auf `39e8fae` hat Release 39484440521
-> gestartet: Build, Originalsignatur und APK-Metadaten erfolgreich geprüft;
-> `signed-upgrade` fehlgeschlagen, Veröffentlichung korrekt übersprungen.
-> Noch keine öffentliche APK .17 oder bestandene signierte Updateprobe behaupten.
+> Vorschau .17 veröffentlicht: Release 39484440521, Versuch 2, signierte
+> .16→.17-Updateprobe und öffentliche bytegleiche Downloadprüfung bestanden.
+> Originalsignierer unverändert; Details und Prüfsumme im Abschnitt .17 unten.
 
 # Prüfstand Android – 2026-10-20
 
@@ -853,23 +850,66 @@ mit einem temporären **Test**-Keystore bestanden; dabei wurde kein neuer
 Vorschau-Schlüssel erzeugt und der echte Vorschau-Fingerabdruck bleibt fest gepinnt.
 
 
-## .17: Originalsignierung repariert, Updateprobe noch offen
+## Veröffentlichte Version .17 — 2026-10-20
 
-Release-Tag `v0.1.0-preview.17` zeigt auf den vollständig geprüften main-Commit
-`39e8fae98671870962e70d5263416acd21502e37`. Der Anwendungscode ist gegenüber
+Release-Tag `v0.1.0-preview.17` zeigt unverändert auf main-Commit
+`39e8fae98671870962e70d5263416acd21502e37`. Anwendungscode gegenüber
 `eb800faf25676055a19a49eea83d0ba158e896ec` unverändert. Vollständige
 [Main-CI 39482528010](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482528010)
-erfolgreich, einschließlich Firefox, WebKit, Build/Lint und native-smoke.
+erfolgreich einschließlich Firefox, WebKit, Build/Lint und native-smoke.
+Originalidentität in [39482529491](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482529491)
+geprüft und ausschließlich verschlüsselt auf main gesichert.
 
-[Release 39484440521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521)
-wurde durch Git-Push ausgelöst. Build-Job erfolgreich: verschlüsseltes Paket
-mit `PB_SIGNING_UNLOCK` in Actions geöffnet, privater Originalschlüssel benutzt,
-APK-Zertifikat gegen `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`
-geprüft; Paket, Appname, nicht debuggable und VersionCode 17 > 16 bestätigt.
+[Release 39484440521, Versuch 2](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521/attempts/2)
+erfolgreich: vorhandenen erfolgreichen Build wiederverwendet; kein neues
+Schlüsselmaterial, kein neuer Tag und kein neuer APK-Build. Die ursprüngliche
+APK ist mit dem Originalsignierer signiert (ein Zertifikat, SHA-256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`).
+Paket `de.familyprojekt.privatebrain.pro.preview`, Name `Private Brain Pro`,
+VersionCode 17 > 16, VersionName `0.1.0-preview.17`, nicht debuggable.
 
-[Signierte Updateprobe](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521/job/118844398526)
-fehlgeschlagen; Veröffentlichung wurde übersprungen. Zur Diagnose liegt das
-Artefakt `signed-upgrade-results` vor. Die laufende Cloud-Umgebung blockiert
-aktuell `api.github.com` und damit den authentifizierten Abruf dieses Artefakts.
-Keinen Fehler im App-Code ohne Diagnose behaupten; die signierte APK nicht
-vor erfolgreicher Updateprobe veröffentlichen. Alte Secrets vorerst behalten.
+### Fehlerbefund und unveränderte Gegenprobe
+
+Das heruntergeladene Artefakt `signed-upgrade-results` aus Versuch 1 enthält
+in `seed.txt` ausschließlich `SIGNED_UPGRADE_FAIL: java.lang.AssertionError:
+WebView response timed out`, über `UpgradeProbe.js:43`, `await:48`, `onStart:73`.
+Auch das Jobprotokoll bestätigt: .16 und Instrumentierung installiert, dann
+Timeout beim ersten WebView-JavaScript-Aufruf. Das Update auf .17 war noch
+nicht ausgeführt. Keine belegte Aussage über einen Signatur- oder Migrationsfehler.
+
+[Diagnoselauf 39491051454](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39491051454)
+benutzte dieselben drei Artefakt-APKs aus 39484440521 (alte App, neue App,
+Instrumentierung) im frischen API-35-Emulator. Nur die Shell-Fehlerdiagnostik
+wurde um Logcat, Activity-/WebView-Status, Fenster und Screenshot ergänzt;
+Fehlerstatus und alle Prüfungen unverändert. Alle drei Phasen bestanden:
+`SIGNED_UPGRADE_SEED_PASS`, `SIGNED_UPGRADE_BASELINE_PASS`,
+`SIGNED_UPGRADE_VERIFY_PASS`. Der Timeout ließ sich nicht reproduzieren;
+seine tiefere Ursache ist aus dem ersten Artefakt nicht belegbar. Keine
+Timeout-Erhöhung, automatischen Testwiederholungen oder Änderungen am App-Code.
+
+Danach nur die fehlgeschlagenen/abhängigen Jobs des ursprünglichen Releases
+erneut gestartet. [Updatejob 118867063256](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521/job/118867063256)
+mit der ursprünglichen Probe ebenfalls erfolgreich: alle drei PASS-Marker,
+keine FAIL-Marker. Prüfung ohne Deinstallation: Sprache, localStorage,
+IndexedDB-Katalog, verschlüsseltes synthetisches Konto, Offline-Kaltstart,
+Speicherort-Einstellung und echter Android-Ordnerdialog mit Abbrechen.
+Das bestätigt das signierte .16→.17-Update im Emulator, keine Messung an
+Klaus' Tablet und keine echte Mailanbieter-Anmeldung.
+
+### Veröffentlichung und öffentliche Downloadprüfung
+
+[Publish-Job 118868309640](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521/job/118868309640)
+erst nach erfolgreicher Updateprobe grün. Öffentliche Vorschau seit
+2026-10-20, 22:28:50 Uhr Europe/Berlin.
+
+[APK .17 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.17/Private-Brain-Pro-0.1.0-preview.17.apk)
+— 5.634.429 Bytes. Unabhängig über den öffentlichen Link heruntergeladen,
+mit `cmp` bytegleich gegen `signed-release` aus dem ursprünglichen Build
+geprüft. `sha256sum -c SHA256SUMS` auf dem Artefakt ebenfalls erfolgreich.
+
+SHA-256: `859c0b16c3517527a21deff909767e572603f7818e2c5ce9e8424dfa3ade097c`.
+
+Erst jetzt sind die alten vier `ANDROID_KEYSTORE_*`-/Alias-Secrets zur Löschung
+freigegeben; diese Sitzung hat sie nicht gelöscht. `PB_SIGNING_UNLOCK` und die
+verschlüsselte Identität samt Offline-Sicherung behalten. Keine Schlüssel oder
+Passwörter lokal wiederhergestellt. PWA und geschützte Module unverändert.
