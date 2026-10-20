@@ -9,6 +9,27 @@ concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  browser-layout:
+    name: Responsive Oberfläche (${{ matrix.engine }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build:web
+      - name: Browser-Engine installieren
+        run: npx playwright-core install --with-deps ${{ matrix.engine }}
+      - name: Fensterbreiten, Suche, Navigation und lokale Daten prüfen
+        run: node tools/native/test-web.mjs
+        env:
+          PB_BROWSER_ENGINE: ${{ matrix.engine }}
   validate:
     runs-on: ubuntu-24.04
     steps:
