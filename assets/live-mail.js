@@ -341,6 +341,7 @@
         error.textContent = e.message;
       }
     } finally {
+      native?.progress?.('idle');
       busy = false;
       app.inert = false;
       if (native) accountTools.inert = false;
@@ -861,7 +862,9 @@
     current = null;
     mail = null;
     reader.replaceChildren(el("p", "mail-muted", native ? S("choose") : T("body")));
+    native?.progress?.('download');
     mail = await fetchMail(item);
+    native?.progress?.('prepare');
     current = item;
     await api(prefix() + "/messages/" + item.uid + "/action", {
       folder,
@@ -983,6 +986,9 @@
     if (native) report.append(el("summary", "", T("check")));
     report.append(findings);
     reader.append(report);
+    native?.progress?.('checking');
+    // Yield once so WebView can paint the real check phase before local parsing.
+    if(native)await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
     await checks(mail, findings);
   }
   function compose(source = {}) {

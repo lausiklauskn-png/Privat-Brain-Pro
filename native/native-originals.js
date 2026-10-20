@@ -81,9 +81,10 @@
   };
   function notice(){
     const status=document.querySelector('#libraryStatus');if(status)status.textContent=t(6);
+    if(window.PBFolders){window.PBFolders.refresh();return;}
     for(const id of ['chooseLibrary','pauseLibrary']){const e=document.getElementById(id);if(e)e.hidden=true;}
   }
-  window.PBOriginals={stored,resolve,reconnect,notice,label:()=>t(7),async storeItem(item){await save(item.file);return item;}};
+  window.PBOriginals={stored,resolve,reconnect,notice,label:()=>t(7),async storeItem(item){const hash=await save(item.file);if(window.PBFolders)await window.PBFolders.copy(hash,item.file.name);return item;}};
   new MutationObserver(notice).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   files.listOriginals().then(result=>{for(const hash of result.items)stored.add(hash);window.PBWorkspace.refresh();}).catch(()=>{});
   notice();

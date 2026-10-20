@@ -28,7 +28,7 @@ try{
     window.Capacitor={isNativePlatform:()=>true,Plugins:{
       ProNetwork:{async getState(){return{offline:localStorage.getItem('fixture-offline')==='true'};},async setOffline({offline}){networkChanges.push(offline);localStorage.setItem('fixture-offline',String(offline));return{offline};}},
       ProDevice:{async getInfo(){return{versionName:'fixture',nativeMail:true};}},
-      ProMail:{async accounts(){return{items:[account]};},async folders(){return{items:[{path:'INBOX',name:'INBOX',specialUse:'\\Inbox'},{path:'Sent',name:'Sent',specialUse:'\\Sent'}]};},async messages(){return{items:[{uid:7,subject:'Compact message',from:'fixture@example.invalid',flags:[],size:100}],validity:'123',total:1,next:null};},async message(){return{subject:'Compact message',from:'fixture@example.invalid',to:account.email,text:'Original message',html:'<h1>Original newsletter</h1><p>More room for the message.</p>',attachments:[]};},async action(args){mailCalls.push(args);return{ok:true};},async saved(){return{items:[]};},async addAccount(){return account;}}
+      ProMail:{async accounts(){return{items:[account]};},async folders(){return{items:[{path:'INBOX',name:'INBOX',specialUse:'\\Inbox'},{path:'Sent',name:'Sent',specialUse:'\\Sent'}]};},async messages(){return{items:[{uid:7,subject:'Compact message',from:'fixture@example.invalid',flags:[],size:100}],validity:'123',total:1,next:null};},async message(){if(window.holdMail)await new Promise(resolve=>window.releaseMail=resolve);return{subject:'Compact message',from:'fixture@example.invalid',to:account.email,text:'Original message',html:'<h1>Original newsletter</h1><p>More room for the message.</p>',attachments:[]};},async action(args){mailCalls.push(args);return{ok:true};},async saved(){return{items:[]};},async addAccount(){return account;}}
     }};
   });
   await page.goto(origin);await page.waitForFunction(()=>window.PBNetwork?.ready&&window.PBWorkspace&&typeof db!=='undefined'&&db&&document.querySelector('.native-toolbar-row'));
@@ -40,19 +40,38 @@ try{
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
       const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=44&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=100;
+      return row.height<=(innerWidth<=650?88:44)&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=650?144:100);
     }));
     if(process.env.PB_CAPTURE_DESIGN==='1'){
-      await mkdir('docs/design/compact14',{recursive:true});await page.screenshot({path:`docs/design/compact14/mail-${width}.png`});
+      await mkdir('docs/design/compact15',{recursive:true});await page.screenshot({path:`docs/design/compact15/mail-${width}.png`});
     }
   }
   await page.setViewportSize({width:320,height:640});
-  await page.locator('.native-more>summary').click();ok('Phone menu exposes named secondary views; keyboard Escape returns focus',await page.locator('[data-tab=settings]').isVisible());await page.keyboard.press('Escape');ok('Phone view menu closes with focus on its opener',await page.locator('.native-more>summary').evaluate(e=>document.activeElement===e)&&await page.locator('[data-tab=settings]').isHidden());
-  for(const [lang,word]of [['en','More views'],['ru','Другие разделы'],['pl','Więcej widoków'],['de','Weitere Ansichten']]){
+  ok('Phone keeps Overview, Catalog, Duplicates and Settings directly visible',await page.locator('.workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>=36&&r.right<=innerWidth&&r.left>=0;})));
+  await page.locator('.native-options>summary').click();await page.keyboard.press('Escape');ok('App menu closes with keyboard Escape and restores focus',await page.locator('.native-options>summary').evaluate(e=>document.activeElement===e)&&!await page.locator('.native-options').evaluate(e=>e.open));
+  for(const [lang,word]of [['en','App menu'],['ru','Меню приложения'],['pl','Menu aplikacji'],['de','App-Menü']]){
     await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-    ok(`${lang}: icon tooltip follows the selected language and has the same accessible name`,await page.locator('.native-more>summary').getAttribute('title')===word&&await page.locator('.native-more>summary').getAttribute('aria-label')===word);
+    ok(`${lang}: app menu tooltip and accessible name follow the selected language`,await page.locator('.native-options>summary').getAttribute('title')===word&&await page.locator('.native-options>summary').getAttribute('aria-label')===word);
   }
+  await page.setViewportSize({width:1280,height:900});
+  const view=page.locator('[data-native-tool=view]'),images=page.locator('[data-native-tool=images]');
+  for(const [control,label]of [[view,'Textansicht'],[images,'Externe Bilder ausblenden']]){
+    await control.hover();await page.locator('.native-tooltip').waitFor();ok(label+': mail symbol explains its action in a visible tooltip',await page.locator('.native-tooltip').textContent()===label);
+  }
+  await images.click();await images.hover();await page.waitForFunction(()=>document.querySelector('.native-tooltip').textContent==='Externe Bilder laden');
+  ok('Image tooltip changes to loading after external images are hidden',await images.getAttribute('aria-label')==='Externe Bilder laden');
+  await view.click();await view.hover();await page.waitForFunction(()=>document.querySelector('.native-tooltip').textContent==='Originalansicht');
+  ok('View tooltip changes to original view after switching to plain text',await view.getAttribute('aria-label')==='Originalansicht');
+  await view.click();await page.mouse.move(1270,890);await page.setViewportSize({width:320,height:640});
   ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=36&&r.width>=36&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
+  await page.evaluate(()=>{window.holdMail=true;window.loadPhases=[];const progress=PBMailDevice.progress;PBMailDevice.progress=stage=>{loadPhases.push(stage);progress(stage);};});
+  await page.locator('.live-mail .mail-back').click();await page.waitForFunction(()=>document.querySelector('.live-mail').getAttribute('aria-busy')!=='true');await page.evaluate(()=>{window.loadPhases=[];});await page.locator('[data-live-uid="7"]').click();
+  await page.waitForFunction(()=>typeof window.releaseMail==='function');
+  ok('Slow provider download displays a real loading phase before claiming content checks',await page.locator('.native-mail-progress [role=status]').textContent()==='E-Mail wird vom Anbieter geladen …'&&await page.evaluate(()=>loadPhases.join(',')==='download'));
+  await page.locator('.native-mail-progress summary').click();
+  ok('Loading explanation names rule checks and explicitly states the antivirus boundary',await page.locator('.native-mail-progress details p').textContent().then(t=>t.includes('anhand von Regeln')&&t.includes('kein vollständiger Virenscanner')));
+  await page.evaluate(()=>{window.holdMail=false;window.releaseMail();});await page.waitForFunction(()=>document.querySelector('.live-mail').getAttribute('aria-busy')!=='true');
+  ok('Actual download, display preparation and rule checks run in order; progress closes on completion',await page.evaluate(()=>loadPhases.join(',')==='download,prepare,checking,idle')&&await page.locator('.native-mail-progress').isHidden());
   await page.evaluate(()=>{window.fixtureSocket=new WebSocket('wss://socket.example.invalid');fetch('https://stream.example.invalid/held').then(r=>r.text()).catch(e=>{window.streamError=e.name;window.streamErrorMessage=e.message;});});
   await page.waitForTimeout(30);
   ok('Streaming fetch body remains pending before the switch',await page.evaluate(()=>streamAborted===0&&typeof window.streamError==='undefined'));

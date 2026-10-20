@@ -23,10 +23,10 @@
   function render() {
     const t = text[document.documentElement.lang] || text.de;
     const mailNotice = {
-      de: 'Direkte Mailverbindung auf diesem Gerät. Dauerhafter Ordnerzugriff und Hintergrundabruf folgen noch.',
-      en: 'Direct mail on this device. Persistent folder access and background sync are still being added.',
-      ru: 'Прямая почта на устройстве. Постоянный доступ к папкам и фоновая синхронизация ещё разрабатываются.',
-      pl: 'Bezpośrednia poczta na urządzeniu. Trwały dostęp do folderów i synchronizacja w tle są w przygotowaniu.'
+      de: 'Direkte Mailverbindung auf diesem Gerät. Ordnerauswahl über Android; Hintergrundabruf folgt noch.',
+      en: 'Direct mail on this device. Folder selection uses Android; background sync is still being added.',
+      ru: 'Прямая почта на устройстве. Выбор папок через Android; фоновая синхронизация ещё разрабатывается.',
+      pl: 'Bezpośrednia poczta na urządzeniu. Wybór folderów przez Android; synchronizacja w tle jest w przygotowaniu.'
     };
     status.textContent = `${t[0]}${version}. ${nativeMail ? (mailNotice[document.documentElement.lang] || mailNotice.de) : t[1]}`;
   }

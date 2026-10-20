@@ -39,6 +39,26 @@ public class NativeStartupTest {
         fail("Bundled app did not satisfy: " + script);
     }
 
+    @Test public void nativeFolderChooserCanBeCancelledAndRetriedWithHiddenExplanation() throws Exception {
+        var instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
+        var monitor=new android.app.Instrumentation.ActivityMonitor(new android.content.IntentFilter(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE),new android.app.Instrumentation.ActivityResult(android.app.Activity.RESULT_CANCELED,null),true);
+        instrumentation.addMonitor(monitor);
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            awaitTrue(scenario,"Boolean(window.PBFolders && window.Capacitor.Plugins.ProFolders)");
+            evaluate(scenario,"localStorage.setItem('pb_fs_ok','1');PBWorkspace.navigate('intake');true");
+            awaitTrue(scenario,"!('showDirectoryPicker' in window) && document.querySelector('#pickDir').getBoundingClientRect().width > 0 && document.querySelector('#chooseLibrary').getBoundingClientRect().width > 0");
+            evaluate(scenario,"document.querySelector('#pickDir').click();true");
+            awaitTrue(scenario,"!document.querySelector('#pickDir').disabled");
+            assertEquals(1,monitor.getHits());
+            evaluate(scenario,"document.querySelector('#chooseLibrary').click();true");
+            awaitTrue(scenario,"!document.querySelector('#chooseLibrary').disabled");assertEquals(2,monitor.getHits());
+            evaluate(scenario,"document.querySelector('#pickDir').click();true");
+            awaitTrue(scenario,"!document.querySelector('#pickDir').disabled");assertEquals(3,monitor.getHits());
+            assertEquals("true",evaluate(scenario,"!document.querySelector('#modalBg.on') && !document.querySelector('.native-folder-consent')"));
+            evaluate(scenario,"localStorage.removeItem('pb_fs_ok');true");
+        }finally{instrumentation.removeMonitor(monitor);}
+    }
+
     @Test public void bundledSearchAndNativeBridgeWork() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q') && document.querySelectorAll('.main-pages .tab').length === 4)");
