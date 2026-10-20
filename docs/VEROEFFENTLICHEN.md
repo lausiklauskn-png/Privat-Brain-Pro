@@ -1,6 +1,6 @@
 # So veröffentlicht jede Sitzung (Claude oder Codex)
 
-Stand: 2026-10-20. Die Vorschau behält die Paketkennung
+Stand: 2026-10-20. [Übergabe zur Schlüsselwiederherstellung](UEBERGABE-VORSCHAU-17.md). Die Vorschau behält die Paketkennung
 `de.familyprojekt.privatebrain.pro.preview` und genau den bisherigen Signierer:
 
 `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`

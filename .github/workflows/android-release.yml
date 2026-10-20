@@ -147,6 +147,7 @@ jobs:
           aapt="$ANDROID_HOME/build-tools/36.0.0/aapt"
           "$signer" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
           cat "$RUNNER_TEMP/signature.txt"
+          cp "$RUNNER_TEMP/signature.txt" release-files/SIGNATUR.txt
           "$aapt" dump badging "$apk" > "$RUNNER_TEMP/badging.txt"
           grep -Fq "package: name='$package'" "$RUNNER_TEMP/badging.txt"
           grep -Fq "versionName='${RELEASE_TAG#v}'" "$RUNNER_TEMP/badging.txt"

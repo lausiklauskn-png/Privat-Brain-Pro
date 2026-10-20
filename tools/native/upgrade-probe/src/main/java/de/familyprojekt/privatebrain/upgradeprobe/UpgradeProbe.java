@@ -111,10 +111,12 @@ public final class UpgradeProbe extends Instrumentation {
                 getUiAutomation().performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK);
                 await("!document.querySelector('#pickDir').disabled && window.PBVault.active() === false");
             }
-            result.putString("stream","SIGNED_UPGRADE_"+phase.toUpperCase()+"_PASS\n");
+            result.putString("stream","SIGNED_UPGRADE_"+phase.toUpperCase(java.util.Locale.ROOT)+"_PASS\n");
             finish(Activity.RESULT_OK,result);
         } catch(Throwable failure) {
-            result.putString("stream","SIGNED_UPGRADE_FAIL: "+failure+"\n");
+            java.io.StringWriter trace=new java.io.StringWriter();
+            failure.printStackTrace(new java.io.PrintWriter(trace));
+            result.putString("stream","SIGNED_UPGRADE_FAIL: "+trace+"\n");
             finish(Activity.RESULT_CANCELED,result);
         }
     }

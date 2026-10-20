@@ -55,9 +55,19 @@ jobs:
         run: npx playwright-core install --with-deps chromium
       - name: Vollständige vorhandene Web-Prüfungen
         run: |
+          set -euo pipefail
+          # Preserve npm's exit code; surface bounded failure details through the API too.
+          report_failure() {
+            code=$?
+            if [[ "$code" -ne 0 ]]; then
+              python3 -c 'import os; from pathlib import Path; p=Path(os.environ["RUNNER_TEMP"])/"web-tests.log"; t=p.read_text(errors="replace")[-6000:] if p.exists() else "No test log"; print("::error title=Web regression::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+            fi
+            exit "$code"
+          }
+          trap report_failure EXIT
           export CB_CHROMIUM="$(node --input-type=module -e 'import {chromium} from "playwright-core"; process.stdout.write(chromium.executablePath())')"
           export WFPDF_KLON="$GITHUB_WORKSPACE/tests/fixtures/Workflow-PDF"
-          npm test
+          npm test 2>&1 | tee "$RUNNER_TEMP/web-tests.log"
           npm run sync:android
           npm run test:native-web
       - run: npm test --prefix mail-service
