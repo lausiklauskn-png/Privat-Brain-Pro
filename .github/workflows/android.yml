@@ -27,7 +27,16 @@ jobs:
       - name: Browser-Engine installieren
         run: npx playwright-core install --with-deps ${{ matrix.engine }}
       - name: Fensterbreiten, Suche, Navigation und lokale Daten prüfen
-        run: node tools/native/test-web.mjs
+        run: |
+          set -euo pipefail
+          if node tools/native/test-web.mjs > "$RUNNER_TEMP/layout.log" 2>&1; then
+            cat "$RUNNER_TEMP/layout.log"
+          else
+            code=$?
+            cat "$RUNNER_TEMP/layout.log"
+            python3 -c 'import os; from pathlib import Path; t=(Path(os.environ["RUNNER_TEMP"])/"layout.log").read_text(errors="replace")[-6000:]; print("::error title=Browser layout::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+            exit "$code"
+          fi
         env:
           PB_BROWSER_ENGINE: ${{ matrix.engine }}
   validate:

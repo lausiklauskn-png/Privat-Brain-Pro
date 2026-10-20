@@ -45,6 +45,10 @@ verbleibende Ablage sein.
   der Gesamtlauf wurde später durch einen Folgecommit abgebrochen. Das bestätigt
   die Instrumentierung, keinen signierten .16→.17-Versionswechsel.
 
+- Diagnose `39467301186` benennt inzwischen **alle vier** oben genannten Secrets
+  als im Job nicht verfügbar. Das ist der konkrete aktuelle Blocker. Ihr Fehlen
+  ist von der älteren Meldung über eine unlesbare Datei zu unterscheiden.
+
 ## Gemeinsamer Veröffentlichungsweg
 
 [PR #35](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/35) ergänzt den
