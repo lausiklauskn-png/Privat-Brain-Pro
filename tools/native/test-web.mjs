@@ -45,9 +45,13 @@ try {
       if(process.env.PB_CAPTURE_DESIGN==='1'&&['search','explorer'].includes(tab)){await page.mouse.move(width-2,898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/${tab}-${width}.png`});}
     }
   }
-  await page.click('.main-pages [data-tab="search"]');
+  // Follow the visible import workflow: finish importing on Files, then return
+  // to Search through navigation before exercising the search field.
+  await clickControl(page,'.main-pages [data-tab="intake"]');
   await page.setInputFiles('#fileInput',{name:'android-smoke.txt',mimeType:'text/plain',buffer:Buffer.from('Fahrzeug Radstand 2820 Millimeter')});
-  await page.waitForFunction(()=>document.querySelector('#stFiles')?.textContent==='1');
+  await page.waitForFunction(()=>!signing && document.querySelector('#stFiles')?.textContent==='1');
+  await clickControl(page,'.main-pages [data-tab="search"]');
+  ok('Search is visible after completing import and returning through navigation',await page.locator('#q').isVisible());
   await page.fill('#q','Radstand');
   await page.waitForFunction(()=>document.querySelector('#results')?.textContent.includes('android-smoke.txt'));
   ok('Imported document is searchable in native bundle',true);
