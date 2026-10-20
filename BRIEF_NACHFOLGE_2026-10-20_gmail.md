@@ -1,3 +1,10 @@
+> **Aktueller Zusatzauftrag, 2026-10-20:** PDF-Seitenansicht einschließlich Scans,
+> Öffnen/Teilen an Workfloh PDF und andere Apps sowie gemeldete Google-Auswahlschleife.
+> Umsetzung und offene Geräte-/Google-Prüfungen stehen in
+> [PDF-Ansicht und Google](docs/PDF-ANSICHT-UND-GOOGLE.md). Die folgenden älteren
+> Zwischenstände sind historisch; die dortige Aussage „Gmail nicht implementiert“
+> ist seit Vorschau .8 überholt. Ein echter Gmail-Login bleibt unbestätigt.
+
 # Nachfolgebrief: Private Brain Pro – Originalbilder, Mail-Links und Gmail
 
 Stand: 2026-10-20. Dieser Brief ist der Arbeitsauftrag für die nächste Sitzung.

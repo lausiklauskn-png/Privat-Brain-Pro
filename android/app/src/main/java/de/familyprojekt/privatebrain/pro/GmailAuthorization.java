@@ -19,6 +19,7 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
     private final ActivityResultLauncher<IntentSenderRequest> launcher;
     private Callback pending;
     private String expected;
+    private final GmailTokenCache tokens = new GmailTokenCache();
     GmailAuthorization(MainActivity activity) {
         client = Identity.getAuthorizationClient(activity);
         launcher = activity.registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result -> {
@@ -50,26 +51,30 @@ final class GmailAuthorization implements MailEngine.OAuthProvider {
         String email = result.toGoogleSignInAccount().getEmail();
         if (result.getAccessToken() == null || !result.getGrantedScopes().contains(MAIL_SCOPE) || email == null ||
             (expected != null && !expected.equalsIgnoreCase(email))) throw new MailFailure("GMAIL_AUTH_REQUIRED");
+        tokens.put(email,result.getAccessToken());
         Callback callback = pending;pending = null;expected = null;
         if (callback != null) callback.success(email);
     }
     private void fail(String code) { Callback callback = pending;pending = null;expected = null;if (callback != null) callback.failure(code); }
     @Override public String token(String email) throws Exception {
+        String cached=tokens.get(email);if(cached!=null)return cached;
         try {
             AuthorizationResult result = Tasks.await(client.authorize(request(email)), 20, TimeUnit.SECONDS);
             if (result.hasResolution() || result.getAccessToken() == null || !result.getGrantedScopes().contains(MAIL_SCOPE))
                 throw new MailFailure("GMAIL_AUTH_REQUIRED");
             String selected = result.toGoogleSignInAccount().getEmail();
             if (selected == null || !email.equalsIgnoreCase(selected)) throw new MailFailure("GMAIL_AUTH_REQUIRED");
+            tokens.put(email,result.getAccessToken());
             return result.getAccessToken();
         } catch (MailFailure error) { throw error; }
         catch (Exception error) { throw new MailFailure(code(error)); }
     }
     @Override public void invalidate(String token) {
+        tokens.invalidate(token);
         try { Tasks.await(client.clearToken(ClearTokenRequest.builder().setToken(token).build()), 5, TimeUnit.SECONDS); }
         catch (Exception ignored) { /* Explicit reauthorization remains required; never resend automatically. */ }
     }
-    void close() { fail("CANCELLED"); }
+    void close() { tokens.clear();fail("CANCELLED"); }
     static String code(Exception error) {
         if (error instanceof MailFailure) return ((MailFailure) error).code;
         Throwable source = error;while (source.getCause() != null && source.getCause() != source) source = source.getCause();

@@ -28,12 +28,15 @@ navigation = [case for case in cases
               and case.get('name') == 'fileViewerAndTwelveAndroidBackStepsKeepAppAlive']
 if len(navigation) != 1:
     raise SystemExit('Expected exactly one executed native file/back-navigation test')
-for name in ('mailLinkGestureOpensExternalBrowserWithoutLeavingMail', 'googleChoiceUsesConsentAndHidesPasswordFields'):
+for name in ('mailLinkGestureOpensExternalBrowserWithoutLeavingMail', 'googleChoiceUsesConsentAndHidesPasswordFields', 'pdfPagesAndAndroidBackUseRealNativeBridge'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeStartupTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native link/OAuth form test: {name}')
-for name in ('originalsSurviveStoreReopeningAndProviderSharesExactBytes', 'incompleteOrWrongHashImportsNeverPublishAndAbortKeepsCompleteCopies', 'browserPolicyRejectsActiveLocalAndCredentialUrls', 'gmailAddsNoPasswordAndOldAccountFormatStillLoads'):
+for name in ('originalsSurviveStoreReopeningAndProviderSharesExactBytes', 'incompleteOrWrongHashImportsNeverPublishAndAbortKeepsCompleteCopies', 'browserPolicyRejectsActiveLocalAndCredentialUrls', 'gmailAddsNoPasswordAndOldAccountFormatStillLoads', 'googleGrantReuseExpiresAndInvalidationKeepsOtherAccountsIsolated'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeOriginalsTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native originals/OAuth test: {name}')
+for name in ('scannedPdfRendersBothPagesWithoutChangingOriginal', 'openAndShareOfferReadOnlyPdfWithOriginalNameAndBytes'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativePdfTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native PDF test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

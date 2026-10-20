@@ -165,4 +165,18 @@ public class NativeStartupTest {
             awaitTrue(scenario,"window.__googleCancelled===true");
         }
     }
+
+    @Test public void pdfPagesAndAndroidBackUseRealNativeBridge() throws Exception {
+        java.io.File file=NativePdfTest.fixture(androidx.test.core.app.ApplicationProvider.getApplicationContext());
+        String data=android.util.Base64.encodeToString(java.nio.file.Files.readAllBytes(file.toPath()),android.util.Base64.NO_WRAP);
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            awaitTrue(scenario,"Boolean(window.PBPDF && window.PBNavigation)");
+            evaluate(scenario,"PBWorkspace.navigate('explorer');showBlob(new File([Uint8Array.from(atob("+org.json.JSONObject.quote(data)+"),c=>c.charCodeAt(0))],'scanned-original.pdf',{type:'application/pdf'}));true");
+            awaitTrue(scenario,"Boolean(document.querySelector('.native-pdf-page')?.naturalWidth>0 && !document.querySelector('.native-pdf-page').hidden && document.querySelector('.native-pdf-toolbar span')?.textContent==='Seite 1 von 2')");
+            evaluate(scenario,"document.querySelectorAll('.native-pdf-toolbar button')[1].click();true");
+            awaitTrue(scenario,"Boolean(document.querySelector('.native-pdf-page')?.naturalWidth>0 && !document.querySelector('.native-pdf-page').hidden && document.querySelector('.native-pdf-toolbar span')?.textContent==='Seite 2 von 2')");
+            pressBackUnconditionally();awaitTrue(scenario,"document.querySelector('.native-file-viewer').hidden && document.querySelector('#panel-explorer').classList.contains('on')");
+            assertEquals("\"https://localhost\"",evaluate(scenario,"location.origin"));
+        }finally{file.delete();}
+    }
 }

@@ -46,70 +46,56 @@ public class ProFilesPlugin extends Plugin {
     @PluginMethod public void abortImport(PluginCall call) { original(call, () -> { originals.abort(call.getString("ticket")); return new org.json.JSONObject().put("ok", true); }); }
     @PluginMethod public void readOriginal(PluginCall call) { original(call, () -> new org.json.JSONObject().put("data", Base64.encodeToString(originals.read(call.getString("hash"), call.getData().optLong("offset", -1)), Base64.NO_WRAP))); }
 
-    @PluginMethod public void open(PluginCall call) {
-        if (call.getString("hash") != null) {
-            worker.execute(() -> {
-                try {
-                    String hash = call.getString("hash");
-                    org.json.JSONObject metadata = originals.info(hash);
-                    if (metadata == null) throw new IllegalStateException();
-                    File file = originals.file(hash);
-                    if (!hash.equals(OriginalFileStore.digest(file))) throw new IllegalStateException();
-                    launch(call, file, metadata.getString("name"));
-                } catch (Exception error) { call.reject("Original unavailable", "ORIGINAL_UNAVAILABLE"); }
-            });
-            return;
+    private final PdfPreviewStore pdf = new PdfPreviewStore();
+    private static final class Selected { File file;String name;Selected(File file,String name){this.file=file;this.name=name;} }
+    private Selected selected(PluginCall call) throws Exception {
+        String hash=call.getString("hash");
+        if(hash!=null){
+            org.json.JSONObject metadata=originals.info(hash);if(metadata==null)throw new IllegalStateException();
+            File file=originals.file(hash);if(!hash.equals(OriginalFileStore.digest(file)))throw new IllegalStateException();
+            return new Selected(file,MailMime.filename(metadata.getString("name")));
         }
-        String encoded = call.getString("data");
-        String name = call.getString("name", "file");
-        if (encoded == null || encoded.length() > 22369624 || name.length() > 1024) {
-            call.reject("File unavailable", "FILE_UNAVAILABLE"); return;
+        String encoded=call.getString("data"),name=call.getString("name","file");
+        if(encoded==null||encoded.length()>22369624||name.length()>1024)throw new IllegalArgumentException();
+        byte[] bytes=Base64.decode(encoded,Base64.NO_WRAP);if(bytes.length>16*1024*1024)throw new IllegalArgumentException();
+        File directory=new File(getContext().getCacheDir(),"exports/files");
+        if(!directory.isDirectory()&&!directory.mkdirs())throw new IllegalStateException();
+        long used=0;File[] existing=directory.listFiles();
+        if(existing!=null)for(File file:existing){
+            if(!file.isFile())continue;
+            if(System.currentTimeMillis()-file.lastModified()>24L*60*60*1000)file.delete();
+            if(file.exists())used+=file.length();
         }
-        worker.execute(() -> {
-            try {
-                byte[] bytes = Base64.decode(encoded, Base64.NO_WRAP);
-                if (bytes.length > 16 * 1024 * 1024) throw new IllegalArgumentException();
-                File directory = new File(getContext().getCacheDir(), "exports/files");
-                if (!directory.isDirectory() && !directory.mkdirs()) throw new IllegalStateException();
-                long used = 0;
-                File[] existing = directory.listFiles();
-                if (existing != null) for (File file : existing) {
-                    if (!file.isFile()) continue;
-                    if (System.currentTimeMillis() - file.lastModified() > 24L * 60 * 60 * 1000) file.delete();
-                    if (file.exists()) used += file.length();
-                }
-                if (used + bytes.length > 64L * 1024 * 1024) throw new IllegalStateException();
-                String safeName = MailMime.filename(name);
-                File file = new File(directory, UUID.randomUUID() + "-" + safeName);
-                try (FileOutputStream stream = new FileOutputStream(file)) { stream.write(bytes); }
-                var uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
-                String extension = safeName.contains(".") ? safeName.substring(safeName.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT) : "";
-                String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type == null ? "application/octet-stream" : type)
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.setClipData(ClipData.newRawUri("", uri));
-                getActivity().runOnUiThread(() -> {
-                    try {
-                        getActivity().startActivity(Intent.createChooser(intent, safeName));
-                        call.resolve(new JSObject().put("ok", true));
-                    } catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
+        if(used+bytes.length>64L*1024*1024)throw new IllegalStateException();
+        String safe=MailMime.filename(name);File file=new File(directory,UUID.randomUUID()+"-"+safe);
+        try(FileOutputStream output=new FileOutputStream(file)){output.write(bytes);}
+        return new Selected(file,safe);
+    }
+    @PluginMethod public void open(PluginCall call){external(call,false);}
+    @PluginMethod public void share(PluginCall call){external(call,true);}
+    private void external(PluginCall call,boolean share){
+        worker.execute(()->{
+            try{
+                Selected chosen=selected(call);Intent intent=fileIntent(getContext(),chosen.file,chosen.name,share);
+                getActivity().runOnUiThread(()->{
+                    try{getActivity().startActivity(Intent.createChooser(intent,chosen.name));call.resolve(new JSObject().put("ok",true));}
+                    catch(Exception error){call.reject("File unavailable","FILE_UNAVAILABLE");}
                 });
-            } catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
+            }catch(Exception error){call.reject("File unavailable","FILE_UNAVAILABLE");}
         });
     }
-
-    private void launch(PluginCall call, File file, String name) throws Exception {
-        var uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file, MailMime.filename(name));
-        String extension = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT) : "";
-        String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type == null ? "application/octet-stream" : type)
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.setClipData(ClipData.newRawUri("", uri));
-        getActivity().runOnUiThread(() -> {
-            try { getActivity().startActivity(Intent.createChooser(intent, MailMime.filename(name))); call.resolve(new JSObject().put("ok", true)); }
-            catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
-        });
+    static Intent fileIntent(android.content.Context context,File file,String name,boolean share)throws Exception{
+        String safe=MailMime.filename(name);
+        var uri=FileProvider.getUriForFile(context,context.getPackageName()+".fileprovider",file,safe);
+        String extension=safe.contains(".")?safe.substring(safe.lastIndexOf('.')+1).toLowerCase(Locale.ROOT):"";
+        String type=MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);if(type==null)type="application/octet-stream";
+        Intent intent=new Intent(share?Intent.ACTION_SEND:Intent.ACTION_VIEW);
+        if(share)intent.setType(type).putExtra(Intent.EXTRA_STREAM,uri).putExtra(Intent.EXTRA_TITLE,safe);
+        else intent.setDataAndType(uri,type);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION).setClipData(ClipData.newRawUri("",uri));return intent;
     }
-
-    @Override protected void handleOnDestroy() { worker.shutdown(); }
+    @PluginMethod public void openPdf(PluginCall call){original(call,()->pdf.open(selected(call).file));}
+    @PluginMethod public void pdfPage(PluginCall call){original(call,()->pdf.page(call.getString("id"),call.getInt("page",-1),call.getInt("width",1200)));}
+    @PluginMethod public void closePdf(PluginCall call){original(call,()->{pdf.close(call.getString("id"));return new org.json.JSONObject().put("ok",true);});}
+    @Override protected void handleOnDestroy(){worker.execute(()->pdf.close());worker.shutdown();}
 }
