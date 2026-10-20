@@ -40,7 +40,7 @@ try {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
       await clickControl(page,`.tab[data-tab="${tab}"]`);
-      ok(`${width}px: ${tab} fills available window without clipped panel content`,await page.evaluate(()=>{const panel=document.querySelector('.panel.on'),r=panel.getBoundingClientRect();return r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&panel.scrollWidth<=panel.clientWidth+1&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;}));
+      ok(`${width}px: ${tab} fills available window without clipped panel content`,await page.evaluate(expected=>{const panel=document.querySelector('.panel.on'),r=panel.getBoundingClientRect();return panel.id==='panel-'+expected&&r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&panel.scrollWidth<=panel.clientWidth+1&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;},tab));
       if(tab==='search')ok(`${width}px: both complete search mode labels and filters fit`,await page.locator('.searchbox,.searchbox .toggle,.searchbox .toggle button,.filterbar,.filterbar select').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;})));
       if(process.env.PB_CAPTURE_DESIGN==='1'&&['search','explorer'].includes(tab)){await page.mouse.move(width-2,898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/${tab}-${width}.png`});}
     }
@@ -53,6 +53,7 @@ try {
   await clickControl(page,'.main-pages [data-tab="search"]');
   try { await page.locator('#q').waitFor({state:'visible'}); }
   catch(error) {
+    console.error('Browser runtime errors before failed navigation',errors);
     console.error('Search navigation state',await page.evaluate(()=>({panel:document.querySelector('.panel.on')?.id,hash:location.hash,tab:document.querySelector('.main-pages [data-tab="search"]')?.className,focus:document.activeElement?.tagName})));
     throw error;
   }

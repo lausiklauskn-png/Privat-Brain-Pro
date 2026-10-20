@@ -31,7 +31,8 @@
   function save(){
     if(!route.viewer)route.explorer=workspace.explorerState();
     snapshots.set(current,{route:structuredClone(route),scroll:[...document.querySelectorAll('.wrap>.panel,.mail-list,.mail-reader,#explorerFiles,#explorerTree')].map(e=>[e.id||e.className,e.scrollTop])});
-    history.replaceState({...history.state,pbNative:{index:current,route}},'',location.href);
+    // popstate restores this snapshot by index. Rewriting the same browser entry
+    // on every save is redundant and exhausts WebKit's History API rate limit.
   }
   function buttons(){
     previous.textContent=close.textContent=t(0);next.textContent=t(1);external.textContent=x(1);share.textContent=x(0);
