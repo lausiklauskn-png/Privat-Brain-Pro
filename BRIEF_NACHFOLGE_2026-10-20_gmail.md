@@ -1,3 +1,10 @@
+> **Neu: Google-Einrichtung erfolgt, Gmail noch nicht verbunden.** Projekt,
+> Android-Client, akzeptierter Gmail-Testnutzer und drei Scopes wurden in der
+> Konsole gezeigt. Vorschau .9 meldet weiter einen allgemeinen Google-Fehler.
+> [SDK-Rückgabe, Domain-Aliase und genauere Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md)
+> beschreibt den aktuellen Reparaturstand und die weiterhin offene Geräteprüfung.
+> Nicht erneut pauschal behaupten, es gebe noch kein Cloud-Projekt.
+
 > **Neuester veröffentlichter Stand: Vorschau .9**, 2026-10-20.
 > [Direkte APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.9/Private-Brain-Pro-0.1.0-preview.9.apk).
 > **Aktualisieren, nicht deinstallieren.** PDF-Seiten/Scans, Öffnen/Teilen und

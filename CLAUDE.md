@@ -1,12 +1,11 @@
 # Private Brain — Sitzungs-Anker
 
-**Aktuell, 2026-10-20: Vorschau .9 veröffentlicht.** PDF-Seiten einschließlich
-Scans lokal anzeigen, Zoom, Öffnen/Teilen und Rechtsklick. Nach erfolgreicher
-Google-Zustimmung wird beim Kontotest kurzzeitig dieselbe native Freigabe genutzt.
-23 native Fälle und signierte Updateprobe .8→.9 bestanden. Google-Auswahlschleife
-und echter Gmail-Zugang am Nutzergerät bleiben unbestätigt; Cloud-OAuth-Einrichtung
-noch klären. [Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-9--2026-10-20),
-[Umsetzung](docs/PDF-ANSICHT-UND-GOOGLE.md),
+**Aktuell, 2026-10-20:** Vorschau .9 veröffentlicht; der Nutzer hat danach die
+Google-Konsole eingerichtet (Projekt, Android-Client, Gmail-Testnutzer, Scopes).
+Die Gmail-Anmeldung ist noch nicht bestätigt. Der neue Reparaturstand behandelt
+fehlende SDK-Kontodaten, Gmail-/Googlemail-Aliase und getrennte Fehlerstellen.
+[Google-Rückgabe/Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md),
 [Übergabe](BRIEF_NACHFOLGE_2026-10-20_gmail.md). Ältere Zwischenstände unten historisch.
 
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine

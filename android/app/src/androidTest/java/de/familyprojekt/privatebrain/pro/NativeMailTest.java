@@ -188,6 +188,8 @@ public class NativeMailTest {
         JSONObject local = draft();engine.saveDraft(first, local);
         MailEngine reopened = new MailEngine(new EncryptedMailStore(context, directory, alias));
         assertEquals(first.id, reopened.saveAccount(new MailAccount(google)).getString("id"));
+        JSONObject aliasAccount=new JSONObject(google.toString()).put("email","fixture@googlemail.com");
+        assertEquals(first.id,reopened.saveAccount(new MailAccount(aliasAccount)).getString("id"));
         assertEquals(2, reopened.accounts().length());assertEquals(old.password, reopened.account(old.id).password);
         assertEquals(local.toString(), reopened.savedDraft(first.id, "draft-" + local.getString("submission")).toString());
         assertFalse(storage.read("accounts").toString().contains("accessToken"));
