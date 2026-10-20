@@ -39,7 +39,13 @@ public class ProMailPlugin extends Plugin {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private MailEngine engine;
     private EncryptedMailStore storage;
-    @Override public void load() { storage = new EncryptedMailStore(getContext()); engine = new MailEngine(storage); }
+    @Override public void load() {
+        storage = new EncryptedMailStore(getContext());
+        engine = new MailEngine(storage, new MailEngine.OAuthProvider() {
+            public String token(String email) throws Exception { return ((MainActivity)getActivity()).google().token(email); }
+            public void invalidate(String token) { ((MainActivity)getActivity()).google().invalidate(token); }
+        });
+    }
     private interface Work { JSONObject run() throws Exception; }
     private void perform(PluginCall call, Work work) {
         worker.execute(() -> {
@@ -164,36 +170,57 @@ public class ProMailPlugin extends Plugin {
             int padding = Math.round(20 * activity.getResources().getDisplayMetrics().density);
             form.setPadding(padding, padding / 2, padding, padding / 2);
             Spinner provider = new Spinner(context);
-            ArrayAdapter<String> choices = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, new String[] {"Telekom / T-Online", "Hetzner"});
+            ArrayAdapter<String> choices = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, new String[] {"Telekom / T-Online", "Hetzner", "Google / Gmail"});
             choices.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); provider.setAdapter(choices); form.addView(provider);
             EditText email = field(form, t[1], InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
             EditText user = field(form, t[2], InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
             EditText password = field(form, t[3], InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             EditText imap = field(form, "IMAP · TLS · 993", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
             EditText smtp = field(form, "SMTP · TLS · 465", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-            provider.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-                public void onNothingSelected(android.widget.AdapterView<?> parent) { }
-                public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                    password.setText("");
-                    imap.setText(position == 0 ? "secureimap.t-online.de" : "mail.your-server.de");
-                    smtp.setText(position == 0 ? "securesmtp.t-online.de" : "mail.your-server.de");
-                    imap.setEnabled(position != 0); smtp.setEnabled(position != 0);
-                }
-            });
             TextView help = new TextView(context); help.setText(t[6]); form.addView(help);
             TextView status = new TextView(context); status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); form.addView(status);
             ScrollView scroll = new ScrollView(context); scroll.setFillViewport(true); scroll.addView(form);
             AlertDialog dialog = new AlertDialog.Builder(context).setTitle(t[0]).setView(scroll)
                 .setPositiveButton(t[4], null).setNegativeButton(t[5], null).create();
             AtomicBoolean finished = new AtomicBoolean(false), testing = new AtomicBoolean(false);
-            dialog.setOnCancelListener(d -> { password.setText(""); if (finished.compareAndSet(false, true)) call.reject("Account setup cancelled", "CANCELLED"); });
-            dialog.setOnDismissListener(d -> { password.setText(""); if (finished.compareAndSet(false, true)) call.reject("Account setup cancelled", "CANCELLED"); });
+            dialog.setOnCancelListener(d -> { password.setText(""); synchronized (finished) { if (finished.compareAndSet(false, true)) call.reject("Account setup cancelled", "CANCELLED"); } });
+            dialog.setOnDismissListener(d -> { password.setText(""); synchronized (finished) { if (finished.compareAndSet(false, true)) call.reject("Account setup cancelled", "CANCELLED"); } });
             dialog.setOnShowListener(d -> {
+                provider.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                    public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+                    public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                        password.setText("");boolean gmail = position == 2;
+                        for (EditText field : new EditText[] {email,user,password,imap,smtp}) showField(field, !gmail);
+                        imap.setText(position == 0 ? "secureimap.t-online.de" : gmail ? "imap.gmail.com" : "mail.your-server.de");
+                        smtp.setText(position == 0 ? "securesmtp.t-online.de" : gmail ? "smtp.gmail.com" : "mail.your-server.de");
+                        imap.setEnabled(position == 1);smtp.setEnabled(position == 1);
+                        help.setText(gmail ? GOOGLE_HELP[language] : t[6]);
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(gmail ? GOOGLE_SIGN_IN[language] : t[4]);
+                    }
+                });
                 GradientDrawable background = new GradientDrawable(); background.setColor(Color.parseColor(dark ? "#171d25" : "#faf6f0"));
                 background.setCornerRadius(18 * activity.getResources().getDisplayMetrics().density);
                 if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(background);
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
                     if (!testing.compareAndSet(false, true)) return;
+                    if (provider.getSelectedItemPosition() == 2) {
+                        status.setText(t[7]);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                        ((MainActivity)activity).google().consent(null, new GmailAuthorization.Callback() {
+                            public void success(String selected) {
+                                if (finished.get()) return;
+                                try {
+                                    JSONObject input = new JSONObject().put("provider", "gmail").put("authType", "oauth2")
+                                        .put("email", selected).put("user", selected).put("imap", "imap.gmail.com").put("smtp", "smtp.gmail.com");
+                                    verifySetup(call, new MailAccount(input), activity, dialog, status, t, language, testing, finished);
+                                } catch (Exception error) { failure("GMAIL_AUTH_REQUIRED"); }
+                            }
+                            public void failure(String code) {
+                                if (finished.get()) return;status.setText(googleError(code, language));
+                                testing.set(false);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                            }
+                        });
+                        return;
+                    }
                     JSONObject input = new JSONObject();
                     try {
                         input.put("provider", provider.getSelectedItemPosition() == 0 ? "telekom" : "hetzner")
@@ -201,32 +228,51 @@ public class ProMailPlugin extends Plugin {
                             .put("password", password.getText().toString()).put("imap", imap.getText().toString()).put("smtp", smtp.getText().toString());
                     } catch (Exception error) { testing.set(false); status.setText(t[8]); return; }
                     status.setText(t[7]); dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                    worker.execute(() -> {
-                        try {
-                            MailAccount account = new MailAccount(input);
-                            engine.verify(account);
-                            if (finished.get()) return;
-                            JSONObject saved = engine.saveAccount(account);
-                            activity.runOnUiThread(() -> {
-                                if (finished.compareAndSet(false, true)) {
-                                    try { call.resolve(JSObject.fromJSONObject(saved)); }
-                                    catch (Exception error) { call.reject("Device storage unavailable", "VAULT_UNAVAILABLE"); }
-                                }
-                                dialog.dismiss();
-                            });
-                        } catch (Exception error) {
-                            String code = code(error);
-                            activity.runOnUiThread(() -> {
-                                if (finished.get()) return;
-                                status.setText(t[code.equals("TLS_FAILED") ? 9 : code.equals("VAULT_UNAVAILABLE") ? 11 :
-                                    code.equals("AUTH_FAILED") || code.equals("INVALID_INPUT") ? 8 : 10]);
-                                testing.set(false); dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                            });
-                        }
-                    });
+                    try { verifySetup(call, new MailAccount(input), activity, dialog, status, t, language, testing, finished); }
+                    catch (Exception error) { testing.set(false);status.setText(t[8]);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true); }
                 });
             });
             dialog.show();
+        });
+    }
+    private static final String[] GOOGLE_SIGN_IN = {"Mit Google anmelden", "Sign in with Google", "Войти через Google", "Zaloguj się przez Google"};
+    private static final String[] GOOGLE_HELP = {"Google fragt dich selbst nach deiner Zustimmung. Dein Google-Passwort wird nicht in dieser App eingegeben.", "Google asks for your consent. Your Google password is not entered in this app.", "Google запросит ваше согласие. Пароль Google не вводится в этом приложении.", "Google poprosi o zgodę. Hasła Google nie wpisuje się w tej aplikacji."};
+    private static final String[] GOOGLE_REQUIRED = {"Google-Anmeldung erneut erforderlich. Wähle Google erneut, ohne das bestehende Konto zu entfernen.", "Google authorization is required again. Select Google again without removing the existing account.", "Нужно снова войти через Google. Выберите Google, не удаляя существующий аккаунт.", "Wymagana ponowna autoryzacja Google. Wybierz Google bez usuwania konta."};
+    private static final String[] GOOGLE_CONFIG = {"Google-Anmeldung ist für diese Test-App noch nicht freigeschaltet. Die Google-Einrichtung muss abgeschlossen werden.", "Google authorization is not enabled for this test app yet. Complete the Google setup first.", "Вход Google ещё не настроен для этой тестовой версии. Требуется настройка Google.", "Logowanie Google nie jest jeszcze skonfigurowane dla tej wersji testowej."};
+    private static String googleError(String code, int language) {
+        if (code.equals("GMAIL_CONFIGURATION_REQUIRED")) return GOOGLE_CONFIG[language];
+        if (code.equals("CANCELLED")) return WORDS[language][5];
+        return GOOGLE_REQUIRED[language];
+    }
+    private static void showField(EditText field, boolean visible) {
+        android.view.ViewGroup parent = (android.view.ViewGroup)field.getParent();int index = parent.indexOfChild(field);
+        field.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (index > 0) parent.getChildAt(index - 1).setVisibility(visible ? View.VISIBLE : View.GONE);
+    }
+    private void verifySetup(PluginCall call, MailAccount account, Activity activity, AlertDialog dialog, TextView status,
+            String[] t, int language, AtomicBoolean testing, AtomicBoolean finished) {
+        status.setText(t[7]);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        worker.execute(() -> {
+            try {
+                engine.verify(account);
+                JSONObject saved;
+                synchronized (finished) {
+                    if (finished.get()) return;
+                    saved = engine.saveAccount(account);finished.set(true);
+                }
+                activity.runOnUiThread(() -> {
+                    try { call.resolve(JSObject.fromJSONObject(saved)); }
+                    catch (Exception error) { call.reject("Device storage unavailable", "VAULT_UNAVAILABLE"); }
+                    dialog.dismiss();
+                });
+            } catch (Exception error) {
+                String code = code(error);
+                activity.runOnUiThread(() -> {
+                    if (finished.get()) return;
+                    status.setText(code.startsWith("GMAIL_") ? googleError(code, language) : t[code.equals("TLS_FAILED") ? 9 : code.equals("VAULT_UNAVAILABLE") ? 11 : code.equals("AUTH_FAILED") || code.equals("INVALID_INPUT") ? 8 : 10]);
+                    testing.set(false);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                });
+            }
         });
     }
     @Override protected void handleOnDestroy() { worker.shutdownNow(); }

@@ -7,8 +7,8 @@ android {
         applicationId "de.familyprojekt.privatebrain.pro"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "0.1.0-preview.7"
+        versionCode 8
+        versionName "0.1.0-preview.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -71,6 +71,7 @@ dependencies {
     implementation project(':capacitor-android')
     implementation 'com.sun.mail:android-mail:1.6.8'
     implementation 'com.sun.mail:android-activation:1.6.8'
+    implementation 'com.google.android.gms:play-services-auth:22.0.0'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

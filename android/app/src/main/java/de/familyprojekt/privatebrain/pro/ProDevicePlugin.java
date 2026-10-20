@@ -22,6 +22,7 @@ public class ProDevicePlugin extends Plugin {
         }
         info.put("nativeMail", true);
         info.put("persistentFolders", false);
+        info.put("persistentFiles", true);
         call.resolve(info);
     }
 }

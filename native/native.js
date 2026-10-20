@@ -35,7 +35,7 @@
   if (nativeMail) {
     const licenses = document.createElement('a');
     licenses.href = 'assets/licenses/mail.html';
-    licenses.textContent = 'JavaMail / Activation · Lizenzen / Licenses';
+    licenses.textContent = 'JavaMail / Activation / Google · Lizenzen / Licenses';
     status.after(licenses);
   }
 

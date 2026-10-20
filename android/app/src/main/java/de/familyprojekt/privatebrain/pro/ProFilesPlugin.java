@@ -21,8 +21,45 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "ProFiles")
 public class ProFilesPlugin extends Plugin {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private OriginalFileStore originals;
+    @Override public void load() { originals = new OriginalFileStore(getContext()); }
+    private interface Work { org.json.JSONObject run() throws Exception; }
+    private void original(PluginCall call, Work work) {
+        worker.execute(() -> {
+            try { call.resolve(JSObject.fromJSONObject(work.run())); }
+            catch (Exception error) { call.reject("Original unavailable", "ORIGINAL_UNAVAILABLE"); }
+        });
+    }
+    @PluginMethod public void listOriginals(PluginCall call) { original(call, () -> new org.json.JSONObject().put("items", originals.list())); }
+    @PluginMethod public void originalInfo(PluginCall call) { original(call, () -> {
+        org.json.JSONObject info = originals.info(call.getString("hash"));
+        return info == null ? new org.json.JSONObject().put("missing", true) : info;
+    }); }
+    @PluginMethod public void beginImport(PluginCall call) { original(call, () -> originals.begin(call.getString("hash"), call.getData().optLong("size", -1), call.getString("name"), call.getString("type", ""))); }
+    @PluginMethod public void appendImport(PluginCall call) { original(call, () -> {
+        String data = call.getString("data");
+        if (data == null || data.length() > 349528) throw new IllegalArgumentException();
+        originals.append(call.getString("ticket"), call.getData().optLong("offset", -1), Base64.decode(data, Base64.NO_WRAP));
+        return new org.json.JSONObject().put("ok", true);
+    }); }
+    @PluginMethod public void finishImport(PluginCall call) { original(call, () -> { originals.finish(call.getString("ticket")); return new org.json.JSONObject().put("ok", true); }); }
+    @PluginMethod public void abortImport(PluginCall call) { original(call, () -> { originals.abort(call.getString("ticket")); return new org.json.JSONObject().put("ok", true); }); }
+    @PluginMethod public void readOriginal(PluginCall call) { original(call, () -> new org.json.JSONObject().put("data", Base64.encodeToString(originals.read(call.getString("hash"), call.getData().optLong("offset", -1)), Base64.NO_WRAP))); }
 
     @PluginMethod public void open(PluginCall call) {
+        if (call.getString("hash") != null) {
+            worker.execute(() -> {
+                try {
+                    String hash = call.getString("hash");
+                    org.json.JSONObject metadata = originals.info(hash);
+                    if (metadata == null) throw new IllegalStateException();
+                    File file = originals.file(hash);
+                    if (!hash.equals(OriginalFileStore.digest(file))) throw new IllegalStateException();
+                    launch(call, file, metadata.getString("name"));
+                } catch (Exception error) { call.reject("Original unavailable", "ORIGINAL_UNAVAILABLE"); }
+            });
+            return;
+        }
         String encoded = call.getString("data");
         String name = call.getString("name", "file");
         if (encoded == null || encoded.length() > 22369624 || name.length() > 1024) {
@@ -58,6 +95,19 @@ public class ProFilesPlugin extends Plugin {
                     } catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
                 });
             } catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
+        });
+    }
+
+    private void launch(PluginCall call, File file, String name) throws Exception {
+        var uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file, MailMime.filename(name));
+        String extension = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT) : "";
+        String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, type == null ? "application/octet-stream" : type)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setClipData(ClipData.newRawUri("", uri));
+        getActivity().runOnUiThread(() -> {
+            try { getActivity().startActivity(Intent.createChooser(intent, MailMime.filename(name))); call.resolve(new JSObject().put("ok", true)); }
+            catch (Exception error) { call.reject("File unavailable", "FILE_UNAVAILABLE"); }
         });
     }
 

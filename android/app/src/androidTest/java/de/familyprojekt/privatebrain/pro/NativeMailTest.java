@@ -156,6 +156,44 @@ public class NativeMailTest {
             server.await(); assertEquals(1, server.authentications.get());
         }
     }
+    @Test public void gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback() throws Exception {
+        for (boolean smtp : new boolean[] {false, true}) {
+            try (TestMailTlsServer server = new TestMailTlsServer(alias + "-tls", smtp, false, true)) {
+                String protocol = smtp ? "smtps" : "imaps";
+                Properties properties = MailAccount.properties("oauth2");
+                properties.put("mail." + protocol + ".ssl.socketFactory", server.trustedClient);
+                properties.setProperty("mail." + protocol + ".socketFactory.fallback", "false");
+                Session session = Session.getInstance(properties);
+                if (smtp) {
+                    try (SMTPTransport client = (SMTPTransport) session.getTransport(protocol)) {
+                        client.connect("localhost", server.port, TestMailTlsServer.OAUTH_USER, TestMailTlsServer.OAUTH_TOKEN);
+                        assertTrue(client.isConnected());
+                    }
+                } else {
+                    try (Store client = session.getStore(protocol)) {
+                        client.connect("localhost", server.port, TestMailTlsServer.OAUTH_USER, TestMailTlsServer.OAUTH_TOKEN);
+                        assertTrue(client.isConnected());
+                    }
+                }
+                server.await();assertEquals(1, server.authentications.get());
+            }
+        }
+    }
+    @Test public void gmailReauthorizationPreservesExistingAccountsAndDrafts() throws Exception {
+        MailEngine engine = new MailEngine(storage);
+        MailAccount old = new MailAccount(accountJson());engine.saveAccount(old);
+        JSONObject google = new JSONObject().put("provider", "gmail").put("authType", "oauth2").put("email", "fixture@gmail.com")
+            .put("imap", "imap.gmail.com").put("smtp", "smtp.gmail.com");
+        MailAccount first = new MailAccount(google);engine.saveAccount(first);
+        JSONObject local = draft();engine.saveDraft(first, local);
+        MailEngine reopened = new MailEngine(new EncryptedMailStore(context, directory, alias));
+        assertEquals(first.id, reopened.saveAccount(new MailAccount(google)).getString("id"));
+        assertEquals(2, reopened.accounts().length());assertEquals(old.password, reopened.account(old.id).password);
+        assertEquals(local.toString(), reopened.savedDraft(first.id, "draft-" + local.getString("submission")).toString());
+        assertFalse(storage.read("accounts").toString().contains("accessToken"));
+        try { reopened.verify(first);fail("Google connection proceeded without authorization provider"); }
+        catch (MailFailure error) { assertEquals("GMAIL_AUTH_REQUIRED", error.code); }
+    }
     private void sendAndRepeat(boolean loseAcknowledgement) throws Exception {
         MailAccount account = new MailAccount(accountJson()); JSONObject draft = draft();
         byte[] prepared = MailMime.bytes(MailMime.compose(account, draft, Session.getInstance(MailAccount.properties())));

@@ -25,6 +25,8 @@
     download: ['Original teilen / sichern', 'Share / save original', 'Поделиться / сохранить оригинал', 'Udostępnij / zapisz oryginał']
   };
   const messages = {
+    GMAIL_AUTH_REQUIRED: ['Google-Anmeldung erneut erforderlich. Über „Konto hinzufügen“ Google wählen; das bestehende Konto bleibt erhalten.', 'Google authorization required again. Choose Google in Add account; the existing account is preserved.', 'Нужна повторная авторизация Google. Выберите Google через добавление аккаунта; существующий аккаунт сохранится.', 'Wymagana ponowna autoryzacja Google. Wybierz Google przy dodawaniu konta; istniejące konto zostaje zachowane.'],
+    GMAIL_CONFIGURATION_REQUIRED: ['Google-Anmeldung ist für diese Test-App noch nicht freigeschaltet.', 'Google authorization is not enabled for this test app yet.', 'Вход Google ещё не настроен для этой тестовой версии.', 'Logowanie Google nie jest skonfigurowane dla tej wersji testowej.'],
     AUTH_FAILED: ['Anmeldung fehlgeschlagen. Telekom benötigt das separate Passwort für E-Mail-Programme.', 'Login failed. Telekom requires the separate password for email apps.', 'Ошибка входа. Telekom требует отдельный пароль для почтовых программ.', 'Logowanie nieudane. Telekom wymaga osobnego hasła pocztowego.'],
     TLS_FAILED: ['TLS-Zertifikat nicht bestätigt. Bitte Servernamen prüfen.', 'TLS certificate not verified. Check server names.', 'TLS-сертификат не подтверждён. Проверьте серверы.', 'Certyfikat TLS niepotwierdzony. Sprawdź serwery.'],
     CONNECTION_FAILED: ['Verbindung fehlgeschlagen. Internet und Servernamen prüfen.', 'Connection failed. Check internet and server names.', 'Нет подключения. Проверьте интернет и серверы.', 'Brak połączenia. Sprawdź internet i serwery.'],

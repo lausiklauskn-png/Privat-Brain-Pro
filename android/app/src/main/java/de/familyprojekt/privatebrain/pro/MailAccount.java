@@ -8,10 +8,12 @@ import javax.mail.internet.InternetAddress;
 import org.json.JSONObject;
 
 final class MailAccount {
-    final String id, provider, email, user, password, imap, smtp;
+    final String id, provider, email, user, password, imap, smtp, authType;
     MailAccount(JSONObject value) throws Exception {
         provider = value.getString("provider");
-        if (!provider.equals("telekom") && !provider.equals("hetzner")) throw new MailFailure("INVALID_INPUT");
+        if (!provider.equals("telekom") && !provider.equals("hetzner") && !provider.equals("gmail")) throw new MailFailure("INVALID_INPUT");
+        authType = value.optString("authType", "password");
+        if (!authType.equals(provider.equals("gmail") ? "oauth2" : "password")) throw new MailFailure("INVALID_INPUT");
         id = value.optString("id", UUID.randomUUID().toString());
         uuid(id);
         email = header(value.getString("email").trim(), 254);
@@ -19,11 +21,13 @@ final class MailAccount {
         address.validate();
         if (!email.equals(address.getAddress()) || !email.contains("@")) throw new MailFailure("INVALID_INPUT");
         user = header(value.optString("user", "").trim().isEmpty() ? email : value.getString("user").trim(), 320);
-        password = value.getString("password");
-        if (password.isEmpty() || password.length() > 4096 || password.indexOf('\0') >= 0) throw new MailFailure("INVALID_INPUT");
+        password = provider.equals("gmail") ? "" : value.getString("password");
+        if ((!provider.equals("gmail") && password.isEmpty()) || password.length() > 4096 || password.indexOf('\0') >= 0) throw new MailFailure("INVALID_INPUT");
         imap = host(value.getString("imap"));
         smtp = host(value.getString("smtp"));
         if (provider.equals("telekom") && (!imap.equals("secureimap.t-online.de") || !smtp.equals("securesmtp.t-online.de")))
+            throw new MailFailure("INVALID_INPUT");
+        if (provider.equals("gmail") && (!imap.equals("imap.gmail.com") || !smtp.equals("smtp.gmail.com") || !user.equals(email) || value.has("password")))
             throw new MailFailure("INVALID_INPUT");
     }
     static void uuid(String id) throws MailFailure {
@@ -43,10 +47,20 @@ final class MailAccount {
         } catch (IllegalArgumentException error) { throw new MailFailure("INVALID_INPUT"); }
     }
     JSONObject privateJson() throws Exception {
-        return publicJson().put("user", user).put("password", password);
+        JSONObject result = publicJson().put("user", user);
+        return provider.equals("gmail") ? result : result.put("password", password);
     }
     JSONObject publicJson() throws Exception {
-        return new JSONObject().put("id", id).put("provider", provider).put("email", email).put("imap", imap).put("smtp", smtp);
+        return new JSONObject().put("id", id).put("provider", provider).put("email", email).put("imap", imap).put("smtp", smtp).put("authType", authType);
+    }
+    static Properties properties(String authentication) {
+        Properties properties = properties();
+        if (authentication.equals("oauth2")) for (String protocol : new String[] {"imaps", "smtps"}) {
+            String prefix = "mail." + protocol + ".auth.";
+            properties.setProperty(prefix + "mechanisms", "XOAUTH2");properties.setProperty(prefix + "xoauth2.disable", "false");
+            properties.setProperty(prefix + "login.disable", "true");properties.setProperty(prefix + "plain.disable", "true");
+        }
+        return properties;
     }
     static Properties properties() {
         Properties properties = new Properties();
