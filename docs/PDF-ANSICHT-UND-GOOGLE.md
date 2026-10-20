@@ -62,6 +62,6 @@ unveränderte Bytes, Dateiname/MIME und Nur-Lesen-Intents sowie den echten
 WebView-Bridge-Weg mit Android Zurück. Ein weiterer Fall prüft Ablauf,
 Invalidierung und Kontentrennung des kurzlebigen Google-Token-Caches.
 
-Die endgültigen Lauf- und Veröffentlichungsnachweise werden nach Abschluss im
-[Android-Prüfstand](PRUEFSTAND-ANDROID.md) ergänzt. Geräteversuch mit Workfloh PDF,
+Die endgültigen Lauf- und Veröffentlichungsnachweise für Vorschau .9 stehen im
+[Android-Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-vorschau-9--2026-10-20). Geräteversuch mit Workfloh PDF,
 Samsung DeX und echter Google-Zustimmung bleibt gesondert erforderlich.
