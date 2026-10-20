@@ -4,19 +4,23 @@
 
 - `debug`: Entwicklung, Kennung `de.familyprojekt.privatebrain.pro.preview.debug`.
   Debugsignierung; keine dauerhafte öffentliche Update-Linie.
-- `preview`: installierbare, extern signierte Testversion, Kennung
+- `preview`: installierbare, extern signierte App **Private Brain Pro**, Kennung
   `de.familyprojekt.privatebrain.pro.preview`. Kein Web-Debugging.
 - `release`: spätere stabile App, Kennung `de.familyprojekt.privatebrain.pro`.
 
-Test und stabil sind getrennte Installationen und übernehmen einander nicht
+Vorschau- und stabile Update-Linie sind getrennte Installationen und übernehmen einander nicht
 automatisch die Daten. Für Updates innerhalb einer Linie müssen Kennung und
 Signierschlüssel gleich bleiben und `versionCode` steigen. Der Katalog liegt im
-privaten WebView-Speicher. Updates löschen ihn nicht absichtlich; eine tatsächliche
-Update-/Migrationsprobe auf Android steht noch aus. Deinstallieren löscht Appdaten.
+privaten WebView-Speicher. Updates löschen ihn nicht absichtlich; die signierte Updateprobe ist im
+[Prüfstand](PRUEFSTAND-ANDROID.md) dokumentiert. Vollständige Nutzerdatenmigration
+am Tablet bleibt gesondert zu prüfen. Deinstallieren löscht Appdaten.
 Die Daten einer Browser-PWA werden nicht automatisch in die native App übernommen.
 Android-Backup ist zunächst ausgeschaltet, damit spätere Kontogeheimnisse nicht
 unbeabsichtigt in Gerätesicherungen gelangen. Vor Produktionsreife ist ein explizites,
 verschlüsseltes Sicherungs- und Wiederherstellungskonzept erforderlich.
+
+Ab Version .13 heißt die App ohne „Test“ **Private Brain Pro**. Die technische
+Update-Linie bleibt erhalten. [Namensänderung und Google](APP-NAME.md).
 
 ## Build und Veröffentlichungen
 

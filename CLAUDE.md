@@ -1,6 +1,12 @@
-# Private Brain — Sitzungs-Anker
+# Private Brain Pro — Sitzungs-Anker
 
-**Aktuell, 2026-10-20: Vorschau .12 mit sieben Anbietervorlagen veröffentlicht.**
+**Nutzerauftrag ab Version .13:** App sichtbar **Private Brain Pro**, ohne „Test“.
+Paketkennung und Signatur unverändert lassen, bestehende App aktualisieren.
+Google-Branding heißt laut Bildern bereits Pro; keine neue Registrierung nötig.
+Google-Testnutzerstatus nicht automatisch auf Produktion umstellen.
+[Name, Installation und Google](docs/APP-NAME.md).
+
+**Vorheriger Stand, 2026-10-20: Vorschau .12 mit sieben Anbietervorlagen veröffentlicht.**
 .12 enthält sieben native Vorlagen und erhält die Googlemail-/Kontowechsel-Reparatur
 aus .11. 31 native Fälle und signiertes Update .11→.12 bestanden.
 Der Nutzer hat ein gespeichertes Google-Konto und eigene Serverordner gezeigt;

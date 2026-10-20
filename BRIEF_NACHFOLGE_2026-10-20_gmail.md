@@ -1,4 +1,11 @@
-> **Neuester Stand: Vorschau .10 veröffentlicht**, 2026-10-20.
+> **Neuester Auftrag: Private Brain Pro ohne „Test“**, 2026-10-20.
+
+Die neue Version .13 übernimmt den Namen in Android, App-Kopf und Hinweisen in
+allen vier Sprachen. Technische Update-Linie und Signatur bleiben erhalten;
+über die vorhandene App installieren. Googles Branding heißt laut Nutzerbildern
+bereits Private Brain Pro. Kein neuer Client, keine neue Mail-Adresse und keine
+automatische Veröffentlichung der Google-App. Details: [APP-NAME](docs/APP-NAME.md).
+Veröffentlichungsnachweis folgt im [Prüfstand](docs/PRUEFSTAND-ANDROID.md).
 
 ## Aktuell: sieben Anbieter und Microsoft-Vorbereitung (.12 veröffentlicht)
 
