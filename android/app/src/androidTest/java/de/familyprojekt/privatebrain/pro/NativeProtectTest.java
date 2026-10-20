@@ -90,6 +90,7 @@ public class NativeProtectTest {
     private void serveLists() throws IOException {
         answers.put("mb.test/v2/files/exports/" + KEY + "/full.csv.zip", new Object[] {200, zip("full.csv", "# full\n\"2026-01-01\",\"" + A + "\"\n\"2026-01-02\",\"" + B + "\"\n")});
         answers.put("mb.test/v2/files/exports/" + KEY + "/recent.csv", new Object[] {200, text("# recent\n\"2026-10-20\",\"" + C + "\"\n")});
+        answers.put("uh.test/v2/files/exports/" + KEY + "/recent.csv", new Object[] {200, text("\"1\",\"2026-10-20\",\"http://evil.example/drop.exe\",\"online\"\n")});
     }
     private static Map<String, Long> appFiles(Context context) {
         Map<String, Long> out = new HashMap<>();
