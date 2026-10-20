@@ -53,6 +53,7 @@ try {
   await clickControl(page,'.main-pages [data-tab="search"]');
   try { await page.locator('#q').waitFor({state:'visible'}); }
   catch(error) {
+    console.error('Browser runtime errors before failed navigation',errors);
     console.error('Search navigation state',await page.evaluate(()=>({panel:document.querySelector('.panel.on')?.id,hash:location.hash,tab:document.querySelector('.main-pages [data-tab="search"]')?.className,focus:document.activeElement?.tagName})));
     throw error;
   }
