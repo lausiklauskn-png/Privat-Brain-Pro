@@ -975,7 +975,8 @@
       menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
       tools.append(summary, menu); actions.append(tools);
     }
-    reader.append(actions, window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
+    // Protection hints (rules, lists) stand between the actions and the message itself.
+    reader.append(actions, ...(window.PBSchutz ? [PBSchutz.mailPanel(mail)] : []), window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
     for (const [index, a] of mail.attachments.entries()) {
       if (a.inline) continue; // Still present in raw MIME and attachment checks.
       if (!a.data && window.PBVault) {
@@ -994,6 +995,7 @@
       b.textContent = "↓ " + a.name;
       delete b.dataset.liveText;
       reader.append(b);
+      if (window.PBSchutz) reader.append(PBSchutz.attachmentStatus(a));
     }
     const report = el(native ? "details" : "div", "mail-report"), findings = el("div");
     if (native) report.append(el("summary", "", T("check")));

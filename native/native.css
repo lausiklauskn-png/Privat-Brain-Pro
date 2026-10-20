@@ -355,3 +355,19 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 @media (max-width:650px) { .native-vault-row { grid-template-columns:1fr 1fr; } .native-vault-row>div { grid-column:1/-1; } }
 .native-vault-attachment { display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0;overflow-wrap:anywhere; }
 .native-vault-where button { display:block;width:100%;margin:6px 0;text-align:left; }
+
+/* Protection against malware, spam and scams (native-protect.js). */
+.pb-schutz-mail { margin:8px 0;padding:6px 10px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;font-size:.88rem;overflow-wrap:anywhere; }
+.pb-schutz-mail summary { cursor:pointer;font-weight:600; }
+.pb-schutz-mail ul { margin:6px 0 2px;padding-left:1.2em;line-height:1.45; }
+.pb-schutz-mail[data-state=hinweis] { border-left-color:var(--warn); }
+.pb-schutz-mail[data-state=befund] { border-left-color:var(--bad); }
+.pb-schutz-mail[data-state=unauffaellig] { border-left-color:var(--good); }
+.pb-schutz-mail li[data-state=befund] { color:var(--bad);font-weight:600; }
+.pb-schutz-sources { list-style:none;margin-left:-1.2em;opacity:.75;font-size:.8rem; }
+.pb-schutz-file { display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.82rem; }
+.pb-schutz-file [data-state=befund] { color:var(--bad);font-weight:600; }
+.pb-schutz-file [data-state=nicht-geprueft],.pb-schutz-file [data-state=checking] { opacity:.75; }
+.pb-schutz-card .pb-schutz-line { margin:4px 0;font-size:.88rem;overflow-wrap:anywhere; }
+.pb-schutz-card .pb-schutz-line[data-state=problem] span { color:var(--bad); }
+.pb-schutz-auto { display:flex;gap:6px;align-items:center;margin:8px 0;font-size:.88rem; }

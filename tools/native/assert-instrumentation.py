@@ -52,6 +52,9 @@ for name in ('changingSourceAndLibraryKeepsOriginalsAndCopiesAfterRestart', 'los
 for name in ('passwordFolderRestoresOnNewDeviceAndRejectsWrongPassword', 'largeAttachmentStreamsIntoFolderAndClearingMarksMailDeleted', 'damagedNewestCatalogFallsBackToThePreviousBackup'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeVaultTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native vault test: {name}')
+for name in ('listsAreFetchedWithTheKeyAndStoredOnlyInTheChosenFolder', 'linkListsNameExactAddressesAndServers', 'automaticUpdatesRespectSwitchScheduleWifiAndRetry', 'lockedFolderAndDamagedListAreNeverTakenAsEmpty', 'virusTotalReceivesOnlyTheFingerprint'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeProtectTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native protection test: {name}')
 mail_tests = {
     'gmailXoauth2AuthenticatesImapAndSmtpWithoutPasswordFallback',
     'gmailReauthorizationPreservesExistingAccountsAndDrafts',

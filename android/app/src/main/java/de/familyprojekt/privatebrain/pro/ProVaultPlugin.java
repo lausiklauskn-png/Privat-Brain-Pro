@@ -117,7 +117,7 @@ public class ProVaultPlugin extends Plugin {
             for (int i = 0; i < all.length(); i++) {
                 JSONObject e = all.getJSONObject(i);
                 items.put(new JSONObject().put("id", e.getString("id")).put("name", e.getString("name")).put("type", e.optString("type"))
-                    .put("size", e.getLong("size")).put("from", e.optString("from")).put("subject", e.optString("subject"))
+                    .put("size", e.getLong("size")).put("sha256", e.optString("sha256")).put("from", e.optString("from")).put("subject", e.optString("subject"))
                     .put("date", e.optString("date")).put("account", e.optString("account")).put("stored", e.optLong("stored")));
             }
             return new JSONObject().put("items", items);

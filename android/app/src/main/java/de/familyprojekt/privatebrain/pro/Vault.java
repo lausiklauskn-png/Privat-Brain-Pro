@@ -46,6 +46,8 @@ final class Vault {
     static final int MIN_PASSWORD = 10;
     static final String ROOT = "Private Brain", SETTINGS = "tresor.json";
     static final String MAILS = "Mails", ATTACHMENTS = "Anhänge", ORIGINALS = "Originale", CATALOG = "Katalog";
+    /** Protection lists, their status and access keys; readable names, encrypted contents. */
+    static final String LISTS = "Schutzlisten";
     private static final String DIR = DocumentsContract.Document.MIME_TYPE_DIR, BINARY = "application/octet-stream";
     private static Vault instance;
 
@@ -165,6 +167,8 @@ final class Vault {
         return dataKey.clone();
     }
     synchronized boolean configured() { return prefs().contains("tree"); }
+    /** Identity of the opened folder; changes when another folder is chosen. */
+    synchronized String folderId() { return configured() ? prefs().getString("id", "") + "|" + prefs().getString("tree", "") : ""; }
     synchronized boolean unlocked() { return dataKey != null || (configured() && remembered()); }
     synchronized void requireUnlocked() throws IOException { key(); bind(); }
 
@@ -391,6 +395,26 @@ final class Vault {
         try { p.writer.write(data); } catch (IOException error) { abort(p); throw error; }
         commit(p);
         prune(dirName, base);
+    }
+
+    // ---------- Named documents (protection lists and their status) ----------
+    /** Newest readable version of "<dirName>/<base>-<n>.pbv", or null when none exists. */
+    synchronized byte[] readDocument(String dirName, String base, long limit) throws IOException {
+        requireUnlocked();
+        return readLatest(dirName, base, "doc/" + base, limit);
+    }
+    /** Writes a new version (read back before it counts) and keeps the last three. */
+    synchronized void writeDocument(String dirName, String base, byte[] data) throws IOException {
+        requireUnlocked();
+        writeVersion(dirName, base, "doc/" + base, data);
+    }
+    /** Names and sizes inside one folder of the vault (for status displays and tests). */
+    synchronized JSONArray listing(String dirName) throws IOException {
+        requireUnlocked();
+        JSONArray out = new JSONArray();
+        try { for (Entry e : children(dir(dirName))) out.put(new JSONObject().put("name", e.name).put("size", e.size)); }
+        catch (org.json.JSONException error) { throw fail("VAULT_UNAVAILABLE"); }
+        return out;
     }
 
     // ---------- Mail attachments ----------

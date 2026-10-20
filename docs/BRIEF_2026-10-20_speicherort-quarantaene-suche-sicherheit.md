@@ -227,6 +227,10 @@ damit einen Knoten einrichten können."*
 
 ## Bauabschnitt 5: Vorbereitung für Viren-, Spam- und Scam-Schutz
 
+> **Stand 2026-10-20:** Schnittstelle, Regeln, MalwareBazaar-/URLhaus-Listen im Ordner,
+> VirusTotal-Fingerabdruck und Hilfs-App gebaut – [SCHUTZ-VIREN-SPAM-BETRUG](SCHUTZ-VIREN-SPAM-BETRUG.md).
+> Offen: ClamAV/YARA auf dem Gerät, Prüfung der Mailliste, Lizenz für Verkauf, Tablet.
+
 ### Nutzerwunsch (2026-10-20)
 
 *„Vorbereitung für Virenscans innerhalb der App … verschiedene Virenscanner oder auch Virenmodelle …
