@@ -1,5 +1,26 @@
 > **Neuester Stand: Vorschau .10 veröffentlicht**, 2026-10-20.
 
+## Neuer Folgeauftrag: weitere Anbieter und Microsoft vorbereiten (.12 in Prüfung)
+
+Nutzer wünscht mehrere bekannte Anbieter. Vier native Vorlagen sind ergänzt:
+WEB.DE, GMX, Yahoo Mail und 1&1/IONOS; mit Telekom, Hetzner und Google sieben
+verbindbare Vorlagen. Passwörter beim Wechsel löschen, feste Server prüfen,
+bestehende Konten/Entwürfe erhalten. Yahoo erfordert ein vom Anbieter erlaubtes
+App-Passwort; WEB.DE/GMX brauchen aktivierten IMAP-Zugriff. IONOS Mail ist kein
+Microsoft-365-Postfach über IONOS.
+
+Auf Nachfrage bestätigt der Nutzer: **Noch keine Microsoft-Entra-Appregistrierung.**
+Deshalb zunächst weitere Anbieter und Vorbereitung von Microsoft. Der Microsoft-
+Eintrag erklärt den fehlenden Freigabeweg und öffnet nur einen Einrichtungsplan;
+kein Microsoft-Konto wird gespeichert oder per Passwort verbunden. Registrierung
+und anschließende native OAuth-/SMTP-STARTTLS-Implementierung stehen noch aus.
+Konkreter Plan mit Paket/Zertifikat, Zielgruppe und delegierten Berechtigungen:
+[MAIL-ANBIETER](docs/MAIL-ANBIETER.md#microsoft-für-die-nächste-sitzung-vorbereiten).
+Keine fremden Client-IDs, Client-Secrets oder unbestätigten 465-Passwortvorlagen.
+Die frühere Googlemail-Nachprüfung am Tablet bleibt parallel offen.
+
+---
+
 ## Aktuell: Vorschau .11 veröffentlicht — 2026-10-20
 
 Die folgenden älteren Abschnitte dokumentieren frühere Stände. Aktuell existieren

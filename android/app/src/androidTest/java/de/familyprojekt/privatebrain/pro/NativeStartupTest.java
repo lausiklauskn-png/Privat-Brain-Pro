@@ -198,6 +198,49 @@ public class NativeStartupTest {
         }finally{instrumentation.removeMonitor(monitor);}
     }
 
+    private void chooseMailProvider(String label){
+        onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog())
+            .perform(androidx.test.espresso.action.ViewActions.scrollTo(),click());
+        androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo(label))
+            .inRoot(androidx.test.espresso.matcher.RootMatchers.isPlatformPopup()).perform(click());
+    }
+    @Test public void providerChoicesClearPasswordsUseFixedServersAndKeepMicrosoftOutOfPasswordLogin()throws Exception{
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            awaitTrue(scenario,"Boolean(window.PBMailDevice)");
+            evaluate(scenario,"PBMailDevice.accounts().then(items=>window.__providerBefore=JSON.stringify(items));window.__providersCancelled=false;PBMailDevice.addAccount().then(value=>window.__providersCancelled=value===null);true");
+            var password=androidx.test.espresso.matcher.ViewMatchers.withInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            for(MailProvider preset:new MailProvider[]{MailProvider.WEBDE,MailProvider.GMX,MailProvider.YAHOO,MailProvider.IONOS}){
+                chooseMailProvider(preset.label);
+                onView(withText(preset.imap)).inRoot(isDialog()).perform(androidx.test.espresso.action.ViewActions.scrollTo())
+                    .check(matches(org.hamcrest.Matchers.allOf(isDisplayed(),org.hamcrest.Matchers.not(androidx.test.espresso.matcher.ViewMatchers.isEnabled()))));
+                onView(withText(preset.smtp)).inRoot(isDialog()).perform(androidx.test.espresso.action.ViewActions.scrollTo())
+                    .check(matches(org.hamcrest.Matchers.not(androidx.test.espresso.matcher.ViewMatchers.isEnabled())));
+                onView(password).inRoot(isDialog()).check(matches(withText("")))
+                    .perform(androidx.test.espresso.action.ViewActions.scrollTo(),androidx.test.espresso.action.ViewActions.replaceText("synthetic-password"),androidx.test.espresso.action.ViewActions.closeSoftKeyboard());
+                onView(withText(preset.help(0))).inRoot(isDialog()).perform(androidx.test.espresso.action.ViewActions.scrollTo()).check(matches(isDisplayed()));
+                // Empty email fails locally: the form must unlock so another provider can be chosen.
+                onView(withText("Verbinden und prüfen")).inRoot(isDialog()).perform(click());
+                onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog())
+                    .check(matches(androidx.test.espresso.matcher.ViewMatchers.isEnabled()));
+                onView(withText("Anmeldung fehlgeschlagen. E-Mail-Adresse, E-Mail-Passwort und Servernamen prüfen.")).inRoot(isDialog())
+                    .perform(androidx.test.espresso.action.ViewActions.scrollTo()).check(matches(isDisplayed()));
+            }
+            chooseMailProvider("Hetzner");
+            onView(password).inRoot(isDialog()).check(matches(withText("")));
+            chooseMailProvider("Google / Gmail");
+            onView(password).inRoot(isDialog()).check(matches(org.hamcrest.Matchers.not(isDisplayed())));
+            chooseMailProvider("Outlook / Microsoft 365");
+            onView(password).inRoot(isDialog()).check(matches(org.hamcrest.Matchers.not(isDisplayed())));
+            onView(withText(MailProvider.setupLabel(0))).inRoot(isDialog()).perform(click());
+            onView(withText(MailProvider.microsoftPlan(0))).inRoot(isDialog()).check(matches(isDisplayed()));
+            pressBackUnconditionally();
+            onView(withText("Abbrechen")).inRoot(isDialog()).perform(click());
+            awaitTrue(scenario,"window.__providersCancelled===true");
+            evaluate(scenario,"PBMailDevice.accounts().then(items=>window.__providerAfter=JSON.stringify(items));true");
+            awaitTrue(scenario,"typeof window.__providerAfter==='string'&&window.__providerAfter===window.__providerBefore");
+        }
+    }
+
     @Test public void pdfPagesAndAndroidBackUseRealNativeBridge() throws Exception {
         java.io.File file=NativePdfTest.fixture(androidx.test.core.app.ApplicationProvider.getApplicationContext());
         String data=android.util.Base64.encodeToString(java.nio.file.Files.readAllBytes(file.toPath()),android.util.Base64.NO_WRAP);
