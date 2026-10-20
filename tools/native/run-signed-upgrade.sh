@@ -23,6 +23,8 @@ adb install "$old_apk"
 adb install "$probe_apk"
 probe seed
 adb shell am force-stop "$package"
+probe baseline
+adb shell am force-stop "$package"
 adb install -r "$new_apk"
 adb shell am force-stop "$package"
 # Both OS networking and the persisted app switch must be offline on cold start.

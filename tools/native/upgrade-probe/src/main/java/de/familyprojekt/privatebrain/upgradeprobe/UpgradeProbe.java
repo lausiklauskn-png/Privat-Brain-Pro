@@ -24,7 +24,9 @@ public final class UpgradeProbe extends Instrumentation {
     private static final String ID = "10b7ec23-2089-4cbd-95a3-64f0dd7a20b1";
     private String phase;
     private WebView web;
+    private final CountDownLatch paused=new CountDownLatch(1);
     @Override public void onCreate(Bundle args) { super.onCreate(args); phase=args.getString("phase"); start(); }
+    @Override public void callActivityOnPause(Activity activity) { super.callActivityOnPause(activity);paused.countDown(); }
     private static void require(boolean value, String message) {
         if (!value) throw new AssertionError(message);
     }
@@ -62,7 +64,7 @@ public final class UpgradeProbe extends Instrumentation {
     @Override public void onStart() {
         Bundle result=new Bundle();
         try {
-            require("seed".equals(phase)||"verify".equals(phase),"Unknown probe phase");
+            require("seed".equals(phase)||"baseline".equals(phase)||"verify".equals(phase),"Unknown probe phase");
             Intent launch=new Intent(Intent.ACTION_MAIN).setClassName(getTargetContext().getPackageName(),PREFIX+"MainActivity")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Activity activity=startActivitySync(launch);
@@ -77,10 +79,17 @@ public final class UpgradeProbe extends Instrumentation {
                 Object account=construct("MailAccount",new Class<?>[]{JSONObject.class},fixture);
                 call(engine,"saveAccount",new Class<?>[]{type("MailAccount")},account);
                 js("document.querySelector('[data-lang=en]').click();localStorage.setItem('pb_upgrade_probe','retained');window.PBNetwork.setOffline(true).then(()=>window.__probeOffline=true);true");
-                await("document.documentElement.lang === 'en' && window.__probeOffline === true");
+                await("document.documentElement.lang === 'en' && localStorage.getItem('pb_lang') === 'en' && window.__probeOffline === true");
                 // Exercise IndexedDB as well as localStorage and the native encrypted account store.
                 js("window.__probeDb=false;(()=>{const tx=db.transaction('catalog','readwrite');tx.objectStore('catalog').put({hash:'signed-upgrade-fixture',name:'Signed upgrade fixture',text:'retained offline data',size:21,type:'text/plain'});tx.oncomplete=()=>window.__probeDb=true;tx.onerror=()=>window.__probeDb='error';})();true");
                 await("window.__probeDb === true");
+                // WebView's localStorage disk commit is asynchronous. Give it the
+                // normal Activity background lifecycle before killing its process.
+                // The separate baseline cold start below proves durability BEFORE
+                // installing an update; no preservation assertion is relaxed.
+                runOnMainSync(()->activity.moveTaskToBack(true));
+                require(paused.await(10,TimeUnit.SECONDS),"Seed app did not background");
+                Thread.sleep(10000);
             } else {
                 await("document.documentElement.lang === 'en' && localStorage.getItem('pb_lang') === 'en' && localStorage.getItem('pb_upgrade_probe') === 'retained'");
                 await("window.PBNetwork.offline === true && document.documentElement.dataset.appOffline === 'true'");
@@ -89,6 +98,9 @@ public final class UpgradeProbe extends Instrumentation {
                 require("synthetic-offline-only".equals(saved.getString("password")),"Encrypted account was not retained");
                 js("window.__probeDb=false;(()=>{const r=db.transaction('catalog').objectStore('catalog').get('signed-upgrade-fixture');r.onsuccess=()=>window.__probeDb=r.result?.text === 'retained offline data';})();true");
                 await("window.__probeDb === true");
+                js("window.Capacitor.Plugins.ProMail.accounts().then(a=>window.__probeAccount=a.items.some(x=>x.id==='"+ID+"'));true");
+                await("window.__probeAccount === true");
+                if("verify".equals(phase)) {
                 js("window.Capacitor.Plugins.ProMail.accounts().then(a=>window.__probeAccount=a.items.some(x=>x.id==='"+ID+"'));PBWorkspace.navigate('settings');true");
                 await("window.__probeAccount === true && document.querySelector('#vaultPlace h3')?.textContent.includes('Storage location and encryption') && document.querySelector('#vault-choose')?.getBoundingClientRect().width > 0 && window.PBVault?.active() === false");
                 js("document.querySelector('[data-lang=de]').click();true");
@@ -110,6 +122,7 @@ public final class UpgradeProbe extends Instrumentation {
                 require(chooser,"Android folder picker did not open");
                 getUiAutomation().performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK);
                 await("!document.querySelector('#pickDir').disabled && window.PBVault.active() === false");
+                }
             }
             result.putString("stream","SIGNED_UPGRADE_"+phase.toUpperCase(java.util.Locale.ROOT)+"_PASS\n");
             finish(Activity.RESULT_OK,result);
