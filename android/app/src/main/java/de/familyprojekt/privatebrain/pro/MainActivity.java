@@ -14,6 +14,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProUpdatesPlugin.class);
         registerPlugin(ProMailPlugin.class);
         registerPlugin(ProFilesPlugin.class);
+        registerPlugin(ProFoldersPlugin.class);
         registerPlugin(ProLinksPlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);

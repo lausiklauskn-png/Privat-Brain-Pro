@@ -5,6 +5,11 @@
   if (!plugin) return;
   const languages = ['de', 'en', 'ru', 'pl'];
   const labels = {
+    loadingDownload:['E-Mail wird vom Anbieter geladen …','Downloading email from the provider …','Загрузка письма у провайдера …','Pobieranie wiadomości od dostawcy …'],
+    loadingPrepare:['E-Mail wird für die Ansicht vorbereitet …','Preparing email for display …','Подготовка письма к просмотру …','Przygotowywanie widoku wiadomości …'],
+    loadingCheck:['Nachricht und Anhänge werden auf verdächtige Inhalte geprüft …','Checking message and attachments for suspicious content …','Проверка письма и вложений на подозрительное содержимое …','Sprawdzanie wiadomości i załączników pod kątem podejrzanej treści …'],
+    loadingWhy:['Warum dauert das?','Why does this take time?','Почему это занимает время?','Dlaczego to trwa?'],
+    loadingExplain:['Zuerst werden Nachricht und Anhänge vom Anbieter übertragen. Danach bereinigt die App die Anzeige und prüft Mailtext und Anhänge anhand von Regeln auf verdächtige Inhalte. Große Anhänge, die Verbindung und die Prüfungen können Zeit benötigen. Das ist kein vollständiger Virenscanner. Befunde und ungeprüfte Bereiche stehen im Prüfbericht unter der Nachricht.','First the message and attachments are transferred from the provider. The app then sanitizes the display and checks message text and attachments for suspicious content using rules. Large attachments, the connection and checks can take time. This is not a full antivirus scan. Findings and unchecked content are listed in the check report below the message.','Сначала письмо и вложения загружаются у провайдера. Затем приложение очищает отображение и проверяет текст и вложения по правилам. Вложения, соединение и проверки могут требовать времени. Это не полноценный антивирус. Находки и непроверенные области указаны в отчёте под письмом.','Najpierw wiadomość i załączniki są pobierane od dostawcy. Następnie aplikacja oczyszcza widok i sprawdza tekst oraz załączniki według reguł. Duże załączniki, połączenie i kontrole mogą wymagać czasu. To nie jest pełny skan antywirusowy. Wyniki i niesprawdzone obszary są w raporcie pod wiadomością.'],
     foldersUnavailable: ['Die Serverordner sind noch nicht geladen. Bitte aktualisieren; gespeicherte Entwürfe und Versandversuche bleiben verfügbar.', 'Server folders are not loaded yet. Refresh; saved drafts and send attempts remain available.', 'Папки сервера ещё не загружены. Обновите список; сохранённые черновики и отправки доступны.', 'Foldery serwera nie zostały wczytane. Odśwież; zapisane szkice i próby wysłania pozostają dostępne.'],
     folderUnavailable: ["Dieser Ordner ist beim Anbieter noch nicht vorhanden.", "This folder does not exist with the provider yet.", "Этой папки ещё нет у провайдера.", "Ten folder nie istnieje jeszcze u dostawcy."],
     messageTools: ["Nachrichtenaktionen", "Message actions", "Действия с письмом", "Działania wiadomości"],
@@ -79,7 +84,15 @@
     if(!Array.isArray(result.items)||result.items.some(item=>!item||typeof item!=='object'||Array.isArray(item)))throw new Error(text('BRIDGE_RESPONSE_INVALID'));
     return result;
   }
+  const progressBox=document.createElement('aside');progressBox.className='native-mail-progress';progressBox.hidden=true;
+  const progressStatus=document.createElement('p');progressStatus.setAttribute('role','status');progressStatus.setAttribute('aria-live','polite');
+  const progressDetails=document.createElement('details'),progressSummary=document.createElement('summary'),progressExplanation=document.createElement('p');
+  progressDetails.append(progressSummary,progressExplanation);progressBox.append(progressStatus,progressDetails);document.getElementById('mailWorkspace').prepend(progressBox);
+  let progressStage='idle';
+  function progress(stage){progressStage=stage;progressBox.hidden=stage==='idle';progressStatus.textContent=stage==='idle'?'':text({download:'loadingDownload',prepare:'loadingPrepare',checking:'loadingCheck'}[stage]);progressSummary.textContent=text('loadingWhy');progressExplanation.textContent=text('loadingExplain');}
+  new MutationObserver(()=>progress(progressStage)).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   window.PBMailDevice = {
+    progress,
     base: 'android:private-brain-pro',
     attachmentLimit: 5 * 1024 * 1024,
     text,
