@@ -52,3 +52,9 @@ Dokument-URI dient ein isolierter Testdatei-Provider. Aus den gespeicherten
 Anteilen wird der konfigurierte Tresor wieder entsperrt. Das ist kein Test an
 Klaus' Tablet oder an dessen SD-Karte. Der Ergebniswächter verlangt die tatsächliche
 Ausführung dieses Falls; fehlende/übersprungene Tests zählen nicht als Erfolg.
+
+## Veröffentlichung und Nachweis
+
+Vorschau .18 ist seit 2026-10-21 veröffentlicht: [APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk). Über die vorhandene App installieren, nicht deinstallieren. Vollständige Quell-CI 39508996409 mit 41 tatsächlich ausgeführten Android-Fällen ohne Fehler/Überspringen; signiertes Update .17 → .18 und öffentlicher Download durch Release 39510666137 erfolgreich geprüft. Die vorbereitete Schutzfunktion aus PR #44 ist in dieser Reparatur-APK nicht enthalten.
+
+SHA-256: `6258bbb6d340b0e2404ff02c294bf011f4824b2cbfea5b6487ed8c102f803fa9`. [Alle Lauf-IDs und Prüfgrenzen](PRUEFSTAND-ANDROID.md#veröffentlichte-version-18--2026-10-21).

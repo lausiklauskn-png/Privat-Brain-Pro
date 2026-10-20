@@ -1,6 +1,5 @@
-> Vorschau .17 veröffentlicht: Release 39484440521, Versuch 2, signierte
-> .16→.17-Updateprobe und öffentliche bytegleiche Downloadprüfung bestanden.
-> Originalsignierer unverändert; Details und Prüfsumme im Abschnitt .17 unten.
+> Vorschau .18 veröffentlicht (2026-10-21): signierte .17→.18-Updateprobe und öffentliche Downloadprüfung bestanden.
+> Reparatur-APK ohne die vorbereitete Schutzfunktion aus PR #44; Prüfsumme und Lauf-IDs im Abschnitt .18 unten.
 
 # Prüfstand Android – 2026-10-20
 
@@ -913,3 +912,27 @@ Erst jetzt sind die alten vier `ANDROID_KEYSTORE_*`-/Alias-Secrets zur Löschung
 freigegeben; diese Sitzung hat sie nicht gelöscht. `PB_SIGNING_UNLOCK` und die
 verschlüsselte Identität samt Offline-Sicherung behalten. Keine Schlüssel oder
 Passwörter lokal wiederhergestellt. PWA und geschützte Module unverändert.
+
+
+## Veröffentlichte Version .18 — 2026-10-21
+
+Veröffentlicht am 2026-10-20 um 22:56:53 UTC, entsprechend 2026-10-21 um 00:56:53 Uhr in Europe/Berlin.
+
+[APK .18](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk) über die vorhandene .17 installieren, nicht deinstallieren.
+Quellcommit und Tag `v0.1.0-preview.18`: `090503e1b4115e0e9bea07359d637b47de0e10e6`, VersionCode 18.
+Der Tag .17 bleibt unverändert auf `39e8fae98671870962e70d5263416acd21502e37`.
+
+- Reparatur: Fünf Shamir-Ersatzschlüssel des unteren Tresors werden über Androids Dokumentdialog tatsächlich gespeichert. Abbruch/Schreibfehler sperren die Einrichtung; Wiederholung verwendet dieselben Anteile. Passwortwechsel und verspätete Antworten nach Schließen sind abgesichert. Die Schlüssel gelten nicht für das getrennte Tablet-/SD-Speicherort-Passwort.
+- Enthalten sind auch die native VaultCode-Rekursionskorrektur und die Navigationskorrektur gegen übermäßiges `history.replaceState`. Die auf main vorbereitete Schutzfunktion aus PR #44 ist **nicht** in dieser Reparatur-APK enthalten; deren Code auf main bleibt erhalten. PWA und geschützte Drift-Guard-Module unverändert.
+- Vollständige Quell-CI [39508996409](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39508996409) auf demselben früheren main-Commit grün: Web/Mail, Chromium/Firefox/WebKit, Build/Lint/Unit und 41 Android-Fälle ohne Fehler/Überspringen. 18 gezielte Browser-Gegenproben prüfen echte Shamir-Erzeugung, alle zehn Dreierkombinationen, Ablehnung von zwei Anteilen und Wiederherstellung. Der Android-Test schreibt über die echte Java-Brücke und ContentResolver in eine isolierte Testdatei und stellt aus deren Anteilen den Tresor wieder her; der Dateidialog wird vom Testmonitor beantwortet. Keine Messung an Klaus' Tablet/SD-Karte. Identitätsprüfung 39508996281 grün.
+- Release-Werkzeuge von main `235c7b124267e06e3d16fdb550d22cb7c147e2f6`: PR #45 bindet die Updateprobe nach Activity-Neustart an die aktuelle WebView. Das Fehlerartefakt von 39506966582 belegte eine Activity-Neuerstellung und Zugriffe der Probe auf eine zerstörte WebView. CI 39508757517 bestand inklusive aller drei erzwungenen Neustartphasen (`RECREATE_READY` und `PASS`) und 46 Android-Fällen. Keine Assertions, Fristen oder Datenerhaltungsbedingungen abgeschwächt; die zusätzlichen fünf Schutztests gehören zum Werkzeug-/main-Stand und nicht zum .18-Appumfang.
+- Release [39510666137](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39510666137), Build/Signatur/Metadaten 118930592157, signiertes Update **.17 → .18** 118933109306, Veröffentlichung 118933930393: alle erfolgreich. Geprüft wurden erhaltene Daten, Sprache, Offline-Kaltstart, Speicherort-Einstellung und Android-Ordnerauswahl. Originalsignierer ausschließlich in Actions, unveränderter Zertifikat-Pin.
+- Der Release-Job hat den öffentlichen APK-Download mit `cmp` bytegleich zum signierten Artefakt geprüft. Der zusätzliche unabhängige Download stimmt in SHA-256 und Größe mit den veröffentlichten Prüfsummen und GitHub-Assetdaten überein. In dieser öffentlichen APK ist `native-recovery.js` bytegleich zur Quelle und die native Speichermethode vorhanden; `native-protect.js`/`ProProtectPlugin` aus PR #44 sind nicht enthalten.
+
+SHA-256: `6258bbb6d340b0e2404ff02c294bf011f4824b2cbfea5b6487ed8c102f803fa9`
+
+Größe: 5.637.591 Bytes
+
+APK: https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk
+
+[Bedienung und Prüfgrenzen](TRESOR-ERSATZSCHLUESSEL.md). Es wurden keine echten Nutzerpasswörter oder Ersatzschlüssel verwendet. `PB_SIGNING_UNLOCK` bleibt erforderlich; keine neue Signieridentität und keine weiteren Secret-Löschungen durch diese Sitzung.

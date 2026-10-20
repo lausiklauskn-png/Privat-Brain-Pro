@@ -1,12 +1,12 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Reparatur .18 in Prüfung:** Ersatzschlüssel des unteren Tresors werden im
-Android-Dialog gespeichert; Einrichtung erst nach erfolgreichem Export und
-Bestätigung. Abbruch/Fehler und Passwortwechsel sind abgesichert. Die Schlüssel
-gehören nicht zum getrennten Passwort des Tablet-/SD-Speicherorts.
-[Bedienung, Ursache und Prüfgrenzen](docs/TRESOR-ERSATZSCHLUESSEL.md).
-Noch keine veröffentlichte .18 behaupten, bevor signierte Updateprobe und
-öffentliche Downloadprüfung bestanden sind.
+**Vorschau .18 veröffentlicht (2026-10-21): Ersatzschlüssel repariert.**
+[APK .18](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk) über die vorhandene App installieren, nicht deinstallieren.
+Unterer Tresor: echte Android-Dateisicherung der fünf Anteile; Einrichtung erst nach erfolgreichem Export und Bestätigung. Abbruch/Fehler, Passwortwechsel und verspätete Antworten nach Schließen abgesichert. Drei Anteile stellen dessen Passwort wieder her, nicht das getrennte Tablet-/SD-Speicherort-Passwort.
+Quelle/Tag `090503e1b4115e0e9bea07359d637b47de0e10e6` (`v0.1.0-preview.18`, Code 18); vollständige Quell-CI 39508996409 mit 41 Android-Fällen und Identitätsprüfung 39508996281 grün. Release 39510666137: signiertes .17→.18-Update 118933109306 und Veröffentlichung 118933930393 erfolgreich.
+SHA-256: `6258bbb6d340b0e2404ff02c294bf011f4824b2cbfea5b6487ed8c102f803fa9` (5.637.591 Bytes). Der Release-Job hat den öffentlichen APK-Download mit `cmp` bytegleich zum signierten Artefakt geprüft. Der zusätzliche unabhängige Download stimmt in SHA-256 und Größe mit den veröffentlichten Prüfsummen und GitHub-Assetdaten überein.
+Release-Werkzeuge von `235c7b124267e06e3d16fdb550d22cb7c147e2f6` (PR #45, CI 39508757517 mit tatsächlichen Activity-Neustarts in allen drei Phasen). Enthalten: Export-, VaultCode- und Navigationsreparatur; PR #44 **nicht** in dieser APK. Die Schutzfunktion bleibt auf main vorbereitet. PWA/geschützte Module und Originalsignierer unverändert.
+[Bedienung/Prüfgrenzen](docs/TRESOR-ERSATZSCHLUESSEL.md), [Release-Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-18--2026-10-21). Keine Messung an Klaus' Tablet. `PB_SIGNING_UNLOCK` behalten.
 
 **Bauabschnitt 5 vorbereitet (2026-10-20, noch nicht veröffentlicht): Schutz vor Viren, Spam, Betrug.**
 Prüfstelle `native/native-protect.js` (`PBSchutz`) mit Einschüben: Regeln für Spam/Betrug

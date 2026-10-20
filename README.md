@@ -1,10 +1,10 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**Aktuell: .16 — [Android-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.16/Private-Brain-Pro-0.1.0-preview.16.apk).** Über die vorhandene App
+**Aktuell: .18 — [Android-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk).** Über die vorhandene App
 installieren; Paket und Signatur bleiben erhalten. Die Navigation zeigt kleine
 Namen rechts neben Symbolen und passt sich zusammen mit Suche und Filtern an
-schmale und breite Fenster an.
+schmale und breite Fenster an. Die fünf Ersatzschlüssel des unteren Tresors lassen sich jetzt im Android-Dateidialog sichern; drei davon ermöglichen die Wiederherstellung. Das getrennte Tablet-/SD-Speicherort-Passwort gehört nicht dazu. [Bedienung und Grenzen](docs/TRESOR-ERSATZSCHLUESSEL.md).
 
 Die Oberfläche ist in Chromium, Firefox und WebKit für 280 bis 1920 Pixel und
 vier Sprachen geprüft. Installierbar ist derzeit Android; es gibt noch keine
