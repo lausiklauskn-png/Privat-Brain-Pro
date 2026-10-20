@@ -1,4 +1,4 @@
-> **Neuester Auftrag .14: Kompakte Bedienung und echter App-Internetschalter.**
+> **Neuester Stand .14 veröffentlicht: Kompakte Bedienung und App-Internetschalter.**
 
 Nach Outlook-Vorbild: Symbole mit Tooltips, flache Kopf- und Mailleisten, seltenere
 Ansichten auf dem Handy hinter „…“. Grüner Offline-Informationshinweis entfällt.
@@ -6,7 +6,16 @@ Ansichten auf dem Handy hinter „…“. Grüner Offline-Informationshinweis en
 nur die Verbindungen dieser App. Konten, Entwürfe und lokale Originale erhalten;
 keinen unklaren Versand wiederholen. Vorhandene Statuslampen und Mycel bleiben
 zugänglich. [Bedienung/Prüfgrenzen](docs/KOMPAKTE-ANSICHT-UND-OFFLINE.md),
-[Bilder](docs/design/compact14/README.md). Veröffentlichungsnachweis folgt.
+[Bilder](docs/design/compact14/README.md). **Private Brain Pro .14 veröffentlicht:** kompakte Symbolleisten und echter
+App-Internetschalter im App-Menü, in beide Richtungen und nach Neustart erhalten.
+[APK .14](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.14/Private-Brain-Pro-0.1.0-preview.14.apk) über die vorhandene App installieren, nicht deinstallieren.
+Anwendungscommit `31a27eeba707cad4f4752ceccfd3c0e0b49a50e1` (PR27), vollständige CI 39425363587
+mit 231 Browser- und 34 Android-Fällen erfolgreich. Signiertes Update .13 → .14
+39425723720 einschließlich Offline-Kaltstart und erneutem Einschalten bestanden.
+Veröffentlichung 39427132118, öffentlicher Download bytegleich geprüft.
+[Bedienung](docs/KOMPAKTE-ANSICHT-UND-OFFLINE.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-14--2026-10-20).
+
 
 ---
 

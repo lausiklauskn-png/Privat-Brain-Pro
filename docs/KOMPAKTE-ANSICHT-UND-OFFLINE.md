@@ -64,3 +64,10 @@ oder echten Nachrichten werden für die Prüfungen verwendet.
 
 [Ansichten mit synthetischen Nachrichten](design/compact14/README.md),
 [Veröffentlichungsnachweis](PRUEFSTAND-ANDROID.md).
+
+
+## Veröffentlichung
+
+[APK .14](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.14/Private-Brain-Pro-0.1.0-preview.14.apk) ist veröffentlicht. Vollständige CI 39425363587,
+34 Android-Fälle und signiertes Update .13 → .14 39425723720 bestanden.
+[Nachweis und genaue Pins](PRUEFSTAND-ANDROID.md#veröffentlichte-version-14--2026-10-20).
