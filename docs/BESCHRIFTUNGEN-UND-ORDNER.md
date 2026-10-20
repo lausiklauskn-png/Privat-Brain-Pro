@@ -82,7 +82,7 @@ für diese Anzeige nicht verändert. Es wird kein neuer Sicherheitsdienst kontak
 
 Der vorhandene App-Internetschalter, Mycel, Konten und Google-Registrierung werden
 von dieser Änderung nicht umgestellt. Nur die native Android-Ausgabe wird angepasst;
-die unabhängige PWA bleibt unberührt. Bilder: [kompakte Ansicht](design/compact15/README.md).
+die unabhängige PWA bleibt unberührt. Bilder: [kompakte Ansicht](design/compact16/README.md).
 
-[APK .15](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.15/Private-Brain-Pro-0.1.0-preview.15.apk) über die vorhandene App installieren.
-[Veröffentlichungsnachweis](PRUEFSTAND-ANDROID.md#veröffentlichte-version-15--2026-10-20).
+[APK .16](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.16/Private-Brain-Pro-0.1.0-preview.16.apk) über die vorhandene App installieren.
+[Veröffentlichungsnachweis](PRUEFSTAND-ANDROID.md#veröffentlichte-version-16--2026-10-20).

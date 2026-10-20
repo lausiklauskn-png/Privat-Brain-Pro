@@ -1,29 +1,27 @@
-# Private Brain Pro – Android
+# Private Brain Pro
 
-Eigenständige native Pro-App auf Basis der bestehenden Private-Brain-Oberfläche.
-Die ursprüngliche PWA bleibt unabhängig im Repository `Privat-Brain` bestehen.
+Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
+**Aktuell: .16 — [Android-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.16/Private-Brain-Pro-0.1.0-preview.16.apk).** Über die vorhandene App
+installieren; Paket und Signatur bleiben erhalten. Die Navigation zeigt kleine
+Namen rechts neben Symbolen und passt sich zusammen mit Suche und Filtern an
+schmale und breite Fenster an.
 
-**Stand: Android-Testversion 0.1.0-preview.4 mit direkter Geräte-Mail veröffentlicht.**
-[Test-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.4/Private-Brain-Pro-0.1.0-preview.4.apk).
-Suche, Dateiimport, Katalog und Postfachoberfläche werden lokal mit Capacitor
-ausgeliefert. Telekom/T-Online und Hetzner verbinden sich direkt über IMAPS/SMTPS
-vom Gerät, mit nativer Kontenerfassung, Android Keystore, Anhängen, lokalen
-Entwürfen und dauerhaftem Versandstatus. Dafür werden kein Dienst-Token und
-keine Termux-Befehle benötigt. Echte Anbieteranmeldung auf dem Nutzergerät steht
-noch aus. Noch offen sind dauerhafter Geräteordnerzugriff, Hintergrundabruf,
-Gmail OAuth und vollständige Funktionsgleichheit. Die Mailprüfer sind kein
-Virenscanner. Modellgewichte fehlen noch; Stichwortsuche ist verfügbar, echte
-e5-Modellqualität ist nicht nachgewiesen.
-Prüfnachweise und Grenzen: [Prüfstand](docs/PRUEFSTAND-ANDROID.md).
+Die Oberfläche ist in Chromium, Firefox und WebKit für 280 bis 1920 Pixel und
+vier Sprachen geprüft. Installierbar ist derzeit Android; es gibt noch keine
+native iOS-/Windows-/macOS-/Linux-Ausgabe. Browser-Engine-Prüfungen ersetzen
+keine Tests auf echten Geräten. Die ursprüngliche PWA im Repository `Privat-Brain`
+bleibt unabhängig und unverändert.
 
-Das bestehende Design, Hell/Dunkel, DE/EN/RU/PL und die 3D-Bubbles bleiben erhalten. Die Pro-Icons erhalten auf ausdrücklichen
-Nutzerwunsch einen hellen Hintergrund; das unterscheidet sie von der PWA.
-Die geschützten Prüfmodule werden bytegleich mitgeführt.
+Mailverbindungen laufen direkt vom Gerät. Anbieter und OAuth-Grenzen:
+[Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md). Die Regelprüfer sind kein
+vollständiger Virenscanner. Modellgewichte fehlen noch; echte e5-Modellqualität
+ist nicht nachgewiesen. [Bedienung und Plattformgrenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-16--2026-10-20),
+[synthetische Ansichten](docs/design/compact16/README.md).
 
-Vorschau 0.1.0-preview.4 enthält direkte Mailverbindungen und die manuelle
-Versionsprüfung. Die signierte APK wurde im Android-Emulator über .2 installiert;
-die Sprachwahl blieb erhalten und die native Kontomaske öffnete sich. Architektur, Rechte und Grenzen:
-[Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md).
+Hell/Dunkel, DE/EN/RU/PL und die geschützten Prüfmodule bleiben erhalten.
+Die Prüfmodule werden bytegleich mitgeführt; die Pro-Icons haben auf Nutzerwunsch
+einen hellen Hintergrund.
 
 ## Entwicklung ohne eigenen PC
 
@@ -51,8 +49,7 @@ cd android
 öffentlicher Dateien erzeugt; Repository, Mailserver, lokale Daten und Schlüssel
 werden nicht pauschal in die App gepackt. Native Assets aktualisiert Android,
 kein PWA-Service-Worker. Für Release-Builds Web-Debugging deaktiviert, Klartext-HTTP
-und beliebige Navigation mit Plugin-Zugriff nicht freigegeben. Der Mailadapter erlaubt benannte Konto-/Postfachoperationen; ein allgemeiner
-privilegierter Dateizugriffs-Adapter fehlt noch.
+und beliebige Navigation mit Plugin-Zugriff nicht freigegeben. Der Mailadapter erlaubt benannte Konto-/Postfachoperationen; Dateizugriff ist auf ausdrücklich freigegebene Originale und Android-SAF-Ordner begrenzt.
 
 Herkunft: [Ausgangsbasis](docs/PRO-AUSGANGSBASIS.md).
 Vorherige PWA-Dokumentation: [PWA-README](docs/PWA-README.md).

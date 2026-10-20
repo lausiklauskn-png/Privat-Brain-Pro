@@ -1,3 +1,32 @@
+> **Aktueller Stand: Private Brain Pro .16 veröffentlicht.**
+
+**Private Brain Pro .16 veröffentlicht:** kleinere Navigationsnamen stehen direkt
+rechts neben den Symbolen, auch auf dem Handy. Alle acht Ansichten bleiben sichtbar;
+bei wenig Platz oder größerer Schrift verteilen sie sich auf flache Zeilen. Suche,
+Zähler und Filter sind kompakter; beide Suchmodi passen vollständig in schmale
+Fenster. Keine animierten Buttonbreiten beim Fensterwechsel. Tooltips, Zahnrad,
+Statuslampen, Ordnerauswahl und App-Internetschalter bleiben erhalten.
+[APK .16](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.16/Private-Brain-Pro-0.1.0-preview.16.apk) über die vorhandene App installieren, nicht deinstallieren.
+Anwendungscommit `0b7fef62a989be4200c1372df8c229ae7253d6c8` (PR31), Quelle `4d668e9ef122060f9b1d96deab52f6515ae4b61e`;
+vollständige CI 39443580790 und 39443590674 bestanden: 319 native
+Browser-Gegenproben plus je 101 in Firefox/WebKit, 37 Android-Fälle ohne
+Fehler/Überspringen, Web-/Mail-Suiten, Unit, Build und Lint. Signiertes Update
+.15 → .16 39443727118 mit erhaltener Sprache, Offline-Kaltstart und erneutem
+Einschalten sowie wiederholter Android-Ordnerauswahl bestanden. Veröffentlichung
+39445984706; öffentlicher Download bytegleich geprüft.
+[Bedienung/Grenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
+[Bilder](docs/design/compact16/README.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-16--2026-10-20).
+Plattformen: Oberflächentests in Chromium, Firefox und WebKit unter Linux;
+keine echten iOS-/Windows-/macOS-/Samsung-/DeX-Gerätetests. Installierbar ist
+weiterhin Android. Native iOS-/Desktop-Ausgaben und deren Geräteadapter fehlen.
+Die unabhängige PWA bleibt unberührt. Google-Konto/Client nicht neu registrieren.
+Der getrennte Speicher-/Quarantäne-/Modell-Auftrag bleibt offen.
+
+---
+
+## Frühere Stände
+
 > **Aktueller Stand: Private Brain Pro .15 veröffentlicht.**
 
 **Private Brain Pro .15 veröffentlicht:** kurze Namen in der Navigation, sichtbare
