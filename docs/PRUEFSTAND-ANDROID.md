@@ -769,3 +769,37 @@ Version und kein echter Providerlogin/-versand in den automatischen Proben.
 Die zusätzliche externe Kopienablage ist noch nicht passwortverschlüsselt und
 verschiebt frühere Dateien nicht. Quelle wird einmal importiert, nicht fortlaufend
 synchronisiert. Der eigenständige Speicher-/Quarantäneauftrag bleibt offen.
+
+
+## Veröffentlichte Version .16 — 2026-10-20
+
+[APK .16](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.16/Private-Brain-Pro-0.1.0-preview.16.apk) (Private Brain Pro, Code 16), Paket
+`de.familyprojekt.privatebrain.pro.preview`. Über .15 installieren, nicht deinstallieren.
+Quelle `4d668e9ef122060f9b1d96deab52f6515ae4b61e`, PR31, Anwendungsmerge `0b7fef62a989be4200c1372df8c229ae7253d6c8`;
+Quell- und Squash-Baum sind identisch. SHA-256 `2e3e6b4d6e8e8307648359b55fca12b5cc205940e78406eeca3f28e5da010eab`,
+5,590,218 Bytes. Unverändertes Zertifikat SHA-256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+Keine Debug-Kennung und kein Debug-Dokumentanbieter in der APK.
+
+Änderung: Namen rechts neben Symbolen, alle acht Ansichten direkt sichtbar,
+flache Zeilen nach Breite/Sprache/Schriftgröße. Suche mit kleinerer Überschrift,
+kompakten Zählern, vollständig sichtbaren Suchmodi und zweispaltigen Handyfiltern.
+Innere Seitenbreite wird geprüft, statt lediglich globalen Überlauf zu verstecken.
+Buttons animieren Größenwechsel nicht. Bestehende Mail-/Ordner-/Netzfunktionen
+bleiben erhalten. [Bedienung und Plattformgrenzen](BESCHRIFTUNGEN-UND-ORDNER.md#fensterbreiten-und-betriebssysteme).
+
+| Nachweis | Ergebnis |
+| --- | --- |
+| [Vollständige CI 39443580790](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39443580790) | exakte Quelle, Web-/Mail-Suiten, 319 native Browser-Gegenproben, Unit, Build, Lint, 37 Android-Fälle ohne Fehler/Überspringen |
+| [Parallele PR-CI 39443590674](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39443590674) | dieselbe Quelle, ebenfalls vollständig bestanden |
+| Browser-Engines in beiden CIs | Firefox und WebKit jeweils 101 Prüfungen; Chromium in der nativen Browsersuite |
+| [Signiertes Update 39443727118](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39443727118) | .15 → .16, Sprache erhalten, Offline-Kaltstart und erneutes Einschalten, echte Android-Ordnerauswahl nach ausgeblendetem Hinweis mehrfach geöffnet/abgebrochen, Anbieterauswahl und Rückwege |
+| [Veröffentlichung 39445984706](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39445984706) | nur exakt geprüfte/signierte APK hochgeladen |
+| Öffentlicher Download | HTTP 200, Länge, SHA-256 und vollständiger Bytevergleich mit der signierten Update-APK bestanden |
+
+Oberflächenbreiten: 280, 320, 390, 650, 768, 1000, 1280 und 1920 Pixel;
+vier Sprachen und größere Schrift. Ausschließlich synthetische lokale Daten.
+Engine-Prüfungen unter Linux belegen keine echten iOS-/Windows-/macOS-Geräte.
+Android-Emulator ist kein Samsung-/DeX-Gerät. Installierbar bleibt die Android-APK;
+native iOS-/Windows-/macOS-/Linux-Ausgaben sind noch nicht vorhanden. Die
+unabhängige PWA und die Google-Registrierung bleiben unverändert.
