@@ -5,6 +5,9 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.smtp.SMTPTransport;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Date;
 import javax.mail.FetchProfile;
@@ -21,8 +24,11 @@ final class MailEngine {
     interface OAuthProvider { String token(String email) throws Exception; void invalidate(String token); }
     private final EncryptedMailStore store;
     private final OAuthProvider oauth;
-    MailEngine(EncryptedMailStore store) { this(store, null); }
-    MailEngine(EncryptedMailStore store, OAuthProvider oauth) { this.store = store;this.oauth = oauth; }
+    private final Vault vault;
+    MailEngine(EncryptedMailStore store) { this(store, null, null); }
+    MailEngine(EncryptedMailStore store, OAuthProvider oauth) { this(store, oauth, null); }
+    MailEngine(EncryptedMailStore store, OAuthProvider oauth, Vault vault) { this.store = store;this.oauth = oauth;this.vault = vault; }
+    private boolean vaultMode() { return vault != null && vault.configured(); }
     private Session session() { return Session.getInstance(MailAccount.properties()); }
     private Session session(MailAccount account) { return Session.getInstance(MailAccount.properties(account.authType)); }
     private String credential(MailAccount account) throws Exception {
@@ -30,9 +36,13 @@ final class MailEngine {
         if (!account.authType.equals("oauth2")) return account.password;
         if (oauth == null) throw new MailFailure("GMAIL_AUTH_REQUIRED");return oauth.token(account.email);
     }
-    private IMAPStore imap(MailAccount account) throws Exception {
+    private IMAPStore imap(MailAccount account) throws Exception { return imap(account, false); }
+    private IMAPStore imap(MailAccount account, boolean large) throws Exception {
         AppNetwork.check();
-        IMAPStore connection = (IMAPStore) session(account).getStore("imaps");
+        java.util.Properties properties = MailAccount.properties(account.authType);
+        // Large downloads into the folder: fewer round trips for one message body.
+        if (large) properties.setProperty("mail.imaps.fetchsize", Integer.toString(1024 * 1024));
+        IMAPStore connection = (IMAPStore) Session.getInstance(properties).getStore("imaps");
         String credential = credential(account);
         try { connection.connect(account.imap, 993, account.authType.equals("oauth2")?GmailIdentity.key(account.user):account.user, credential); return connection; }
         catch (javax.mail.AuthenticationFailedException error) { try { connection.close(); } catch (Exception ignored) { } if (account.authType.equals("oauth2")) { oauth.invalidate(credential);throw new MailFailure("GMAIL_IMAP_AUTH_FAILED"); }throw error; }
@@ -157,7 +167,7 @@ final class MailEngine {
                     String sender = MailMime.addresses(message.getFrom());
                     items.put(new JSONObject().put("uid", last).put("subject", subject.substring(0, Math.min(1024, subject.length())))
                         .put("from", sender.substring(0, Math.min(2000, sender.length()))).put("date", date == null ? "" : date.toString())
-                        .put("oversized", message.getSize() > MailMime.MAX_RAW).put("detailsPending", false)
+                        .put("oversized", message.getSize() > (vaultMode() ? Vault.MAX_MESSAGE : MailMime.MAX_RAW)).put("detailsPending", false)
                         .put("flags", flags).put("size", message.getSize()));
                 }
                 return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("total", folder.getMessageCount()).put("items", items)
@@ -177,7 +187,58 @@ final class MailEngine {
         }
     }
     JSONObject message(MailAccount account, String name, String validity, long uid) throws Exception {
+        if (vaultMode()) return vaultMessage(account, name, validity, uid);
         return MailMime.parse(raw(account, name, validity, uid), session());
+    }
+    /**
+     * Folder mode: an opened mail is kept encrypted in the folder; its attachments are
+     * streamed there piece by piece (up to 1 GB each) and never pass through the page.
+     */
+    private JSONObject vaultMessage(MailAccount account, String name, String validity, long uid) throws Exception {
+        if (uid < 1 || uid > 4294967295L || validity == null || !validity.matches("[0-9]{1,10}")) throw new MailFailure("INVALID_INPUT");
+        vault.requireUnlocked();
+        String key = vault.mailKey(account.email, name, validity, uid);
+        JSONObject cached = vault.loadMail(key);
+        if (cached != null) return vault.withAttachmentState(cached);
+        File temp = vault.temporary();
+        try {
+            try (IMAPStore connection = imap(account, true)) {
+                IMAPFolder folder = open(connection, name, validity, false);
+                try {
+                    Message message = folder.getMessageByUID(uid);
+                    if (message == null) throw new MailFailure("MESSAGE_MISSING");
+                    long size = message.getSize();
+                    if (size > Vault.MAX_MESSAGE) throw new MailFailure("MESSAGE_TOO_LARGE");
+                    long free = vault.free();
+                    // Download copy in app storage plus the encrypted copy in the folder.
+                    if (temp.getParentFile().getUsableSpace() < size + 64L * 1024 * 1024 || (free >= 0 && free < size + 64L * 1024 * 1024))
+                        throw new MailFailure("STORAGE_FULL");
+                    try (OutputStream out = new java.io.BufferedOutputStream(new FileOutputStream(temp), 256 * 1024)) {
+                        message.writeTo(new java.io.FilterOutputStream(out) {
+                            long written;
+                            @Override public void write(int b) throws java.io.IOException { write(new byte[] {(byte) b}, 0, 1); }
+                            @Override public void write(byte[] data, int offset, int length) throws java.io.IOException {
+                                if ((written += length) > Vault.MAX_MESSAGE) throw new java.io.IOException("MESSAGE_TOO_LARGE");
+                                out.write(data, offset, length);
+                            }
+                        });
+                    }
+                } finally { folder.close(false); }
+            }
+            JSONObject mail = MailMime.parseFile(temp, session(), vault.sink(key, account.email));
+            boolean complete = true;
+            JSONArray parts = mail.getJSONArray("attachments");
+            for (int i = 0; i < parts.length(); i++) if (parts.getJSONObject(i).optBoolean("failed")) complete = false;
+            // An incomplete transfer is shown once but fetched again next time.
+            if (complete) vault.saveMail(key, mail);
+            return vault.withAttachmentState(mail);
+        } finally { temp.delete(); }
+    }
+    /** "Erneut laden": forget the folder copy of one mail; the next opening fetches it again. */
+    void forgetMessage(MailAccount account, String name, String validity, long uid) throws Exception {
+        if (!vaultMode()) return;
+        vault.requireUnlocked();
+        vault.forgetMail(vault.mailKey(account.email, name, validity, uid));
     }
     void createFolder(MailAccount account, String name) throws Exception {
         MailAccount.header(name, 200);

@@ -96,6 +96,8 @@
   previous.onclick=close.onclick=back;next.onclick=forward;
   async function handoff(method){
     const entry=active;if(!entry)return;menu.hidden=true;
+    // Files from the encrypted folder leave it only after the folder's own warning.
+    if(entry.file.pbVaultId&&window.PBVault){try{await PBVault.handOut(entry.file.pbVaultId,method==='share');}catch{if(active===entry)body.append(make('p','',t(5)));}return;}
     if(!entry.file.pbOriginalHash&&entry.file.size>16*1024*1024){body.append(make('p','',t(7)));return;}
     external.disabled=share.disabled=true;
     try{await window.Capacitor.Plugins.ProFiles[method](await PBPDF.arguments(entry.file));}

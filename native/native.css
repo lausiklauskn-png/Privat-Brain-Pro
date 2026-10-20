@@ -343,3 +343,15 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
   .search-welcome h2 { font-size:1.35rem; }
   .search-welcome p { font-size:.85rem; }
 }
+
+/* Storage location and encrypted mail attachments (native-vault.js). */
+.native-vault-line { display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.85rem;margin:6px 0 0; }
+.native-vault-line button { min-height:32px;padding:4px 10px; }
+.native-vault-status { font-size:.88rem; }
+.native-vault-limits ul { margin:6px 0 0;padding-left:1.2em;font-size:.85rem;line-height:1.45; }
+.native-vault-head { display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:0 0 8px; }
+.native-vault-clear { border-color:var(--bad);color:var(--bad); }
+.native-vault-row { grid-template-columns:minmax(0,1fr) auto auto; }
+@media (max-width:650px) { .native-vault-row { grid-template-columns:1fr 1fr; } .native-vault-row>div { grid-column:1/-1; } }
+.native-vault-attachment { display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0;overflow-wrap:anywhere; }
+.native-vault-where button { display:block;width:100%;margin:6px 0;text-align:left; }

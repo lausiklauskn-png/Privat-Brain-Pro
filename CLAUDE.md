@@ -1,5 +1,17 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Bauabschnitt 1 (Vorschau .17, 2026-10-20): eigener Speicherort mit Passwort.**
+Einstellungen → „🔐 Speicherort und Verschlüsselung“: Tablet oder SD-Karte über die
+Android-Ordnerauswahl, Passwort nur im nativen Dialog (PBKDF2 600k → AES-256-GCM,
+Format PBV1, `VaultCrypto`/`Vault`/`ProVaultPlugin`, Seite `native/native-vault.js`).
+Mail-Anhänge bis 1 GiB je Datei werden von Android stückweise in `Anhänge/` gestreamt,
+nie durch die WebView; geöffnete Mails, Konten/Entwürfe, Originale und Katalogsicherung
+liegen verschlüsselt im Ordner; „Vorhandenen Ordner öffnen“ stellt auf neuem Gerät
+wieder her (nur ergänzen, nie überschreiben). Explorer „📎 Mail-Anhänge“ mit „Ganzen
+Ordner leeren“ → Mails zeigen „Anhang gelöscht“. Ohne Speicherort bleibt .16-Verhalten.
+Prüfen im Ordner, VirusTotal, Senden großer Anhänge, Passwortwechsel: noch offen.
+Am Tablet nicht gemessen. [Bedienung, Format, Grenzen, Nachweise](docs/SPEICHERORT-UND-TRESOR.md).
+
 **Private Brain Pro .16 veröffentlicht:** kleinere Navigationsnamen stehen direkt
 rechts neben den Symbolen, auch auf dem Handy. Alle acht Ansichten bleiben sichtbar;
 bei wenig Platz oder größerer Schrift verteilen sie sich auf flache Zeilen. Suche,

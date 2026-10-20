@@ -33,6 +33,9 @@ public class ProFilesPlugin extends Plugin {
     @PluginMethod public void listOriginals(PluginCall call) { original(call, () -> new org.json.JSONObject().put("items", originals.list())); }
     @PluginMethod public void originalInfo(PluginCall call) { original(call, () -> {
         org.json.JSONObject info = originals.info(call.getString("hash"));
+        // New device: an original missing here is brought back from the chosen folder, verified by fingerprint.
+        if (info == null) try { if (Vault.get(getContext()).restoreOriginal(call.getString("hash"), originals)) info = originals.info(call.getString("hash")); }
+            catch (Exception ignored) { /* Not in the folder or folder locked: the page offers reselecting the file. */ }
         return info == null ? new org.json.JSONObject().put("missing", true) : info;
     }); }
     @PluginMethod public void beginImport(PluginCall call) { original(call, () -> originals.begin(call.getString("hash"), call.getData().optLong("size", -1), call.getString("name"), call.getString("type", ""))); }
@@ -42,7 +45,17 @@ public class ProFilesPlugin extends Plugin {
         originals.append(call.getString("ticket"), call.getData().optLong("offset", -1), Base64.decode(data, Base64.NO_WRAP));
         return new org.json.JSONObject().put("ok", true);
     }); }
-    @PluginMethod public void finishImport(PluginCall call) { original(call, () -> { originals.finish(call.getString("ticket")); return new org.json.JSONObject().put("ok", true); }); }
+    @PluginMethod public void finishImport(PluginCall call) { original(call, () -> {
+        String hash = originals.finish(call.getString("ticket"));
+        Vault vault = Vault.get(getContext());
+        boolean copied = false;
+        // Folder mode: every new original also goes encrypted into the chosen folder.
+        if (vault.configured() && vault.unlocked()) {
+            try { vault.copyOriginal(hash, originals.file(hash), originals.info(hash)); copied = true; }
+            catch (Exception error) { return new org.json.JSONObject().put("ok", true).put("vault", false); }
+        }
+        return new org.json.JSONObject().put("ok", true).put("vault", copied);
+    }); }
     @PluginMethod public void abortImport(PluginCall call) { original(call, () -> { originals.abort(call.getString("ticket")); return new org.json.JSONObject().put("ok", true); }); }
     @PluginMethod public void readOriginal(PluginCall call) { original(call, () -> new org.json.JSONObject().put("data", Base64.encodeToString(originals.read(call.getString("hash"), call.getData().optLong("offset", -1)), Base64.NO_WRAP))); }
 
