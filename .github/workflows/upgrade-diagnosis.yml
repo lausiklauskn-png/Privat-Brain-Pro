@@ -1,0 +1,49 @@
+name: Diagnose vorhandener signierter Updateprobe
+on:
+  push:
+    branches: [codex/preview17-upgrade-diagnosis]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39484440521
+          name: signed-release
+          path: release-files
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39484440521
+          name: signed-upgrade-inputs
+          path: upgrade-inputs
+      - name: KVM aktivieren
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Unveränderte signierte APKs und Probe mit Fehlerdiagnostik ausführen
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tools/native/run-signed-upgrade.sh upgrade-inputs/previous.apk release-files/*.apk upgrade-inputs/probe.apk
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: upgrade-diagnosis
+          path: upgrade-results/
+          retention-days: 14
