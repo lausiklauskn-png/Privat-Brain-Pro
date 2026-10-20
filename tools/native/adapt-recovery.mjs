@@ -39,6 +39,8 @@ export function adaptRecovery(html) {
       finally{if(epoch===setupEpoch)recoveryBusy(false);}`);
   replace('el("tzFinish").disabled=!sv.checked;', 'el("tzFinish").disabled=sharesBusy || !sharesSaved || !sv.checked;');
   replace('if(!pendingShares || !el("tzSaved").checked)', 'if(sharesBusy || !sharesSaved || pendingPassword!==pw || !pendingShares || !el("tzSaved").checked)');
+  replace('var verify=await J().encryptTresor({ pb:"verify", v:1 }, pw);', 'var epoch=setupEpoch;recoveryBusy(true);\n        var verify=await J().encryptTresor({ pb:"verify", v:1 }, pw);\n        if(epoch!==setupEpoch)return;');
+  replace('}catch(e){ err.textContent=String(e&&e.message||e); }\n    });\n  }\n\n  function downloadShares', '}catch(e){if(epoch===setupEpoch)err.textContent=window.PBRecoveryExport.text("failed");}\n      finally{if(epoch===setupEpoch)recoveryBusy(false);}\n    });\n  }\n\n  function downloadShares');
   const start=html.indexOf('  function downloadShares(shares){');
   const end=html.indexOf('  function openUnlock(){', start);
   if(start<0 || end<0)throw new Error('Review native recovery export boundary');

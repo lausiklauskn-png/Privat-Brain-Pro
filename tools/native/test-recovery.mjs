@@ -45,6 +45,16 @@ try{
  await page.fill('#tzPw2',pw+'-changed');await page.click('#tzMk');await page.waitForFunction(()=>!document.querySelector('#tzSaved').disabled);
  ok('New keys match the new password, never the earlier backup',await page.evaluate(async pw=>await JasonLib.combineShares(exports.at(-1).shares.slice(1,4))===pw,pw+'-changed'));
  ok('Every three-key combination recovers; two keys are rejected',await page.evaluate(async pw=>{const s=exports.at(-1).shares;for(let a=0;a<3;a++)for(let b=a+1;b<4;b++)for(let c=b+1;c<5;c++)if(await JasonLib.combineShares([s[a],s[b],s[c]])!==pw)return false;try{await JasonLib.combineShares(s.slice(0,2));return false;}catch{return true;}},pw+'-changed'));
+ await page.evaluate(()=>{
+  window.originalEncrypt=JasonLib.encryptTresor;
+  JasonLib.encryptTresor=async(...args)=>{const result=await originalEncrypt(...args);return new Promise(resolve=>window.finishSetup=()=>resolve(result));};
+ });
+ await page.check('#tzSaved');await page.click('#tzFinish');await page.waitForFunction(()=>typeof window.finishSetup==='function');
+ ok('Pending setup prevents password edits and duplicate completion',await page.locator('#tzPw').isDisabled()&&await page.locator('#tzFinish').isDisabled());
+ await page.click('#tresorModalBg button[data-tclose]');await page.click('#tresorSetup');
+ await page.evaluate(async()=>{JasonLib.encryptTresor=originalEncrypt;finishSetup();await new Promise(r=>setTimeout(r,0));});
+ ok('Closing pending setup cannot create a vault after cancellation',await page.evaluate(()=>!PBTresor.isSetUp()&&!PBTresor.isUnlocked()&&document.querySelector('#tzFinish').disabled));
+ await page.fill('#tzPw',pw+'-changed');await page.fill('#tzPw2',pw+'-changed');await page.click('#tzMk');await page.waitForFunction(()=>!document.querySelector('#tzSaved').disabled);
  await page.check('#tzSaved');await page.click('#tzFinish');await page.waitForFunction(()=>PBTresor.isUnlocked());
  ok('No password or recovery share is persisted in localStorage',await page.evaluate(pw=>{const s=JSON.stringify(localStorage);return !s.includes(pw)&&!s.includes('JT3v5-');},pw));
  await page.click('#tresorLock');await page.click('#tresorRecover');
