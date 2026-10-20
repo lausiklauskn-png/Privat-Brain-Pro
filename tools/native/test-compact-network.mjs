@@ -40,17 +40,18 @@ try{
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
       const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=44&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=100;
+      return row.height<=(innerWidth<=650?88:44)&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=650?144:100);
     }));
     if(process.env.PB_CAPTURE_DESIGN==='1'){
       await mkdir('docs/design/compact15',{recursive:true});await page.screenshot({path:`docs/design/compact15/mail-${width}.png`});
     }
   }
   await page.setViewportSize({width:320,height:640});
-  await page.locator('.native-more>summary').click();ok('Phone menu exposes named secondary views; keyboard Escape returns focus',await page.locator('[data-tab=settings]').isVisible());await page.keyboard.press('Escape');ok('Phone view menu closes with focus on its opener',await page.locator('.native-more>summary').evaluate(e=>document.activeElement===e)&&await page.locator('[data-tab=settings]').isHidden());
-  for(const [lang,word]of [['en','More views'],['ru','Другие разделы'],['pl','Więcej widoków'],['de','Weitere Ansichten']]){
+  ok('Phone keeps Overview, Catalog, Duplicates and Settings directly visible',await page.locator('.workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>=36&&r.right<=innerWidth&&r.left>=0;})));
+  await page.locator('.native-options>summary').click();await page.keyboard.press('Escape');ok('App menu closes with keyboard Escape and restores focus',await page.locator('.native-options>summary').evaluate(e=>document.activeElement===e)&&!await page.locator('.native-options').evaluate(e=>e.open));
+  for(const [lang,word]of [['en','App menu'],['ru','Меню приложения'],['pl','Menu aplikacji'],['de','App-Menü']]){
     await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-    ok(`${lang}: icon tooltip follows the selected language and has the same accessible name`,await page.locator('.native-more>summary').getAttribute('title')===word&&await page.locator('.native-more>summary').getAttribute('aria-label')===word);
+    ok(`${lang}: app menu tooltip and accessible name follow the selected language`,await page.locator('.native-options>summary').getAttribute('title')===word&&await page.locator('.native-options>summary').getAttribute('aria-label')===word);
   }
   await page.setViewportSize({width:1280,height:900});
   const view=page.locator('[data-native-tool=view]'),images=page.locator('[data-native-tool=images]');

@@ -10,7 +10,7 @@
   const offText=i=>(offlineWords[document.documentElement.lang]||offlineWords.de)[i];
   document.querySelector('header .badge-off')?.remove();
   const text=i=>(strings[document.documentElement.lang]||strings.de)[i];
-  const captions={de:['Suchen','Dateien','Explorer','Mail','Dashboard','Katalog','Doppelte','Einstellungen'],en:['Search','Files','Explorer','Mail','Dashboard','Catalog','Duplicates','Settings'],ru:['Поиск','Файлы','Проводник','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Pliki','Eksplorator','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
+  const captions={de:['Suchen','Dateien','Explorer','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Search','Files','Explorer','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Файлы','Проводник','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Pliki','Eksplorator','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
   const pages=['search','intake','explorer','mail','dash','order','dupes','settings'];
   const paths={
     search:'M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
@@ -93,16 +93,15 @@
     finally{offlineButton.disabled=false;networkLabel();}
   };networkLabel();
   const phone=matchMedia('(max-width:650px)');
-  function resize(){more.open=!phone.matches;options.open=false;}
+  function resize(){more.open=true;options.open=false;}
   phone.addEventListener('change',resize);resize();
   optionsPanel.addEventListener('click',event=>{if(event.target.closest('button'))options.open=false;});
-  secondary.addEventListener('click',event=>{if(phone.matches&&event.target.closest('button')){more.open=false;moreTitle.focus();}});
   document.addEventListener('click',event=>{
-    for(const menu of [options,...(phone.matches?[more]:[])])if(menu.open&&!menu.contains(event.target))menu.open=false;
+    if(options.open&&!options.contains(event.target))options.open=false;
   });
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape')return;
-    const opened=[options,...(phone.matches?[more]:[])].find(menu=>menu.open);
+    const opened=options.open?options:null;
     if(opened){event.preventDefault();opened.open=false;opened.querySelector('summary').focus();}
   });
   const keys={refresh:'refresh',compose:'compose',import:'intake',reply:'reply',forward:'forward',back:'back',tools:'more',messageTools:'more',

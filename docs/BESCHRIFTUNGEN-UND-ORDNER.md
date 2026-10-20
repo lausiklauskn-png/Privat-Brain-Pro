@@ -3,8 +3,9 @@
 Stand 2026-10-20, technische Version 0.1.0-preview.15.
 
 Die obere Navigation zeigt kurze Namen neben den Symbolen, auf dem Handy darunter.
-Sie bleibt eine flache Zeile. Weitere Ansichten stehen auf dem Handy im Menü „…“;
-im aufgeklappten Menü und auf dem Desktop sind ihre Namen sichtbar. Einstellungen
+Alle acht Ansichten bleiben direkt sichtbar. Auf dem Handy gibt es dafür zwei
+flache Zeilen, jeweils mit Symbol und kurzem Namen. Auf dem Desktop stehen die
+Ansichten gemeinsam in einer Zeile. Einstellungen
 und App-Menü haben ein Zahnrad; der Themewechsel behält das Mondsymbol.
 
 Alle kompakten Symbolknöpfe zeigen einen eigenen sichtbaren Tooltip bei Mauszeiger

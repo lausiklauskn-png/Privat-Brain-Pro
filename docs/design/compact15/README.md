@@ -4,8 +4,8 @@ Synthetische Dateien, Konten und Nachrichten; keine Nutzerdaten. Stand 2026-10-2
 
 `import-*`, `dashboard-*` und `mail-*` zeigen die Ansichten bei 320, 390, 768 und
 1280 CSS-Pixeln. Hauptansichten bleiben benannt, auf dem Handy unter dem Symbol.
-Weitere Ansichten öffnen sich auf kleinen Fenstern im Menü „…“. Desktopansichten
-zeigen auch deren Namen. Mailwerkzeuge bleiben kompakte Symbole mit sichtbaren
+Übersicht, Katalog, Doppelte und Einstellungen stehen auch auf dem Handy direkt
+in einer zweiten flachen Zeile. Desktopansichten zeigen alle acht benannten Ansichten. Mailwerkzeuge bleiben kompakte Symbole mit sichtbaren
 Tooltips. Die Kacheln des Dashboards sind kleiner und öffnen Dateien, Kategorien
 und Duplikate. Die drei großen Hinweisboxen sind zu einem kleinen Hinweis unter
 dem Einwurf zusammengefasst.

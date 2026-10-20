@@ -70,9 +70,9 @@ try{
  for(const width of [320,390,768,1280]){
   await page.setViewportSize({width,height:width<650?640:900});
   await page.evaluate(()=>document.fonts.ready);
-  ok(`${width}px: named navigation is one flat row and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>e.getBoundingClientRect().height<=44&&document.documentElement.scrollWidth<=innerWidth));
+  ok(`${width}px: named navigation is one flat row and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>e.getBoundingClientRect().height<=(innerWidth<=650?88:44)&&document.documentElement.scrollWidth<=innerWidth));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/compact15',{recursive:true});await page.screenshot({path:`docs/design/compact15/import-${width}.png`});}
-  if(width<650)await page.locator('.native-more>summary').click();await page.click('[data-tab=dash]');
+  await page.click('[data-tab=dash]');
   ok(`${width}px: dashboard tiles stay compact and contain real keyboard buttons`,await page.locator('#panel-dash .tile').evaluateAll(nodes=>nodes.every(e=>e.getBoundingClientRect().height<=140))&&await page.locator('#kpiCats').evaluate(e=>e.closest('button').type==='button'));
   if(process.env.PB_CAPTURE_DESIGN==='1')await page.screenshot({path:`docs/design/compact15/dashboard-${width}.png`});
   await page.click('[data-tab=intake]');

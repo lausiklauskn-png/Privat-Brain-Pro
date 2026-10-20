@@ -279,3 +279,17 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 #panel-dash .tile { display:block!important; }
 #panel-dash .tile .k { letter-spacing:normal;text-transform:none; }
 #panel-dash .tile .k,#panel-dash .tile .v,#panel-dash .tile .u { display:block;overflow-wrap:anywhere; }
+
+/* All eight app views stay directly available; small windows use two flat rows. */
+.native-more>summary { display:none!important; }
+@media(max-width:650px) {
+  .native-toolbar-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 2px; }
+  .native-toolbar-row .main-pages { grid-column:1;grid-row:1; }
+  .native-toolbar-row>#sbkim-widget { grid-column:2;grid-row:1; }
+  .native-toolbar-row .native-more { grid-column:1/-1;grid-row:2;min-width:0; }
+  .native-more>.workspace-tools { position:static;display:flex;flex-direction:row;gap:2px;width:100%;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent; }
+  .native-more .workspace-tools .tab { flex:1 1 0;width:auto;min-width:0;padding:3px 1px!important;flex-direction:column;justify-content:center;gap:3px; }
+  .native-more .workspace-tools .compact-icon { width:16px;height:16px; }
+  .native-more .workspace-tools .compact-caption { font-size:.66rem;max-width:100%;overflow:hidden;text-overflow:ellipsis; }
+  .native-toolbar-row .main-pages .compact-caption { font-size:.72rem; }
+}
