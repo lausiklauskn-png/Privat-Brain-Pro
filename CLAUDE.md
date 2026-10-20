@@ -394,3 +394,10 @@ CI 39342179484, signierte Updateprobe .6 → .7 mit sichtbarem und Android-Zurü
 [APK .7](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.7/Private-Brain-Pro-0.1.0-preview.7.apk).
 Bestehende App aktualisieren, nicht deinstallieren. Grenzen/Nachweise in
 `docs/RUECKNAVIGATION.md` und `docs/PRUEFSTAND-ANDROID.md`.
+
+## Nächste Sitzung: Google/Gmail (2026-10-20)
+
+Arbeitsauftrag und tatsächlicher Stand stehen in
+[BRIEF_NACHFOLGE_2026-10-20_gmail.md](BRIEF_NACHFOLGE_2026-10-20_gmail.md).
+Gmail/OAuth ist noch nicht implementiert. Neben Telekom/Hetzner ergänzen;
+Postfachgestaltung, Original-Mails, Rücknavigation und bestehende Konten erhalten.
