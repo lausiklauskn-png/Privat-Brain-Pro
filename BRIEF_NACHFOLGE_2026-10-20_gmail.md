@@ -1,4 +1,32 @@
-> **Neuester Stand .14 veröffentlicht: Kompakte Bedienung und App-Internetschalter.**
+> **Aktueller Stand: Private Brain Pro .15 veröffentlicht.**
+
+**Private Brain Pro .15 veröffentlicht:** kurze Namen in der Navigation, sichtbare
+Tooltips, kleinere anklickbare Dashboard-Kacheln und ein echtes Zahnrad.
+Alle acht Ansichten bleiben direkt sichtbar, auf dem Handy in zwei flachen Zeilen.
+Android-Ordnerauswahl bleibt nach „Nicht mehr zeigen“, Abbrechen und Neustart
+bedienbar. Neue zusätzliche Ablagekopien werden geprüft und überschreiben keine
+vorhandenen Dateien; alte Originalkopien/Katalogeinträge bleiben beim Wechsel.
+Die großen Hinweisboxen stehen klein unter dem Einwurf. Der Mail-Ladehinweis
+unterscheidet Abruf, Ansicht und tatsächliche Regelprüfung; kein vollständiger
+Virenscanner. [APK .15](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.15/Private-Brain-Pro-0.1.0-preview.15.apk) über die bestehende App installieren, nicht deinstallieren.
+Anwendungscommit `161e9156d46b9b36007cedc322881d124f802ed2` (PR29), vollständige CI 39436653702
+mit 275 Browser- und 37 Android-Fällen bestanden. Signiertes Update .14 → .15
+39437954389 einschließlich echter Android-Ordnerauswahl nach ausgeblendetem
+Hinweis, Offline-Kaltstart und erneutem Einschalten bestanden. Veröffentlichung
+39438829136, öffentlicher Download bytegleich geprüft.
+[Bedienung/Grenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
+[Bilder](docs/design/compact15/README.md),
+[Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-15--2026-10-20).
+Die Zusatzablage ist noch keine passwortverschlüsselte externe Ablage. Keine
+automatische Ordnersynchronisierung; Wechsel gilt für zukünftige Kopien.
+Der getrennte Speicher-/Quarantäne-/Modell-Auftrag bleibt offen. Mailfunktion am
+Gerät wurde vom Nutzer bereits bestätigt; keine neue Google-Registrierung nötig.
+
+---
+
+## Frühere Stände
+
+> **Vorheriger Stand .14 veröffentlicht: Kompakte Bedienung und App-Internetschalter.**
 
 Nach Outlook-Vorbild: Symbole mit Tooltips, flache Kopf- und Mailleisten, seltenere
 Ansichten auf dem Handy hinter „…“. Grüner Offline-Informationshinweis entfällt.
@@ -19,7 +47,7 @@ Veröffentlichung 39427132118, öffentlicher Download bytegleich geprüft.
 
 ---
 
-> **Neuester Stand: Private Brain Pro .13 veröffentlicht**, 2026-10-20.
+> **Vorheriger Stand: Private Brain Pro .13 veröffentlicht**, 2026-10-20.
 
 Die neue Version .13 übernimmt den Namen in Android, App-Kopf und Hinweisen in
 allen vier Sprachen. Technische Update-Linie und Signatur bleiben erhalten;

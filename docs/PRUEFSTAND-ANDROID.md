@@ -698,3 +698,74 @@ mindestens 300 px Lesebereich im kleinen Fenster und einzeilige Kopfaktionen.
 Kein echter Providerlogin/-versand, kein realer Samsung-/DeX-Lauf, keine vollständige
 Nutzerdatenmigration mit Nutzerbestand nachgewiesen. Browser-Netzwerkantworten und
 Konten synthetisch; native Socket-Abbruch-/Neustartprüfungen tatsächlich ausgeführt.
+
+
+## Veröffentlichte Version .15 — 2026-10-20
+
+Die Hauptnavigation ist wieder kurz beschriftet, neben den Symbolen bzw. auf dem
+Handy darunter. Alle acht Ansichten bleiben direkt sichtbar, auf kleinen Fenstern
+in zwei flachen Zeilen. Dashboard-Kacheln sind kleiner und öffnen Explorer, Kategorien und
+Duplikate. Eigene sichtbare Tooltips reagieren auf Maus und Tastatur, einschließlich
+zustandsabhängiger Mailansicht-/Bilderknöpfe. Einstellungen erhalten ein Zahnrad.
+Die bestehenden Mailaktionen bleiben kompakt. Drei große Hinweisboxen stehen als
+kurzer Hinweis unter dem Einwurf.
+
+Androids Storage Access Framework ersetzt den dort nicht verfügbaren
+Browser-Ordnerweg. „Nicht mehr zeigen“ beeinflusst nur die Erklärung. Quellordner
+lassen sich erneut wählen und abbrechen; eine zusätzliche Kopienablage kann
+gewechselt und nach Neustart weiterverwendet werden. Alte Dateien und Katalogeinträge
+bleiben erhalten. Neue Kopien überschreiben keine vorhandenen Dateien und werden
+nach dem Schreiben geprüft. Ordnertransfer verarbeitet eine Datei nach der anderen;
+bei verweigerter Ablagefreigabe wird kein erfolgreicher Katalogimport vorgetäuscht.
+Der Debug-Dokumentanbieter für die Proben ist durch MANAGE_DOCUMENTS geschützt
+und in der signierten Vorschau-APK vollständig ausgeschlossen.
+
+Der neue Mail-Ladehinweis zeigt tatsächlichen Abruf, Vorbereitung und die bestehende
+Regelprüfung. „Warum dauert das?“ erklärt Übertragung, Anhänge und Prüfgrenzen.
+Kein vollständiger Virenscan wird behauptet. Original-MIME und Anhänge bleiben
+unverändert. Gepinnte 21 Module, unabhängige PWA, Mycel, App-Internetschalter und
+Google-Client bleiben erhalten. Die PWA nutzt weiterhin ihren bestehenden Ablauf;
+die Ladephasen werden nur bei vorhandenem nativen Adapter angezeigt.
+
+- Geprüfter Quellstand `d8de7b1964671f37db55aa7fd0ba487aa8414dd6`, Anwendungscommit
+  `161e9156d46b9b36007cedc322881d124f802ed2` (PR29), Quellbäume identisch.
+- Vollständige [CI 39436653702](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39436653702)
+  und [parallele PR-CI 39436662132](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39436662132)
+  erfolgreich: 38 Web-Befehle, 275 native Browserfälle, 14 Maildienstfälle,
+  Android-Unitprüfungen, Build/Lint und 37 Android-Fälle ohne Fehler/Überspringen.
+  Neu: native Dokumentanbieter-Kopien und Wechsel, Fehler ohne Überschreiben,
+  echte Android-Pickeraufrufe trotz ausgeblendetem Hinweis nach wiederholtem
+  Abbrechen. Lokale Browser-/Unit-/Build-/Lintprüfungen ebenfalls bestanden.
+- [Signiertes Update .14 → .15 39437954389](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39437954389)
+  erfolgreich, Probecommit `d21a43d57cf940fae7278ed45dc8fab5b9283180`. Sprache bleibt erhalten,
+  Offline-Kaltstart und erneutes Einschalten, tatsächliche Android-Ordnerauswahl
+  für Quelle und Ablage nach „Nicht mehr zeigen“, Abbrechen und Wiederholen,
+  native Anbieterauswahl und Zurück-Wege bestanden. Der erste Probeaufbau
+  39434750350 suchte vor der Sprachwahl fälschlich den englischen
+  Namen im vorhandenen deutschen App-Menü. Das korrigierte Probeskript fand
+  anschließend die alte Browser-Ausblendung des Android-Ordnerknopfs
+  (39435263479). Diese Anwendungsstelle wurde korrigiert,
+  um eine echte Gegenprobe ohne Browser-Ordner-API ergänzt und mit dem finalen
+  Quellstand, erneuter vollständiger CI und signierter APK nochmals geprüft.
+  Die nächste Probe (39436908728) bestand diese Schritte,
+  erwartete aber im erweiterten Verlauf einen Zurück-Schritt zu wenig. Nur
+  das Probeskript um den korrekt besuchten Einwurf-Schritt ergänzt; finale
+  Anwendungsquelle und APK dabei unverändert.
+- [Veröffentlichung 39438829136](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39438829136)
+  erfolgreich, Veröffentlichungscommit `dd93a8fd9ead0acc506b724c2b35617d46fe5e0d`.
+  [Öffentlicher APK-Download](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.15/Private-Brain-Pro-0.1.0-preview.15.apk): HTTP 200, 5.589.534 Bytes,
+  SHA256 `fa5dc58be2856f75eba0048e297cf9053c0362700e9df0dcc3b4ba61464411b4`. Bytegleich mit der signierten geprüften APK.
+
+Version `0.1.0-preview.15`, Code 15, Appname **Private Brain Pro**.
+Paket `de.familyprojekt.privatebrain.pro.preview`, unverändertes Zertifikat SHA256
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`,
+SHA1 `14:A1:59:A6:26:CA:0F:D8:7A:B0:A0:BF:9D:55:C3:9B:D4:A6:31:A4`,
+kein Debug-Flag. Google-Test-/Produktionsstatus nicht geändert.
+
+320×640, 390×640, 768×900 und 1280×900 mit synthetischen Daten im Browser geprüft;
+[Bilder](design/compact15/README.md), [Bedienung/Grenzen](BESCHRIFTUNGEN-UND-ORDNER.md).
+Keine vollständige Nutzerdatenmigration, kein realer Samsung-/DeX-Lauf dieser
+Version und kein echter Providerlogin/-versand in den automatischen Proben.
+Die zusätzliche externe Kopienablage ist noch nicht passwortverschlüsselt und
+verschiebt frühere Dateien nicht. Quelle wird einmal importiert, nicht fortlaufend
+synchronisiert. Der eigenständige Speicher-/Quarantäneauftrag bleibt offen.

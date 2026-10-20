@@ -1,3 +1,7 @@
+> Ab Version .15 zeigt die Navigation zusätzlich kurze Namen und eigene sichtbare
+> Tooltips. [Beschriftungen und Ordnerauswahl](BESCHRIFTUNGEN-UND-ORDNER.md).
+> Das hier beschriebene App-Offlineverhalten bleibt gültig.
+
 # Kompakte Ansicht und App-Internetschalter — Version .14
 
 Auf Nutzerwunsch orientiert sich die Bedienung am Aufbau von Outlook: flache
