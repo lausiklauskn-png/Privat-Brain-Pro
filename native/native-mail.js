@@ -5,6 +5,7 @@
   if (!plugin) return;
   const languages = ['de', 'en', 'ru', 'pl'];
   const labels = {
+    foldersUnavailable: ['Die Serverordner sind noch nicht geladen. Bitte aktualisieren; gespeicherte Entwürfe und Versandversuche bleiben verfügbar.', 'Server folders are not loaded yet. Refresh; saved drafts and send attempts remain available.', 'Папки сервера ещё не загружены. Обновите список; сохранённые черновики и отправки доступны.', 'Foldery serwera nie zostały wczytane. Odśwież; zapisane szkice i próby wysłania pozostają dostępne.'],
     folderUnavailable: ["Dieser Ordner ist beim Anbieter noch nicht vorhanden.", "This folder does not exist with the provider yet.", "Этой папки ещё нет у провайдера.", "Ten folder nie istnieje jeszcze u dostawcy."],
     messageTools: ["Nachrichtenaktionen", "Message actions", "Действия с письмом", "Działania wiadomości"],
     tools: ["Weitere Aktionen", "More actions", "Другие действия", "Więcej działań"],
@@ -25,6 +26,17 @@
     download: ['Original teilen / sichern', 'Share / save original', 'Поделиться / сохранить оригинал', 'Udostępnij / zapisz oryginał']
   };
   const messages = {
+    BRIDGE_RESPONSE_INVALID: ['Die App hat keine gültige Postfachantwort erhalten. Bitte aktualisieren.', 'The app received no valid mailbox response. Please refresh.', 'Приложение не получило корректный ответ почты. Обновите список.', 'Aplikacja nie otrzymała poprawnej odpowiedzi poczty. Odśwież.'],
+    CANCELLED: ['Der Postfachaufruf wurde abgebrochen. Bitte erneut versuchen.', 'The mailbox operation was cancelled. Please try again.', 'Почтовая операция прервана. Повторите попытку.', 'Operacja pocztowa anulowana. Spróbuj ponownie.'],
+    GMAIL_SCOPE_MISSING: ["Google hat den erforderlichen Mail-Zugriff nicht freigegeben. Mail-Berechtigung und Testnutzer prüfen.", "Google has not granted mail access. Check mail permission and test users.", "Google не разрешил доступ к почте. Проверьте разрешение и тестовых пользователей.", "Google nie przyznał dostępu do poczty. Sprawdź uprawnienia i użytkowników testowych."],
+    GMAIL_ACCOUNT_UNAVAILABLE: ["Google-Freigabe erhalten, aber die zugehörige E-Mail-Adresse konnte nicht sicher ermittelt werden. Internetverbindung prüfen.", "Google authorization received, but the account email could not be verified. Check your connection.", "Разрешение Google получено, но адрес аккаунта не удалось подтвердить. Проверьте подключение.", "Otrzymano zgodę Google, ale nie potwierdzono adresu konta. Sprawdź połączenie."],
+    GMAIL_ACCOUNT_MISMATCH: ["Google hat ein anderes Konto zurückgegeben. Bitte das bereits verbundene Google-Konto auswählen.", "Google returned a different account. Select the Google account already connected.", "Google вернул другой аккаунт. Выберите ранее подключённый аккаунт.", "Google zwrócił inne konto. Wybierz wcześniej połączone konto Google."],
+    GMAIL_TOKEN_MISSING: ["Google hat keine nutzbare Zugriffsfreigabe zurückgegeben.", "Google did not return a usable access grant.", "Google не вернул действительное разрешение доступа.", "Google nie zwrócił działającego uprawnienia dostępu."],
+    GMAIL_TOKEN_REJECTED: ["Google hat die erhaltene Zugriffsfreigabe abgelehnt. Erneute Zustimmung erforderlich.", "Google rejected the access grant. Authorize again.", "Google отклонил разрешение доступа. Требуется новое согласие.", "Google odrzucił uprawnienie dostępu. Wymagana ponowna zgoda."],
+    GMAIL_CONSENT_REQUIRED: ["Google benötigt noch deine ausdrückliche Zustimmung zum Mail-Zugriff.", "Google still needs your explicit consent to mail access.", "Google ещё требуется ваше согласие на доступ к почте.", "Google nadal wymaga wyraźnej zgody na dostęp do poczty."],
+    GMAIL_IMAP_AUTH_FAILED: ["Google-Zustimmung erhalten; Gmail hat die Anmeldung am Posteingangsserver abgelehnt.", "Google consent received; Gmail rejected the IMAP login.", "Согласие Google получено, но Gmail отклонил вход IMAP.", "Otrzymano zgodę Google, ale Gmail odrzucił logowanie IMAP."],
+    GMAIL_SMTP_AUTH_FAILED: ["Google-Zustimmung erhalten; Gmail hat die Anmeldung am Versandserver abgelehnt. Es wurde keine Nachricht gesendet.", "Google consent received; Gmail rejected the SMTP login. No message was sent.", "Согласие Google получено, но Gmail отклонил вход SMTP. Письмо не отправлено.", "Otrzymano zgodę Google, ale Gmail odrzucił logowanie SMTP. Nie wysłano wiadomości."],
+    NETWORK_FAILED: ["Die Google-Verbindung ist fehlgeschlagen. Internetverbindung prüfen.", "Google connection failed. Check your internet connection.", "Не удалось подключиться к Google. Проверьте интернет.", "Nie udało się połączyć z Google. Sprawdź internet."],
     GMAIL_AUTH_REQUIRED: ['Google-Anmeldung erneut erforderlich. Über „Konto hinzufügen“ Google wählen; das bestehende Konto bleibt erhalten.', 'Google authorization required again. Choose Google in Add account; the existing account is preserved.', 'Нужна повторная авторизация Google. Выберите Google через добавление аккаунта; существующий аккаунт сохранится.', 'Wymagana ponowna autoryzacja Google. Wybierz Google przy dodawaniu konta; istniejące konto zostaje zachowane.'],
     GMAIL_CONFIGURATION_REQUIRED: ['Google-Anmeldung ist für diese Test-App noch nicht freigeschaltet.', 'Google authorization is not enabled for this test app yet.', 'Вход Google ещё не настроен для этой тестовой версии.', 'Logowanie Google nie jest skonfigurowane dla tej wersji testowej.'],
     AUTH_FAILED: ['Anmeldung fehlgeschlagen. Telekom benötigt das separate Passwort für E-Mail-Programme.', 'Login failed. Telekom requires the separate password for email apps.', 'Ошибка входа. Telekom требует отдельный пароль для почтовых программ.', 'Logowanie nieudane. Telekom wymaga osobnego hasła pocztowego.'],
@@ -51,19 +63,28 @@
     return values?.[Math.max(0, languages.indexOf(document.documentElement.lang))] || null;
   }
   async function invoke(method, args = {}) {
-    try { return await plugin[method](args); }
-    catch (error) {
-      if (error?.code === 'CANCELLED') return null;
-      throw new Error(text(error?.code) || text('CONNECTION_FAILED'));
+    try {
+      const result=await plugin[method](args);
+      if(!result||typeof result!=='object'||Array.isArray(result))throw {code:'BRIDGE_RESPONSE_INVALID'};
+      return result;
     }
+    catch (error) {
+      if (error?.code === 'CANCELLED' && method === 'addAccount') return null;
+      const known=Object.hasOwn(messages,error?.code);
+      throw new Error((known?text(error.code):text('CONNECTION_FAILED'))+(known?' ('+error.code+')':''));
+    }
+  }
+  function withItems(result) {
+    if(!Array.isArray(result.items)||result.items.some(item=>!item||typeof item!=='object'||Array.isArray(item)))throw new Error(text('BRIDGE_RESPONSE_INVALID'));
+    return result;
   }
   window.PBMailDevice = {
     base: 'android:private-brain-pro',
     attachmentLimit: 5 * 1024 * 1024,
     text,
-    accounts: async () => (await invoke('accounts')).items,
+    accounts: async () => withItems(await invoke('accounts')).items,
     addAccount: () => invoke('addAccount', {language:document.documentElement.lang, dark:document.documentElement.dataset.theme === 'dunkel'}),
-    saved: async account => (await invoke('saved', {account})).items,
+    saved: async account => withItems(await invoke('saved', {account})).items,
     savedDraft: (account,id) => invoke('savedDraft',{account,id}),
     openAttachment: args => invoke('openAttachment', args),
     openOriginal: args => invoke('openOriginal', args),
@@ -77,7 +98,7 @@
       const account = parts[0], kind = parts[1];
       if (parts.length === 2 && kind === 'folders' && ['GET','POST'].includes(verb)) {
         const result = await invoke(verb === 'POST' ? 'createFolder' : 'folders', {account,...(body || {})});
-        return verb === 'GET' ? result.items : result;
+        return verb === 'GET' ? withItems(result).items : result;
       }
       if (parts.length === 2 && ['draft','send'].includes(kind) && verb === 'POST') {
         const result = await invoke(kind === 'draft' ? 'saveDraft' : 'send',{account,draft:body});
@@ -86,7 +107,7 @@
       }
       const params = {account, folder:url.searchParams.get('folder') || body?.folder || 'INBOX', validity:url.searchParams.get('validity') || body?.validity};
       if (kind === 'messages' && parts.length === 2 && verb === 'GET') {
-        const result = await invoke('messages',{...params,before:Number(url.searchParams.get('before')) || 0});
+        const result = withItems(await invoke('messages',{...params,before:Number(url.searchParams.get('before')) || 0}));
         for (const item of result.items) if (!item.subject && item.detailsPending) item.subject = text('detailsPending');
         return result;
       }

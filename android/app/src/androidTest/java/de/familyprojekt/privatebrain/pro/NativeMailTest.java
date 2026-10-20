@@ -189,7 +189,13 @@ public class NativeMailTest {
         MailEngine reopened = new MailEngine(new EncryptedMailStore(context, directory, alias));
         assertEquals(first.id, reopened.saveAccount(new MailAccount(google)).getString("id"));
         JSONObject aliasAccount=new JSONObject(google.toString()).put("email","fixture@googlemail.com");
-        assertEquals(first.id,reopened.saveAccount(new MailAccount(aliasAccount)).getString("id"));
+        JSONObject repaired=reopened.saveAccount(new MailAccount(aliasAccount));
+        assertEquals(first.id,repaired.getString("id"));assertEquals("fixture@googlemail.com",repaired.getString("email"));
+        MailEngine afterRepair=new MailEngine(new EncryptedMailStore(context,directory,alias));
+        assertEquals("fixture@googlemail.com",afterRepair.account(first.id).email);
+        assertEquals("fixture@googlemail.com",afterRepair.account(first.id).user);
+        MimeMessage outgoing=MailMime.compose(afterRepair.account(first.id),local,Session.getInstance(MailAccount.properties()));
+        assertEquals("fixture@googlemail.com",((javax.mail.internet.InternetAddress)outgoing.getFrom()[0]).getAddress());
         assertEquals(2, reopened.accounts().length());assertEquals(old.password, reopened.account(old.id).password);
         assertEquals(local.toString(), reopened.savedDraft(first.id, "draft-" + local.getString("submission")).toString());
         assertFalse(storage.read("accounts").toString().contains("accessToken"));

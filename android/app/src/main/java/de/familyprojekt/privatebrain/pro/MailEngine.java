@@ -68,7 +68,13 @@ final class MailEngine {
         JSONArray values = root == null ? new JSONArray() : root.getJSONArray("items");
         if (account.provider.equals("gmail")) for (int n = 0; n < values.length(); n++) {
             MailAccount existing = new MailAccount(values.getJSONObject(n));
-            if (existing.provider.equals("gmail") && GmailIdentity.same(existing.email,account.email)) return existing.publicJson();
+            if (existing.provider.equals("gmail") && GmailIdentity.same(existing.email,account.email)) {
+                // Called only after explicit authorization and both server logins have succeeded.
+                // Repair the alias from older previews without changing account/draft IDs.
+                MailAccount updated = new MailAccount(account.privateJson().put("id",existing.id));
+                values.put(n,updated.privateJson());store.write("accounts",new JSONObject().put("items",values));
+                return updated.publicJson();
+            }
         }
         if (values.length() >= 20) throw new MailFailure("ACCOUNT_LIMIT");
         values.put(account.privateJson());

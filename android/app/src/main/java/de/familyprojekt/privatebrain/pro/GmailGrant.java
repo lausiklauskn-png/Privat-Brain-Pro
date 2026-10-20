@@ -15,6 +15,8 @@ final class GmailGrant {
         if(email==null||email.isEmpty())email=identity.email(token);
         email=GmailIdentity.checked(email);
         if(expected!=null&&!GmailIdentity.same(expected,email))throw new MailFailure("GMAIL_ACCOUNT_MISMATCH");
-        return new GmailGrant(email,token);
+        // The Android account name is also needed for later silent authorization.
+        // Preserve its verified alias instead of replacing a Googlemail address in the UI/From.
+        return new GmailGrant(expected==null?email:GmailIdentity.checked(expected),token);
     }
 }

@@ -63,3 +63,44 @@ des neuen stabilen Fehlercodes, niemals Tokens, Passwörter oder Gerätecodes.
 Ein echter Google-Login sowie echter Gmail-Empfang und Versand bleiben bis zur
 entsprechenden Geräteprüfung offen. Keine öffentliche Google-Prüfung oder
 Store-Veröffentlichung aus der privaten Testkonfiguration ableiten.
+
+## Fortsetzung: Googlemail und Kontowechsel (.11, noch in Prüfung)
+
+Die neuesten Gerätebilder zeigen erstmals das gespeicherte Google-Konto mit
+kanonischer Gmail-Adresse und eigenen Serverordnern. Das Speichern erfolgt erst
+nach erfolgreicher IMAP- und SMTP-Authentifizierung; Empfang einzelner Nachrichten
+und Versand sind damit nicht bestätigt. Die lokale Testnachricht steht weiterhin
+auf „Noch nicht übermittelt“. Kein automatischer Neuversand.
+
+Die bisherige Domain-Normalisierung in `GmailIdentity.checked` änderte auch Anzeige,
+Absenderadresse und den Android-Kontonamen für spätere Freigaben. Nun bleibt die
+von Android gewählte und anschließend gegen Googles Grant verifizierte Adresse
+erhalten. Vor der Zustimmung wird die systemeigene Kontenauswahl ausschließlich
+für `com.google` geöffnet. Keine Kontoliste/Passwörter in JavaScript, keine neue
+GET_ACCOUNTS-Berechtigung. Gmail/Googlemail werden nur für Identitätsvergleich,
+RAM-Cache und den XOAUTH2-Serverbenutzernamen gleichgesetzt. Bei expliziter erneuter
+Freigabe wird die bestätigte Schreibweise unter der bisherigen Kontenkennung
+aktualisiert; Telekom/Hetzner und gespeicherte Entwürfe bleiben erhalten.
+
+Der JavaScript-Adapter schluckte bisher jedes native CANCELLED als null; folgende
+Zugriffe auf `.items` verursachten genau den fotografierten TypeError. Nun wird
+nur das ausdrückliche Abbrechen von „Konto hinzufügen“ als null behandelt. Alle
+Leseaufrufe verlangen ein Antwortobjekt und ein gültiges items-Array. Abgebrochene
+stille Google-Anmeldungen melden GMAIL_CONSENT_REQUIRED; die Mailansicht zeigt die
+gezielte Erklärung samt sicherem Fehlercode auch außerhalb der Einrichtungsmaske.
+Dass ein bestimmter SDK-Status am Nutzergerät diesen TypeError auslöste, lässt sich
+aus dem Foto allein nicht bestimmen.
+
+Beim Kontowechsel werden alte UID-/Reader-/Ordner-/Zählerzustände vor dem ersten
+asynchronen Aufruf entfernt. Bis Serverordner vorliegen, bleiben Standardnavigation
+und gespeicherte Geräteentwürfe/Versandversuche erreichbar; unbekannte Serverzahlen
+werden nicht als leer oder als Zahl des vorherigen Anbieters dargestellt.
+
+Zusätzliche Prüfungen: 22 Browser-Bedienproben für Fehlerantworten, verzögerten und
+fehlgeschlagenen Kontowechsel, lesbare Google-Fehler in vier Sprachen und erhaltenen
+unversandten Entwurf. Android-Prüfungen verlangen die alte Domain im From-Header,
+dieselbe Kontenkennung nach erneuter Freigabe und erhaltenen Entwurf nach Wiederöffnung.
+Die Systemkontenauswahl wird mit einem abgefangenen Android-Aktivitätsergebnis auf
+Abbrechen und erneutes Öffnen geprüft. Echter Google-Zugriff benötigt weiterhin den
+anschließenden Geräteversuch. Veröffentlichungsnachweis folgt erst nach bestandenen
+Prüfungen und signiertem Update.

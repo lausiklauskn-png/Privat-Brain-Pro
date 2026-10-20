@@ -14,7 +14,7 @@ final class GmailIdentity {
     static String checked(String email)throws MailFailure {
         try{
             MailAccount.header(email,254);InternetAddress address=new InternetAddress(email,true);address.validate();
-            if(!email.equals(address.getAddress())||!email.contains("@"))throw new IllegalArgumentException();return key(email);
+            if(!email.equals(address.getAddress())||!email.contains("@"))throw new IllegalArgumentException();return email;
         }catch(Exception error){throw new MailFailure("GMAIL_ACCOUNT_UNAVAILABLE");}
     }
 }

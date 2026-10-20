@@ -451,3 +451,13 @@ keine Geheimnisse im Chat anfordern. Der parallele Kontrolllauf 39351619966 zeig
 einmal ein fehlendes JavaScript-Abbruchsignal im Google-Dialog; Versuch 2 besteht
 alle 19 Fälle. Ursache nicht nachgewiesen, am Tablet zusätzlich prüfen. Siehe Prüfstand und Nachfolgebrief, keine vollständige
 Gmail-Funktionsgleichheit behaupten. PWA und geschützte Module unverändert.
+
+## Googlemail und Kontowechsel — Vorschau .11 in Prüfung
+
+Neuester Gerätebefund: Google-Konto gespeichert, danach null/items-Fehler;
+Testnachricht weiterhin unversandt. Googlemail-Schreibweise bei Systemkontenauswahl
+und bestätigter Wiederanmeldung erhalten, kanonische Domain nur für Vergleich/Cache/
+XOAUTH2-Benutzernamen. Nur ausdrückliches Abbrechen der Kontomaske darf im JS-Adapter
+null liefern. Keine alten Nachrichten/UIDs/Zähler unter einem anderen Konto zeigen.
+Lokale Entwürfe und unklare Versandversuche nicht automatisch senden oder neu anlegen.
+Details: [Google-Diagnose](docs/GMAIL-RUECKGABE-DIAGNOSE.md).

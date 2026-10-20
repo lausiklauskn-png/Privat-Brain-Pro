@@ -23,11 +23,25 @@ public class NativeGmailGrantTest {
         AtomicInteger calls=new AtomicInteger();AuthorizationResult result=result("fixture-token",List.of(GmailAuthorization.MAIL_SCOPE),null);
         assertNull(result.toGoogleSignInAccount());
         GmailGrant grant=GmailGrant.read(result,"fixture@googlemail.com",token->{calls.incrementAndGet();assertEquals("fixture-token",token);return "fixture@gmail.com";});
-        assertEquals("fixture@gmail.com",grant.email);assertEquals("fixture-token",grant.token);assertEquals(1,calls.get());
+        assertEquals("fixture@googlemail.com",grant.email);assertEquals("fixture-token",grant.token);assertEquals(1,calls.get());
         GmailGrant known=GmailGrant.read(result("fixture-token",List.of(GmailAuthorization.MAIL_SCOPE),account("Fixture@googlemail.com")),"fixture@gmail.com",token->{fail("Unnecessary identity fetch");return null;});
         assertEquals("fixture@gmail.com",known.email);
         GmailTokenCache cache=new GmailTokenCache(()->0);cache.put(known.email,known.token);assertEquals("fixture-token",cache.get("FIXTURE@googlemail.com"));
         assertFalse(GmailIdentity.same("different@gmail.com",known.email));assertFalse(GmailIdentity.same("fixture@custom.example",known.email));assertFalse(GmailIdentity.same("fixture+different@gmail.com",known.email));
+    }
+    @Test public void silentGoogleCancellationRequiresConsentWithoutPretendingUserCancelledSetup()throws Exception{
+        for(int status:new int[]{16,12501}) {
+            Exception error=new java.util.concurrent.ExecutionException(new com.google.android.gms.common.api.ApiException(new com.google.android.gms.common.api.Status(status)));
+            assertEquals("CANCELLED",GmailAuthorization.code(error));
+            assertEquals("GMAIL_CONSENT_REQUIRED",GmailAuthorization.backgroundCode(error));
+        }
+        assertEquals("GMAIL_CONSENT_REQUIRED",GmailAuthorization.backgroundCode(new java.util.concurrent.CancellationException()));
+        assertEquals("GMAIL_CONFIGURATION_REQUIRED",GmailAuthorization.backgroundCode(new com.google.android.gms.common.api.ApiException(new com.google.android.gms.common.api.Status(10))));
+        assertEquals("NETWORK_FAILED",GmailAuthorization.backgroundCode(new java.util.concurrent.TimeoutException()));
+        // The chosen Android alias survives provider normalization, but never a different identity.
+        GmailGrant googlemail=GmailGrant.read(result("fixture-token",List.of(GmailAuthorization.MAIL_SCOPE),account("fixture@gmail.com")),"Fixture@googlemail.com",token->{fail();return null;});
+        assertEquals("Fixture@googlemail.com",googlemail.email);
+        assertEquals("fixture@gmail.com",GmailIdentity.key(googlemail.email));
     }
     @Test public void incompleteGrantAndDifferentAccountNeverBecomeUsableCredentials()throws Exception{
         AtomicInteger calls=new AtomicInteger();GmailGrant.Identity identity=token->{calls.incrementAndGet();return "fixture@gmail.com";};
@@ -51,7 +65,7 @@ public class NativeGmailGrantTest {
     @Test public void identityLookupUsesOnlyFixedHttpsAndRejectsRedirectsUnverifiedAndOversizedReplies()throws Exception{
         Response[] last=new Response[1];
         GmailUserInfo info=new GmailUserInfo(url->{assertEquals(GmailUserInfo.ENDPOINT,url.toString());return last[0]=new Response(url,200,"{\"email\":\"fixture@googlemail.com\",\"verified_email\":true}");});
-        assertEquals("fixture@gmail.com",info.email("fixture-token"));assertTrue(last[0].disconnected);
+        assertEquals("fixture@googlemail.com",info.email("fixture-token"));assertTrue(last[0].disconnected);
         assertFalse(last[0].getInstanceFollowRedirects());assertFalse(last[0].getUseCaches());assertEquals("Bearer fixture-token",last[0].getRequestProperty("Authorization"));
         assertEquals(15000,last[0].getConnectTimeout());assertEquals(20000,last[0].getReadTimeout());
         for(int status:new int[]{302,401,403,500}){
