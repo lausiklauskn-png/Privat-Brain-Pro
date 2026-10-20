@@ -74,4 +74,15 @@ public class NativeOriginalsTest {
         try { new MailAccount(new JSONObject(google.toString()).put("password","forbidden"));fail("Google password accepted"); }catch(MailFailure expected) { }
         try { new MailAccount(new JSONObject(google.toString()).put("imap","different.example.com"));fail("OAuth credential may escape Gmail host"); }catch(MailFailure expected) { }
     }
+
+    @Test public void googleGrantReuseExpiresAndInvalidationKeepsOtherAccountsIsolated() {
+        java.util.concurrent.atomic.AtomicLong now=new java.util.concurrent.atomic.AtomicLong(1000);
+        GmailTokenCache cache=new GmailTokenCache(now::get);
+        cache.put("first@example.com","fixture-grant-a");cache.put("second@example.com","fixture-grant-b");
+        assertEquals("fixture-grant-a",cache.get("FIRST@example.com"));assertNull(cache.get("third@example.com"));
+        cache.invalidate("fixture-grant-a");assertNull(cache.get("first@example.com"));assertEquals("fixture-grant-b",cache.get("second@example.com"));
+        now.addAndGet(GmailTokenCache.LIFETIME_MS);assertNull(cache.get("second@example.com"));
+        cache.put("first@example.com","fixture-grant-c");now.decrementAndGet();assertNull(cache.get("first@example.com"));
+        cache.put("first@example.com","fixture-grant-d");cache.clear();assertNull(cache.get("first@example.com"));
+    }
 }

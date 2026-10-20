@@ -53,7 +53,7 @@ try{
   await page.keyboard.press('Escape');await page.locator('#lightboxBg.on').waitFor({state:'hidden'});
   ok('Second Back closes preview and leaves app usable',await page.locator('#explorerFiles').isVisible());
   await page.evaluate(()=>showBlob(new File(['%PDF-1.4'],'sample.pdf',{type:'application/pdf'}),{name:'sample.pdf'}));
-  await page.locator('.native-file-viewer').waitFor();await page.getByRole('button',{name:'Mit anderer App öffnen'}).click();
+  await page.locator('.native-file-viewer').waitFor();await page.getByRole('button',{name:'Öffnen mit …'}).click();
   await page.waitForFunction(()=>openedFiles.length===1);
   ok('Unsupported document opens only through explicit native chooser',await page.evaluate(()=>openedFiles[0].name==='sample.pdf'&&atob(openedFiles[0].data)==='%PDF-1.4')&&page.url().startsWith(url));
   await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});

@@ -122,3 +122,12 @@ body .wrap { height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-i
 @media(max-width:650px) {
   #mailWorkspace>.mail-account-bar { gap:4px; }
 }
+
+.native-pdf-toolbar { display:flex;flex-wrap:wrap;align-items:center;gap:8px;position:sticky;top:0;background:var(--card);padding:8px;z-index:1; }
+.native-pdf-toolbar button,.native-pdf-toolbar select { min-height:44px; }
+.native-pdf-page { display:block;height:auto;max-width:none;background:white;margin:12px auto; }
+.native-file-menu { position:fixed;z-index:105;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow); }
+.native-file-menu[hidden] { display:none; }
+.native-file-menu button { display:block;min-height:44px;width:100%;text-align:left; }
+
+.native-pdf-page[hidden] { display:none; }
