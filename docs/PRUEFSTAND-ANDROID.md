@@ -445,3 +445,51 @@ Logs. Echte Google-Zustimmung und Gmail-IMAP/SMTP weiterhin unbestätigt;
 Google-Cloud-Projekt/Android-OAuth-Client und Testnutzer müssen geklärt werden.
 Telekom-Konto und lokale Daten behalten, keinen privaten Dienst-Token neu erzeugen.
 Details: [PDF-Ansicht und Google](PDF-ANSICHT-UND-GOOGLE.md).
+
+## Veröffentlichte Vorschau .10 — 2026-10-20
+
+[APK .10 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.10/Private-Brain-Pro-0.1.0-preview.10.apk).
+**Aktualisieren, nicht deinstallieren.** Paket unverändert:
+`de.familyprojekt.privatebrain.pro.preview`, VersionCode 10,
+`0.1.0-preview.10-test`, min24/target36, kein Debug-Flag.
+5.558.347 Bytes; APK-SHA256
+`c8f8658f462ef96410a4ae85431665a59ee0567ce0b4499f610289ba6b137640`.
+Zertifikat-SHA256 weiterhin
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`;
+der vorhandene Android-OAuth-Client passt weiterhin.
+
+- Quell-HEAD `1caa9343025175a9909b98d8e11c8e6a4ff92bc1`.
+  [Vollständige CI 39360742861](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39360742861)
+  und [paralleler PR-Lauf 39360795013](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39360795013)
+  erfolgreich. 38 bestehende npm-Prüfbefehle, 189 native Browserproben,
+  14 Maildiensttests, Java-/Android-Build und Lint bestanden.
+  **26 native Instrumentierungsfälle ohne Fehler oder Überspringen**,
+  darunter drei neue Google-Grant-/Identitätsfälle. Vorschau-Lint:
+  0 Fehler, 8 Warnungen aus Bestandsressourcen/-code.
+- [PR18](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/18)
+  nach vollständiger erfolgreicher CI zusammengeführt:
+  `6e3e8f7212985265c632afcb38039c59dea5261e`.
+  Git-Baum exakt identisch mit dem geprüften Quell-HEAD.
+- [Signierte Updateprobe .9 → .10, 39360896526](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39360896526)
+  erfolgreich: tatsächliches `adb install -r`, englische Einstellung bleibt
+  erhalten, native Kontomaske/Abbrechen und sichtbarer/Android-Zurück-Weg.
+  Die Probe verwendet keine echten Konten und prüft keine Dokumentmigration.
+- [Veröffentlichung 39361820199](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39361820199)
+  verlangt erfolgreiche Quell-CI, identische Bäume und unabhängige Updateprobe
+  derselben signierten APK, dazu Hash/Paket/Zertifikat. Öffentlicher Download
+  mit HTTP200, Größe und Hash geprüft; bytegleich mit der signierten APK.
+
+Der native Google-Rückweg behandelt fehlende Legacy-Kontodaten anhand einer
+bestätigten Adresse vom festen Google-HTTPS-Userinfo-Endpunkt. Mail-Zustimmung,
+Kontozuordnung und IMAP-/SMTP-Ablehnung bekommen getrennte sichere Fehlercodes
+in vier Sprachen. Gmail-/Googlemail-Domain-Aliase erhalten Kontokennung und
+Entwürfe. Keine freie URL, keine Redirects, keine abgeschaltete TLS-Prüfung,
+keine Tokens in JavaScript/Dateien/Logs und kein automatischer Neuversand.
+Details: [Google-Rückgabe/Diagnose](GMAIL-RUECKGABE-DIAGNOSE.md).
+
+Der Nutzer hat die Google-Konsole inzwischen eingerichtet und .9 installiert;
+die konkrete Ursache seiner .9-Ablehnung sowie ein echter Gmail-Login bleiben
+unbestätigt. Der nächste Nachweis ist ein einzelner Anmeldeversuch am Tablet
+mit .10 und gegebenenfalls Foto des neuen Fehlercodes. Nicht wieder pauschal
+zur Neuerstellung von Projekt/Client/Testnutzer auffordern. Bestehende Konten
+und Kataloge behalten. Die PWA und alle 21 geschützten Module sind unverändert.
