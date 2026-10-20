@@ -1,5 +1,7 @@
 name: Signierte Android-Testversion oder stabile Version
 on:
+  push:
+    tags: ['v*-preview.*']
   workflow_dispatch:
     inputs:
       channel:
@@ -9,19 +11,31 @@ on:
         type: choice
         options: [test, stable]
       tag:
-        description: Neuer Versions-Tag, z. B. v0.1.0-preview.1
+        description: Neuer Versions-Tag, z. B. v0.1.0-preview.17
         required: true
         type: string
+      source_commit:
+        description: Optionaler voller main-Commit (z. B. für die unveränderte .17)
+        required: false
+        type: string
+      dry_run:
+        description: Nur signieren und Update prüfen, nicht veröffentlichen
+        default: false
+        type: boolean
 permissions:
-  contents: write
+  contents: read
   checks: read
 concurrency:
   group: android-release
   cancel-in-progress: false
 jobs:
-  release:
+  build:
     runs-on: ubuntu-24.04
     environment: ${{ inputs.channel == 'stable' && 'android-production' || 'android-preview' }}
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+      tag: ${{ steps.source.outputs.tag }}
+      channel: ${{ steps.source.outputs.channel }}
     env:
       PB_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       PB_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -29,36 +43,50 @@ jobs:
       PB_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Geprüfte Release-Werkzeuge vor historischem Quellcheckout sichern
+        run: |
+          cp -R tools/native/upgrade-probe "$RUNNER_TEMP/upgrade-probe"
+          cp tools/native/prepare-signing-key.py "$RUNNER_TEMP/prepare-signing-key.py"
+      - name: main-Zugehörigkeit, Tag und Quellcommit prüfen
+        id: source
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+          REQUESTED_SHA: ${{ inputs.source_commit }}
+          REQUESTED_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          tag="$REQUESTED_TAG"
+          channel="${REQUESTED_CHANNEL:-test}"
+          sha="$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            tag="$GITHUB_REF_NAME"
+            sha=$(git rev-parse "$GITHUB_REF^{commit}")
+          elif [[ -n "$REQUESTED_SHA" ]]; then
+            [[ "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+            sha=$(git rev-parse "$REQUESTED_SHA^{commit}")
+          fi
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]
+          git fetch origin main
+          git merge-base --is-ancestor "$sha" origin/main
+          if [[ "$channel" == stable ]]; then [[ "$tag" != *-* ]]; else [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]]; fi
+          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$sha"
+          fi
+          git checkout --detach "$sha"
+          grep -Fq "versionName \"${tag#v}\"" android/app/build.gradle
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
       - name: Erfolgreichen nativen Starttest desselben Commits verlangen
         env:
           GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -euo pipefail
-          passed=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --jq '[.check_runs[] | select(.name == "native-smoke" and .conclusion == "success")] | length')
-          if [[ "$passed" -lt 1 ]]; then
-            echo 'Vor dem Release muss der native Android-Starttest dieses Commits erfolgreich sein.'
-            exit 1
-          fi
-      - name: Signierung und Versionskennung prüfen
-        env:
-          RELEASE_TAG: ${{ inputs.tag }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
-        run: |
-          set -euo pipefail
-          test -n "$PB_KEYSTORE_BASE64" && test -n "$PB_KEYSTORE_PASSWORD"
-          test -n "$PB_KEY_ALIAS" && test -n "$PB_KEY_PASSWORD"
-          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]
-          if [[ "$RELEASE_CHANNEL" == stable ]]; then
-            [[ "$RELEASE_TAG" != *-* ]]
-            grep -q "versionName \"${RELEASE_TAG#v}\"" android/app/build.gradle
-          else
-            [[ "$RELEASE_TAG" == *-preview.* ]]
-            grep -q "versionName \"${RELEASE_TAG#v}\"" android/app/build.gradle
-          fi
-          test "$(git branch --show-current)" = main
-          printf '%s' "$PB_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/private-brain.jks"
-          chmod 600 "$RUNNER_TEMP/private-brain.jks"
-          echo "PB_KEYSTORE_FILE=$RUNNER_TEMP/private-brain.jks" >> "$GITHUB_ENV"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA/check-runs?per_page=100" > "$RUNNER_TEMP/checks.json"
+          jq -e '[.[].check_runs[] | select(.name == "native-smoke" and .conclusion == "success" and .app.slug == "github-actions")] | length > 0' "$RUNNER_TEMP/checks.json"
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: '22'
@@ -67,18 +95,22 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Android SDK des GitHub-Runners prüfen
+      - name: Android SDK prüfen
         run: |
           set -euo pipefail
-          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
-          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
-          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+      - name: Vorhandenen Signierschlüssel laden und Alias prüfen
+        env:
+          RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/prepare-signing-key.py"
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix mail-service --ignore-scripts
       - run: npx playwright-core install --with-deps chromium
       - name: Vor Veröffentlichung vollständig prüfen
         run: |
+          set -euo pipefail
           export CB_CHROMIUM="$(node --input-type=module -e 'import {chromium} from "playwright-core"; process.stdout.write(chromium.executablePath())')"
           export WFPDF_KLON="$GITHUB_WORKSPACE/tests/fixtures/Workflow-PDF"
           npm test
@@ -87,42 +119,157 @@ jobs:
           npm run test:native-web
       - name: APK und Android App Bundle bauen
         env:
-          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
         working-directory: android
         run: |
+          set -euo pipefail
           if [[ "$RELEASE_CHANNEL" == stable ]]; then
             ./gradlew --no-daemon --max-workers=2 assembleRelease bundleRelease lintRelease
           else
             ./gradlew --no-daemon --max-workers=2 assemblePreview lintPreview
+            ./gradlew --no-daemon --max-workers=2 -p "$RUNNER_TEMP/upgrade-probe" assembleRelease
           fi
-      - name: Signatur prüfen und Release vorbereiten
+      - name: Signatur, Paket, Name, Debug-Flag und Versionsfortschritt prüfen
         env:
-          RELEASE_CHANNEL: ${{ inputs.channel }}
-          RELEASE_TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
         run: |
           set -euo pipefail
           variant=preview
-          if [[ "$RELEASE_CHANNEL" == stable ]]; then variant=release; fi
-          mkdir -p release-files
+          package=de.familyprojekt.privatebrain.pro.preview
+          if [[ "$RELEASE_CHANNEL" == stable ]]; then variant=release; package=de.familyprojekt.privatebrain.pro; fi
+          mkdir -p release-files upgrade-inputs
           apk="release-files/Private-Brain-Pro-${RELEASE_TAG#v}.apk"
           cp "android/app/build/outputs/apk/$variant/app-$variant.apk" "$apk"
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
-          if [[ "$RELEASE_CHANNEL" == stable ]]; then
+          signer="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          aapt="$ANDROID_HOME/build-tools/36.0.0/aapt"
+          "$signer" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/signature.txt"
+          cat "$RUNNER_TEMP/signature.txt"
+          cp "$RUNNER_TEMP/signature.txt" release-files/SIGNATUR.txt
+          "$aapt" dump badging "$apk" > "$RUNNER_TEMP/badging.txt"
+          grep -Fq "package: name='$package'" "$RUNNER_TEMP/badging.txt"
+          grep -Fq "versionName='${RELEASE_TAG#v}'" "$RUNNER_TEMP/badging.txt"
+          grep -Fxq "application-label:'Private Brain Pro'" "$RUNNER_TEMP/badging.txt"
+          ! grep -q '^application-debuggable' "$RUNNER_TEMP/badging.txt"
+          if [[ "$RELEASE_CHANNEL" == test ]]; then
+            expected=362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80
+            test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/signature.txt")" = "$expected"
+            test "$(grep -c '^Signer #[0-9]* certificate SHA-256 digest:' "$RUNNER_TEMP/signature.txt")" = 1
+            gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
+            previous=$(jq -er '[.[][] | select(.draft == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+-preview\\.[0-9]+$")))] | sort_by(.published_at) | last | .tag_name' "$RUNNER_TEMP/releases.json")
+            gh release download "$previous" --pattern '*.apk' --dir upgrade-inputs
+            mapfile -t old < <(find upgrade-inputs -maxdepth 1 -name '*.apk')
+            test "${#old[@]}" = 1
+            mv "${old[0]}" upgrade-inputs/previous.apk
+            "$signer" verify --print-certs upgrade-inputs/previous.apk > "$RUNNER_TEMP/previous-signature.txt"
+            test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/previous-signature.txt")" = "$expected"
+            "$aapt" dump badging upgrade-inputs/previous.apk > "$RUNNER_TEMP/previous-badging.txt"
+            grep -Fq "package: name='$package'" "$RUNNER_TEMP/previous-badging.txt"
+            current=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$RUNNER_TEMP/badging.txt")
+            previous_code=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$RUNNER_TEMP/previous-badging.txt")
+            test "$current" -gt "$previous_code"
+            cp "$RUNNER_TEMP/upgrade-probe/build/outputs/apk/release/"*.apk upgrade-inputs/probe.apk
+            "$signer" verify --print-certs upgrade-inputs/probe.apk > "$RUNNER_TEMP/probe-signature.txt"
+            test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/probe-signature.txt")" = "$expected"
+            echo "Updateprobe: $previous (Code $previous_code) → $RELEASE_TAG (Code $current)" >> "$GITHUB_STEP_SUMMARY"
+          else
             cp android/app/build/outputs/bundle/release/app-release.aab release-files/Private-Brain-Pro.aab
           fi
-          cd release-files
-          sha256sum Private-Brain-Pro.* > SHA256SUMS
-      - name: GitHub Release veröffentlichen (nur manuell gestartet)
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
-        run: |
-          set -euo pipefail
-          options=()
-          if [[ "$RELEASE_CHANNEL" == test ]]; then options+=(--prerelease); fi
-          gh release create "$RELEASE_TAG" release-files/* --target "$GITHUB_SHA" \
-            --title "Private Brain Pro $RELEASE_TAG" --generate-notes "${options[@]}"
+          (cd release-files; shopt -s nullglob; files=(./*.apk ./*.aab); sha256sum "${files[@]}" > SHA256SUMS)
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: signed-release
+          path: release-files/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v7.0.2
+        if: steps.source.outputs.channel == 'test'
+        with:
+          name: signed-upgrade-inputs
+          path: upgrade-inputs/
+          if-no-files-found: error
+          retention-days: 7
       - name: Temporären Signierschlüssel entfernen
         if: always()
         run: rm -f "$RUNNER_TEMP/private-brain.jks"
+  signed-upgrade:
+    needs: build
+    if: needs.build.outputs.channel == 'test'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          name: signed-release
+          path: release-files
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          name: signed-upgrade-inputs
+          path: upgrade-inputs
+      - name: KVM aktivieren
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Signiertes Update mit Daten, Sprache, Offline-Kaltstart, Speicherort und Ordnerauswahl
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tools/native/run-signed-upgrade.sh upgrade-inputs/previous.apk release-files/*.apk upgrade-inputs/probe.apk
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: signed-upgrade-results
+          path: upgrade-results/
+          retention-days: 14
+  publish:
+    needs: [build, signed-upgrade]
+    if: >-
+      always() && needs.build.result == 'success' &&
+      (needs.signed-upgrade.result == 'success' ||
+      (needs.build.outputs.channel == 'stable' && needs.signed-upgrade.result == 'skipped')) &&
+      inputs.dry_run != true
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          name: signed-release
+          path: release-files
+      - name: Geprüfte APK veröffentlichen und öffentlichen Download bytegleich prüfen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_CHANNEL: ${{ needs.build.outputs.channel }}
+          SOURCE_SHA: ${{ needs.build.outputs.sha }}
+        run: |
+          set -euo pipefail
+          (cd release-files; sha256sum -c SHA256SUMS)
+          options=()
+          if [[ "$RELEASE_CHANNEL" == test ]]; then options+=(--prerelease); fi
+          # Draft first: never make an incomplete upload publicly visible.
+          gh release create "$RELEASE_TAG" release-files/* --draft --target "$SOURCE_SHA" \
+            --title "Private Brain Pro $RELEASE_TAG" --generate-notes "${options[@]}"
+          gh release edit "$RELEASE_TAG" --draft=false
+          mkdir public-download
+          for apk in release-files/*.apk; do
+            name=$(basename "$apk")
+            curl --fail --location --retry 5 --retry-all-errors \
+              "https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/$name" -o "public-download/$name"
+            cmp "$apk" "public-download/$name"
+            sha256sum "public-download/$name" >> "$GITHUB_STEP_SUMMARY"
+          done

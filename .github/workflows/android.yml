@@ -27,7 +27,16 @@ jobs:
       - name: Browser-Engine installieren
         run: npx playwright-core install --with-deps ${{ matrix.engine }}
       - name: Fensterbreiten, Suche, Navigation und lokale Daten prüfen
-        run: node tools/native/test-web.mjs
+        run: |
+          set -euo pipefail
+          if node tools/native/test-web.mjs > "$RUNNER_TEMP/layout.log" 2>&1; then
+            cat "$RUNNER_TEMP/layout.log"
+          else
+            code=$?
+            cat "$RUNNER_TEMP/layout.log"
+            python3 -c 'import os; from pathlib import Path; t=(Path(os.environ["RUNNER_TEMP"])/"layout.log").read_bytes()[-2800:].decode(errors="replace"); print("::error title=Browser layout::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+            exit "$code"
+          fi
         env:
           PB_BROWSER_ENGINE: ${{ matrix.engine }}
   validate:
@@ -55,9 +64,19 @@ jobs:
         run: npx playwright-core install --with-deps chromium
       - name: Vollständige vorhandene Web-Prüfungen
         run: |
+          set -euo pipefail
+          # Preserve npm's exit code; surface bounded failure details through the API too.
+          report_failure() {
+            code=$?
+            if [[ "$code" -ne 0 ]]; then
+              python3 -c 'import os; from pathlib import Path; p=Path(os.environ["RUNNER_TEMP"])/"web-tests.log"; t=p.read_bytes()[-2800:].decode(errors="replace") if p.exists() else "No test log"; print("::error title=Web regression::"+t.replace("%","%25").replace("\r","%0D").replace("\n","%0A"))'
+            fi
+            exit "$code"
+          }
+          trap report_failure EXIT
           export CB_CHROMIUM="$(node --input-type=module -e 'import {chromium} from "playwright-core"; process.stdout.write(chromium.executablePath())')"
           export WFPDF_KLON="$GITHUB_WORKSPACE/tests/fixtures/Workflow-PDF"
-          npm test
+          npm test 2>&1 | tee "$RUNNER_TEMP/web-tests.log"
           npm run sync:android
           npm run test:native-web
       - run: npm test --prefix mail-service
@@ -105,4 +124,60 @@ jobs:
         with:
           name: android-starttest-berichte
           path: android/app/build/reports/androidTests/
+          retention-days: 14
+  upgrade-probe-smoke:
+    # Independent of the broad regression suite: validate the new harness directly.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci --ignore-scripts
+      - run: npm run sync:android
+      - name: Test-App und getrennte Instrumentierung bauen
+        run: |
+          set -euo pipefail
+          exec > >(tee "$RUNNER_TEMP/probe-build.log") 2>&1
+          ./android/gradlew --no-daemon --max-workers=2 -p android assembleDebug
+          python3 tools/native/test-signing-key.py
+          ./android/gradlew --no-daemon --max-workers=2 -p tools/native/upgrade-probe -PprobeTarget=de.familyprojekt.privatebrain.pro.preview.debug assembleDebug
+      - name: KVM aktivieren
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Probe mit Debug-App prüfen (kein Nachweis eines Vorschau-Updates)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: PB_UPGRADE_TEST_PACKAGE=de.familyprojekt.privatebrain.pro.preview.debug bash tools/native/run-signed-upgrade.sh android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/app-debug.apk tools/native/upgrade-probe/build/outputs/apk/debug/*.apk
+      - name: Fehler der Probe auch als API-lesbare Annotation ausgeben
+        if: failure()
+        run: |
+          python3 - <<'PYERROR'
+          import os
+          from pathlib import Path
+          paths=list(Path('upgrade-results').glob('*.txt'))
+          build=Path(os.environ['RUNNER_TEMP'])/'probe-build.log'
+          if build.exists(): paths.append(build)
+          for path in paths:
+              text=path.read_bytes()[-2800:].decode(errors='replace').replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              print('::error title=Upgrade probe::'+text)
+          PYERROR
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: upgrade-probe-smoke-results
+          path: upgrade-results/
           retention-days: 14
