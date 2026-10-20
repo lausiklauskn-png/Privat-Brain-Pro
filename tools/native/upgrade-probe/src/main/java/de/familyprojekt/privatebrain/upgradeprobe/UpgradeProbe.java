@@ -37,15 +37,23 @@ public final class UpgradeProbe extends Instrumentation {
         }
         return null;
     }
-    private String js(String script) throws Exception {
+    /** Null when the WebView has not answered within the given time. */
+    private String evaluate(String script, long seconds) throws Exception {
         CountDownLatch done=new CountDownLatch(1); AtomicReference<String> value=new AtomicReference<>();
         runOnMainSync(()->web.evaluateJavascript(script,result->{value.set(result);done.countDown();}));
-        require(done.await(15,TimeUnit.SECONDS),"WebView response timed out"); return value.get();
+        return done.await(seconds,TimeUnit.SECONDS) ? value.get() : null;
+    }
+    private String js(String script) throws Exception {
+        String value=evaluate(script,15);
+        require(value!=null,"WebView response timed out"); return value;
     }
     private void await(String expression) throws Exception {
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
         while(System.nanoTime()<deadline) {
-            if("true".equals(js("Boolean("+expression+")")))return;
+            // A first cold start of a freshly installed APK can leave the WebView silent
+            // for longer than one poll. No answer means "not yet", within the same deadline.
+            long left=TimeUnit.NANOSECONDS.toSeconds(deadline-System.nanoTime());
+            if("true".equals(evaluate("Boolean("+expression+")",Math.max(1,Math.min(15,left)))))return;
             Thread.sleep(200);
         }
         throw new AssertionError("Failed condition: "+expression);
