@@ -112,6 +112,7 @@ try{
   await page.locator('.native-vault-attachment').first().waitFor();
   ok('A 40 MB mail opens with its attachment as a reference in the folder',await page.locator('.native-vault-attachment').first().textContent().then(t=>t.includes('schreiben.txt')&&t.includes('im Anhang-Ordner')));
   ok('Over-1-GB attachments are named, not silently dropped',await page.locator('.native-vault-attachment').nth(1).textContent().then(t=>t.includes('über 1 GB')));
+  await page.waitForFunction(()=>document.querySelector('.mail-report')?.textContent.includes('nicht im Browser geprüft'));
   ok('Check report says the folder copy was not checked in the browser',await page.locator('.mail-report').textContent().then(t=>t.includes('nicht im Browser geprüft')));
   await page.locator('.native-vault-attachment button',{hasText:'Ansehen'}).click();
   await page.locator('.native-file-text').waitFor();
