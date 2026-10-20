@@ -809,10 +809,25 @@ unabhängige PWA und die Google-Registrierung bleiben unverändert.
 Geplanter unveränderter Quellstand `eb800faf25676055a19a49eea83d0ba158e896ec`,
 versionCode 17, versionName `0.1.0-preview.17`. Laut übermitteltem Auftrag ist die
 Quell-CI `39458924438` grün; der Release-Versuch `39461965718` scheiterte beim
-Lesen des Keystores. Diese beiden Laufstände sind Angaben aus der Übergabe.
+Lesen des Keystores. Der erfolgreiche CI-Lauf und sein Quellcommit sowie der fehlgeschlagene
+Release-Lauf wurden inzwischen über die GitHub-API bestätigt.
 
 Der gemeinsame [Veröffentlichungsweg](VEROEFFENTLICHEN.md) wird vorbereitet.
 Noch kein Nachweis für reparierte Secrets, signiertes Update .16 → .17,
 Veröffentlichung oder bytegleichen öffentlichen .17-Download. Deshalb noch kein
 Abschnitt „Veröffentlichte Version .17“ und keine erfundene APK-Prüfsumme.
 Am Tablet ist Bauabschnitt 1 weiterhin nicht gemessen.
+
+Neue Gegenprobe: [Release-Probelauf 39465502932](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39465502932)
+mit `dry_run=true` und genau dem .17-Quellcommit scheitert bereits im Schritt
+„Vorhandenen Signierschlüssel laden und Alias prüfen“. Updateprobe und
+Veröffentlichung wurden folgerichtig übersprungen. Die GitHub-Integration
+verweigert den Zugriff auf Environment-Secrets mit HTTP 403.
+
+Lokal bestanden: `npm test`, 14 Maildiensttests, alle nativen Websuiten
+(einschließlich 30 Tresorproben mit simulierter Android-Brücke), Android-Debug-Build
+und Lint, 8 Unit-Tests ohne Fehler oder Überspringen, Release-Kompilation und
+Debug-Build der getrennten Update-Instrumentierung sowie `actionlint`. Die
+öffentliche .16 wurde heruntergeladen und mit dem erwarteten Vorschau-Zertifikat
+verifiziert; APK-SHA-256: `2e3e6b4d6e8e8307648359b55fca12b5cc205940e78406eeca3f28e5da010eab`.
+Diese Erfolge ersetzen die noch fehlende signierte .16→.17-Updateprobe nicht.
