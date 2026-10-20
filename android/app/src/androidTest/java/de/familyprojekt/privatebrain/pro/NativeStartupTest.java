@@ -138,13 +138,13 @@ public class NativeStartupTest {
                 androidx.test.espresso.action.Tap.SINGLE,view->{int[] position=new int[2];view.getLocationOnScreen(position);return new float[]{position[0]+x,position[1]+y};},androidx.test.espresso.action.Press.FINGER));
             long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
             while(opened.get()==null && System.nanoTime()<deadline)Thread.sleep(100);
-            assertNotNull("Actual mail link click did not request external browser",opened.get());
+            assertNotNull("Actual mail link click did not request external browser; frame=" + evaluate(scenario,"JSON.stringify({origin:location.origin,sandbox:document.querySelector('#browser-link-fixture iframe')?.getAttribute('sandbox'),ratio:devicePixelRatio})"),opened.get());
             assertEquals("https://example.com/mail-test",opened.get().getDataString());
             assertTrue(opened.get().hasCategory(android.content.Intent.CATEGORY_BROWSABLE));
             assertEquals("\"kept\"",evaluate(scenario,"window.__browserSentinel"));
             assertEquals("\"https://localhost\"",evaluate(scenario,"location.origin"));
             assertEquals("true",evaluate(scenario,"document.querySelector('#panel-mail').classList.contains('on')"));
-            assertEquals("\"\"",evaluate(scenario,"document.querySelector('#browser-link-fixture iframe').getAttribute('sandbox')"));
+            assertEquals("\"allow-top-navigation-by-user-activation\"",evaluate(scenario,"document.querySelector('#browser-link-fixture iframe').getAttribute('sandbox')"));
         } finally { instrumentation.removeMonitor(monitor); }
     }
 
@@ -153,7 +153,8 @@ public class NativeStartupTest {
             awaitTrue(scenario,"Boolean(window.PBMailDevice)");
             evaluate(scenario,"window.__googleCancelled=false;PBMailDevice.addAccount().then(value=>window.__googleCancelled=value===null);true");
             onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog()).perform(click());
-            androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo("Google / Gmail")).perform(click());
+            androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo("Google / Gmail"))
+                .inRoot(androidx.test.espresso.matcher.RootMatchers.isPlatformPopup()).perform(click());
             onView(withText("Mit Google anmelden")).inRoot(isDialog()).check(matches(isDisplayed()));
             onView(withText("Passwort für E-Mail-Programme")).inRoot(isDialog()).check(matches(org.hamcrest.Matchers.not(isDisplayed())));
             onView(withText("Abbrechen")).inRoot(isDialog()).perform(click());

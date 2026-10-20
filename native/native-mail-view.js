@@ -53,7 +53,7 @@
       if (href) {
         if(links)links.push(href);
         const target=links?(targets?.get(href)||''):href;
-        if(target)node.setAttribute('href',target);
+        if(target){node.setAttribute('href',target);if(targets)node.setAttribute('target','_top');}
         node.setAttribute('rel','noreferrer noopener');
         if(!node.hasAttribute('title'))node.setAttribute('title',href);
       }
@@ -107,6 +107,7 @@
         images.hidden = showText; hint.hidden = showText || !external; hint.textContent = T('imageHint');
         frame.hidden = showText; text.hidden = !showText;
         const version=++generation,links=typeof nativeLinks?.prepare==='function'?[]:null;
+        frame.setAttribute('sandbox','');
         frame.srcdoc = displayHtml(mail.html,mail.attachments,external,links);
         frame.dataset.linksReady=links?.length?'false':'true';
         if(links?.length){
@@ -114,6 +115,10 @@
           nativeLinks.prepare({urls}).then(result=>{
             if(generation!==version)return;
             const targets=new Map();urls.forEach((url,index)=>{const ticket=result.tickets[index];if(/^[a-f0-9-]{36}$/.test(ticket||''))targets.set(url,location.origin+'/_pb_mail_link/'+ticket);});
+            // Only sanitized links to native opaque routes may target the parent, and
+            // only with a real user activation. No scripts, origin access or popups.
+            // Android WebView does not consistently report HTTP subframe navigation.
+            if(targets.size)frame.setAttribute('sandbox','allow-top-navigation-by-user-activation');
             frame.srcdoc=displayHtml(mail.html,mail.attachments,external,[],targets);frame.dataset.linksReady='true';
           }).catch(()=>{if(generation===version){hint.textContent=T('linkError');hint.hidden=false;frame.dataset.linksReady='error';}});
         }

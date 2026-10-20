@@ -31,10 +31,14 @@ entfernt private Kopien und Konten; diese Ablage ersetzt kein externes Backup.
 ## Links aus E-Mails
 
 In Textansichten öffnet ein ausdrücklicher Klick den nativen Browserweg.
-HTML-Mails behalten ihren skriptfreien Sandbox-Frame mit leerem `sandbox` und
-restriktiver CSP. Zulässige HTTP(S)-Adressen werden nativ gegen kurzlebige opaque
+HTML-Mails behalten ihren skriptfreien Sandbox-Frame mit restriktiver CSP. Zulässige HTTP(S)-Adressen werden nativ gegen kurzlebige opaque
 Kennungen registriert; die WebView übergibt nur bei tatsächlicher Benutzergeste
-an Android `ACTION_VIEW` / `CATEGORY_BROWSABLE`. Die Mail bleibt im Postfach.
+an Android `ACTION_VIEW` / `CATEGORY_BROWSABLE`. Nur registrierte native Brokerlinks
+erhalten `target="_top"` und die eng begrenzte Sandboxfreigabe
+`allow-top-navigation-by-user-activation`: HTTP-Navigation innerhalb eines Frames
+wird in Android WebView nicht zuverlässig an den Navigationscallback gemeldet.
+Die native Brücke konsumiert den Brokeraufruf vor einer App-Navigation; ohne echte
+Geste bleibt der Browser geschlossen. Die Mail bleibt im Postfach.
 Keine automatischen Browseraufrufe, keine Skript-, Popup- oder Origin-Freigabe.
 Aktive Schemata, Gerätepfade, lokale/numerische Hosts und Benutzerinformationen
 in URLs sind gesperrt. Android kann je nach Standardzuordnung eine passende

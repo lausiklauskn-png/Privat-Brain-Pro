@@ -30,7 +30,8 @@ try{
  await page.waitForFunction(()=>document.querySelector('.mail-html')?.dataset.linksReady==='true');
  const doc=await page.locator('.mail-html').getAttribute('srcdoc');
  ok('HTML links use registered opaque routes',doc.includes('/_pb_mail_link/')&&prepared.includes('https://example.com/offer?q=1&x=2'));
- ok('Mail HTML keeps an empty sandbox and script-blocking CSP',await page.locator('.mail-html').getAttribute('sandbox')===''&&doc.includes("script-src 'none'")&&!doc.includes('<script>')&&!doc.includes('<form>'));
+ ok('Mail keeps scripts, origin access, forms and popups sandboxed',await page.locator('.mail-html').getAttribute('sandbox')==='allow-top-navigation-by-user-activation'&&doc.includes("script-src 'none'")&&!doc.includes('<script>')&&!doc.includes('<form>'));
+ ok('Only a registered broker route can target the parent after a user gesture',doc.includes('target="_top"')&&doc.includes('/_pb_mail_link/'));
  ok('Active URL schemes cannot become browser routes',!doc.includes('intent://'));
  ok('Mail layout never triggers an automatic browser request',opened.length===2&&!await page.evaluate(()=>window.executed));
  ok('No renderer runtime errors',errors.length===0);
