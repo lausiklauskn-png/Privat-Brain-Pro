@@ -317,3 +317,17 @@ Die Probe verlangt jetzt den sichtbaren leeren Explorer-Inhalt und verwirft alte
 Fensterabbilder bei einem vorübergehend fehlenden Accessibility-Root. APK,
 Anwendungsquelle und die elf erfolgreich ausgeführten Android-Tests wurden dafür
 nicht geändert. Erst der vollständig erfolgreiche Folgelauf veröffentlicht.
+
+
+### Neue Nutzerrückmeldung zu Originalbildern (2026-10-20)
+
+Vergrößern und Zurück funktionieren nach Nutzerangabe auf dem Tablet. „Original
+öffnen“ scheitert dagegen mit der Meldung, dass das Original nicht erreichbar/der
+Ordner nicht verbunden sei und der Katalogeintrag bleibe. Fehler noch offen; die
+Ursache wurde am Gerät nicht festgestellt. Eine gespeicherte Vorschau kann die
+Großansicht ermöglichen, ohne dass das Original verfügbar ist. Die bestandenen
+Sitzungs-/Rücknavigationstests beweisen keine dauerhafte Dateiberechtigung oder
+Erhaltung von Originalkopien über Neustart und Update. Diagnose, geeigneter
+nativer Originalzugriff und Wiederzuordnung fehlender Quellen sind als zusätzlicher
+Auftrag neben Gmail im [Nachfolgebrief](../BRIEF_NACHFOLGE_2026-10-20_gmail.md)
+hinterlegt. In diesem Nachtrag wird keine neue APK oder Reparatur behauptet.

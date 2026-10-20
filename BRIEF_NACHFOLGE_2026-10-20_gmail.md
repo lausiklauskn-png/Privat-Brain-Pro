@@ -1,8 +1,12 @@
-# Nachfolgebrief: Private Brain Pro – Google/Gmail ergänzen
+# Nachfolgebrief: Private Brain Pro – Originalbilder reparieren und Gmail ergänzen
 
 Stand: 2026-10-20. Dieser Brief ist der Arbeitsauftrag für die nächste Sitzung.
 
 ## Nächster Auftrag
+
+**Zwei Aufträge für die nächste Sitzung:** den gemeldeten Originalbild-Zugriff
+prüfen und beheben sowie Google/Gmail als weiteren Mailanbieter ergänzen. Die
+Reparatur des Bildzugriffs ersetzt den Gmail-Auftrag nicht.
 
 Google/Gmail als weiteren Mailanbieter neben Telekom/T-Online und Hetzner in der
 nativen Android-App ergänzen. Der Nutzer möchte ein Google-Mailkonto hinzufügen,
@@ -88,8 +92,55 @@ sichtbares Zurück/Vorwärts, Android-Zurück, Maus und Tastatur, gemeinsamer Ve
 für Seiten, Explorerordner, Bildvorschau und Originalansicht. Mindestens zwölf
 Rückschritte sind geprüft. Niemals wieder `window.open(blobURL)` als nativen
 Dateiweg verwenden. PDF/Office können ausdrücklich über eine andere Android-App
-geöffnet werden; der interne Rückweg bleibt erhalten. Bestätigung der neuen
-Navigation auf dem tatsächlichen Nutzergerät steht noch aus.
+geöffnet werden; der interne Rückweg bleibt erhalten. Der Nutzer bestätigt jetzt
+auf seinem Tablet das Vergrößern von Bildern und den Rückweg. **Das Öffnen der
+Originalbilder funktioniert dort jedoch nicht**, siehe zusätzlichen Auftrag unten.
+Diese Rückmeldung bestätigt nicht sämtliche zwölf Schritte auf dem Nutzergerät.
+
+## Zusätzlicher Fehlerauftrag: Originalbilder nicht erreichbar
+
+Nutzerrückmeldung vom 2026-10-20: Bilder lassen sich vergrößern, Zurück funktioniert.
+Bei „Original öffnen“ kommt jedoch sinngemäß „Original ist nicht erreichbar oder
+nicht verbunden; der Katalogeintrag bleibt“. Passende vorhandene Meldung im Code:
+**„Original nicht erreichbar (Ordner nicht verbunden). Der Katalog-Eintrag bleibt.“**
+Der Fehler ist noch nicht behoben; in dieser Übergabe wurde nur die Meldung dem
+vorhandenen Code zugeordnet, keine Ursache am Nutzergerät nachgewiesen.
+
+Arbeitsauftrag:
+
+1. Den Weg Ergebnis/Explorer → Bildvorschau → „Original öffnen“ mit den tatsächlich
+   importierten Dateiquellen untersuchen. `openFile`, `resolveFile`, `showBlob` und
+   `openLightbox` in `index.html`, `SESSION_FILES`, `DIR_HANDLES`, Katalogpfade und
+   `assets/workspace.js` sowie `native/native-navigation.js` prüfen. Die native
+   Dateiansicht behebt den Rückweg, ersetzt aber keinen fehlenden Dateizugriff.
+2. Unterscheiden zwischen Originaldatei, gespeicherter Vorschau/Thumbnail und
+   reinem Katalogeintrag. Die Großansicht kann aus einer gespeicherten Vorschau
+   stammen; ihr Funktionieren beweist nicht, dass die Originaldatei erreichbar ist.
+3. Prüfen, ob das Original nur als Sitzungsdatei gehalten wurde und nach Neustart
+   oder APK-Update fehlt, ob eine Ordnerfreigabe verloren ging oder ob Zuordnung/
+   Pfadauflösung fehlschlägt. Das sind mögliche Ursachen, keine bereits festgestellte
+   Diagnose. Android besitzt bislang keinen fertig implementierten dauerhaften
+   Ordneradapter; Desktop-Dateihandles nicht als Android-Lösung voraussetzen.
+4. Erforderlichenfalls einen dauerhaften nativen Zugriff über geeignete Android-
+   Dateiauswahl mit dauerhaft gewährter URI-Berechtigung oder eine lokale App-Kopie
+   umsetzen. Die passende Variante anhand des bestehenden Imports wählen. Keine
+   allgemeinen Speicherrechte voraussetzen, keine Originale überschreiben oder
+   verschieben. Katalog und vorhandene Konten/Dokumente bei Migration erhalten.
+5. Bereits fehlende Originale über einen verständlichen Neuverbinden-/Datei-wieder-
+   auswählen-Weg zuordnen, gegebenenfalls mit Inhalts-/Hashprüfung. Keine Bilddaten
+   aus einer komprimierten Vorschau als angebliches Original ausgeben. Falls das
+   Original nicht mehr vorhanden ist, diesen Zustand ehrlich erklären; Daten
+   nicht erfinden, Katalog und Vorschau nicht als Fehlerbehandlung löschen.
+6. Den vollständigen Ablauf nach echtem Dateiimport, App-Neustart und signiertem
+   APK-Update testen: Großansicht, unverändertes Original öffnen, Zurück zur
+   Vorschau und zurück zur vorherigen App-Ansicht. Verschiedene Originalquellen,
+   verweigerte/entzogene Berechtigung und fehlende Datei berücksichtigen. Original-
+   Bytes beziehungsweise Prüfsumme vergleichen, nicht nur ein sichtbares Bild.
+
+Die bisherigen 22 Navigationsproben und der Android-Zurück-Test beweisen keinen
+neustartfesten Zugriff auf zuvor ausgewählte Originaldateien. Dafür zusätzliche
+gezielte Proben ergänzen. Anschließend eine neue signierte Update-APK bereitstellen;
+vorhandene Installation nicht deinstallieren lassen. Bild-/Zurück-Design erhalten.
 
 ## Gmail: technische Arbeit für die nächste Sitzung
 

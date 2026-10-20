@@ -401,3 +401,9 @@ Arbeitsauftrag und tatsächlicher Stand stehen in
 [BRIEF_NACHFOLGE_2026-10-20_gmail.md](BRIEF_NACHFOLGE_2026-10-20_gmail.md).
 Gmail/OAuth ist noch nicht implementiert. Neben Telekom/Hetzner ergänzen;
 Postfachgestaltung, Original-Mails, Rücknavigation und bestehende Konten erhalten.
+
+Zusätzlicher Auftrag derselben Folgesitzung: Nutzer bestätigt Bildvergrößerung
+und Zurück, meldet aber bei „Original öffnen“: „Original nicht erreichbar (Ordner
+nicht verbunden). Der Katalog-Eintrag bleibt.“ Diagnose/Behebung und dauerhaften
+Originalzugriff prüfen; Vorschau nicht als Original ausgeben. Im Nachfolgebrief
+ergänzt. Gmail-Auftrag bleibt bestehen; Fehler bislang nicht behoben.
