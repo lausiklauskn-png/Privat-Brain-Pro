@@ -1,12 +1,12 @@
-# Nachfolgebrief: Private Brain Pro – Originalbilder reparieren und Gmail ergänzen
+# Nachfolgebrief: Private Brain Pro – Originalbilder, Mail-Links und Gmail
 
 Stand: 2026-10-20. Dieser Brief ist der Arbeitsauftrag für die nächste Sitzung.
 
 ## Nächster Auftrag
 
-**Zwei Aufträge für die nächste Sitzung:** den gemeldeten Originalbild-Zugriff
-prüfen und beheben sowie Google/Gmail als weiteren Mailanbieter ergänzen. Die
-Reparatur des Bildzugriffs ersetzt den Gmail-Auftrag nicht.
+**Drei Aufträge für die nächste Sitzung:** Originalbild-Zugriff reparieren,
+E-Mail-Links im externen Browser öffnen können und Google/Gmail als weiteren
+Mailanbieter ergänzen. Die Fehlerreparaturen ersetzen den Gmail-Auftrag nicht.
 
 Google/Gmail als weiteren Mailanbieter neben Telekom/T-Online und Hetzner in der
 nativen Android-App ergänzen. Der Nutzer möchte ein Google-Mailkonto hinzufügen,
@@ -141,6 +141,50 @@ Die bisherigen 22 Navigationsproben und der Android-Zurück-Test beweisen keinen
 neustartfesten Zugriff auf zuvor ausgewählte Originaldateien. Dafür zusätzliche
 gezielte Proben ergänzen. Anschließend eine neue signierte Update-APK bereitstellen;
 vorhandene Installation nicht deinstallieren lassen. Bild-/Zurück-Design erhalten.
+
+## Zusätzlicher Fehlerauftrag: E-Mail-Links im Browser öffnen
+
+Weitere Nutzerrückmeldung vom 2026-10-20: Links aus E-Mails lassen sich nicht
+öffnen beziehungsweise nicht im Browser öffnen. Konkrete Zieladressen oder eine
+Fehlermeldung wurden nicht genannt. Fehler ist noch offen, am Nutzergerät nicht
+diagnostiziert. Die Rückmeldung ergänzt die beiden anderen Arbeitsaufträge.
+
+Arbeitsauftrag:
+
+1. Linkbetätigung in der HTML-Originalansicht und der Textansicht prüfen:
+   `native/native-mail-view.js`, vorhandene Mailrenderer, native WebView-
+   Navigationsbehandlung und Android-Browserübergabe. Der aktuelle Originalrenderer
+   erhält geprüfte HTTP(S)-Links, verwendet aber einen skriptfreien Sandbox-Frame;
+   die Textansicht besteht derzeit aus wörtlichem Text. Das ist ein Codebefund,
+   noch kein nachgewiesener Ablauf des vom Nutzer beobachteten Fehlers.
+2. Explizites Antippen/Anklicken eines zulässigen Weblinks soll den externen
+   Browser öffnen. Den URL-Übergabeweg aus vertrauenswürdigem App-/nativem Code
+   umsetzen, nicht aus beliebigen Mail-Skripten. URL und erlaubtes Schema an der
+   nativen Grenze erneut prüfen. Keine ungeprüften `javascript:`, `data:`, `file:`,
+   `content:`- oder `intent:`-Adressen aus Nachrichten ausführen. Andere Linktypen
+   wie `mailto:` getrennt und ausdrücklich bewerten.
+3. Die bestehende Mail-Sandbox, Skriptsperre, Herkunftstrennung und geschützten
+   Prüfer erhalten. Nicht zur Reparatur pauschal `allow-scripts`, `allow-same-origin`
+   oder freie Navigation/Popups freigeben. Kein allgemeiner URL-/HTTP-Proxy oder
+   Zugriff auf Gerätegeheimnisse für Mailinhalte. Die vorhandene reine
+   APK-Downloadfreigabe nicht für beliebige Mailadressen zweckentfremden.
+4. Keine automatische Browseröffnung beim Laden einer Mail, bei Bildabrufen oder
+   durch fremde Nachrichtenereignisse. Der bewusste Linkklick muss die Öffnung
+   auslösen. Die Mailansicht und ihre Auswahl bleiben erhalten; Zurück aus dem
+   Browser führt wieder zur App. Fehlender Browser, ungültiger Link und
+   abgebrochene Übergabe dürfen die App nicht festsetzen oder schließen.
+5. Sichtbare Textlinks und verlinkte Newsletter-Bilder, lange URLs/Weiterleitungs-
+   links und mehrere Links prüfen. Android-Touch, Maus/Tastatur in DeX und
+   Rückkehr zur gleichen Nachricht testen. Automatisierte negative Proben für
+   Skript-/Schema-Missbrauch und unbeabsichtigtes Öffnen ergänzen; tatsächlichen
+   Browserstart auf Android gesondert nachweisen. Bestehende Originalbild-,
+   Postfach- und Rücknavigationstests bleiben erhalten.
+
+Keine persönlichen E-Mail-Links mit Anmelde-/Tracking-Tokens in Git oder Logs
+übernehmen; synthetische Testlinks verwenden. Die bisher bestandenen Mail-
+Darstellungs-/Sandboxtests bestätigen keinen funktionierenden Browserstart durch
+Links. Nach Reparatur mit den anderen Änderungen eine signierte Update-APK und
+klaren Prüfnachweis bereitstellen.
 
 ## Gmail: technische Arbeit für die nächste Sitzung
 
