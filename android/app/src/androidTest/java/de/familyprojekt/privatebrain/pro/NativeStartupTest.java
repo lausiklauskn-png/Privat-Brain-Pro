@@ -39,6 +39,49 @@ public class NativeStartupTest {
         fail("Bundled app did not satisfy: " + script);
     }
 
+    @Test public void recoveryKeysRequireACompletedDocumentSaveAndCanRecoverTheVault() throws Exception {
+        var instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
+        var context=instrumentation.getTargetContext();
+        var directory=new java.io.File(context.getCacheDir(),"exports");directory.mkdirs();
+        var output=new java.io.File(directory,"synthetic-recovery-"+java.util.UUID.randomUUID()+".txt");
+        assertTrue(output.createNewFile());
+        var uri=androidx.core.content.FileProvider.getUriForFile(context,context.getPackageName()+".fileprovider",output);
+        var save=new java.util.concurrent.atomic.AtomicBoolean(false);
+        var intents=new java.util.concurrent.CopyOnWriteArrayList<android.content.Intent>();
+        var monitor=new android.app.Instrumentation.ActivityMonitor(){
+            @Override public android.app.Instrumentation.ActivityResult onStartActivity(android.content.Intent intent){
+                if(!android.content.Intent.ACTION_CREATE_DOCUMENT.equals(intent.getAction()))return null;
+                intents.add(new android.content.Intent(intent));
+                return save.get()?new android.app.Instrumentation.ActivityResult(android.app.Activity.RESULT_OK,new android.content.Intent().setData(uri)):
+                    new android.app.Instrumentation.ActivityResult(android.app.Activity.RESULT_CANCELED,null);
+            }
+        };
+        instrumentation.addMonitor(monitor);
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            awaitTrue(scenario,"Boolean(window.PBRecoveryExport && window.PBTresor && window.PBWorkspace)");
+            evaluate(scenario,"localStorage.removeItem('pb_tresor_verify');PBTresor.lock();PBWorkspace.navigate('settings');document.querySelector('#tresorSetup').click();document.querySelector('#tzPw').value='synthetic-recovery-fixture-2026';document.querySelector('#tzPw2').value='synthetic-recovery-fixture-2026';document.querySelector('#tzMk').click();true");
+            awaitTrue(scenario,"document.querySelector('#tzErr').textContent.includes('abgebrochen')");
+            assertEquals(1,intents.size());
+            assertEquals("text/plain",intents.get(0).getType());
+            assertTrue(intents.get(0).hasCategory(android.content.Intent.CATEGORY_OPENABLE));
+            assertTrue(intents.get(0).getBooleanExtra(android.content.Intent.EXTRA_LOCAL_ONLY,false));
+            assertEquals("true",evaluate(scenario,"document.querySelector('#tzSaved').disabled && document.querySelector('#tzFinish').disabled"));
+            assertEquals(0,output.length());
+            save.set(true);evaluate(scenario,"document.querySelector('#tzDl').click();true");
+            awaitTrue(scenario,"!document.querySelector('#tzSaved').disabled && document.querySelector('#tzErr').textContent.includes('gespeichert')");
+            assertEquals(2,intents.size());
+            var lines=new String(java.nio.file.Files.readAllBytes(output.toPath()),java.nio.charset.StandardCharsets.UTF_8).split("\\n");
+            var shares=new org.json.JSONArray();for(String line:lines)if(line.startsWith("JT3v5-"))shares.put(line.trim());
+            assertEquals(5,shares.length());
+            evaluate(scenario,"window.__exportedRecovery="+shares+";document.querySelector('#tzSaved').click();document.querySelector('#tzFinish').click();true");
+            awaitTrue(scenario,"PBTresor.isUnlocked()");
+            evaluate(scenario,"PBTresor.lock();document.querySelector('#tresorRecover').click();document.querySelector('#trShares').value=window.__exportedRecovery.slice(0,3).join('\\n');document.querySelector('#trGo').click();true");
+            awaitTrue(scenario,"PBTresor.isUnlocked()");
+            assertEquals("true",evaluate(scenario,"!JSON.stringify(localStorage).includes('synthetic-recovery-fixture-2026') && !JSON.stringify(localStorage).includes('JT3v5-')"));
+            evaluate(scenario,"PBTresor.lock();localStorage.removeItem('pb_tresor_verify');delete window.__exportedRecovery;true");
+        }finally{instrumentation.removeMonitor(monitor);output.delete();}
+    }
+
     @Test public void nativeFolderChooserCanBeCancelledAndRetriedWithHiddenExplanation() throws Exception {
         var instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
         var monitor=new android.app.Instrumentation.ActivityMonitor(new android.content.IntentFilter(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE),new android.app.Instrumentation.ActivityResult(android.app.Activity.RESULT_CANCELED,null),true);

@@ -1,0 +1,65 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {resolve,sep,extname} from 'node:path';
+import {chromium} from 'playwright-core';
+const root=resolve('www'),mime={'.html':'text/html','.js':'text/javascript','.css':'text/css'};
+const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+sep))throw Error();res.setHeader('content-type',mime[extname(path)]||'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404).end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+let browser,count=0;
+const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
+try{
+ browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
+ const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{
+  window.exports=[];window.exportMode='cancelled';
+  window.Capacitor={Plugins:{ProFiles:{async saveRecoveryKeys(data){window.exports.push(data);if(window.exportMode==='failure')throw Error('synthetic write failure');return window.exportMode==='saved'?{saved:true}:{cancelled:true,saved:false};}}}};
+ });
+ await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>window.PBTresor&&window.PBRecoveryExport&&window.PBWorkspace);
+ await page.click('.tab[data-tab=settings]');await page.click('#tresorSetup');
+ await page.evaluate(()=>{
+  window.originalSplit=JasonLib.splitSecret;
+  JasonLib.splitSecret=async pw=>{const result=await originalSplit(pw);return new Promise(resolve=>window.finishGeneration=()=>resolve(result));};
+ });
+ await page.fill('#tzPw','synthetic-cancelled-generation');await page.fill('#tzPw2','synthetic-cancelled-generation');await page.click('#tzMk');
+ await page.waitForFunction(()=>typeof window.finishGeneration==='function');
+ ok('Pending generation prevents password edits and duplicate generation',await page.locator('#tzPw').isDisabled()&&await page.locator('#tzMk').isDisabled());
+ await page.click('#tresorModalBg button[data-tclose]');await page.click('#tresorSetup');
+ await page.evaluate(async()=>{JasonLib.splitSecret=originalSplit;finishGeneration();await new Promise(r=>setTimeout(r,0));});
+ ok('Closing a pending generation cannot export keys or enable a reopened dialog',await page.evaluate(()=>exports.length===0&&document.querySelector('#tzFinish').disabled&&document.querySelector('#tzSaved').disabled));
+ await page.fill('#tzPw','short');await page.fill('#tzPw2','short');await page.click('#tzMk');
+ ok('Short password does not generate or export keys',await page.evaluate(()=>exports.length===0));
+ const pw='synthetic-recovery-fixture-2026';
+ await page.fill('#tzPw',pw);await page.fill('#tzPw2',pw+'different');await page.click('#tzMk');
+ ok('Mismatched passwords do not export keys',await page.evaluate(()=>exports.length===0));
+ await page.fill('#tzPw2',pw);await page.click('#tzMk');await page.waitForFunction(()=>document.querySelector('#tzErr').textContent.includes('abgebrochen'));
+ ok('Generate opens native export with five actual Shamir shares',await page.evaluate(()=>exports.length===1&&exports[0].shares.length===5&&exports[0].shares.every(s=>s.startsWith('JT3v5-'))));
+ ok('Three exported keys recover the exact password',await page.evaluate(async pw=>await JasonLib.combineShares(exports[0].shares.slice(0,3))===pw,pw));
+ ok('Cancellation cannot be confirmed as a saved backup',await page.locator('#tzSaved').isDisabled()&&await page.locator('#tzFinish').isDisabled());
+ await page.evaluate(()=>window.exportMode='failure');await page.click('#tzDl');await page.waitForFunction(()=>document.querySelector('#tzErr').textContent.includes('nicht gespeichert'));
+ ok('Write failure is visible and cannot complete setup',await page.locator('#tzSaved').isDisabled()&&await page.locator('#tzFinish').isDisabled());
+ await page.evaluate(()=>window.exportMode='saved');await page.click('#tzDl');await page.waitForFunction(()=>!document.querySelector('#tzSaved').disabled);
+ ok('Retry exports the same keys rather than generating a new set',await page.evaluate(()=>JSON.stringify(exports[0].shares)===JSON.stringify(exports[2].shares)));
+ await page.check('#tzSaved');ok('Successful save plus explicit confirmation enables setup',!await page.locator('#tzFinish').isDisabled());
+ await page.fill('#tzPw',pw+'-changed');ok('Password changes invalidate previously saved keys',await page.locator('#tzFinish').isDisabled()&&await page.locator('#tzSaved').isDisabled());
+ await page.fill('#tzPw2',pw+'-changed');await page.click('#tzMk');await page.waitForFunction(()=>!document.querySelector('#tzSaved').disabled);
+ ok('New keys match the new password, never the earlier backup',await page.evaluate(async pw=>await JasonLib.combineShares(exports.at(-1).shares.slice(1,4))===pw,pw+'-changed'));
+ ok('Every three-key combination recovers; two keys are rejected',await page.evaluate(async pw=>{const s=exports.at(-1).shares;for(let a=0;a<3;a++)for(let b=a+1;b<4;b++)for(let c=b+1;c<5;c++)if(await JasonLib.combineShares([s[a],s[b],s[c]])!==pw)return false;try{await JasonLib.combineShares(s.slice(0,2));return false;}catch{return true;}},pw+'-changed'));
+ await page.evaluate(()=>{
+  window.originalEncrypt=JasonLib.encryptTresor;
+  JasonLib.encryptTresor=async(...args)=>{const result=await originalEncrypt(...args);return new Promise(resolve=>window.finishSetup=()=>resolve(result));};
+ });
+ await page.check('#tzSaved');await page.click('#tzFinish');await page.waitForFunction(()=>typeof window.finishSetup==='function');
+ ok('Pending setup prevents password edits and duplicate completion',await page.locator('#tzPw').isDisabled()&&await page.locator('#tzFinish').isDisabled());
+ await page.click('#tresorModalBg button[data-tclose]');await page.click('#tresorSetup');
+ await page.evaluate(async()=>{JasonLib.encryptTresor=originalEncrypt;finishSetup();await new Promise(r=>setTimeout(r,0));});
+ ok('Closing pending setup cannot create a vault after cancellation',await page.evaluate(()=>!PBTresor.isSetUp()&&!PBTresor.isUnlocked()&&document.querySelector('#tzFinish').disabled));
+ await page.fill('#tzPw',pw+'-changed');await page.fill('#tzPw2',pw+'-changed');await page.click('#tzMk');await page.waitForFunction(()=>!document.querySelector('#tzSaved').disabled);
+ await page.check('#tzSaved');await page.click('#tzFinish');await page.waitForFunction(()=>PBTresor.isUnlocked());
+ ok('No password or recovery share is persisted in localStorage',await page.evaluate(pw=>{const s=JSON.stringify(localStorage);return !s.includes(pw)&&!s.includes('JT3v5-');},pw));
+ await page.click('#tresorLock');await page.click('#tresorRecover');
+ await page.fill('#trShares',await page.evaluate(()=>exports.at(-1).shares.slice(0,3).join('\n')));await page.click('#trGo');await page.waitForFunction(()=>PBTresor.isUnlocked());
+ ok('Exported keys restore and unlock the actual configured vault',await page.evaluate(()=>PBTresor.isUnlocked()));
+ ok('No unhandled browser errors',errors.length===0);
+ console.log(`${count} native recovery checks passed (document transport simulated; Android chooser tested separately).`);
+}finally{await browser?.close();await new Promise(r=>server.close(r));}

@@ -51,6 +51,11 @@ try {
   await page.setInputFiles('#fileInput',{name:'android-smoke.txt',mimeType:'text/plain',buffer:Buffer.from('Fahrzeug Radstand 2820 Millimeter')});
   await page.waitForFunction(()=>!signing && document.querySelector('#stFiles')?.textContent==='1');
   await clickControl(page,'.main-pages [data-tab="search"]');
+  try { await page.locator('#q').waitFor({state:'visible'}); }
+  catch(error) {
+    console.error('Search navigation state',await page.evaluate(()=>({panel:document.querySelector('.panel.on')?.id,hash:location.hash,tab:document.querySelector('.main-pages [data-tab="search"]')?.className,focus:document.activeElement?.tagName})));
+    throw error;
+  }
   ok('Search is visible after completing import and returning through navigation',await page.locator('#q').isVisible());
   await page.fill('#q','Radstand');
   await page.waitForFunction(()=>document.querySelector('#results')?.textContent.includes('android-smoke.txt'));

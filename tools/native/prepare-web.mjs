@@ -1,3 +1,4 @@
+import { adaptRecovery } from './adapt-recovery.mjs';
 import { cp, mkdir, readFile, rm, writeFile, lstat, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -38,7 +39,8 @@ html = html.replace(/<link[^>]*rel="manifest"[^>]*>/g, '');
 const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
 html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>`);
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
-html = html.replace('</body>', '<script src="native-originals.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
+html = adaptRecovery(html);
+html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
 if (!html.includes('<script src="assets/live-mail.js')) throw new Error('Review native mail adapter injection after source changes');
 html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="native-mail-folders.js"></script>\n<script src="assets/live-mail.js');
 // The app-owned status initializer must accept the native local asset origin.
@@ -49,6 +51,6 @@ if (!statusInit.includes(origins)) throw new Error('Review native status origin 
 statusInit = statusInit.replace(origins, 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost"];');
 await writeFile(statusPath, statusInit);
 await writeFile(join(out, 'index.html'), html);
-for (const name of ['native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js']) await cp(join(root, 'native', name), join(out, name));
+for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 console.log('Native web bundle prepared from explicit public inputs.');
