@@ -2,6 +2,8 @@ package de.familyprojekt.privatebrain.pro;
 
 import android.content.ClipData;
 import android.content.Intent;
+import android.app.Activity;
+import android.net.Uri;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 import androidx.core.content.FileProvider;
@@ -10,6 +12,12 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.ActivityCallback;
+import androidx.activity.result.ActivityResult;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Locale;
@@ -21,6 +29,60 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "ProFiles")
 public class ProFilesPlugin extends Plugin {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean exportingRecovery = new AtomicBoolean();
+    private byte[] recoveryBytes;
+
+    /** No cache file, arbitrary path, network request or persistent URI grant. */
+    @PluginMethod public void saveRecoveryKeys(PluginCall call) {
+        if (!exportingRecovery.compareAndSet(false, true)) { call.reject("Export busy", "RECOVERY_BUSY"); return; }
+        try {
+            org.json.JSONArray shares = call.getArray("shares");
+            String name = call.getString("name", "PRIVATE-BRAIN-RECOVERY-KEYS.txt");
+            String heading = call.getString("heading", "Private Brain: recovery keys (3 of 5 required).");
+            if (shares == null || shares.length() != 5 || !name.matches("[A-Za-z0-9_-]{1,80}\\.txt") || heading.length() > 1024) throw new IllegalArgumentException();
+            StringBuilder content = new StringBuilder(heading).append("\n\n");
+            for (int n = 0; n < 5; n++) {
+                String share = shares.getString(n);
+                if (share.length() > 8192 || !share.matches("JT3v5-" + (n + 1) + "-[A-Za-z0-9_-]+")) throw new IllegalArgumentException();
+                content.append(share).append('\n');
+            }
+            recoveryBytes = content.toString().getBytes(StandardCharsets.UTF_8);
+            // Do not retain the transport JSON while the Android picker is open.
+            call.getData().remove("shares");
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("text/plain")
+                .addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE, name)
+                .putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            startActivityForResult(call, intent, "recoverySaved");
+        } catch (Exception error) {
+            clearRecovery(); call.reject("Recovery export unavailable", "RECOVERY_EXPORT_FAILED");
+        }
+    }
+
+    @ActivityCallback private void recoverySaved(PluginCall call, ActivityResult result) {
+        if (call == null) { clearRecovery(); return; }
+        Intent data = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) {
+            clearRecovery(); call.resolve(new JSObject().put("cancelled", true).put("saved", false)); return;
+        }
+        Uri destination = data.getData();
+        worker.execute(() -> {
+            try {
+                if (!"content".equals(destination.getScheme()) || recoveryBytes == null) throw new SecurityException();
+                try (OutputStream output = getContext().getContentResolver().openOutputStream(destination, "w")) {
+                    if (output == null) throw new IllegalStateException();
+                    output.write(recoveryBytes); output.flush();
+                }
+                clearRecovery(); call.resolve(new JSObject().put("saved", true));
+            } catch (Exception error) {
+                clearRecovery(); call.reject("Recovery export unavailable", "RECOVERY_EXPORT_FAILED");
+            }
+        });
+    }
+
+    private void clearRecovery() {
+        if (recoveryBytes != null) Arrays.fill(recoveryBytes, (byte) 0);
+        recoveryBytes = null; exportingRecovery.set(false);
+    }
     private OriginalFileStore originals;
     @Override public void load() { originals = new OriginalFileStore(getContext()); }
     private interface Work { org.json.JSONObject run() throws Exception; }
@@ -110,5 +172,5 @@ public class ProFilesPlugin extends Plugin {
     @PluginMethod public void openPdf(PluginCall call){original(call,()->pdf.open(selected(call).file));}
     @PluginMethod public void pdfPage(PluginCall call){original(call,()->pdf.page(call.getString("id"),call.getInt("page",-1),call.getInt("width",1200)));}
     @PluginMethod public void closePdf(PluginCall call){original(call,()->{pdf.close(call.getString("id"));return new org.json.JSONObject().put("ok",true);});}
-    @Override protected void handleOnDestroy(){worker.execute(()->pdf.close());worker.shutdown();}
+    @Override protected void handleOnDestroy(){worker.execute(()->{clearRecovery();pdf.close();});worker.shutdown();}
 }
