@@ -40,10 +40,11 @@ try{
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
       const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=(innerWidth<=650?88:44)&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=650?144:100);
+      return row.height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
     }));
     if(process.env.PB_CAPTURE_DESIGN==='1'){
-      await mkdir('docs/design/compact15',{recursive:true});await page.screenshot({path:`docs/design/compact15/mail-${width}.png`});
+      await page.mouse.move(width-2,width<650?638:898);
+      await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/mail-${width}.png`});
     }
   }
   await page.setViewportSize({width:320,height:640});
@@ -54,6 +55,7 @@ try{
     ok(`${lang}: app menu tooltip and accessible name follow the selected language`,await page.locator('.native-options>summary').getAttribute('title')===word&&await page.locator('.native-options>summary').getAttribute('aria-label')===word);
   }
   await page.setViewportSize({width:1280,height:900});
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const view=page.locator('[data-native-tool=view]'),images=page.locator('[data-native-tool=images]');
   for(const [control,label]of [[view,'Textansicht'],[images,'Externe Bilder ausblenden']]){
     await control.hover();await page.locator('.native-tooltip').waitFor();ok(label+': mail symbol explains its action in a visible tooltip',await page.locator('.native-tooltip').textContent()===label);

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, mkdir } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
-import { chromium } from 'playwright-core';
+import { chromium, firefox, webkit } from 'playwright-core';
 async function clickControl(page,selector) {
   const control=page.locator(selector);
   if(!await control.isVisible())await control.locator('xpath=ancestor::details[1]').locator(':scope>summary').click();
@@ -26,7 +26,9 @@ try {
   const html=await readFile(root+'/index.html','utf8');
   ok('No PWA installation script or service-worker registration in native build', !html.includes('src="assets/installieren.js') && !html.includes('navigator.serviceWorker.register('));
   ok('Light Pro icon matches the bundled asset', (await readFile('icon-512.png')).equals(await readFile(root+'/icon-512.png')));
-  browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
+  const engine=process.env.PB_BROWSER_ENGINE||'chromium';
+  assert.ok(['chromium','firefox','webkit'].includes(engine),'Known browser engine');
+  browser=await ({chromium,firefox,webkit})[engine].launch(engine==='chromium'?{executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']}:{});
   const url=`http://127.0.0.1:${server.address().port}/`;
   const page=await browser.newPage();const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
@@ -34,12 +36,13 @@ try {
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
   ok('Native bundle starts on search',await page.locator('#q').isVisible() && await page.locator('.brand h1').textContent()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
   ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes('Direkte Mailverbindung')));
-  for(const width of [320,768,1280,1920]) {
+  for(const width of [280,320,390,650,768,1000,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
       await clickControl(page,`.tab[data-tab="${tab}"]`);
-      ok(`${width}px: ${tab} fills available window without global page overflow`,await page.evaluate(()=>{const r=document.querySelector('.panel.on').getBoundingClientRect();return r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;}));
-      if(process.env.PB_CAPTURE_DESIGN==='1'&&width===1280&&['search','explorer'].includes(tab))await page.screenshot({path:`docs/design/mail-preview5/nachher-${tab}-1280.png`});
+      ok(`${width}px: ${tab} fills available window without clipped panel content`,await page.evaluate(()=>{const panel=document.querySelector('.panel.on'),r=panel.getBoundingClientRect();return r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&panel.scrollWidth<=panel.clientWidth+1&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;}));
+      if(tab==='search')ok(`${width}px: both complete search mode labels and filters fit`,await page.locator('.searchbox,.searchbox .toggle,.searchbox .toggle button,.filterbar,.filterbar select').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;})));
+      if(process.env.PB_CAPTURE_DESIGN==='1'&&['search','explorer'].includes(tab)){await page.mouse.move(width-2,898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/${tab}-${width}.png`});}
     }
   }
   await page.click('.main-pages [data-tab="search"]');
@@ -55,6 +58,10 @@ try {
   for(const lang of ['en','ru','pl','de']) {
     await clickControl(page,`[data-lang="${lang}"]`);
     ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes({de:'Direkte Mailverbindung',en:'Direct mail',ru:'Прямая почта',pl:'Bezpośrednia poczta'}[lang])));
+    await page.setViewportSize({width:320,height:640});
+    await page.evaluate(()=>document.documentElement.style.fontSize='20px');
+    ok(`${lang}: larger fonts keep all eight names beside icons and inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===8&&nodes.every(e=>{const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
+    await page.evaluate(()=>document.documentElement.style.fontSize='');
   }
   ok('No runtime errors',errors.length===0);
   ok('No service worker registered',await page.evaluate(async()=>(await navigator.serviceWorker.getRegistrations()).length===0));

@@ -142,7 +142,7 @@ body .wrap { padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom))
 header.top { display:flex;align-items:center;flex-wrap:nowrap;gap:8px;padding:0 0 4px;min-height:36px; }
 header .logo,header .logo img { width:28px;height:28px;flex:none; }
 header .brand { flex:1;min-width:0; }
-header .brand h1 { font-size:1.25rem;line-height:1.25;margin:0;white-space:nowrap; }
+header .brand h1 { font-size:1.25rem;line-height:1.25;margin:0;white-space:normal; }
 header .brand .sub { display:none; }
 header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;gap:4px;margin:0;max-width:none; }
 .native-navigation { display:flex;flex-wrap:nowrap;gap:2px; }
@@ -235,7 +235,7 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 
 /* Keep names visible without bringing back tall navigation cards. */
 .native-toolbar-row .tab { width:auto;padding:6px 9px!important; }
-.native-toolbar-row .compact-caption { font-size:.8rem;line-height:1;white-space:nowrap; }
+.native-toolbar-row .compact-caption { font-size:.75rem;line-height:1.15;white-space:nowrap; }
 .native-more .workspace-tools .compact-label { display:none; }
 .native-tooltip { position:fixed;z-index:2147483647;max-width:calc(100vw - 12px);padding:7px 10px;border-radius:6px;background:var(--ink);color:var(--bg);font:500 .8rem/1.4 system-ui,sans-serif;box-shadow:0 3px 12px #0004;overflow-wrap:anywhere;pointer-events:none; }
 .native-tooltip[hidden] { display:none!important; }
@@ -262,8 +262,8 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 @media(max-width:900px) { #panel-dash .tiles { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:650px) {
   .native-toolbar-row .main-pages { flex:1 1 0;min-width:0;gap:1px; }
-  .native-toolbar-row .main-pages .tab { flex:1 1 0;min-width:0;padding:3px 1px!important;flex-direction:column;gap:3px; }
-  .native-toolbar-row .main-pages .compact-icon { width:16px;height:16px; }
+  .native-toolbar-row .main-pages .tab { flex:1 1 0;min-width:0;padding:3px 2px!important;flex-direction:row;gap:2px; }
+  .native-toolbar-row .main-pages .compact-icon { width:14px;height:14px; }
   .native-toolbar-row .main-pages .compact-caption { font-size:.66rem;max-width:100%;overflow:hidden;text-overflow:ellipsis; }
   .native-more .workspace-tools .compact-icon { display:block; }
   #panel-dash .tile { padding:10px;min-height:96px; }
@@ -280,16 +280,66 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 #panel-dash .tile .k { letter-spacing:normal;text-transform:none; }
 #panel-dash .tile .k,#panel-dash .tile .v,#panel-dash .tile .u { display:block;overflow-wrap:anywhere; }
 
-/* All eight app views stay directly available; small windows use two flat rows. */
+/* All eight app views stay directly available, with names beside their symbols.
+   Wrap controls between rows rather than clipping translated names. */
 .native-more>summary { display:none!important; }
-@media(max-width:650px) {
-  .native-toolbar-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 2px; }
-  .native-toolbar-row .main-pages { grid-column:1;grid-row:1; }
+.native-toolbar-row { flex-wrap:wrap; }
+.native-toolbar-row .main-pages,.native-toolbar-row .native-more { max-width:100%; }
+.native-toolbar-row .workspace-tools { flex-wrap:wrap; }
+.native-toolbar-row .tab { transition:background-color .12s,border-color .12s,color .12s; }
+@media(max-width:1000px) {
+  .native-toolbar-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px; }
+  .native-toolbar-row .main-pages { grid-column:1;grid-row:1;display:flex;flex-wrap:wrap;min-width:0;gap:2px; }
   .native-toolbar-row>#sbkim-widget { grid-column:2;grid-row:1; }
   .native-toolbar-row .native-more { grid-column:1/-1;grid-row:2;min-width:0; }
   .native-more>.workspace-tools { position:static;display:flex;flex-direction:row;gap:2px;width:100%;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent; }
-  .native-more .workspace-tools .tab { flex:1 1 0;width:auto;min-width:0;padding:3px 1px!important;flex-direction:column;justify-content:center;gap:3px; }
-  .native-more .workspace-tools .compact-icon { width:16px;height:16px; }
-  .native-more .workspace-tools .compact-caption { font-size:.66rem;max-width:100%;overflow:hidden;text-overflow:ellipsis; }
-  .native-toolbar-row .main-pages .compact-caption { font-size:.72rem; }
+  .native-toolbar-row .main-pages .tab,.native-more .workspace-tools .tab { flex:1 0 auto;width:auto;min-width:0;padding:3px 2px!important;flex-direction:row;justify-content:center;gap:2px;height:36px;min-height:36px!important; }
+  .native-toolbar-row .main-pages .compact-icon,.native-more .workspace-tools .compact-icon { display:block;width:14px;height:14px; }
+  .native-toolbar-row .main-pages .compact-caption,.native-more .workspace-tools .compact-caption { font-size:.6875rem;max-width:none;overflow:visible;text-overflow:clip; }
+  .native-more .workspace-tools .compact-label { display:none; }
+}
+@media(max-width:360px) {
+  .native-toolbar-row .main-pages { display:grid;grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .native-toolbar-row>#sbkim-widget { align-self:center; }
+  header .brand h1 { white-space:normal; }
+}
+@media(max-width:300px) {
+  .native-more>.workspace-tools { display:grid;grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* The same intrinsic sizing works with touch, mouse and system font scaling.
+   Panels scroll vertically; their controls must fit without a hidden right edge. */
+html { -webkit-text-size-adjust:100%;text-size-adjust:100%; }
+body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); }
+.wrap>.panel { min-width:0;max-width:100%; }
+.panel :is(input,select,textarea,button),.panel .field { min-width:0;max-width:100%; }
+.panel :is(h2,h3,p,.note,.card,.empty,.kv) { overflow-wrap:anywhere; }
+.panel .btnrow { flex-wrap:wrap; }
+.panel .groups { grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr)); }
+.search-welcome { padding:12px 0 4px; }
+.search-welcome h2 { font-size:clamp(1.35rem,3vw,2rem);margin:0 0 8px; }
+.search-welcome p { font-size:.9rem;line-height:1.45;margin:6px 0; }
+.search-totals { gap:6px;margin:6px 0 12px; }
+.search-totals span { padding:6px 9px;border-radius:8px;font-size:.8rem; }
+.searchbox { gap:6px;padding:8px;min-width:0; }
+.searchbox input[type=search] { flex:1 1 240px;width:0;min-width:0;max-width:100%;min-height:40px;padding:8px 10px; }
+.searchbox .toggle { min-width:0;max-width:100%; }
+.searchbox .toggle button { flex:1 1 0;min-width:0;min-height:36px;padding:6px 10px;white-space:normal;overflow-wrap:anywhere; }
+.filterbar { gap:6px;margin:8px 0 2px; }
+.filterbar select { flex:0 1 auto;min-width:0;max-width:100%;min-height:36px; }
+.searchmeta { margin:8px 0 4px;line-height:1.4; }
+.explorer-toolbar input { min-width:0;max-width:100%;flex:1 1 160px; }
+.explorer-row { min-width:0;gap:8px;padding:10px; }
+.explorer-row>div { min-width:0; }
+.kv { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+@media(max-width:650px) {
+  body .wrap { padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px)); }
+  .searchbox { display:grid;grid-template-columns:minmax(0,1fr) auto; }
+  .searchbox input[type=search] { width:100%;font-size:1rem; }
+  .searchbox .toggle { grid-column:1/-1;width:100%; }
+  .searchbox .toggle button { flex:1 1 auto;padding:6px;font-size:.8rem;overflow-wrap:normal; }
+  .filterbar { display:grid;grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .filterbar select,.filterbar button { width:100%; }
+  .search-welcome h2 { font-size:1.35rem; }
+  .search-welcome p { font-size:.85rem; }
 }

@@ -1,11 +1,13 @@
 # Beschriftungen und Ordnerauswahl
 
-Stand 2026-10-20, technische Version 0.1.0-preview.15.
+Stand 2026-10-20, technische Version 0.1.0-preview.16.
 
-Die obere Navigation zeigt kurze Namen neben den Symbolen, auf dem Handy darunter.
-Alle acht Ansichten bleiben direkt sichtbar. Auf dem Handy gibt es dafür zwei
-flache Zeilen, jeweils mit Symbol und kurzem Namen. Auf dem Desktop stehen die
-Ansichten gemeinsam in einer Zeile. Einstellungen
+Die obere Navigation zeigt kleinere kurze Namen direkt rechts neben den Symbolen,
+auch auf dem Handy. Die Knöpfe sind 36 Pixel hoch. Alle acht Ansichten bleiben
+direkt sichtbar. Abhängig von Fensterbreite, Sprache und Schriftgröße verteilen
+sie sich auf flache Zeilen, jeweils mit Symbol und kurzem Namen. Sehr schmale
+Fenster erhalten zusätzliche Zeilen statt abgeschnittener Namen. Auf breiten
+Fenstern stehen die Ansichten gemeinsam in einer Zeile. Einstellungen
 und App-Menü haben ein Zahnrad; der Themewechsel behält das Mondsymbol.
 
 Alle kompakten Symbolknöpfe zeigen einen eigenen sichtbaren Tooltip bei Mauszeiger
@@ -17,6 +19,25 @@ Das Dashboard verwendet kleine Kacheln. Katalogeinträge öffnen den Explorer mi
 allen Dateien; Kategorien öffnen die vorhandene Kategorienübersicht; doppelte
 Inhalte öffnen die Duplikatansicht. Die Kataloggröße bleibt eine Information.
 Die drei großen Einwurf-Hinweisboxen stehen als kurzer Hinweis unter dem Einwurf.
+
+## Fensterbreiten und Betriebssysteme
+
+Die Suche hat eine kleinere Überschrift und kompakte Zähler. In schmalen Fenstern
+stehen Suchfeld und Mikrofon nebeneinander; darunter passen beide vollständigen
+Suchmodus-Namen in die Breite. Filter verteilen sich auf zwei Spalten. Die Seiten
+scrollen senkrecht; Bedienelemente dürfen nicht hinter einem abgeschnittenen
+rechten Rand verschwinden. Bildschirmränder mit Aussparungen werden berücksichtigt.
+Die Oberfläche verwendet dieselben SVG-Symbole statt betriebssystemabhängiger
+Emoji für die Navigation; Maus und Tastatur zeigen Tooltips, Touch bleibt bedienbar.
+
+Die Browser-Prüfung umfasst 280, 320, 390, 650, 768, 1.000, 1.280 und 1.920 Pixel,
+alle acht Ansichten und vier Sprachen mit vergrößerter Schrift. Die CI führt sie
+zusätzlich in Firefox und WebKit aus; Chromium deckt die Engine von Chrome/Edge
+und Android-WebView ab. Engine-Prüfungen unter Linux sind keine Tests auf echten
+iPhones, Macs oder Windows-Geräten. Installierbar ist derzeit die Android-APK;
+es gibt noch keine native iOS-, Windows-, macOS- oder Linux-Ausgabe. Geräte-Mail,
+Keystore und Ordnerfreigaben besitzen aktuell Android-Adapter. Die eigenständige
+PWA wird durch diese Änderung nicht verändert.
 
 ## Ordner am Android-Gerät
 
