@@ -42,6 +42,9 @@ public class NativeStartupTest {
     @Test public void bundledSearchAndNativeBridgeWork() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q') && document.querySelectorAll('.main-pages .tab').length === 4)");
+            scenario.onActivity(activity -> assertEquals("Private Brain Pro",
+                activity.getApplicationInfo().loadLabel(activity.getPackageManager()).toString()));
+            assertEquals("\"Private Brain Pro\"", evaluate(scenario, "document.querySelector('.brand h1').textContent"));
             assertEquals("\"https://localhost\"", evaluate(scenario, "location.origin"));
             evaluate(scenario, "window.Capacitor.Plugins.ProDevice.getInfo().then(info => window.__nativeSmokeInfo = info); true");
             awaitTrue(scenario, "Boolean(window.__nativeSmokeInfo && window.__nativeSmokeInfo.platform === 'android' && window.__nativeSmokeInfo.versionName && window.__nativeSmokeInfo.nativeMail === true)");

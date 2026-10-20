@@ -21,6 +21,15 @@ for (const input of files) {
   await cp(join(root, input), join(out, input), { recursive: true });
 }
 let html = await readFile(join(root, 'index.html'), 'utf8');
+// Native branding is independent of the unchanged PWA source.
+for (const [before, after] of [
+  ['<title>Private Brain — nach Bedeutung suchen</title>', '<title>Private Brain Pro — nach Bedeutung suchen</title>'],
+  ['<meta name="apple-mobile-web-app-title" content="Private Brain">', '<meta name="apple-mobile-web-app-title" content="Private Brain Pro">'],
+  ['<h1>Private Brain</h1>', '<h1>Private Brain Pro</h1>']
+]) {
+  if (!html.includes(before)) throw new Error('Review native branding after source changes');
+  html = html.replace(before, after);
+}
 const worker = 'if("serviceWorker" in navigator){ try{ await navigator.serviceWorker.register("sw.js"); }catch{} }';
 if (!html.includes(worker)) throw new Error('Review native service-worker adaptation after source changes');
 html = html.replace(worker, '// Native assets are updated by Android; no service worker.');

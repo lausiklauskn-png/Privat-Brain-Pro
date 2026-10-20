@@ -4,10 +4,10 @@
   const settingsPage = document.querySelector('#panel-settings');
   for (const node of document.querySelectorAll('.wrap>footer,body>.fp-badge-wrap')) settingsPage?.append(node);
   const text = {
-    de: ['Android-Testversion', 'Direkte Mailverbindung und dauerhafter Ordnerzugriff werden noch ergänzt.'],
-    en: ['Android test version', 'Direct mail and persistent folder access are still being added.'],
-    ru: ['Тестовая версия Android', 'Прямая почта и постоянный доступ к папкам ещё разрабатываются.'],
-    pl: ['Wersja testowa Android', 'Bezpośrednia poczta i trwały dostęp do folderów są w przygotowaniu.']
+    de: ['Private Brain Pro', 'Direkte Mailverbindung und dauerhafter Ordnerzugriff werden noch ergänzt.'],
+    en: ['Private Brain Pro', 'Direct mail and persistent folder access are still being added.'],
+    ru: ['Private Brain Pro', 'Прямая почта и постоянный доступ к папкам ещё разрабатываются.'],
+    pl: ['Private Brain Pro', 'Bezpośrednia poczta i trwały dostęp do folderów są w przygotowaniu.']
   };
   const status = document.createElement('p');
   status.className = 'native-status';
@@ -42,7 +42,7 @@
   const updates = window.Capacitor?.Plugins?.ProUpdates;
   if (!updates || !settings) return;
   const words = {
-    de: ['Auf Updates prüfen', 'Prüft öffentliche GitHub-Veröffentlichungen. Dabei wird eine Verbindung zu GitHub aufgebaut.', 'Prüfung läuft …', 'Du verwendest die aktuelle verfügbare Version.', 'Neue Test-/App-Version: ', 'APK herunterladen', 'Updateprüfung derzeit nicht möglich. Prüfe deine Verbindung und versuche es später erneut.', 'Für diese Entwicklungsversion ist keine Updateprüfung verfügbar.', 'Der Download konnte nicht geöffnet werden. Bitte versuche es erneut.'],
+    de: ['Auf Updates prüfen', 'Prüft öffentliche GitHub-Veröffentlichungen. Dabei wird eine Verbindung zu GitHub aufgebaut.', 'Prüfung läuft …', 'Du verwendest die aktuelle verfügbare Version.', 'Neue App-Version: ', 'APK herunterladen', 'Updateprüfung derzeit nicht möglich. Prüfe deine Verbindung und versuche es später erneut.', 'Für diese Entwicklungsversion ist keine Updateprüfung verfügbar.', 'Der Download konnte nicht geöffnet werden. Bitte versuche es erneut.'],
     en: ['Check for updates', 'Checks public GitHub releases. This connects to GitHub.', 'Checking …', 'You have the latest available version.', 'New app version: ', 'Download APK', 'Unable to check for updates. Check your connection and try again later.', 'Updates are unavailable for this development build.', 'Unable to open the download. Please try again.'],
     ru: ['Проверить обновления', 'Проверяет общедоступные выпуски GitHub с подключением к GitHub.', 'Проверка …', 'Установлена последняя доступная версия.', 'Новая версия приложения: ', 'Скачать APK', 'Не удалось проверить обновления. Проверьте подключение и повторите позже.', 'Для этой версии для разработки проверка недоступна.', 'Не удалось открыть загрузку. Повторите попытку.'],
     pl: ['Sprawdź aktualizacje', 'Sprawdza publiczne wydania GitHub. Łączy się przy tym z GitHub.', 'Sprawdzanie …', 'Używasz najnowszej dostępnej wersji.', 'Nowa wersja aplikacji: ', 'Pobierz APK', 'Nie można sprawdzić aktualizacji. Sprawdź połączenie i spróbuj później.', 'Ta wersja deweloperska nie obsługuje aktualizacji.', 'Nie można otworzyć pobierania. Spróbuj ponownie.']

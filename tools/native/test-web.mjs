@@ -27,8 +27,8 @@ try {
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
-  ok('Native bundle starts on search',await page.locator('#q').isVisible());
-  ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Android-Testversion')));
+  ok('Native bundle starts on search',await page.locator('#q').isVisible() && await page.locator('.brand h1').textContent()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
+  ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes('Direkte Mailverbindung')));
   for(const width of [320,768,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
@@ -49,7 +49,7 @@ try {
   ok('Existing theme toggle works',await page.locator('html').getAttribute('data-theme')!==before);
   for(const lang of ['en','ru','pl','de']) {
     await page.locator(`[data-lang="${lang}"]`).click();
-    ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes({de:'Android-Testversion',en:'Android test version',ru:'Тестовая версия',pl:'Wersja testowa'}[lang])));
+    ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes({de:'Direkte Mailverbindung',en:'Direct mail',ru:'Прямая почта',pl:'Bezpośrednia poczta'}[lang])));
   }
   ok('No runtime errors',errors.length===0);
   ok('No service worker registered',await page.evaluate(async()=>(await navigator.serviceWorker.getRegistrations()).length===0));
