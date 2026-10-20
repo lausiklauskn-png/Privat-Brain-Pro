@@ -73,7 +73,8 @@ try {
     ok(`${lang}: larger fonts keep all eight names beside icons and inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===8&&nodes.every(e=>{const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
     await page.evaluate(()=>document.documentElement.style.fontSize='');
   }
-  ok('No runtime errors',errors.length===0);
+  // Name the errors: the WebKit job otherwise fails without saying why.
+  ok('No runtime errors'+(errors.length?': '+errors.join(' | '):''),errors.length===0);
   ok('No service worker registered',await page.evaluate(async()=>(await navigator.serviceWorker.getRegistrations()).length===0));
   const updatePage = await browser.newPage();
   await updatePage.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
@@ -117,6 +118,6 @@ try {
   await updatePage.locator('#native-update-check').click();
   await updatePage.waitForFunction(()=>document.querySelector('#native-update-check').disabled===false);
   ok('Current app has no download offer',await updatePage.locator('#native-update-download').isHidden() && await updatePage.locator('.native-updates').textContent().then(t=>t.includes('aktuelle')));
-  ok('No update UI runtime errors',errors.length===0);
+  ok('No update UI runtime errors'+(errors.length?': '+errors.join(' | '):''),errors.length===0);
 } finally {await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} native web checks passed`);

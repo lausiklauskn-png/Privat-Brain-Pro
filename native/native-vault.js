@@ -279,6 +279,7 @@
     viewButton.onclick = () => view(entry).catch(error => alert(errorText(error)));
     out.onclick = () => handOut(entry.id).catch(error => alert(errorText(error)));
     row.append(info, viewButton, out);
+    if (window.PBSchutz && entry.sha256) info.append(PBSchutz.attachmentStatus(entry, { handOut: () => handOut(entry.id, true).catch(error => alert(errorText(error))) }));
     return row;
   }
   window.PBExplorerExtra = {
@@ -334,6 +335,7 @@
         v.onclick = () => view(a).catch(error => alert(errorText(error)));
         o.onclick = () => handOut(a.ref).catch(error => alert(errorText(error)));
         box.append(v, o);
+        if (window.PBSchutz) box.append(PBSchutz.attachmentStatus(a, { handOut: () => handOut(a.ref, true).catch(error => alert(errorText(error))) }));
       } else if (a.deleted) {
         label.textContent += t('deleted') + ' ';
         const r = make('button', t('reload'), 'mail-button'); r.type = 'button'; r.onclick = () => reload?.(); box.append(r);

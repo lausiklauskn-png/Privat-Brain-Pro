@@ -8,6 +8,16 @@ gehören nicht zum getrennten Passwort des Tablet-/SD-Speicherorts.
 Noch keine veröffentlichte .18 behaupten, bevor signierte Updateprobe und
 öffentliche Downloadprüfung bestanden sind.
 
+**Bauabschnitt 5 vorbereitet (2026-10-20, noch nicht veröffentlicht): Schutz vor Viren, Spam, Betrug.**
+Prüfstelle `native/native-protect.js` (`PBSchutz`) mit Einschüben: Regeln für Spam/Betrug
+(ohne Netz), MalwareBazaar-/URLhaus-Listen (abuse.ch, persönlicher Auth-Key), VirusTotal
+nur Fingerabdruck auf Tipp, Übergabe an Virenscanner-App. Listen, Stand und Schlüssel
+**nur** verschlüsselt im Speicherort-Ordner unter `Schutzlisten/` mit lesbaren Namen,
+nie im App-Speicher (`Protection`/`ProtectionList`/`ProProtectPlugin`). Automatisch alle
+12 h, Gesamtliste nur im WLAN, Internetschalter beachtet. Nie „virenfrei“ schreiben.
+Anbieter nicht erreichbar gemessen, Lizenz für Verkauf offen, Tablet nicht gemessen.
+[Bedienung, Grenzen, Nachweise](docs/SCHUTZ-VIREN-SPAM-BETRUG.md).
+
 **Vorschau .17 veröffentlicht (2026-10-20).**
 [APK .17](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.17/Private-Brain-Pro-0.1.0-preview.17.apk)
 über die vorhandene .16 installieren, nicht deinstallieren. Unveränderter Tag
