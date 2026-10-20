@@ -32,7 +32,8 @@ waren Entschlüsselung, Original-Pin-/Privatschlüsselprüfung, Versiegelung und
 unabhängige Wiederherstellung erfolgreich. Der Gesamtlauf ist rot, weil GitHub
 Actions keine PR anlegen darf; deshalb wird der bereits erzeugte, geprüfte
 Übernahmezweig gemäß Ersatzweg durch die autorisierte Sitzung übernommen.
-Nach dem Merge ist weiterhin die Operation **check auf main** auszuführen.
+Der anschließende [Identitätsworkflow auf main 39482529491](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482529491)
+war erfolgreich (Commit `39e8fae98671870962e70d5263416acd21502e37`).
 
 `signing/android-release.enc.json` enthält ausschließlich das verschlüsselte
 Identitätspaket; `signing/android-certificate.json` den öffentlichen Pin.

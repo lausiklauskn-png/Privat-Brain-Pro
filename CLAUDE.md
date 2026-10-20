@@ -1,12 +1,16 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Veröffentlichungsweg in Vorbereitung:** [Gemeinsamer Release-Ablauf für Claude und Codex](docs/VEROEFFENTLICHEN.md).
-Vorschau .17 ist hier noch nicht als veröffentlicht bestätigt; APK-Link, Prüfsumme
-und Lauf-IDs erst nach erfolgreicher Signierung, Updateprobe und Downloadprüfung ergänzen.
-Der bisherige Vorschau-Schlüssel darf nur als verschlüsseltes Paket im Repo liegen;
-Freigabe ausschließlich `PB_SIGNING_UNLOCK` im Environment `android-preview`.
-[Sicherer Einweg-Import und aktueller Originalschlüssel-Blocker](docs/SIGNIERUNG-UND-GITHUB.md).
-In der aktuellen Codex-Umgebung ist das Original nicht vorhanden; keinen Ersatz erzeugen.
+**Vorschau .17: Signierung repariert, Updateprobe noch offen.**
+Originalsignierer über PR #37/#38 ausschließlich verschlüsselt auf main gesichert;
+Identitätsworkflow 39482529491 und vollständige Main-CI 39482528010 grün.
+Tag `v0.1.0-preview.17` auf `39e8fae98671870962e70d5263416acd21502e37`
+hat Release 39484440521 ausgelöst. Build, Original-Zertifikat, Paket, VersionCode
+17 und nicht debuggable geprüft; `signed-upgrade` 118844398526 fehlgeschlagen,
+Veröffentlichung korrekt übersprungen. Noch keine öffentliche .17 oder APK-Prüfsumme.
+Ergebnisartefakt `signed-upgrade-results` zur Diagnose auswerten; aktuelle Cloud-
+Netzregel blockiert `api.github.com`. Alte Secrets bis nach erfolgreichem Release behalten.
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md), [gemeinsamer Release-Ablauf](docs/VEROEFFENTLICHEN.md),
+[Signierung und Sicherung](docs/SIGNIERUNG-UND-GITHUB.md). Keine lokale Schlüsselkopie nötig.
 
 **Bauabschnitt 1 (Vorschau .17, 2026-10-20): eigener Speicherort mit Passwort.**
 Einstellungen → „🔐 Speicherort und Verschlüsselung“: Tablet oder SD-Karte über die

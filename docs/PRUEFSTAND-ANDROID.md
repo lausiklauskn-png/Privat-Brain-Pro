@@ -1,8 +1,9 @@
-> Signierung, Stand 2026-10-20: Vorbereitung auf AES-256-GCM-Paket im Repo und
-> `PB_SIGNING_UNLOCK` ausschließlich in Actions; siehe
-> [sichere Übernahme](SIGNIERUNG-UND-GITHUB.md). Original-Keystore in der aktuellen
-> Umgebung nicht gefunden. Kein echter Import-/Release-/Update-Nachweis für .17;
-> APK-Link und SHA-256 werden erst nach tatsächlichem Release ergänzt.
+> Signierung, Stand 2026-10-20: Originalsignierer per PR #37/#38 wiederhergestellt
+> und ausschließlich AES-256-GCM-verschlüsselt auf main gesichert. Identitätsworkflow
+> 39482529491 grün. Tag `v0.1.0-preview.17` auf `39e8fae` hat Release 39484440521
+> gestartet: Build, Originalsignatur und APK-Metadaten erfolgreich geprüft;
+> `signed-upgrade` fehlgeschlagen, Veröffentlichung korrekt übersprungen.
+> Noch keine öffentliche APK .17 oder bestandene signierte Updateprobe behaupten.
 
 # Prüfstand Android – 2026-10-20
 
@@ -810,7 +811,7 @@ Android-Emulator ist kein Samsung-/DeX-Gerät. Installierbar bleibt die Android-
 native iOS-/Windows-/macOS-/Linux-Ausgaben sind noch nicht vorhanden. Die
 unabhängige PWA und die Google-Registrierung bleiben unverändert.
 
-## Vorschau .17 – Veröffentlichung noch ausstehend (2026-10-20)
+## Historie: .17-Signierfehler vor Wiederherstellung (2026-10-20)
 
 Geplanter unveränderter Quellstand `eb800faf25676055a19a49eea83d0ba158e896ec`,
 versionCode 17, versionName `0.1.0-preview.17`. Laut übermitteltem Auftrag ist die
@@ -850,3 +851,25 @@ Auch die Prüfung auf eine einzelne zusätzliche Base64-Schicht kann ohne die
 erforderlichen Secrets nicht ausgeführt werden. Sechs lokale Positiv-/Negativfälle
 mit einem temporären **Test**-Keystore bestanden; dabei wurde kein neuer
 Vorschau-Schlüssel erzeugt und der echte Vorschau-Fingerabdruck bleibt fest gepinnt.
+
+
+## .17: Originalsignierung repariert, Updateprobe noch offen
+
+Release-Tag `v0.1.0-preview.17` zeigt auf den vollständig geprüften main-Commit
+`39e8fae98671870962e70d5263416acd21502e37`. Der Anwendungscode ist gegenüber
+`eb800faf25676055a19a49eea83d0ba158e896ec` unverändert. Vollständige
+[Main-CI 39482528010](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39482528010)
+erfolgreich, einschließlich Firefox, WebKit, Build/Lint und native-smoke.
+
+[Release 39484440521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521)
+wurde durch Git-Push ausgelöst. Build-Job erfolgreich: verschlüsseltes Paket
+mit `PB_SIGNING_UNLOCK` in Actions geöffnet, privater Originalschlüssel benutzt,
+APK-Zertifikat gegen `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`
+geprüft; Paket, Appname, nicht debuggable und VersionCode 17 > 16 bestätigt.
+
+[Signierte Updateprobe](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39484440521/job/118844398526)
+fehlgeschlagen; Veröffentlichung wurde übersprungen. Zur Diagnose liegt das
+Artefakt `signed-upgrade-results` vor. Die laufende Cloud-Umgebung blockiert
+aktuell `api.github.com` und damit den authentifizierten Abruf dieses Artefakts.
+Keinen Fehler im App-Code ohne Diagnose behaupten; die signierte APK nicht
+vor erfolgreicher Updateprobe veröffentlichen. Alte Secrets vorerst behalten.
