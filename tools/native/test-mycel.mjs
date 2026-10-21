@@ -97,6 +97,7 @@ try{
   ok('On first start the Siegel sits in the top bar on the right, between the title and ← → ☰ (360–1280 px)',first.every(([,c])=>c.oben==='rechts'&&c.inBar&&c.afterTitle&&c.beforeTools)||console.log(JSON.stringify(first)));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/siegel-mycel',{recursive:true});await page.mouse.move(180,600);await pause(200);
     await page.screenshot({path:'docs/design/siegel-mycel/oben-eingerastet.png'});}
+  ok('The Siegel stays below app windows (dialogs, ☰ menu, image and file viewer)',await page.evaluate(()=>{const z=Number(getComputedStyle(document.querySelector('#sbkim-widget')).zIndex);return z>31&&z<60;}));
   const head=await rect('header.top');
   await drag('#sbkim-widget',60,head.y+6);
   w=await widget();const placed=await rect('#sbkim-widget');
