@@ -5,6 +5,12 @@ Enthält PR #48–#52 (Alle Konten, Aufräumen, Explorer ↕/Inhalt, Kategorien,
 Release-Lauf 39613483028 (workflow_dispatch mit `source_commit`, von dieser Claude-Sitzung auf Klaus' ausdrückliche Bitte gestartet; der Tag-Push war gesperrt) erfolgreich: Signatur, Updateprobe .19 → .20, Veröffentlichung.
 Unabhängiger Download: SHA-256 `936649e6faa6eb23af07ed2fa7b5cdef4e884d13f0de68fcb3b1eca2a5c33d14`, 5.749.114 Bytes, gleich SHA256SUMS. Newsletter-Abmelden (PR #53) **nicht** enthalten. Tablet nicht gemessen.
 
+**Mikrofon, Internet-Lampe, Dateiwahl (Klaus 2026-10-21):** 🎤 in der Suche nutzt in der Pro-App das Sprach-Fenster von
+Android (`ProSpeechPlugin`, `native/native-speech.js`), nur der erkannte Text kommt zurück. Kleine Lampe oben vor ← → ☰:
+grün = Internet erlaubt, rot = getrennt, Tippen schaltet, Hinweis beim Darüberfahren; Menü-Schalter bleibt. Siegel-Start
+jetzt 152 px vom Rand (unberührter .20-Startplatz rückt mit). „Original erneut auswählen“ zeigt nur einen Knopf.
+405 beim Teilen an Workflow PDF liegt beim Empfänger → Codex-Brief. [Details](docs/MIKROFON-LAMPE-DATEIWAHL.md).
+
 **Newsletter abmelden (Klaus 2026-10-21):** unsichtbares `List-Unsubscribe` (+ RFC 8058 One-Click) wird gelesen; in „🧹 Aufräumen“ ⚡ direkt, ✉ Abmelde-Mail **nur nach Bestätigung**, 🌐 Webseite. Selbst abmelden nur mit Freigabe und nur ⚡ für „Ist Werbung“-Absender; bei Betrugsverdacht nie. [Details](docs/AUFRAEUMEN-NEWSLETTER.md#newsletter-abmelden-klaus-2026-10-21).
 
 **Siegel und Mycel (Klaus 2026-10-21):** nur der **runde Siegel-Knopf** schwebt (Modul 17, byte-1:1), am Knopf

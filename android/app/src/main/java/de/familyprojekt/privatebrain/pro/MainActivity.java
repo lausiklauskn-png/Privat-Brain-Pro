@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProVaultPlugin.class);
         registerPlugin(ProProtectPlugin.class);
         registerPlugin(ProLinksPlugin.class);
+        registerPlugin(ProSpeechPlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);
         bridge.getWebView().getSettings().setBlockNetworkLoads(AppNetwork.isOffline());
