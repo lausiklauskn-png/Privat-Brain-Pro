@@ -51,6 +51,34 @@
     different: ['Verschieden – beide behalten', 'Different – keep both', 'Разные – оставить оба', 'Różne – zachowaj oba'],
     merged: ['Zusammengelegt. Ihre Markierungen bleiben erhalten.', 'Merged. Your marks are kept.', 'Объединено. Ваши отметки сохранены.', 'Połączono. Twoje oznaczenia zostały zachowane.'],
     kept: ['Beide bleiben erhalten.', 'Both are kept.', 'Оба сохранены.', 'Oba zachowane.'],
+    clean: ['🧹 Aufräumen', '🧹 Clean up', '🧹 Уборка', '🧹 Porządki'],
+    cleanIntro: ['Newsletter und Werbung aller Konten. Abgelaufene Angebote können in den Papierkorb des Anbieters; dort lassen sie sich zurückholen, bis der Anbieter ihn leert. Ohne eindeutiges Datum wird nie von selbst gelöscht. Mails mit Stern und Absender mit „Ist wichtig“ bleiben immer.',
+      'Newsletters and ads from all accounts. Expired offers can go to the provider\'s trash, where they can be restored until the provider empties it. Without a clear date nothing is deleted automatically. Starred mails and senders marked “Important” always stay.',
+      'Рассылки и реклама всех аккаунтов. Истёкшие предложения можно переместить в корзину провайдера и восстановить, пока она не очищена. Без ясной даты ничего не удаляется автоматически. Письма со звездой и отправители «Важно» остаются всегда.',
+      'Newslettery i reklamy ze wszystkich kont. Wygasłe oferty mogą trafić do kosza dostawcy i można je przywrócić, dopóki kosz nie zostanie opróżniony. Bez jasnej daty nic nie jest usuwane automatycznie. Wiadomości z gwiazdką i nadawcy „Ważne” zostają zawsze.'],
+    expiredH: ['⌛ Abgelaufen', '⌛ Expired', '⌛ Истекли', '⌛ Wygasłe'],
+    checkH: ['❓ Zum Prüfen (kein eindeutiges Datum)', '❓ To check (no clear date)', '❓ Проверить (нет ясной даты)', '❓ Do sprawdzenia (brak jasnej daty)'],
+    runningH: ['✅ Läuft noch', '✅ Still running', '✅ Ещё действуют', '✅ Nadal aktualne'],
+    trashedH: ['↩ Zuletzt in den Papierkorb gelegt', '↩ Recently moved to trash', '↩ Недавно в корзине', '↩ Ostatnio przeniesione do kosza'],
+    trashAll: ['Alle abgelaufenen in den Papierkorb', 'Move all expired to trash', 'Все истёкшие в корзину', 'Wszystkie wygasłe do kosza'],
+    trashOne: ['🗑 In den Papierkorb', '🗑 Move to trash', '🗑 В корзину', '🗑 Do kosza'],
+    confirmTrash: ['Mails in den Papierkorb des Anbieters legen? Rückgängig bleibt möglich, bis der Anbieter den Papierkorb leert.', 'Move emails to the provider\'s trash? Undo stays possible until the provider empties the trash.', 'Переместить письма в корзину провайдера? Отмена возможна, пока корзина не очищена.', 'Przenieść wiadomości do kosza dostawcy? Cofnięcie jest możliwe, dopóki kosz nie zostanie opróżniony.'],
+    ask: ['abgelaufene Angebote. Künftig abgelaufene Angebote dieses Absenders selbst in den Papierkorb legen?', 'expired offers. Move this sender\'s expired offers to trash automatically from now on?', 'истёкших предложений. Впредь перемещать истёкшие предложения этого отправителя в корзину автоматически?', 'wygasłych ofert. Odtąd automatycznie przenosić wygasłe oferty tego nadawcy do kosza?'],
+    yesAuto: ['Ja, künftig selbst', 'Yes, from now on', 'Да, впредь сами', 'Tak, odtąd samo'],
+    noAuto: ['Nein, ich lösche selbst', 'No, I delete myself', 'Нет, удаляю сам', 'Nie, usuwam sam'],
+    autoOn: ['🤖 räumt selbst auf', '🤖 cleans up itself', '🤖 убирает само', '🤖 sprząta samo'],
+    until: ['gültig bis', 'valid until', 'действует до', 'ważne do'],
+    noDate: ['kein eindeutiges Datum', 'no clear date', 'нет ясной даты', 'brak jasnej daty'],
+    protected: ['geschützt', 'protected', 'защищено', 'chronione'],
+    isAd: ['📰 Ist Werbung', '📰 Is advertising', '📰 Это реклама', '📰 To reklama'],
+    isImportant: ['⭐ Ist wichtig', '⭐ Is important', '⭐ Важно', '⭐ Ważne'],
+    moved: ['in den Papierkorb gelegt', 'moved to trash', 'перемещено в корзину', 'przeniesiono do kosza'],
+    automatic: ['automatisch', 'automatic', 'автоматически', 'automatycznie'],
+    undo: ['Rückgängig', 'Undo', 'Отменить', 'Cofnij'],
+    restored: ['zurückgeholt', 'restored', 'восстановлено', 'przywrócono'],
+    gone: ['nicht mehr im Papierkorb', 'no longer in trash', 'уже нет в корзине', 'nie ma już w koszu'],
+    noTrash: ['Kein Papierkorb beim Anbieter gefunden; nichts wurde verschoben.', 'No provider trash found; nothing was moved.', 'Корзина у провайдера не найдена; ничего не перемещено.', 'Nie znaleziono kosza u dostawcy; nic nie przeniesiono.'],
+    noId: ['Ohne Mail-Kennung wird nicht verschoben (kein sicherer Rückweg).', 'Without a message ID nothing is moved (no safe way back).', 'Без идентификатора письмо не перемещается (нет надёжного возврата).', 'Bez identyfikatora nic nie jest przenoszone (brak bezpiecznego powrotu).'],
     unnamed: ['(ohne Absender)', '(no sender)', '(без отправителя)', '(bez nadawcy)'],
     noSubject: ['(kein Betreff)', '(no subject)', '(без темы)', '(bez tematu)']
   };
@@ -60,12 +88,12 @@
   function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; } }
   function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Preference only. */ } }
   const view = Object.assign({ mode: 'senders', order: 'newest' }, load(KEYS.view, {}));
-  if (!['senders', 'list'].includes(view.mode)) view.mode = 'senders';
+  if (!['senders', 'list', 'clean'].includes(view.mode)) view.mode = 'senders';
   if (!['newest', 'oldest'].includes(view.order)) view.order = 'newest';
 
   // ---------- helpers ----------
   const many = n => n + ' ' + t(n === 1 ? 'mail' : 'mails');
-  const fold = s => String(s || '').toLocaleLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
+  const fold = s => String(s || '').toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss');
   function senderAddress(from) {
     const s = String(from || '').split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)[0] || '';
     const m = s.match(/<([^<>\s]+@[^<>\s]+)>/) || s.match(/([^\s<>"',;]+@[^\s<>"',;]+)/);
@@ -82,12 +110,13 @@
       // DOMParser documents are inert: no scripts run, no images or styles load.
       const doc = new DOMParser().parseFromString(String(html), 'text/html');
       for (const n of doc.querySelectorAll('script,style,head,noscript,template')) n.remove();
-      return (doc.body?.innerText || doc.body?.textContent || '').replace(/[ \t ]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
+      return (doc.body?.innerText || doc.body?.textContent || '').replace(/[ \t\u00a0]+/g, ' ').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
     } catch { return ''; }
   }
   const locKey = (account, folder, validity, uid) => account + '\n' + folder + '\n' + validity + '\n' + uid;
   const hashText = async text => sha256(new TextEncoder().encode(text).buffer);
   const indexed = () => CATALOG.filter(r => r.mailIndex && r.mail);
+  const visible = () => indexed().filter(r => !r.mailTrashed);
   function fmtDate(ms) { return ms ? new Date(ms).toLocaleDateString(document.documentElement.lang || 'de', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''; }
   function fmtTime(ms) { return ms ? new Date(ms).toLocaleString(document.documentElement.lang || 'de', { dateStyle: 'short', timeStyle: 'short' }) : ''; }
 
@@ -115,6 +144,8 @@
     if (body) { rec.mailHasAttachments = Boolean(body.attachments); const text = body.text || htmlToText(body.html); if (text && text.length >= (rec.mailBody || '').length) { rec.mailBody = text.slice(0, 8000); rec.size = text.length; } }
     if (rec.mailBody == null) rec.mailBody = '';
     addLocation(rec, loc); rec.tags = rec.tags || []; rec.dupes = rec.dupes || [];
+    // Found again in a read folder: someone took it back out of the trash. Never move it by itself again.
+    if (rec.mailTrashed) { delete rec.mailTrashed; rec.mailKeep = 1; }
     const changed = before !== JSON.stringify([rec.name, rec.mail?.from, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody?.length, rec.mailRemotes]);
     if (changed) textFields(rec);
     return changed;
@@ -134,6 +165,9 @@
       mailIndex: 1, mailMessageId: item.messageId || '', mailSeen: Boolean(item.seen), mailFlagged: Boolean(item.flagged),
       mailList: Boolean(item.list || item.bulk), mailHasAttachments: Boolean(body?.attachments) };
     addLocation(rec, loc); textFields(rec);
+    const known = ctx.senders.get(senderAddress(item.from));
+    if (known?.mark) rec.mailSenderMark = known.mark;
+    if (known?.rule) rec.mailSenderRule = known.rule;
     if (!item.messageId) {
       // Without an identifier, a near twin is only flagged; the user decides in "Doppelte".
       const twin = (ctx.twins.get(twinKey(item.from, subject)) || []).find(r => r.hash !== hash && !r.mailDupeChecked && Math.abs((r.date || 0) - (item.date || 0)) <= DAY);
@@ -208,7 +242,7 @@
     if (rec.mailMessageId) ctx.byId.set(rec.mailMessageId, rec);
   }
   function context() {
-    const ctx = { known: new Map(), byId: new Map(), twins: new Map(), legacy: new Map(), count: 0, since: load(KEYS.since, 0) };
+    const ctx = { known: new Map(), byId: new Map(), twins: new Map(), legacy: new Map(), senders: senderSettings(), count: 0, since: load(KEYS.since, 0) };
     if (!ctx.since) { ctx.since = Date.now() - YEAR; store(KEYS.since, ctx.since); }
     for (const r of CATALOG) {
       if (!r.mail) continue;
@@ -237,6 +271,10 @@
       if (failed.length) lastProblem = t('failed') + ' ' + failed.join(', ');
       if (!stopRequested && accounts.length) store(KEYS.last, { at: Date.now(), accounts: accounts.length });
       if (!accounts.length && !auto) lastProblem = t('noAccounts');
+      if (!stopRequested && accounts.length) {
+        const due = sorted().expired.filter(r => r.mailSenderRule === 'auto');
+        if (due.length) await trashRecords(due, 'auto');
+      }
     })().finally(() => { running = null; progressText = stopRequested ? t('stopped') : ''; rebuildIndex(); refreshAll(); draw(); drawDupes(); });
     return running;
   }
@@ -246,18 +284,158 @@
     sync(true).catch(() => {});
   }
 
+  // ---------- clean-up: expiry, trash, undo ----------
+  const expiryCache = new WeakMap();
+  function validUntil(r) {
+    const key = (r.mailBody || '').length + '|' + r.date + '|' + r.name;
+    const hit = expiryCache.get(r);
+    if (hit?.key === key) return hit.value;
+    const value = window.PBMailExpiry ? PBMailExpiry.find(r.name + '\n' + (r.mailBody || ''), r.date || Date.now()) : { until: null, sure: false, phrase: '' };
+    expiryCache.set(r, { key, value }); return value;
+  }
+  function senderSettings() {
+    const map = new Map();
+    for (const r of indexed()) {
+      const key = senderAddress(r.mail.from), s = map.get(key) || {};
+      if (r.mailSenderMark) s.mark = r.mailSenderMark;
+      if (r.mailSenderRule) s.rule = r.mailSenderRule;
+      map.set(key, s);
+    }
+    return map;
+  }
+  /** Sets a mark or rule for one sender on all of its entries; new mails inherit it. */
+  async function setSender(address, field, value) {
+    for (const r of indexed().filter(x => senderAddress(x.mail.from) === address)) {
+      if (value) r[field] = value; else delete r[field];
+      await idbPut('catalog', r);
+    }
+  }
+  const isNewsletter = r => (r.mailList || r.mailSenderMark === 'ad') && r.mailSenderMark !== 'important';
+  // A mail Klaus took back out of the trash is never moved again by itself.
+  const guarded = r => r.mailFlagged || r.mailStar || r.mailSenderMark === 'important' || r.mailKeep || !r.mailMessageId;
+  function sorted() {
+    const out = { expired: [], check: [], running: [] };
+    for (const r of visible().filter(isNewsletter)) {
+      const v = validUntil(r);
+      if (!v.until) out.check.push(r);
+      else if (PBMailExpiry.expired(v.until) && !guarded(r)) out.expired.push(r);
+      else if (PBMailExpiry.expired(v.until)) out.check.push(r);
+      else out.running.push(r);
+    }
+    for (const list of Object.values(out)) list.sort(byOrder);
+    return out;
+  }
+  async function trashFolder(account, cache) {
+    if (cache.has(account)) return cache.get(account);
+    let path = null;
+    try { const folders = await device.request('/' + encodeURIComponent(account) + '/folders'); path = window.PBMailFolders?.resolve(folders).roles.get('trash')?.path || null; }
+    catch (error) { lastProblem = error.message; }
+    cache.set(account, path); return path;
+  }
+  let lastRun = null;
+  /** Moves mails into the provider's trash. Only mails with a Message-ID, so undo can find them again. */
+  async function trashRecords(list, reason) {
+    const run = { id: crypto.randomUUID(), at: Date.now(), reason }, cache = new Map();
+    let moved = 0;
+    for (const r of list) {
+      if (!r.mailMessageId) { lastProblem = t('noId'); continue; }
+      const places = [];
+      for (const l of r.mailRemotes || []) {
+        const trash = await trashFolder(l.account, cache);
+        if (!trash) { lastProblem = t('noTrash'); continue; }
+        if (l.folder === trash) continue;
+        try {
+          await device.request('/' + encodeURIComponent(l.account) + '/messages/' + l.uid + '/action', { folder: l.folder, validity: l.validity, action: 'move', target: trash });
+          places.push({ account: l.account, email: l.email, from: l.folder, trash });
+        } catch (error) { lastProblem = error.message; }
+      }
+      if (!places.length) continue;
+      r.mailRemotes = (r.mailRemotes || []).filter(l => !places.some(p => p.account === l.account && p.from === l.folder));
+      r.mailRemote = r.mailRemotes[0] ? { base: device.base, ...r.mailRemotes[0] } : null;
+      r.mailTrashed = { run: run.id, at: run.at, reason, places };
+      await idbPut('catalog', r); moved++;
+    }
+    if (moved) lastRun = { ...run, count: moved }; // the undo banner says it once
+    rebuildIndex(); refreshAll(); draw();
+    return moved;
+  }
+  async function undoRun(id) {
+    let back = 0, gone = 0;
+    for (const r of indexed().filter(x => x.mailTrashed?.run === id)) {
+      let left = [];
+      for (const p of r.mailTrashed.places) {
+        try {
+          const found = await device.locate({ account: p.account, folder: p.trash, messageId: r.mailMessageId });
+          if (!found.uid) { gone++; continue; }
+          await device.request('/' + encodeURIComponent(p.account) + '/messages/' + found.uid + '/action', { folder: p.trash, validity: found.validity, action: 'move', target: p.from });
+          back++;
+        } catch (error) { lastProblem = error.message; left.push(p); }
+      }
+      if (left.length) r.mailTrashed.places = left; else { delete r.mailTrashed; r.mailKeep = 1; }
+      await idbPut('catalog', r);
+    }
+    if (lastRun?.id === id) lastRun = null;
+    progressText = back + ' · ' + t('restored') + (gone ? ' · ' + gone + ' ' + t('gone') : '');
+    rebuildIndex(); refreshAll(); draw();
+    sync(true).catch(() => {}); // the restored mails get their new place on the server
+  }
+  function runs() {
+    const map = new Map();
+    for (const r of indexed()) if (r.mailTrashed) { const x = map.get(r.mailTrashed.run) || { id: r.mailTrashed.run, at: r.mailTrashed.at, reason: r.mailTrashed.reason, count: 0 }; x.count++; map.set(x.id, x); }
+    return [...map.values()].sort((a, b) => b.at - a.at).slice(0, 10);
+  }
+  function chip(r) {
+    if (!isNewsletter(r)) return '';
+    const v = validUntil(r);
+    return v.until ? t('until') + ' ' + new Date(v.until).toLocaleDateString(document.documentElement.lang || 'de', { day: '2-digit', month: '2-digit' }) : t('noDate');
+  }
+  function drawClean(list) {
+    const groupsBy = sorted(), settings = senderSettings();
+    list.append(el('p', 'mail-muted', t('cleanIntro')));
+    const asked = new Map();
+    for (const r of groupsBy.expired) { const a = senderAddress(r.mail.from); if (!settings.get(a)?.rule) asked.set(a, [...(asked.get(a) || []), r]); }
+    for (const [address, mails] of asked) {
+      const box = el('div', 'mail-report mail-all-ask'); box.dataset.mailAsk = address;
+      box.append(el('p', '', senderName(mails[0].mail.from) + ': ' + mails.length + ' ' + t('ask')));
+      box.append(button(t('yesAuto'), async () => { await setSender(address, 'mailSenderRule', 'auto'); await trashRecords(mails, 'auto'); }, 'mail-primary'),
+        button(t('noAuto'), async () => { await setSender(address, 'mailSenderRule', 'no'); draw(); }));
+      list.append(box);
+    }
+    const section = (key, mails, extra) => {
+      const head = el('h3', 'mail-all-section', t(key) + ' (' + mails.length + ')'); head.dataset.mailClean = key; list.append(head);
+      if (extra) list.append(extra);
+      for (const r of mails.slice(0, 200)) {
+        const wrap = el('div', 'mail-all-clean-row'); wrap.append(mailRow(r));
+        if (key === 'checkH' && r.mailMessageId) wrap.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) await trashRecords([r], 'manual'); }));
+        list.append(wrap);
+      }
+    };
+    section('expiredH', groupsBy.expired, groupsBy.expired.length ? button(t('trashAll'), async () => { if (confirm(groupsBy.expired.length + ' · ' + t('confirmTrash'))) await trashRecords(groupsBy.expired, 'manual'); }, 'mail-primary') : null);
+    section('checkH', groupsBy.check);
+    section('runningH', groupsBy.running);
+    const past = runs();
+    if (past.length) {
+      list.append(el('h3', 'mail-all-section', t('trashedH')));
+      for (const run of past) {
+        const row = el('div', 'mail-all-run'); row.dataset.mailRun = run.id;
+        row.append(el('span', '', fmtTime(run.at) + ' · ' + many(run.count) + (run.reason === 'auto' ? ' · ' + t('automatic') : '')), button(t('undo'), () => undoRun(run.id)));
+        list.append(row);
+      }
+    }
+  }
+
   // ---------- view ----------
   const panel = document.createElement('section'); panel.className = 'mail-app mail-all'; panel.hidden = true; panel.id = 'pb-mail-all';
   let status = null, selectedSender = null, openRecord = null, query = '';
   host.append(panel);
   function show(on) {
     panel.hidden = !on; host.classList.toggle('mail-all-open', on);
-    if (on) { draw(); panel.scrollTop = 0; }
+    if (on) { panel.scrollTop = 0; draw(); }
   }
   /** First entry of the mailbox folder bar; costs no extra row on a phone. */
   function entry() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'mail-folder'; b.dataset.mailAll = 'open';
-    b.setAttribute('aria-current', 'false'); b.append(t('open'), el('small', '', String(indexed().length || '')));
+    b.setAttribute('aria-current', 'false'); b.append(t('open'), el('small', '', String(visible().length || '')));
     b.onclick = () => show(true); return b;
   }
   function button(text, fn, cls = '') {
@@ -285,7 +463,7 @@
     b.type = 'button'; b.dataset.mailAllId = r.hash;
     b.append(el('span', 'mail-avatar', senderName(r.mail.from).slice(0, 1).toUpperCase()),
       el('span', 'mail-subject', (r.mailFlagged ? '★ ' : '') + (r.name || t('noSubject'))),
-      el('span', 'mail-preview', senderName(r.mail.from) + ' · ' + (r.mailBody || '').replace(/\s+/g, ' ').slice(0, 80)),
+      el('span', 'mail-preview', [senderName(r.mail.from), chip(r), (r.mailBody || '').replace(/\s+/g, ' ').slice(0, 80)].filter(Boolean).join(' · ')),
       el('time', 'mail-date', fmtDate(r.date)));
     b.onclick = () => { openRecord = r.hash; draw(); };
     row.append(el('span'), b); return row;
@@ -296,8 +474,15 @@
       el('p', 'mail-muted', (r.mail.from || '') + ' · ' + fmtTime(r.date)));
     const where = (r.mailRemotes || []).map(l => (l.email || '') + ' · ' + l.folder).join(' | ');
     if (where) box.append(el('p', 'mail-muted', t('account') + ': ' + where));
-    const marks = el('p', 'mail-muted'); marks.textContent = [r.mailList ? t('newsletter') : '', r.mailHasAttachments ? t('attachments') : ''].filter(Boolean).join(' · ');
+    const marks = el('p', 'mail-muted'); marks.textContent = [r.mailList ? t('newsletter') : '', chip(r), guarded(r) && isNewsletter(r) ? t('protected') : '', r.mailSenderRule === 'auto' ? t('autoOn') : '', r.mailHasAttachments ? t('attachments') : ''].filter(Boolean).join(' · ');
     if (marks.textContent) box.append(marks);
+    const address = senderAddress(r.mail.from), tools = el('div', 'mail-reader-actions');
+    for (const [key, value] of [['isAd', 'ad'], ['isImportant', 'important']]) {
+      const b = button(t(key), async () => { await setSender(address, 'mailSenderMark', r.mailSenderMark === value ? '' : value); draw(); });
+      b.setAttribute('aria-pressed', String(r.mailSenderMark === value)); b.dataset.mailMark = value; tools.append(b);
+    }
+    if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
+    box.append(tools);
     box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
     if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), async () => {
       const l = r.mailRemotes[0]; show(false);
@@ -319,19 +504,26 @@
     tools.append(summary, menu); if (!running) head.append(tools);
     panel.append(head);
     status = el('p', 'mail-notice'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-    const all = indexed(), since = load(KEYS.since, 0);
+    const all = visible(), since = load(KEYS.since, 0);
     status.textContent = running ? progressText : [progressText, lastProblem, last ? t('last') + ' ' + fmtTime(last.at) + ' · ' + all.length + ' ' + t('mails') + ' · ' + last.accounts + ' ' + t('accounts') + (since ? ' · ' + t('since') + ' ' + fmtDate(since) : '') : t('never')].filter(Boolean).join(' · ');
     panel.append(status);
+    if (lastRun && !running) {
+      const banner = el('div', 'mail-undo'); banner.dataset.mailUndo = lastRun.id;
+      banner.append(el('span', '', '🗑 ' + many(lastRun.count) + ' ' + t('moved')), button(t('undo'), () => undoRun(lastRun.id)));
+      panel.append(banner);
+    }
     if (!last && !all.length) { panel.append(el('p', 'mail-muted', t('intro'))); return; }
     const search = el('input'); search.type = 'search'; search.placeholder = t('search'); search.setAttribute('aria-label', t('search')); search.value = query; search.dataset.mailAll = 'search';
     search.oninput = () => { query = search.value; selectedSender = query ? null : selectedSender; openRecord = null; draw(); };
     const switches = el('div', 'mail-list-actions mail-all-switch');
     const modeList = button(t('list'), () => { view.mode = 'list'; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); });
     const modeSenders = button(t('senders'), () => { view.mode = 'senders'; openRecord = null; store(KEYS.view, view); draw(); });
-    modeList.setAttribute('aria-pressed', String(view.mode === 'list')); modeSenders.setAttribute('aria-pressed', String(view.mode === 'senders'));
+    const modeClean = button(t('clean'), () => { view.mode = 'clean'; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); });
+    modeList.setAttribute('aria-pressed', String(view.mode === 'list')); modeSenders.setAttribute('aria-pressed', String(view.mode === 'senders')); modeClean.setAttribute('aria-pressed', String(view.mode === 'clean'));
+    modeClean.dataset.mailAll = 'clean'; modeList.dataset.mailAll = 'list'; modeSenders.dataset.mailAll = 'senders';
     const order = button(view.order === 'newest' ? t('newest') : t('oldest'), () => { view.order = view.order === 'newest' ? 'oldest' : 'newest'; store(KEYS.view, view); draw(); });
     order.dataset.mailAll = 'order';
-    switches.append(modeList, modeSenders, order);
+    switches.append(modeList, modeSenders, modeClean, order);
     panel.append(search, switches);
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
     const current = openRecord && all.find(r => r.hash === openRecord);
@@ -339,7 +531,8 @@
     const mails = all.filter(matches).sort(byOrder);
     const list = el('div', 'mail-all-list');
     if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits')));
-    if (view.mode === 'senders' && !query.trim()) {
+    if (view.mode === 'clean' && !query.trim()) drawClean(list);
+    else if (view.mode === 'senders' && !query.trim()) {
       const g = selectedSender && groups(mails).find(x => x.key === selectedSender);
       if (g) {
         list.append(button(t('back'), () => { selectedSender = null; draw(); }, 'mail-back'), el('h3', '', g.name), el('p', 'mail-muted', g.key + ' · ' + many(g.mails.length)));
@@ -364,7 +557,7 @@
   if (dupesHost) dupesHost.append(dupesBox);
   function drawDupes() {
     if (!dupesHost) return;
-    const pairs = indexed().filter(r => r.mailDupeOf && !r.mailDupeChecked).map(r => [CATALOG.find(x => x.hash === r.mailDupeOf), r]).filter(p => p[0]);
+    const pairs = visible().filter(r => r.mailDupeOf && !r.mailDupeChecked).map(r => [CATALOG.find(x => x.hash === r.mailDupeOf), r]).filter(p => p[0]);
     dupesBox.hidden = !pairs.length; dupesBox.replaceChildren();
     if (!pairs.length) return;
     dupesBox.append(el('div', 'fname', t('dupesTitle')), el('p', 'mail-muted', t('dupesHelp')));
@@ -392,5 +585,5 @@
   setInterval(autoRun, INTERVAL);
   setTimeout(autoRun, 5000);
   drawDupes();
-  window.PBMailIndex = { entry, sync, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName };
+  window.PBMailIndex = { entry, sync, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName };
 })();

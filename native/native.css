@@ -395,3 +395,12 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 .mail-all-dupe { border-top:1px solid var(--line); padding:8px 0; display:flex; flex-wrap:wrap; gap:6px; }
 .mail-all-dupe > strong, .mail-all-dupe > p { flex-basis:100%; margin:0; }
 .mail-all .mail-back { display:inline-flex; }
+.mail-all-section { margin:16px 12px 4px; font-size:1rem; }
+.mail-all-list > .mail-primary, .mail-all-list > .mail-button { margin:4px 12px 8px; }
+.mail-all-clean-row { display:grid; }
+.mail-all-clean-row > .mail-button { justify-self:end; margin:0 12px 8px; min-height:40px; }
+.mail-all-ask { margin:8px 12px; display:flex; flex-wrap:wrap; gap:8px; }
+.mail-all-ask > p { flex-basis:100%; margin:0; }
+.mail-all-run { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin:4px 12px; padding:6px 0; border-top:1px solid var(--line); }
+.mail-all > .mail-undo { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 12px; }
+.mail-all .mail-reader-actions .mail-button[aria-pressed=true] { background:var(--mail-soft); border-color:var(--mail-accent); font-weight:bold; }

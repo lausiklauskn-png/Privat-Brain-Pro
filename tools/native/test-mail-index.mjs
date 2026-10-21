@@ -32,20 +32,23 @@ try{
     const A={id:'11111111-1111-4111-8111-111111111111',email:'klaus@example.invalid',provider:'telekom'};
     const B={id:'22222222-2222-4222-8222-222222222222',email:'zweit@example.invalid',provider:'gmail'};
     window.mailAccounts=[A,B];
-    const m=(uid,from,subject,ageDays,extra={})=>({uid,messageId:extra.messageId??`<m${uid}@example.invalid>`,from,subject,date:now-ageDays*day,size:2000,seen:false,flagged:false,list:Boolean(extra.list),bulk:false,text:extra.text??`Text ${subject}`,html:extra.html||''});
+    const m=(uid,from,subject,ageDays,extra={})=>({uid,messageId:extra.messageId??`<m${uid}@example.invalid>`,from,subject,date:now-ageDays*day,size:2000,seen:false,flagged:Boolean(extra.flagged),list:Boolean(extra.list),bulk:false,text:extra.text??`Text ${subject}`,html:extra.html||''});
+    const d=n=>{const x=new Date(now+n*day);return x.getDate()+'.'+(x.getMonth()+1)+'.'+x.getFullYear();};
+    window.dateIn=d;window.m=m;
     // Account A: inbox spans two pages; one Aldi newsletter is also in account B (same Message-ID).
     const inboxA=[];
     for(let i=0;i<120;i++)inboxA.push(m(1000-i,'Kollege <kollege@example.invalid>','Notiz '+i,10+i*2));
     inboxA.splice(0,0,
-      m(2001,'ALDI SÜD <news@aldi.invalid>','Angebote KW 43',1,{list:true,messageId:'<aldi43@aldi.invalid>',text:'Gültig bis 26.10.'}),
-      m(2000,'ALDI SÜD <news@aldi.invalid>','Angebote KW 42',8,{list:true,messageId:'<aldi42@aldi.invalid>'}),
+      m(2001,'ALDI SÜD <news@aldi.invalid>','Angebote neu',1,{list:true,messageId:'<aldi43@aldi.invalid>',text:'Gültig bis '+d(5)}),
+      m(2000,'ALDI SÜD <news@aldi.invalid>','Angebote alt',8,{list:true,messageId:'<aldi42@aldi.invalid>',text:'Angebote vom '+d(-10)+' bis '+d(-3)}),
+      m(1994,'Rabattshop <deals@rabatt.invalid>','Mit Stern',4,{list:true,flagged:true,text:'nur bis '+d(-3)}),
       m(1999,'Stadtwerke <rechnung@stadtwerke.invalid>','Ihre Rechnung Oktober',3,{text:'Rechnungsbetrag 54,20 EUR'}),
       m(1998,'Shop <info@shop.invalid>','Bestellung',5,{messageId:'',text:'Version eins'}),
       m(1997,'Shop <info@shop.invalid>','Bestellung',5.2,{messageId:'',text:'Version zwei, anders'}),
       m(1996,'Verein <verein@example.invalid>','Nur HTML',6,{text:'',html:'<p>Treffen <b>Samstag</b></p><script>window.pwned=1</script><img src="https://tracker.invalid/p.png">'}),
       m(1995,'Altbekannt <alt@example.invalid>','Schon katalogisiert',7,{messageId:''}));
     const archiveA=[m(50,'Y-Food <hello@yfood.invalid>','Neue Sorte',20,{list:true})];
-    const inboxB=[m(3001,'Aldi Süd <news@aldi.invalid>','Angebote KW 43',1,{list:true,messageId:'<aldi43@aldi.invalid>',text:'Gültig bis 26.10.'}),m(3000,'Mutter <mama@example.invalid>','Sonntag',2)];
+    const inboxB=[m(3001,'Aldi Süd <news@aldi.invalid>','Angebote neu',1,{list:true,messageId:'<aldi43@aldi.invalid>',text:'Gültig bis '+d(5)}),m(3000,'Mutter <mama@example.invalid>','Sonntag',2)];
     window.server={[A.id]:{INBOX:inboxA,Archiv:archiveA,Papierkorb:[m(9,'x@y.invalid','weg',1)],Spam:[m(8,'x@y.invalid','spam',1)],Gesendet:[m(7,'klaus@example.invalid','raus',1)],Entwürfe:[m(6,'klaus@example.invalid','entwurf',1)]},
       [B.id]:{INBOX:inboxB,'[Gmail]/Alle Nachrichten':[...inboxB],'[Gmail]/Sent Mail':[m(5,'zweit@example.invalid','raus',1)]}};
     const folders={[A.id]:[{path:'INBOX',name:'INBOX',specialUse:'',collection:false},{path:'Archiv',name:'Archiv',specialUse:'',collection:false},{path:'Papierkorb',name:'Papierkorb',specialUse:'',collection:false},{path:'Spam',name:'Spam',specialUse:'',collection:false},{path:'Gesendet',name:'Gesendet',specialUse:'',collection:false},{path:'Entwürfe',name:'Entwürfe',specialUse:'',collection:false}],
@@ -66,7 +69,11 @@ try{
         async indexText(args){log('indexText',args);offline();
           if(args.uids.length>10)throw{code:'INVALID_INPUT'};
           return{items:args.uids.map(uid=>{const x=window.server[args.account][args.folder].find(y=>y.uid===uid);return{uid,text:x.text,html:x.html,attachments:false};})};},
-        async action(args){log('action',args);return{ok:true};},
+        async action(args){log('action',args);
+          if(args.action==='move'){if(window.noMove)throw{code:'MOVE_UNSUPPORTED'};const from=window.server[args.account][args.folder],i=from.findIndex(x=>x.uid===args.uid);if(i<0)throw{code:'MESSAGE_MISSING'};
+            const [x]=from.splice(i,1),to=(window.server[args.account][args.target]??=[]);to.push({...x,uid:Math.max(0,...to.map(y=>y.uid))+5000});}
+          return{ok:true};},
+        async locate(args){log('locate',args);const x=(window.server[args.account][args.folder]||[]).find(y=>y.messageId===args.messageId);return{validity:'7',uid:x?x.uid:null};},
         async saved(args){log('saved',args);return{items:[]};},
         async send(args){log('send',args);throw{code:'INVALID_INPUT'};},
         async saveDraft(args){log('saveDraft',args);return{ok:true};},
@@ -115,12 +122,12 @@ try{
   await panel.locator('[data-mail-sender="news@aldi.invalid"]').click();
   const subjects=async()=>panel.locator('[data-mail-all-id] .mail-subject').allTextContents();
   await capture(page,'3-buendel-aldi');
-  ok('Inside a bundle the newest mail is on top',JSON.stringify(await subjects())===JSON.stringify(['Angebote KW 43','Angebote KW 42']));
+  ok('Inside a bundle the newest mail is on top',JSON.stringify(await subjects())===JSON.stringify(['Angebote neu','Angebote alt']));
   await panel.locator('[data-mail-all=order]').click();
-  ok('↕ turns the order around',JSON.stringify(await subjects())===JSON.stringify(['Angebote KW 42','Angebote KW 43']));
+  ok('↕ turns the order around',JSON.stringify(await subjects())===JSON.stringify(['Angebote alt','Angebote neu']));
   await panel.locator('[data-mail-all=order]').click();
   await panel.locator('[data-mail-all-id]').first().click();
-  ok('Reader shows text, both accounts and the newsletter mark',(await panel.textContent()).includes('Gültig bis 26.10.')&&(await panel.textContent()).includes('zweit@example.invalid')&&(await panel.textContent()).includes('📰'));
+  ok('Reader shows text, both accounts and the newsletter mark',(await panel.textContent()).includes('Gültig bis '+await page.evaluate(()=>dateIn(5)))&&(await panel.textContent()).includes('zweit@example.invalid')&&(await panel.textContent()).includes('📰'));
   // Search over all accounts
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
   await panel.locator('[data-mail-all=search]').fill('gultig');
@@ -149,6 +156,64 @@ try{
   ok('"Gleich – zusammenlegen" leaves one entry',await page.evaluate(()=>CATALOG.filter(r=>r.mailIndex&&r.name==='Bestellung').length)===1&&await dupes.isHidden());
   // Local mailbox stays as it was
   ok('Local mailbox does not list the overview entries',await page.evaluate(()=>!document.querySelector('.mail-app:not(.live-mail) [data-mail-id]')||[...document.querySelectorAll('.mail-app:not(.live-mail) [data-mail-id]')].every(b=>!CATALOG.find(r=>r.hash===b.dataset.mailId)?.mailIndex||CATALOG.find(r=>r.hash===b.dataset.mailId)?.mailLegacy)));
+  // Clean-up by validity
+  await page.locator('[data-tab="mail"]').click();
+  // The earlier star protects that Aldi mail; take it away again for the clean-up checks.
+  await page.evaluate(async()=>{const r=CATALOG.find(x=>x.mailMessageId==='<aldi42@aldi.invalid>');r.mailStar=false;r.mailFlagged=false;window.server['11111111-1111-4111-8111-111111111111'].INBOX.find(y=>y.uid===2000).flagged=false;await idbPut('catalog',r);});
+  await panel.locator('[data-mail-all=clean]').click();
+  const section=async key=>{const all=await panel.locator('.mail-all-list > *').evaluateAll(n=>n.map(x=>({clean:x.dataset.mailClean||'',ids:[...x.querySelectorAll('[data-mail-all-id]')].map(b=>b.dataset.mailAllId)})));let on=false,ids=[];for(const x of all){if(x.clean)on=x.clean===key;else if(on)ids.push(...x.ids);}return ids;};
+  const hashOf=id=>page.evaluate(id=>CATALOG.find(r=>r.mailMessageId===id)?.hash,id);
+  ok('Expired offer is listed as expired, the running one as running',JSON.stringify(await section('expiredH'))===JSON.stringify([await hashOf('<aldi42@aldi.invalid>')])&&(await section('runningH')).includes(await hashOf('<aldi43@aldi.invalid>')));
+  ok('No clear date and starred mails wait in "Zum Prüfen"',(await section('checkH')).includes(await hashOf('<m50@example.invalid>'))&&(await section('checkH')).includes(await hashOf('<m1994@example.invalid>')));
+  ok('Nothing was moved before Klaus decides',!(await page.evaluate(()=>window.mailCalls.some(c=>c.method==='action'))));
+  ok('One question per sender with expired offers',await panel.locator('[data-mail-ask]').count()===1&&await panel.locator('[data-mail-ask="news@aldi.invalid"]').count()===1);
+  await panel.getByRole('button',{name:'Ja, künftig selbst'}).click();
+  await page.waitForFunction(()=>window.mailCalls.some(c=>c.method==='action'&&c.args.action==='move'));
+  await page.waitForFunction(()=>CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>')?.mailTrashed);
+  const moved=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='action').map(c=>c.args));
+  ok('"Ja" moves exactly the expired mail into the provider trash',moved.length===1&&moved[0].uid===2000&&moved[0].folder==='INBOX'&&moved[0].target==='Papierkorb'&&moved[0].action==='move');
+  ok('Running offer and starred mail stay where they are',await page.evaluate(()=>window.server['11111111-1111-4111-8111-111111111111'].INBOX.some(x=>x.uid===2001)&&window.server['11111111-1111-4111-8111-111111111111'].INBOX.some(x=>x.uid===1994)));
+  ok('Trashed mail leaves the lists and an undo appears',await panel.locator('[data-mail-undo]').isVisible()&&!(await section('expiredH')).length&&await panel.locator('[data-mail-run]').count()===1);
+  await capture(page,'6-aufraeumen');
+  await panel.locator('[data-mail-undo]').getByRole('button',{name:'Rückgängig'}).click();
+  await page.waitForFunction(()=>!CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>')?.mailTrashed&&!PBMailIndex.running());
+  const back=await page.evaluate(()=>({calls:window.mailCalls.filter(c=>c.method==='locate').map(c=>c.args),inbox:window.server['11111111-1111-4111-8111-111111111111'].INBOX.some(x=>x.messageId==='<aldi42@aldi.invalid>'),places:CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>').mailRemotes.length}));
+  ok('Rückgängig finds the mail in the trash by its ID and moves it back',back.calls.length===1&&back.calls[0].folder==='Papierkorb'&&back.calls[0].messageId==='<aldi42@aldi.invalid>'&&back.inbox);
+  ok('After undo the mail is filed at its place again, without a copy',back.places===1&&await page.evaluate(()=>CATALOG.filter(r=>r.mailMessageId==='<aldi42@aldi.invalid>').length)===1);
+  ok('A mail taken back is not moved again automatically',await page.evaluate(()=>!CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>').mailTrashed&&window.mailCalls.filter(c=>c.method==='action'&&c.args.uid!==undefined&&c.args.folder==='INBOX').length===1));
+  // Approved sender: new expired offers go to the trash by themselves after fetching.
+  await page.evaluate(()=>{window.server['11111111-1111-4111-8111-111111111111'].INBOX.push(m(2002,'ALDI SÜD <news@aldi.invalid>','Angebote vorletzte Woche',12,{list:true,messageId:'<aldi41@aldi.invalid>',text:'gültig bis '+dateIn(-6)}));});
+  await page.evaluate(()=>PBMailIndex.sync());
+  const auto=await page.evaluate(()=>({trashed:CATALOG.filter(r=>r.mailTrashed).map(r=>r.mailMessageId).sort(),reason:CATALOG.find(r=>r.mailMessageId==='<aldi41@aldi.invalid>')?.mailTrashed?.reason}));
+  ok('Approved sender: expired offers are cleaned up after fetching, marked automatic',JSON.stringify(auto.trashed)===JSON.stringify(['<aldi41@aldi.invalid>'])&&auto.reason==='auto');
+  ok('New mails of the sender inherit the approval',await page.evaluate(()=>CATALOG.find(r=>r.mailMessageId==='<aldi41@aldi.invalid>').mailSenderRule)==='auto');
+  // Klaus takes a mail back himself in the provider's webmail: the next fetch shows it again.
+  await page.evaluate(()=>{const a=window.server['11111111-1111-4111-8111-111111111111'],i=a.Papierkorb.findIndex(x=>x.messageId==='<aldi41@aldi.invalid>');const [x]=a.Papierkorb.splice(i,1);a.INBOX.push({...x,uid:2100});});
+  await page.evaluate(()=>PBMailIndex.sync());
+  ok('A mail restored at the provider is visible again and not moved again',await page.evaluate(()=>{const r=CATALOG.find(x=>x.mailMessageId==='<aldi41@aldi.invalid>');return !r.mailTrashed&&r.mailKeep===1&&r.mailRemotes.some(l=>l.uid===2100)&&window.server['11111111-1111-4111-8111-111111111111'].INBOX.some(x=>x.uid===2100);}));
+  ok('Starred newsletter is never moved',await page.evaluate(()=>!window.mailCalls.some(c=>c.method==='action'&&c.args.uid===1994)));
+  // Marks per sender
+  await page.evaluate(()=>{PBMailIndex.show(true);});
+  const yfood=await hashOf('<m50@example.invalid>');
+  await panel.locator(`[data-mail-all-id="${yfood}"]`).first().click();
+  await panel.locator('[data-mail-mark=important]').click();
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('"Ist wichtig" takes the sender out of clean-up',await page.evaluate(()=>CATALOG.find(r=>r.mailMessageId==='<m50@example.invalid>').mailSenderMark)==='important'&&(await section('runningH')).length>0&&![...await section('checkH'),...await section('expiredH'),...await section('runningH')].includes(yfood));
+  const bill=await page.evaluate(()=>CATALOG.find(x=>x.name==='Ihre Rechnung Oktober').hash);
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('A sender without newsletter mark is not in clean-up',!(await section('checkH')).includes(bill));
+  await panel.locator('[data-mail-all=list]').click();
+  await panel.locator(`[data-mail-all-id="${bill}"]`).click();
+  await panel.locator('[data-mail-mark=ad]').click();
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('"Ist Werbung" brings the sender into clean-up, without a date only "Zum Prüfen"',(await section('checkH')).includes(bill)&&!(await section('expiredH')).includes(bill));
+  await page.evaluate(()=>{window.noMove=true;});
+  await page.evaluate(async()=>{await PBMailIndex.trash([CATALOG.find(r=>r.mailMessageId==='<m1994@example.invalid>')]);});
+  ok('Provider without safe move: nothing happens and the reason is shown',await page.evaluate(()=>!CATALOG.find(r=>r.mailMessageId==='<m1994@example.invalid>').mailTrashed)&&(await panel.locator('[role=status]').textContent()).includes('MOVE_UNSUPPORTED'));
+  await page.evaluate(()=>{window.noMove=false;});
+  ok('Mails without ID are never moved',await page.evaluate(async()=>{const r=CATALOG.find(x=>x.mailIndex&&!x.mailMessageId);await PBMailIndex.trash([r]);return !r.mailTrashed;}));
   // Offline: nothing breaks, the reason is shown
   await page.locator('[data-tab="mail"]').click();
   await page.evaluate(()=>{window.offline=true;});
@@ -157,6 +222,7 @@ try{
   ok('App internet off: fetching waits and says why',(await panel.locator('[role=status]').textContent()).includes('App-Internet ist aus'));
   await page.evaluate(()=>{window.offline=false;});
   // Open at the provider uses the right account, folder and UID
+  await panel.locator('[data-mail-all=senders]').click();
   await panel.locator('[data-mail-sender="mama@example.invalid"]').click();
   await panel.locator('[data-mail-all-id]').first().click();
   await panel.getByRole('button',{name:'Beim Anbieter öffnen'}).click();
@@ -164,6 +230,14 @@ try{
   const opened=await page.evaluate(()=>window.mailCalls.find(c=>c.method==='message').args);
   ok('"Beim Anbieter öffnen" opens exactly this mail in its account',opened.account==='22222222-2222-4222-8222-222222222222'&&opened.folder==='INBOX'&&opened.uid===3000&&await panel.isHidden());
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  // A background redraw keeps the reading position
+  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await panel.locator('[data-mail-all=list]').click();
+  await page.setViewportSize({width:390,height:600});
+  const kept=await page.evaluate(async()=>{const p=document.getElementById('pb-mail-all');p.scrollTop=400;const before=p.scrollTop;await PBMailIndex.sync();await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return [before,p.scrollTop];});
+  ok('Background update keeps the scroll position ('+kept.join(' → ')+')',kept[0]>100&&Math.abs(kept[0]-kept[1])<2);
+  await page.setViewportSize({width:1280,height:900});
+  await panel.getByRole('button',{name:'← Zurück zum Postfach'}).click();
   // Languages and phone width
   await mail.locator('.live-mail [data-mail-all=open]').click();
   await page.evaluate(()=>{document.documentElement.lang='en';});
@@ -172,8 +246,9 @@ try{
   await page.evaluate(()=>{document.documentElement.lang='de';});
   await page.setViewportSize({width:360,height:740});
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));
-  const small=await panel.locator('.mail-all-switch .mail-button').evaluateAll(n=>n.map(b=>b.getBoundingClientRect().height));
-  ok('Buttons stay large enough for one-handed use',small.every(h=>h>=40));
+  // Measured in one step: a background fetch may redraw the panel between finding and measuring.
+  const small=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all .mail-all-switch .mail-button')].map(b=>b.offsetHeight));
+  ok('Buttons stay large enough for one-handed use ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=40));
   await panel.getByRole('button',{name:'← Zurück zum Postfach'}).click();
   ok('"Zurück zum Postfach" returns to the normal mailbox',await panel.isHidden()&&await mail.locator('.live-mail').isVisible());
   ok('No runtime errors',errors.length===0);

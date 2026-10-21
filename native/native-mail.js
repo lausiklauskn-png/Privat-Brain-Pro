@@ -116,6 +116,11 @@
       for (const item of result.items) if (!Number.isSafeInteger(item.uid) || item.uid < 1 || typeof item.subject !== 'string' || typeof item.from !== 'string' || typeof item.messageId !== 'string' || typeof item.date !== 'number') throw new Error(text('BRIDGE_RESPONSE_INVALID'));
       return result;
     },
+    locate: async args => {
+      const result = await invoke('locate', args);
+      if (typeof result.validity !== 'string' || !/^[0-9]{1,10}$/.test(result.validity) || !(result.uid === null || (Number.isSafeInteger(result.uid) && result.uid > 0))) throw new Error(text('BRIDGE_RESPONSE_INVALID'));
+      return result;
+    },
     indexText: async args => {
       const result = withItems(await invoke('indexText', args));
       for (const item of result.items) if (!Number.isSafeInteger(item.uid) || typeof item.text !== 'string' || typeof item.html !== 'string') throw new Error(text('BRIDGE_RESPONSE_INVALID'));

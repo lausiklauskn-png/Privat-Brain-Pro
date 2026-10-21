@@ -1,7 +1,9 @@
 # Plan „Ordnen, Sortieren, Suchen“ (2026-10-21)
 
 **Stand: von Klaus am 2026-10-21 freigegeben („Ja.“). Grundlage und A1 gebaut:
-[Alle Konten und Absender](ALLE-KONTEN-UND-ABSENDER.md). A2–A6 offen.**
+[Alle Konten und Absender](ALLE-KONTEN-UND-ABSENDER.md). A2 gebaut:
+[Aufräumen](AUFRAEUMEN-NEWSLETTER.md). A3–A6 offen, siehe
+[Nachfolge-Brief](BRIEF_2026-10-21_nachfolge-ordnen-sortieren-suchen.md).**
 Grundlage: [Brief der Plansitzung](BRIEF_2026-10-21_plansitzung-ordnen-sortieren-suchen.md)
 (liegt auf Zweig `ccr-1b365b80-fw60yy`, PR #47).
 

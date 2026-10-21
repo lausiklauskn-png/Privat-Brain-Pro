@@ -214,6 +214,19 @@ final class MailEngine {
             } finally { folder.close(false); }
         }
     }
+    /** Undo for "in den Papierkorb": find one mail again by its Message-ID (exact match, read-only). */
+    JSONObject locate(MailAccount account, String name, String messageId) throws Exception {
+        if (MailIndex.messageId(new String[] {messageId}).isEmpty()) throw new MailFailure("INVALID_INPUT");
+        try (IMAPStore connection = imap(account)) {
+            IMAPFolder folder = open(connection, name, null, false);
+            try {
+                Message[] found = folder.search(new javax.mail.search.HeaderTerm("Message-ID", messageId));
+                long uid = 0;
+                for (Message message : found) if (MailIndex.messageId(message.getHeader("Message-ID")).equals(messageId)) uid = Math.max(uid, folder.getUID(message));
+                return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("uid", uid > 0 ? uid : JSONObject.NULL);
+            } finally { folder.close(false); }
+        }
+    }
     /** Readable text of a few messages for the sorting index; attachment parts are skipped unread. */
     JSONObject indexText(MailAccount account, String name, String validity, JSONArray uids) throws Exception {
         if (validity == null || !validity.matches("[0-9]{1,10}") || uids == null || uids.length() < 1 || uids.length() > MailIndex.TEXT_BATCH) throw new MailFailure("INVALID_INPUT");
