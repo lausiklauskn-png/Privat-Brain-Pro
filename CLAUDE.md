@@ -1,5 +1,10 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Teilen an Private Brain Pro (Klaus 2026-10-21, für .22):** Die App steht in Androids Teilen-Liste
+(`ACTION_SEND`/`SEND_MULTIPLE`, `ProSharePlugin`, `ShareInbox`, `native/native-share.js`). Geteilte Dateien gehen
+durch denselben Import wie „Dateien hinzufügen“ (`signBatch`, 80 MB je Datei, Mail-Exporte bis 200 MB), Text ohne
+Datei wird eine Textdatei. Nur `content://` der sendenden App. Tablet nicht gemessen. [Details](docs/TEILEN-EMPFANG.md).
+
 **Vorschau .21 veröffentlicht (2026-10-21).** [APK .21](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.21/Private-Brain-Pro-0.1.0-preview.21.apk) über die vorhandene App installieren, nicht deinstallieren.
 Enthält PR #53 (Newsletter abmelden, Internet-Lampe, Android-Spracheingabe, ein „Datei auswählen“), VersionCode 21, Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d` (Main-CI 39627948087 grün inkl. native-smoke).
 Release-Lauf 39630287203 (workflow_dispatch, auf Klaus' Bitte) erfolgreich: Signatur, Updateprobe .20 → .21, Veröffentlichung.
