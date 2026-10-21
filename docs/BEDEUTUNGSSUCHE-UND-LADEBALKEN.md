@@ -15,7 +15,16 @@
   `PLATZHALTER.md`. Der Balken zeigte also kein Laden, die Suche lief nur über Stichworte.
 - **Einlesen:** Der Balken rückte erst nach jeder **ganzen** Datei vor. Bei einer Datei ging er von 0 auf 100 %.
 
-## Wie es jetzt ist
+## Stand für .22: Modell vorbereitet, aber noch aus
+
+Der erste Bau mit Modell (148,3 MB im Paket) lief im Android-Emulator in einen Absturz: `NativeSemanticTest`
+endete mit „Instrumentation run failed due to Process crashed“, ohne Fehlermeldung (Lauf 39637009672, API 35,
+2560 MB RAM). Vermutlich reicht der Speicher der WebView beim Laden des 118-MB-Modells nicht; belegt ist das nicht.
+Damit .22 mit Teilen, Ladebalken und KI-Knopf erscheinen kann, steht `"enabled": false` in
+`tools/native/semantic-model.json`: der Bau lädt das Modell nicht, `NativeSemanticTest` ist bis dahin herausgenommen.
+Die Bedeutungssuche bleibt in .22 wie bisher bei Stichworten. Alles andere unten ist gebaut und geprüft.
+
+## Wie es gebaut ist
 
 | | |
 |---|---|

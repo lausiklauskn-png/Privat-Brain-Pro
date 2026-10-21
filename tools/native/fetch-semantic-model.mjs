@@ -75,6 +75,7 @@ async function copyTree(from, names, to) {
 
 /** Returns true when the model is in the bundle. */
 export async function bundleSemanticModel(out) {
+  if (pins.enabled === false) { console.log('Semantic model switched off in semantic-model.json: ' + (pins.enabledNote || '')); return false; }
   try {
     const lib = await library();
     const mod = await model();

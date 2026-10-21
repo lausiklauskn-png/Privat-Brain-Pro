@@ -10,7 +10,7 @@ Text). Vorschau „Das sieht die KI“, Halt bei KI-Anweisung, Rückweg mit Rüc
 Pro-App nie (CSP sperrte jsDelivr). Jetzt bringt der Bau e5-small (118 MB) und transformers.js 2.17.2 mit
 (`tools/native/fetch-semantic-model.mjs`, Fingerabdrücke in `semantic-model.json`, auf GitHub streng);
 `BundledLibrary` beantwortet Modul 03s jsDelivr-Adresse aus dem APK, Modul 03 bleibt byte-1:1. Einlesen zeigt den Stand
-innerhalb einer Datei (`PBImportStep`). App etwa 155 MB größer. Probe `NativeSemanticTest`. [Details](docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md).
+innerhalb einer Datei (`PBImportStep`). **In .22 noch aus** (`enabled: false`): im Emulator stürzte die App beim Laden des Modells ab; Lösung für .23. [Details](docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md).
 
 **Teilen an Private Brain Pro (Klaus 2026-10-21, für .22):** Die App steht in Androids Teilen-Liste
 (`ACTION_SEND`/`SEND_MULTIPLE`, `ProSharePlugin`, `ShareInbox`, `native/native-share.js`). Geteilte Dateien gehen

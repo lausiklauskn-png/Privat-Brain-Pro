@@ -1,4 +1,6 @@
 {
+  "enabled": false,
+  "enabledNote": "2026-10-21: aus für .22. Im Android-Emulator stürzte die App beim Laden des 118-MB-Modells ab (NativeSemanticTest, Lauf 39637009672, „Process crashed“). Wieder an, sobald das gelöst ist.",
   "comment": "Bedeutungs-Modell fest in der App (Klaus 2026-10-21). Modul 03 bleibt byte-1:1; die App liefert seine jsDelivr-Adresse selbst aus. Jede Datei ist per SHA-256 festgelegt; fehlt ein Wert, druckt der Bau ihn aus (Lernlauf) und bricht im strengen Modus ab. Modell-Werte am 2026-10-21 im GitHub-Bau 39635608482 aus Hugging Face (Revision 761b726) gelesen: erstes Vertrauen, seitdem fest.",
   "library": {
     "package": "@xenova/transformers",
