@@ -371,3 +371,28 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 .pb-schutz-card .pb-schutz-line { margin:4px 0;font-size:.88rem;overflow-wrap:anywhere; }
 .pb-schutz-card .pb-schutz-line[data-state=problem] span { color:var(--bad); }
 .pb-schutz-auto { display:flex;gap:6px;align-items:center;margin:8px 0;font-size:.88rem; }
+
+/* Benutzerhandbuch (native-manual.js). */
+.pb-handbuch { width:min(920px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;margin:0 auto;padding:0;border:0;display:flex;flex-direction:column;background:var(--card);color:var(--ink); }
+.pb-handbuch:not([open]) { display:none; }
+.pb-handbuch::backdrop { background:#0008; }
+.pb-handbuch a { color:var(--acc); }
+.pb-handbuch .hb-kopf { padding:10px 16px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:inherit; }
+.pb-handbuch h2 { margin:0;font-size:1.15rem; }
+.pb-handbuch .hb-stand,.pb-handbuch .hb-hinweis { margin:2px 0;font-size:.8rem;opacity:.75; }
+.pb-handbuch .hb-leiste { display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:6px;font-size:.9rem; }
+.pb-handbuch .hb-inhalt { overflow:auto;padding:4px 16px 60dvh;line-height:1.55;flex:1; }
+.pb-handbuch .hb-kapitel { scroll-margin-top:8px;padding-top:6px; }
+.pb-handbuch h3 { font-size:1.02rem;margin:16px 0 6px; }
+.pb-handbuch .hb-schritte li { margin:4px 0; }
+.pb-handbuch dt { font-weight:700;margin-top:10px; }
+.pb-handbuch dd { margin:2px 0 0 0; }
+.pb-handbuch a.hb-sprung { text-decoration:underline dotted;text-underline-offset:3px; }
+.pb-handbuch a.hb-extern,.pb-schutz-extern { text-decoration:underline;font-weight:600;overflow-wrap:anywhere; }
+.pb-handbuch .hb-markiert { animation:hb-blink 1.6s ease-out; }
+@keyframes hb-blink { from { background:rgba(240,190,60,.45); } to { background:transparent; } }
+.hb-einstiegszeile { margin:0 0 8px;font-size:.92rem; }
+.hb-einstieg { text-decoration:underline; }
+#handbuchSpeicherort { display:inline-block;margin:0 0 6px;font-size:.88rem; }
+.pb-schutz-links { margin:8px 0;font-size:.86rem; }
+.pb-schutz-links p { margin:3px 0; }

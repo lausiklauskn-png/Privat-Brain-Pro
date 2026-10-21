@@ -32,8 +32,12 @@
     updating: ['Listen werden geladen …', 'Loading lists …', 'Загрузка списков …', 'Pobieranie list …'],
     keyAbuse: ['🔑 abuse.ch-Schlüssel', '🔑 abuse.ch key', '🔑 ключ abuse.ch', '🔑 klucz abuse.ch'],
     keyVt: ['🔑 VirusTotal-Schlüssel', '🔑 VirusTotal key', '🔑 ключ VirusTotal', '🔑 klucz VirusTotal'],
-    getAbuse: ['Schlüssel bei abuse.ch holen', 'Get key at abuse.ch', 'Получить ключ на abuse.ch', 'Pobierz klucz z abuse.ch'],
-    getVt: ['Schlüssel bei VirusTotal holen', 'Get key at VirusTotal', 'Получить ключ на VirusTotal', 'Pobierz klucz z VirusTotal'],
+    getKeys: ['🔑 Schlüssel holen (öffnet den Browser): erst Konto erstellen, dann Schlüssel erstellen, kopieren und oben mit „🔑 …-Schlüssel“ einfügen.', '🔑 Get keys (opens the browser): create an account, create a key, copy it and paste it above with “🔑 … key”.', '🔑 Получить ключи (откроется браузер): создать аккаунт, создать ключ, скопировать и вставить выше через «🔑 ключ …».', '🔑 Pobierz klucze (otwiera przeglądarkę): załóż konto, utwórz klucz, skopiuj i wklej wyżej przez „🔑 klucz …”.'],
+    accountAndKey: ['Konto & Schlüssel erstellen:', 'Create account & key:', 'Аккаунт и ключ:', 'Konto i klucz:'],
+    account: ['Konto erstellen:', 'Create account:', 'Создать аккаунт:', 'Załóż konto:'],
+    key: ['Schlüssel erstellen:', 'Create key:', 'Создать ключ:', 'Utwórz klucz:'],
+    opensBrowser: ['öffnet den Browser', 'opens the browser', 'открывает браузер', 'otwiera przeglądarkę'],
+    guide: ['📖 Anleitung: Virenschutz einrichten (Schritt für Schritt)', '📖 Guide: set up protection (step by step)', '📖 Инструкция: настройка защиты', '📖 Instrukcja: konfiguracja ochrony'],
     checkAll: ['Alles prüfen', 'Check everything', 'Проверить всё', 'Sprawdź wszystko'],
     checkAllDone: ['Geprüft: {n} Dateien gegen die Liste bekannter Schaddateien. Treffer: {hits}.', 'Checked: {n} files against the list of known malware. Hits: {hits}.', 'Проверено файлов: {n}. Совпадений: {hits}.', 'Sprawdzono plików: {n}. Trafienia: {hits}.'],
     noFolder: ['Erst einen Speicherort wählen (oben). Die Listen werden nur dort abgelegt, nicht im Tablet-Speicher.', 'Choose a storage location first (above). Lists are stored only there, not in tablet storage.', 'Сначала выберите место хранения (выше). Списки хранятся только там.', 'Najpierw wybierz miejsce zapisu (wyżej). Listy są zapisywane tylko tam.'],
@@ -383,11 +387,22 @@
       button('schutz-key-abuse', t('keyAbuse') + (s.keys?.abusech ? ' ✓' : ''), () => setKey('abusech')),
       button('schutz-key-vt', t('keyVt') + (s.keys?.virustotal ? ' ✓' : ''), () => setKey('virustotal')),
       button('schutz-check-all', t('checkAll'), checkAll));
-    const getters = make('div', null, 'btnrow'); getters.style.justifyContent = 'flex-start';
-    for (const [id, label, url] of [['schutz-get-abuse', t('getAbuse'), 'https://auth.abuse.ch/'], ['schutz-get-vt', t('getVt'), 'https://www.virustotal.com/gui/join-us']]) {
-      const b = make('button', '↗ ' + label, 'ghost'); b.type = 'button'; b.id = id;
-      b.onclick = event => { if (event.isTrusted) void links?.open?.({ url }); };
-      b.hidden = typeof links?.open !== 'function'; getters.append(b);
+    // Simple text links, clearly marked, as in "Mein Rezeptbuch": account, key, then paste above.
+    const getters = make('div', null, 'pb-schutz-links');
+    const ext = (id, label, url) => {
+      const a = make('a', label + ' ↗', 'pb-schutz-extern'); a.href = url; a.id = id; a.rel = 'noopener'; a.title = t('opensBrowser');
+      a.onclick = event => { event.preventDefault(); if (event.isTrusted) void links?.open?.({ url }); };
+      return a;
+    };
+    const row = (label, ...parts) => { const p = make('p', null, 'pb-schutz-linkzeile'); p.append(make('strong', label + ': ')); parts.forEach((x, i) => { if (i) p.append(document.createTextNode(' · ')); p.append(x); }); return p; };
+    getters.append(make('p', t('getKeys'), 'pb-schutz-linkkopf'),
+      row('abuse.ch', ext('schutz-get-abuse', t('accountAndKey') + ' auth.abuse.ch', 'https://auth.abuse.ch/')),
+      row('VirusTotal', ext('schutz-get-vt', t('account') + ' virustotal.com', 'https://www.virustotal.com/gui/join-us'), ext('schutz-get-vt-key', t('key') + ' my-apikey', 'https://www.virustotal.com/gui/my-apikey')));
+    if (typeof links?.open !== 'function') for (const a of getters.querySelectorAll('a')) a.onclick = null;
+    if (window.PBHandbuch) {
+      const guide = make('a', t('guide'), 'pb-schutz-anleitung'); guide.href = '#'; guide.id = 'schutz-anleitung';
+      guide.onclick = event => { event.preventDefault(); window.PBHandbuch.open('virenschutz'); };
+      getters.append(make('p', null, 'pb-schutz-linkzeile')); getters.lastChild.append(guide);
     }
     const where = s.configured && s.unlocked ? line(t('where'), '„' + (s.folder || 'Schutzlisten') + '“: ' + ((s.files || []).map(f => f.name).join(', ') || '–')) : null;
     const status_ = make('p', [busy ? t('updating') : '', message].filter(Boolean).join(' · '), 'native-vault-status'); status_.id = 'schutzStatus'; status_.setAttribute('role', 'status');
