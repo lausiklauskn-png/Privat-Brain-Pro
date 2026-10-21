@@ -13,7 +13,7 @@
 
 | | Bedienung |
 |---|---|
-| 🔏 Siegel | ein **runder Knopf** mit einem kleinen ✕ am Rand. Am Knopf selbst ziehen. Lässt man ihn oben an der Kopfleiste los, rastet er dort ein, links oder rechts, je nachdem wo er losgelassen wurde. Die Lage bleibt nach dem Neustart. Kurz tippen öffnet das Siegel-Fenster. |
+| 🔏 Siegel | ein **runder Knopf** mit einem kleinen ✕ am Rand. Beim ersten Start sitzt er oben rechts in der Kopfleiste, im freien Platz vor ← → ☰ (Klaus: „rechts ist Platz“, `native/native-seal-place.js`). Am Knopf selbst ziehen. Lässt man ihn oben an der Kopfleiste los, rastet er dort ein, links oder rechts, je nachdem wo er losgelassen wurde. Die Lage bleibt nach dem Neustart. Kurz tippen öffnet das Siegel-Fenster. |
 | ✕ am Siegel | blendet es aus, auch nach dem Neustart. Zurück: **Einstellungen → „🔏 Siegel und 🌐 Mycel“ → „🔏 Siegel wieder zeigen“**. Der Knopf steht nur da, solange das Siegel ausgeblendet ist. |
 | 🌐 Mycel | keine eigene Pille mehr. Es öffnet sich aus dem **Siegel-Fenster** („🌐 Mycel-Netz“ unter der Überschrift), aus dem App-Menü ☰ und aus den Einstellungen. „–“ und „✕“ schließen es. |
 
@@ -45,6 +45,8 @@ in `native/native.css` und `native/native-mycel.js`.
   nach dem nächsten Start die neue.
 - **„✕“ am Mycel-Fenster** gilt laut Kanon nur bis zum Neuladen. Da hier keine Pille steht, schließt
   es einfach das Fenster.
+- **Unter den App-Fenstern:** Das Siegel liegt über der Symbolleiste, aber unter Dialogen, dem ☰-Menü, der Bildansicht und der Dateiansicht (Ebene 55). Oben rechts eingerastet hätte es sonst „Öffnen mit …“ in der Dateiansicht verdeckt; gefunden hat das `test-navigation.mjs`.
+- **320 px breite Handys:** zwischen Titel und ← → ☰ bleiben nur 26 px, der Knopf ist 32 px groß. Er berührt dort das Ende des Titels; von 360 px an steht er frei (gemessen 360 · 412 · 768 · 1280 px).
 - **Andocken nur oben:** Der Kanon kennt eine einzige Andockstelle, die Kopfleiste
   (`data-sbkim-leiste`). Woanders bleibt das Siegel frei liegen, wo es losgelassen wurde.
 - **Kennzeichnung „⚠ nicht an die KI“:** Das alte Fenster hatte dafür eine eigene Marke. Das
@@ -56,7 +58,7 @@ in `native/native.css` und `native/native-mycel.js`.
 
 ## Nachweise
 
-- `tools/native/test-mycel.mjs`, 31 Prüfungen mit den echten Kanon-Modulen und ohne Netz, in
+- `tools/native/test-mycel.mjs`, 33 Prüfungen mit den echten Kanon-Modulen und ohne Netz, in
   `npm run test:native-web`. Bild: `docs/design/siegel-mycel/oben-eingerastet.png`
   (`PB_CAPTURE_DESIGN=1`).
 - Gegenprobe von Hand an Wegwerf-Kopien von `www/`, 2026-10-21. Gefangen wurden diese Fehler:

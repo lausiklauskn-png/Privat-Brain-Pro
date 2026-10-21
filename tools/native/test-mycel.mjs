@@ -87,6 +87,17 @@ try{
   let w=await widget();
   ok('The Siegel floats instead of being glued into the toolbar',!w.inRow&&w.pos==='fixed');
   ok('Only the round Siegel and its small ✕ are shown (no lamps, no −)',JSON.stringify(w.shown)===JSON.stringify(['siegel','✕'])&&w.w<=34&&w.h<=34);
+  // Klaus: "rechts ist Platz" – first start: in the top bar on the right, clear of the title and of ← → ☰.
+  const clear=()=>page.evaluate(()=>{const s=document.querySelector('#sbkim-widget').getBoundingClientRect(),t=document.querySelector('header .tools').getBoundingClientRect(),h=document.querySelector('header.top').getBoundingClientRect();
+    const range=document.createRange();range.selectNodeContents(document.querySelector('.brand h1'));const txt=range.getBoundingClientRect();
+    return {oben:document.querySelector('#sbkim-widget').getAttribute('data-sbkim-oben'),inBar:s.top>=h.top-1&&s.bottom<=h.bottom+8,afterTitle:s.left>=txt.right+2,beforeTools:s.right<=t.left-2};});
+  const first=[];
+  for(const width of [360,412,768,1280]){await page.setViewportSize({width,height:780});await pause(250);first.push([width,await clear()]);}
+  await page.setViewportSize({width:360,height:780});await pause(250);
+  ok('On first start the Siegel sits in the top bar on the right, between the title and ← → ☰ (360–1280 px)',first.every(([,c])=>c.oben==='rechts'&&c.inBar&&c.afterTitle&&c.beforeTools)||console.log(JSON.stringify(first)));
+  if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/siegel-mycel',{recursive:true});await page.mouse.move(180,600);await pause(200);
+    await page.screenshot({path:'docs/design/siegel-mycel/oben-eingerastet.png'});}
+  ok('The Siegel stays below app windows (dialogs, ☰ menu, image and file viewer)',await page.evaluate(()=>{const z=Number(getComputedStyle(document.querySelector('#sbkim-widget')).zIndex);return z>31&&z<60;}));
   const head=await rect('header.top');
   await drag('#sbkim-widget',60,head.y+6);
   w=await widget();const placed=await rect('#sbkim-widget');
@@ -107,8 +118,7 @@ try{
   ok('Now Settings offers "🔏 Siegel wieder zeigen"',await page.locator('[data-mycel-seal]').isVisible()&&(await page.locator('[data-mycel-seal]').textContent())==='🔏 Siegel wieder zeigen');
   await page.locator('[data-mycel-seal]').click();
   ok('… and it brings the Siegel back',await page.evaluate(()=>SbkimWidget.isVisible())&&!(await page.locator('[data-mycel-seal]').isVisible()));
-  if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/siegel-mycel',{recursive:true});
-    await page.locator('[data-tab="search"]').click();await page.screenshot({path:'docs/design/siegel-mycel/oben-eingerastet.png'});}
+
 
   // --- Language and layout ------------------------------------------------------------
   await page.evaluate(()=>localStorage.setItem('pb_lang','en'));await page.reload();

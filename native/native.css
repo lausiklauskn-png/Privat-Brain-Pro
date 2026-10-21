@@ -514,6 +514,9 @@ header.top .mycel-platz { display:none!important; }
 #sbkim-widget .sbkim-widget-slot.siegel::after,#sbkim-widget .sbkim-widget-close::after { content:none!important; }
 #sbkim-widget .sbkim-widget-close { position:absolute!important;top:-5px;right:-7px;width:16px!important;min-width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;border-radius:50%!important;font-size:9px!important;line-height:16px!important;justify-content:center!important;background:var(--card,#222)!important;border:1px solid var(--line,#888)!important;color:var(--mut,#999)!important;opacity:.85; }
 #sbkim-widget { cursor:grab; }
+/* Above the toolbar (31), below every app window: dialogs 60, ☰ menu 65, image view 80, file viewer 100.
+   Docked top right it would otherwise cover "Öffnen mit …" in the file viewer. */
+#sbkim-widget { z-index:55!important; }
 #sbkim-widget .sbkim-widget-slot.siegel { pointer-events:none!important; }
 /* Klaus: the Mycel lives inside the Siegel window – its own pill is not shown. */
 #sbkim-rdv-btn { display:none!important; }
