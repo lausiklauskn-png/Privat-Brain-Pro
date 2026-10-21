@@ -525,3 +525,11 @@ header.top .mycel-platz { display:none!important; }
 /* A hidden file field stays hidden: the mail dialog style (display:block) beat the hidden attribute,
    so "Datei auswählen" showed twice in "Original erneut auswählen" (Klaus 2026-10-21). */
 .live-dialog input[type=file][hidden],input[type=file][hidden] { display:none!important; }
+
+/* Internet lamp in the top bar (Klaus 2026-10-21): green = allowed, red = app cut off. Narrow, flat,
+   the tap area reaches beyond the dot like the other flat buttons. */
+header .tools .native-net-lamp { width:18px!important;min-width:18px!important;height:28px!important;min-height:28px!important;padding:0!important;border:0;background:transparent;box-shadow:none;border-radius:6px; }
+header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px -2px; }
+.native-net-dot { display:block;width:10px;height:10px;border-radius:50%;background:#2fb344;box-shadow:0 0 0 2px color-mix(in srgb,#2fb344 25%,transparent); }
+.native-net-lamp[data-state=off] .native-net-dot { background:#d63939;box-shadow:0 0 0 2px color-mix(in srgb,#d63939 25%,transparent); }
+.native-net-lamp:active { transform:scale(1.12); }

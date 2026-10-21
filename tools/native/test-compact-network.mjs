@@ -78,9 +78,13 @@ try{
   await page.evaluate(()=>{window.fixtureSocket=new WebSocket('wss://socket.example.invalid');fetch('https://stream.example.invalid/held').then(r=>r.text()).catch(e=>{window.streamError=e.name;window.streamErrorMessage=e.message;});});
   await page.waitForTimeout(30);
   ok('Streaming fetch body remains pending before the switch',await page.evaluate(()=>streamAborted===0&&typeof window.streamError==='undefined'));
-  await page.locator('.native-options>summary').click();await page.getByRole('switch').click();
+  const lamp=page.locator('header .tools>.native-net-lamp');
+  ok('A small green internet lamp sits in the top bar with the tooltip "App vom Internet trennen"',await lamp.isVisible()&&await lamp.getAttribute('data-state')==='on'&&await lamp.getAttribute('aria-label')==='App vom Internet trennen'&&await lamp.getAttribute('title')==='App vom Internet trennen'&&await lamp.evaluate(e=>{const r=e.getBoundingClientRect(),h=document.querySelector('header.top').getBoundingClientRect();return getComputedStyle(e.firstElementChild).backgroundColor==='rgb(47, 179, 68)'&&r.top>=h.top&&r.bottom<=h.bottom&&r.height<=28;}));
+  await lamp.hover();ok('Hovering the lamp shows the tooltip text',await page.locator('#native-control-tooltip').isVisible()&&await page.locator('#native-control-tooltip').textContent()==='App vom Internet trennen');
+  await lamp.click();
   await page.waitForFunction(()=>PBNetwork.offline&&window.streamAborted===1&&window.socketCloses===1&&typeof window.streamError==='string');
   ok('Offline switch closes a running socket and a fetch whose body is still streaming',await page.evaluate(()=>['AbortError','TypeError'].includes(streamError)&&fixtureSocket.readyState===WebSocket.CLOSED));
+  ok('The lamp turns red and offers "Internetzugriff wieder erlauben"; the menu switch shows the same state',await lamp.getAttribute('data-state')==='off'&&await lamp.getAttribute('aria-label')==='Internetzugriff wieder erlauben'&&await lamp.evaluate(e=>getComputedStyle(e.firstElementChild).backgroundColor==='rgb(214, 57, 57)')&&await page.locator('.native-offline-switch').getAttribute('aria-checked')==='true');
   const before=requests.length;
   ok('Offline blocks fetch, XHR, WebSocket and beacon before their transport is invoked',await page.evaluate(async()=>{
     const rejected=await fetch('https://network.example.invalid/blocked').then(()=>false,e=>e.message==='APP_OFFLINE');let xhr=false,socket=false;
@@ -91,7 +95,9 @@ try{
   ok('Offline leaves local bundled assets, catalog and mailbox state available',await page.evaluate(async()=>{localStorage.setItem('layout-sentinel','kept');return(await fetch('native.css')).ok&&Array.isArray(await PBMailDevice.accounts())&&document.querySelector('.live-mail .mail-reader h3').textContent==='Compact message';}));
   await page.reload();await page.waitForFunction(()=>window.PBNetwork?.ready&&PBNetwork.offline&&window.PBWorkspace);
   ok('Offline state and local data survive a restart without a logout',await page.evaluate(()=>localStorage.getItem('layout-sentinel')==='kept'&&networkChanges.length===0));
-  await page.locator('.native-options>summary').click();await page.getByRole('switch').click();await page.waitForFunction(()=>!PBNetwork.offline);
+  ok('After the restart the lamp is still red',await page.locator('header .tools>.native-net-lamp').getAttribute('data-state')==='off');
+  await page.locator('.native-options>summary').click();await page.locator('.native-offline-switch').click();await page.waitForFunction(()=>!PBNetwork.offline);
+  ok('The menu switch restores internet access and the lamp turns green again',await page.locator('header .tools>.native-net-lamp').getAttribute('data-state')==='on');
   ok('The same switch restores internet access without sending queued mail',await page.evaluate(async()=>(await fetch('https://network.example.invalid/resumed')).ok&&networkChanges.join(',')==='false'&&mailCalls.length===0)&&requests.some(url=>url.endsWith('/resumed')));
   ok('Compact menus and app-only internet switching have no unhandled runtime errors',errors.length===0);
 }finally{await browser?.close();}
