@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import org.json.JSONObject;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -49,13 +48,13 @@ public class UnsubscribeTest {
 
     @Test public void sendsOneFormPostWithoutFollowingRedirects() throws Exception {
         FakeConnection[] seen = new FakeConnection[1];
-        JSONObject result = Unsubscribe.oneClick("https://news.example.com/u?id=7", url -> seen[0] = new FakeConnection(url, 302));
-        assertTrue(result.getBoolean("ok"));
-        assertEquals(302, result.getInt("status"));
+        Unsubscribe.Result result = Unsubscribe.oneClick("https://news.example.com/u?id=7", url -> seen[0] = new FakeConnection(url, 302));
+        assertTrue(result.ok);
+        assertEquals(302, result.status);
         assertEquals("POST", seen[0].getRequestMethod());
         assertFalse(seen[0].getInstanceFollowRedirects());
         assertEquals("application/x-www-form-urlencoded", seen[0].getRequestProperty("Content-Type"));
         assertEquals("List-Unsubscribe=One-Click", seen[0].body.toString(StandardCharsets.US_ASCII.name()));
-        assertFalse(Unsubscribe.oneClick("https://news.example.com/u", url -> new FakeConnection(url, 500)).getBoolean("ok"));
+        assertFalse(Unsubscribe.oneClick("https://news.example.com/u", url -> new FakeConnection(url, 500)).ok);
     }
 }

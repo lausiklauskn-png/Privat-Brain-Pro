@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import org.json.JSONObject;
 
 /**
  * One-click newsletter unsubscribe (RFC 8058): a single POST of "List-Unsubscribe=One-Click"
@@ -16,6 +15,11 @@ import org.json.JSONObject;
  */
 final class Unsubscribe {
     interface Opener { HttpURLConnection open(URL url) throws IOException; }
+    /** Plain result, so the rule stays testable on a JVM; the plugin turns it into JSON. */
+    static final class Result {
+        final boolean ok; final int status;
+        Result(boolean ok, int status) { this.ok = ok; this.status = status; }
+    }
     static final byte[] BODY = "List-Unsubscribe=One-Click".getBytes(StandardCharsets.US_ASCII);
 
     private Unsubscribe() { }
@@ -34,7 +38,7 @@ final class Unsubscribe {
         catch (Exception invalid) { throw new MailFailure("INVALID_INPUT"); }
     }
 
-    static JSONObject oneClick(String value, Opener opener) throws Exception {
+    static Result oneClick(String value, Opener opener) throws Exception {
         URL url = validate(value);
         AppNetwork.check();
         long started = AppNetwork.epoch();
@@ -53,7 +57,7 @@ final class Unsubscribe {
             try (OutputStream out = request.getOutputStream()) { out.write(BODY); }
             int status = request.getResponseCode();
             AppNetwork.check(started);
-            return new JSONObject().put("ok", accepted(status)).put("status", status);
+            return new Result(accepted(status), status);
         } finally {
             AppNetwork.release(cancel);
             request.disconnect();
