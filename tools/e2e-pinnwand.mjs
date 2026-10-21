@@ -254,12 +254,12 @@ ok('DM: Fremder C bekommt null (kein Leck, fail-soft)', dm.strangerNull===true);
 ok('DM: Sicherheitsnummer symmetrisch (SAS gegen MITM)', dm.sasSymmetric===true);
 ok('DM: pubFromPriv leitet den öffentlichen Schlüssel korrekt ab', dm.pubFromPriv===true);
 
-// 15) net-widget (🌐) und Pinnwand (📌) koexistieren, eigene IDs
+// 15) Mycel-Fenster (🌐, Modul 23-UI) und Pinnwand (📌) koexistieren, eigene IDs
 const coexist = await page.evaluate(()=>({
-  net: !!document.querySelector('#pbNetBtn'), pin: !!document.querySelector('#pbPinBtn'),
-  distinctPanels: !!document.querySelector('#pbNetPanel') && !!document.querySelector('#pbPinPanel'),
+  net: !!document.querySelector('#sbkim-rdv-btn'), pin: !!document.querySelector('#pbPinBtn'),
+  distinctPanels: !!document.querySelector('#sbkim-rdv-panel') && !!document.querySelector('#pbPinPanel'),
 }));
-ok('🌐 Netz-Flieger + 📌 Pinnwand-Flieger koexistieren (eigene IDs)', coexist.net===true && coexist.pin===true && coexist.distinctPanels===true);
+ok('🌐 Mycel-Fenster + 📌 Pinnwand-Flieger koexistieren (eigene IDs)', coexist.net===true && coexist.pin===true && coexist.distinctPanels===true);
 
 // 16) Kanal-Umschalter 🌐 Öffentlich · 🏢 Intern
 const chan = await page.evaluate(()=>({

@@ -35,7 +35,8 @@ try{
   await page.click('[data-tab=mail]');await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('[data-live-uid="7"]').click();
   await page.locator('.live-mail .mail-html').waitFor();
   ok('320px touch: Pro name fits and the green offline information is removed',await page.locator('.brand h1').textContent()==='Private Brain Pro'&&await page.locator('.badge-off').count()===0&&await page.locator('.brand h1').evaluate(e=>e.getBoundingClientRect().right<=document.querySelector('header .tools').getBoundingClientRect().left));
-  ok('Native status lamps are mounted at the actual app origin and remain clickable',await page.locator('.native-toolbar-row #sbkim-widget-slot-lebt').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget-slot-verkehr').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget-slot-fremd').isVisible());
+  // Klaus 2026-10-21: only the round Siegel floats (lamps not shown); tools/native/test-mycel.mjs covers drag, snap, ✕.
+  ok('The round Siegel is mounted at the actual app origin and floats outside the toolbar',await page.locator('#sbkim-widget-slot-siegel').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget').count()===0&&await page.locator('#sbkim-widget').evaluate(w=>getComputedStyle(w).position==='fixed'));
   for(const width of [320,390,768,1280]){
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{

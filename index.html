@@ -326,7 +326,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
+  <header class="top" data-sbkim-leiste>
     <div class="logo" aria-hidden="true">
       <img src="icon-512.png" alt="" width="46" height="46">
     </div>
@@ -334,6 +334,8 @@
       <h1>Private Brain</h1>
       <div class="sub" data-i18n="brandSub">Dein privates zweites Gehirn — alles nach <b>Bedeutung</b> finden. Offline.</div>
     </div>
+    <!-- Platz für die 🌐-Pille des Mycel-Fensters (Modul 23-UI dockt hier an, INTERFACES §11.8). -->
+    <span class="mycel-platz" data-sbkim-mycel-platz></span>
     <div class="tools">
       <span class="badge-off" data-i18n-title="offlineTitle" title="Alles läuft in diesem Browser. Keine Datei verlässt das Gerät (außer du schaltest eine EU-KI bewusst frei).">
         <span class="dot"></span> <span data-i18n="offline">offline</span>
@@ -535,11 +537,10 @@
     <div class="empty" id="dupeEmpty"><div class="big">✨</div><p>Keine doppelten Inhalte gefunden.</p></div>
   </section>
 
-  <!-- NETZ — „Mit dem Knotennetz verbinden" lebt jetzt AUSSCHLIESSLICH im schwebenden
-       🌐-Flieger (modules/net-widget.js), nicht mehr als fester Tab/Panel (Klaus 2026-07-19:
-       „alter Netz-Button weg, nur der Flieger"). Der Flieger trägt das Gerätename-Feld +
-       das volle Werkzeug (Verbinden · Frage nach Bedeutung + 🎤 · Wer ist im Raum? · Antworten
-       an/aus · 📬 Briefkasten · KI-Richter). Kein #panel-net, kein #pbNetTabMount mehr. -->
+  <!-- NETZ — „Mit dem Knotennetz verbinden" lebt seit 2026-10-21 im Mycel-Fenster des Kanons
+       (modules/23_rendezvous_ui.js, byte-1:1): 🌐-Pille im Platz [data-sbkim-mycel-platz] der
+       Kopfleiste, mit Verbinden · Wer ist im Raum? · Frage nach Bedeutung + 🎤 · Briefkasten ·
+       KI-Richter. In der Pro-App öffnet es sich aus dem Siegel-Fenster. Kein fester Tab. -->
 
   <!-- EINSTELLUNGEN -->
   <section class="panel" id="panel-settings">
@@ -702,6 +703,8 @@
 <script src="modules/05_anastomose.js"></script>
 <script type="module" src="modules/05b_nostr_relay.js"></script>
 <script src="modules/23_rendezvous.js"></script>
+<!-- Mycel-Fenster des Kanons (byte-1:1, Pflicht-Liste B), vor Modul 17 (PFLICHT_MODULE Ladereihenfolge). -->
+<script src="modules/23_rendezvous_ui.js"></script>
 <script src="modules/20_schluessel_safe.js"></script>
 <script src="modules/21_spracheingabe.js"></script>
 <!-- Stufe D — Selbst-Siegel + Membran + Status-Lampen (Modul 17 VOR 15/16 inited).
@@ -3442,13 +3445,10 @@ boot();
 </script>
 
 <!-- Gerätename (lokal, kein PII): frei wählbarer Anzeige-Name, reist als Hinweis mit.
-     Das Eingabefeld + seine Verdrahtung leben jetzt IM schwebenden Flieger
-     (modules/net-widget.js) — dort wo das Netz-Werkzeug ist. Der Flieger feuert
-     beim Tippen 'sbkim:geraetename-changed'; rendezvous-init.js hört darauf und
-     re-konfiguriert den Anzeige-Namen (displayNodeName). Kein #geraetename mehr im HTML. -->
+     Das Feld setzt rendezvous-init.js in das Mycel-Fenster (#sbkim-rdv-panel), nie in die
+     byte-kopierte Datei selbst (NETZWEIT § 2). -->
 <!-- App-Adapter für „Mit Freunden verbinden" (nach der App, nutzt window.__CB_getCorpus). -->
 <script src="modules/rendezvous-init.js"></script>
-<script src="modules/net-widget.js"></script>
 <!-- 📌 Pinnwand als eigener schwebender Flieger (Blase + Panel), PB-Theme.
      Portiert die Sage-Pinnwand-Brett-Logik (Frage→Antwort/Nostr/DM-Krypto B7),
      eigenes PB-Brett (Tag sbkim-privatbrain-brett). Importiert dm_crypto + noble
