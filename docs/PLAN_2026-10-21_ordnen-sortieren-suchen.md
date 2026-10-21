@@ -29,6 +29,36 @@ Grundlage: [Brief der Plansitzung](BRIEF_2026-10-21_plansitzung-ordnen-sortieren
 | Kategorien | **Vorschlag, ein Tipp** zum Anlegen; danach sammeln sie sich selbst (nur Ansicht) |
 | Scanner-Übergabe | Knopf **„An Private Brain“** in Workflow PDF Pro über Android-Teilen |
 | Reihenfolge | **Postfach zuerst** |
+| Konten | Suche, Bündel, Aufräumen und Kategorien gelten **für alle eingetragenen Konten zusammen** |
+| Erstabruf | einmal alle Konten abrufen und einordnen, **letzte 12 Monate**; Älteres mit „Ältere nachholen“ |
+| Danach | **automatisch beim Öffnen und alle 30 Minuten**, nur bei eingeschaltetem App-Internet |
+| Doppelungen | eine schon vorhandene Mail wird beim erneuten Laden **überschrieben**, keine neue Fassung; unsichere Fälle in den Ordner **„Doppelte“** |
+
+## Grundlage für alle Abschnitte: alle Konten, keine Doppelungen
+
+- **Heute im Code:** eine Mail kommt nur auf ausdrückliches „In den Katalog“ in den Katalog.
+  Ihr Kennzeichen ist ein Fingerabdruck aus Absender, Betreff, Datum und Text
+  (`assets/live-mail.js`). Lädt man dieselbe Mail noch einmal, entsteht deshalb meist keine
+  zweite. Ändert sich aber ein Zeichen, oder liegt dieselbe Mail in zwei Konten, kann es doch
+  zwei Einträge geben.
+- **Neu:** Erkannt wird zuerst an der Kennung im Mailkopf (`Message-ID`). Fehlt sie, gilt der
+  bisherige Fingerabdruck. Ist eine Mail schon da, wird ihr Eintrag **überschrieben**.
+  Klaus' eigene Markierungen bleiben dabei erhalten (Stern, „Ist Werbung“, „Ist wichtig“,
+  Kategorie), ebenso die Originale im Speicherort-Ordner. Liegt dieselbe Mail in zwei Konten,
+  bleibt es **ein** Eintrag, der beide Fundorte kennt.
+- **Unsicher** (gleicher Betreff und Absender, Text weicht ab, keine Kennung): nichts wird
+  überschrieben, beide kommen in den vorhandenen Ordner **„Doppelte“**, wo Klaus mit einem Tipp
+  „Gleich – zusammenlegen“ oder „Verschieden – beide behalten“ wählt.
+- **Erstabruf:** Knopf „📥 Alle Konten abrufen und einordnen“ mit Fortschritt je Konto
+  (12 Monate). Danach von selbst beim Öffnen der App und alle 30 Minuten, nur bei eingeschaltetem
+  App-Internet. Große Anhänge werden nicht automatisch geladen. Ein Konto, das gerade nicht
+  erreichbar ist, wird übersprungen und gemeldet; die anderen laufen weiter.
+- **Grenzen:** nur Lesen und Einordnen; Senden passiert nie automatisch. Ältere Mails als
+  12 Monate erst nach „Ältere nachholen“. Alle 30 Minuten gilt, solange Android die App
+  im Hintergrund nicht anhält (Energiesparen am Tablet kann das verzögern).
+- **Prüfung:** Proben mit zwei Testkonten: dieselbe Mail zweimal laden → ein Eintrag,
+  Markierungen erhalten; dieselbe Mail in beiden Konten → ein Eintrag; abweichender Text ohne
+  Kennung → „Doppelte“; Konto offline → andere laufen weiter.
 
 ## Bauabschnitte
 
