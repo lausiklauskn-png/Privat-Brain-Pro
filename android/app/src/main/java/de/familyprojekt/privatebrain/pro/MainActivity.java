@@ -49,6 +49,8 @@ public class MainActivity extends BridgeActivity {
                     return new android.webkit.WebResourceResponse("text/plain", "UTF-8", new java.io.ByteArrayInputStream(new byte[0]));
                 return super.shouldInterceptRequest(view, request);
             }
+            // Android calls this only from 8.0 (API 26) on; older devices keep the old behaviour.
+            @android.annotation.TargetApi(android.os.Build.VERSION_CODES.O)
             @Override public boolean onRenderProcessGone(android.webkit.WebView view, android.webkit.RenderProcessGoneDetail detail) {
                 // The view's process ended (for example out of memory while the meaning model starts).
                 // Remember it and open the app again instead of letting Android close it.
