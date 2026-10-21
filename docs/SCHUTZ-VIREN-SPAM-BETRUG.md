@@ -1,6 +1,8 @@
-# Schutz vor Viren, Spam und Betrug (Bauabschnitt 5, vorbereitet)
+# Schutz vor Viren, Spam und Betrug (Bauabschnitt 5, in Vorschau .19)
 
-Stand 2026-10-20. Auftrag: [Brief Abschnitt 5](BRIEF_2026-10-20_speicherort-quarantaene-suche-sicherheit.md#bauabschnitt-5-vorbereitung-für-viren--spam--und-scam-schutz).
+In Vorschau .19 seit 2026-10-21 veröffentlicht: [APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.19/Private-Brain-Pro-0.1.0-preview.19.apk). Vollständige Main-CI 39570196725 und Release 39575223652 mit signierter .18→.19-Updateprobe erfolgreich. [Prüfsumme und alle Belege](PRUEFSTAND-ANDROID.md#veröffentlichte-version-19--2026-10-21). Die nachfolgenden Anbieter-, Geräte- und Lizenzgrenzen bleiben bestehen.
+
+Stand der Funktionsbeschreibung 2026-10-20. Auftrag: [Brief Abschnitt 5](BRIEF_2026-10-20_speicherort-quarantaene-suche-sicherheit.md#bauabschnitt-5-vorbereitung-für-viren--spam--und-scam-schutz).
 Nutzer 2026-10-20: *„… mit automatischer Aktualisierung von Virendateien … auch Spam-Schutz …
 Listen mit in den Ordner, der auf der SD-Karte ist … Nichts soll auf den Hauptspeicher des
 Tablets gehen, sondern alles in die Ordner, die dafür vorgesehen sind, mit Benennung.“*

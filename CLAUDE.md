@@ -1,14 +1,23 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .19 veröffentlicht (2026-10-21), Nachfolgeversion von .18.**
+[APK .19](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.19/Private-Brain-Pro-0.1.0-preview.19.apk) über die vorhandene App installieren, nicht deinstallieren.
+Tag `v0.1.0-preview.19` exakt auf main-Commit `418ff2eeced686af8145aecd2d5e82a746a25f18`, VersionCode 19. Enthält PR #44 (Schutz-Prüfstelle) und PR #46 (Versionsnummer), einschließlich der Reparaturen aus .18.
+Vollständige Main-CI 39570196725 einschließlich native-smoke grün: 46 Android-Fälle ohne Fehler/Überspringen, 34 Schutz-Simulationen und 18 Ersatzschlüssel-Gegenproben. Release 39575223652: Signatur/Metadaten 119138967179, signiertes Update **.18 → .19** 119141943511 und Veröffentlichung 119142938424 erfolgreich. Daten, Sprache, Offline-Kaltstart, Speicherort-Einstellung und Android-Ordnerauswahl erhalten/geprüft.
+Öffentlicher Download im Release-Job mit `cmp` bytegleich zum signierten Artefakt. Zusätzlicher unabhängiger Download stimmt in SHA-256 und Größe mit SHA256SUMS und GitHub-Assetdaten überein; die ausgelieferten Dateien `native-protect.js` und `native-recovery.js` stimmen bytegleich mit der Quelle überein.
+SHA-256: `b5851f24eee940078f1cd5805e64e0eb5482ab4d3cdf8e3d83f216ffef6d6604` (5.667.836 Bytes). Originalsignierer ausschließlich in Actions; `PB_SIGNING_UNLOCK` behalten. PWA und geschützte Module unverändert.
+Die Schutz-Prüfstelle ist enthalten, bleibt aber ein begrenzter Schutz anhand von Regeln/Listen. Echte Anbieterzugänge und Klaus' Tablet wurden nicht getestet; die dokumentierten Anbieter-/Lizenzgrenzen bleiben bestehen.
+[Bedienung und Grenzen](docs/SCHUTZ-VIREN-SPAM-BETRUG.md), [Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-19--2026-10-21).
+
 **Vorschau .18 veröffentlicht (2026-10-21): Ersatzschlüssel repariert.**
 [APK .18](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk) über die vorhandene App installieren, nicht deinstallieren.
 Unterer Tresor: echte Android-Dateisicherung der fünf Anteile; Einrichtung erst nach erfolgreichem Export und Bestätigung. Abbruch/Fehler, Passwortwechsel und verspätete Antworten nach Schließen abgesichert. Drei Anteile stellen dessen Passwort wieder her, nicht das getrennte Tablet-/SD-Speicherort-Passwort.
 Quelle/Tag `090503e1b4115e0e9bea07359d637b47de0e10e6` (`v0.1.0-preview.18`, Code 18); vollständige Quell-CI 39508996409 mit 41 Android-Fällen und Identitätsprüfung 39508996281 grün. Release 39510666137: signiertes .17→.18-Update 118933109306 und Veröffentlichung 118933930393 erfolgreich.
 SHA-256: `6258bbb6d340b0e2404ff02c294bf011f4824b2cbfea5b6487ed8c102f803fa9` (5.637.591 Bytes). Der Release-Job hat den öffentlichen APK-Download mit `cmp` bytegleich zum signierten Artefakt geprüft. Der zusätzliche unabhängige Download stimmt in SHA-256 und Größe mit den veröffentlichten Prüfsummen und GitHub-Assetdaten überein.
-Release-Werkzeuge von `235c7b124267e06e3d16fdb550d22cb7c147e2f6` (PR #45, CI 39508757517 mit tatsächlichen Activity-Neustarts in allen drei Phasen). Enthalten: Export-, VaultCode- und Navigationsreparatur; PR #44 **nicht** in dieser APK. Die Schutzfunktion bleibt auf main vorbereitet. PWA/geschützte Module und Originalsignierer unverändert.
+Release-Werkzeuge von `235c7b124267e06e3d16fdb550d22cb7c147e2f6` (PR #45, CI 39508757517 mit tatsächlichen Activity-Neustarts in allen drei Phasen). Enthalten: Export-, VaultCode- und Navigationsreparatur; PR #44 **nicht** in dieser APK. Zum .18-Release blieb die Schutzfunktion auf main vorbereitet. PWA/geschützte Module und Originalsignierer unverändert.
 [Bedienung/Prüfgrenzen](docs/TRESOR-ERSATZSCHLUESSEL.md), [Release-Nachweis](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-18--2026-10-21). Keine Messung an Klaus' Tablet. `PB_SIGNING_UNLOCK` behalten.
 
-**Bauabschnitt 5 vorbereitet (2026-10-20, noch nicht veröffentlicht): Schutz vor Viren, Spam, Betrug.**
+**Bauabschnitt 5 in Vorschau .19 veröffentlicht (2026-10-21): Schutz vor Viren, Spam, Betrug.**
 Prüfstelle `native/native-protect.js` (`PBSchutz`) mit Einschüben: Regeln für Spam/Betrug
 (ohne Netz), MalwareBazaar-/URLhaus-Listen (abuse.ch, persönlicher Auth-Key), VirusTotal
 nur Fingerabdruck auf Tipp, Übergabe an Virenscanner-App. Listen, Stand und Schlüssel

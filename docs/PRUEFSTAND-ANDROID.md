@@ -1,5 +1,5 @@
-> Vorschau .18 veröffentlicht (2026-10-21): signierte .17→.18-Updateprobe und öffentliche Downloadprüfung bestanden.
-> Reparatur-APK ohne die vorbereitete Schutzfunktion aus PR #44; Prüfsumme und Lauf-IDs im Abschnitt .18 unten.
+> Vorschau .19 veröffentlicht (2026-10-21), einschließlich PR #44: signierte .18→.19-Updateprobe und öffentliche Downloadprüfung erfolgreich.
+> Tag exakt auf `418ff2eeced686af8145aecd2d5e82a746a25f18`; APK-Link, SHA-256 und Lauf-IDs im Abschnitt .19 unten.
 
 # Prüfstand Android – 2026-10-20
 
@@ -936,3 +936,19 @@ Größe: 5.637.591 Bytes
 APK: https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk
 
 [Bedienung und Prüfgrenzen](TRESOR-ERSATZSCHLUESSEL.md). Es wurden keine echten Nutzerpasswörter oder Ersatzschlüssel verwendet. `PB_SIGNING_UNLOCK` bleibt erforderlich; keine neue Signieridentität und keine weiteren Secret-Löschungen durch diese Sitzung.
+
+
+## Veröffentlichte Version .19 — 2026-10-21
+
+**Vorschau .19 veröffentlicht (2026-10-21), Nachfolgeversion von .18.**
+[APK .19](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.19/Private-Brain-Pro-0.1.0-preview.19.apk) über die vorhandene App installieren, nicht deinstallieren.
+Tag `v0.1.0-preview.19` exakt auf main-Commit `418ff2eeced686af8145aecd2d5e82a746a25f18`, VersionCode 19. Enthält PR #44 (Schutz-Prüfstelle) und PR #46 (Versionsnummer), einschließlich der Reparaturen aus .18.
+Vollständige Main-CI 39570196725 einschließlich native-smoke grün: 46 Android-Fälle ohne Fehler/Überspringen, 34 Schutz-Simulationen und 18 Ersatzschlüssel-Gegenproben. Release 39575223652: Signatur/Metadaten 119138967179, signiertes Update **.18 → .19** 119141943511 und Veröffentlichung 119142938424 erfolgreich. Daten, Sprache, Offline-Kaltstart, Speicherort-Einstellung und Android-Ordnerauswahl erhalten/geprüft.
+Öffentlicher Download im Release-Job mit `cmp` bytegleich zum signierten Artefakt. Zusätzlicher unabhängiger Download stimmt in SHA-256 und Größe mit SHA256SUMS und GitHub-Assetdaten überein; die ausgelieferten Dateien `native-protect.js` und `native-recovery.js` stimmen bytegleich mit der Quelle überein.
+SHA-256: `b5851f24eee940078f1cd5805e64e0eb5482ab4d3cdf8e3d83f216ffef6d6604` (5.667.836 Bytes). Originalsignierer ausschließlich in Actions; `PB_SIGNING_UNLOCK` behalten. PWA und geschützte Module unverändert.
+Die Schutz-Prüfstelle ist enthalten, bleibt aber ein begrenzter Schutz anhand von Regeln/Listen. Echte Anbieterzugänge und Klaus' Tablet wurden nicht getestet; die dokumentierten Anbieter-/Lizenzgrenzen bleiben bestehen.
+[Bedienung und Grenzen](SCHUTZ-VIREN-SPAM-BETRUG.md), [Prüfstand](PRUEFSTAND-ANDROID.md#veröffentlichte-version-19--2026-10-21).
+
+Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39570196725). Release: [39575223652](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39575223652). Veröffentlichung UTC: `2026-10-21T09:22:25Z`.
+
+Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
