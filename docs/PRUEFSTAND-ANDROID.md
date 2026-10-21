@@ -952,3 +952,15 @@ Die Schutz-Prüfstelle ist enthalten, bleibt aber ein begrenzter Schutz anhand v
 Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39570196725). Release: [39575223652](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39575223652). Veröffentlichung UTC: `2026-10-21T09:22:25Z`.
 
 Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
+
+
+## Veröffentlichte Version .20 — 2026-10-21
+
+- **Inhalt:** PR #48–#52, Quelle main `ca2e4dccf39599b65f4de70848ef8bc6595f0e07`, VersionCode 20.
+- **Main-CI:** 39609980272 grün, einschließlich native-smoke.
+- **Release-Lauf:** [39613483028](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39613483028).
+  - Start über `workflow_dispatch`: channel `test`, tag `v0.1.0-preview.20`, `source_commit` wie oben.
+  - Erfolgreich: Signatur und Metadaten, signiertes Update .19 → .20 ohne Deinstallation, Veröffentlichung als Pre-Release.
+- **Download:** unabhängig geladen, SHA-256 `936649e6faa6eb23af07ed2fa7b5cdef4e884d13f0de68fcb3b1eca2a5c33d14`, 5.749.114 Bytes. Beides stimmt mit `SHA256SUMS` und dem Digest des GitHub-Assets überein.
+- **Nicht enthalten:** PR #53 (Newsletter abmelden).
+- **Nicht geprüft:** Messung an Klaus' Tablet und echte Mailanbieter.
