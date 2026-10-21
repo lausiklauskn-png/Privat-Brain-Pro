@@ -176,7 +176,8 @@ try{
   ok('Trashed mail leaves the lists and an undo appears',await panel.locator('[data-mail-undo]').isVisible()&&!(await section('expiredH')).length&&await panel.locator('[data-mail-run]').count()===1);
   await capture(page,'6-aufraeumen');
   await panel.locator('[data-mail-undo]').getByRole('button',{name:'Rückgängig'}).click();
-  await page.waitForFunction(()=>!CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>')?.mailTrashed&&!PBMailIndex.running());
+  // Wait for the new place on the server, not only for "not in trash": the follow-up fetch starts a moment later.
+  await page.waitForFunction(()=>{const r=CATALOG.find(x=>x.mailMessageId==='<aldi42@aldi.invalid>');return r&&!r.mailTrashed&&r.mailRemotes?.length===1&&!PBMailIndex.running();});
   const back=await page.evaluate(()=>({calls:window.mailCalls.filter(c=>c.method==='locate').map(c=>c.args),inbox:window.server['11111111-1111-4111-8111-111111111111'].INBOX.some(x=>x.messageId==='<aldi42@aldi.invalid>'),places:CATALOG.find(r=>r.mailMessageId==='<aldi42@aldi.invalid>').mailRemotes.length}));
   ok('Rückgängig finds the mail in the trash by its ID and moves it back',back.calls.length===1&&back.calls[0].folder==='Papierkorb'&&back.calls[0].messageId==='<aldi42@aldi.invalid>'&&back.inbox);
   ok('After undo the mail is filed at its place again, without a copy',back.places===1&&await page.evaluate(()=>CATALOG.filter(r=>r.mailMessageId==='<aldi42@aldi.invalid>').length)===1);

@@ -377,7 +377,7 @@
     if (lastRun?.id === id) lastRun = null;
     progressText = back + ' · ' + t('restored') + (gone ? ' · ' + gone + ' ' + t('gone') : '');
     rebuildIndex(); refreshAll(); draw();
-    sync(true).catch(() => {}); // the restored mails get their new place on the server
+    await sync(true).catch(() => {}); // the restored mails get their new place on the server
   }
   function runs() {
     const map = new Map();
