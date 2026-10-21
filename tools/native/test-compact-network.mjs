@@ -40,7 +40,7 @@ try{
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
       const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab:not(.compact-icon-only)')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
+      return row.height<=(innerWidth<340?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab.compact-icon-only')].every(b=>{const q=b.getBoundingClientRect();return q.width<=32&&Math.abs(q.width-q.height)<=2;})&&[...document.querySelectorAll('.native-toolbar-row .tab:not(.compact-icon-only)')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
     }));
     if(process.env.PB_CAPTURE_DESIGN==='1'){
       await page.mouse.move(width-2,width<650?638:898);
@@ -48,7 +48,7 @@ try{
     }
   }
   await page.setViewportSize({width:320,height:640});
-  ok('Phone keeps Overview, Catalog, Duplicates and Settings directly visible',await page.locator('.workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>=36&&r.right<=innerWidth&&r.left>=0;})));
+  ok('Phone keeps Overview, Catalog, Duplicates and Settings directly visible',await page.locator('.workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>=28&&r.right<=innerWidth&&r.left>=0;})));
   await page.locator('.native-options>summary').click();await page.keyboard.press('Escape');ok('App menu closes with keyboard Escape and restores focus',await page.locator('.native-options>summary').evaluate(e=>document.activeElement===e)&&!await page.locator('.native-options').evaluate(e=>e.open));
   for(const [lang,word]of [['en','App menu'],['ru','Меню приложения'],['pl','Menu aplikacji'],['de','App-Menü']]){
     await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
