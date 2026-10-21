@@ -371,3 +371,27 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 .pb-schutz-card .pb-schutz-line { margin:4px 0;font-size:.88rem;overflow-wrap:anywhere; }
 .pb-schutz-card .pb-schutz-line[data-state=problem] span { color:var(--bad); }
 .pb-schutz-auto { display:flex;gap:6px;align-items:center;margin:8px 0;font-size:.88rem; }
+
+/* Alle Konten: Absender-Bündel und Postfach-Suche (native-mail-index.js) */
+#mailWorkspace.mail-all-open > :not(.mail-all):not(.native-mail-progress) { display:none !important; }
+.mail-all { overflow:auto; overscroll-behavior:contain; }
+.mail-all .mail-head h2 { margin:0 auto 0 0; }
+.mail-all > .mail-notice, .mail-all > .mail-muted, .mail-all > .mail-count { margin:8px 12px; }
+.mail-all > input[type=search] { margin:8px 12px 0; min-height:44px; box-sizing:border-box; width:calc(100% - 24px); }
+.mail-all-switch { display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px; }
+.mail-all-switch .mail-button[aria-pressed=true] { background:var(--mail-soft); border-color:var(--mail-accent); font-weight:bold; }
+.mail-all-list { padding:0 0 12px; }
+.mail-all-list > h3, .mail-all-list > p, .mail-all-list > .mail-back { margin:8px 12px; }
+.mail-all-list .mail-item { grid-template-columns:44px minmax(0,1fr); }
+.mail-all-list .mail-item button { display:block; text-align:left; min-height:60px; overflow-wrap:anywhere; }
+.mail-all-list .mail-item .mail-avatar { display:none; }
+.mail-all-list .mail-item .mail-subject, .mail-all-list .mail-item .mail-preview, .mail-all-list .mail-item .mail-date { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mail-all-list .mail-item .mail-date { font-size:.75rem; color:var(--mut); }
+.mail-all-list .mail-item.unread .mail-subject { font-weight:bold; }
+.mail-count-badge { justify-self:center; min-width:26px; padding:2px 6px; border-radius:12px; background:var(--mail-soft); color:var(--ink); text-align:center; font-size:.8rem; font-weight:bold; }
+.mail-all-reader { padding:12px; }
+.mail-all-reader .mail-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+.mail-app.mail-all-dupes { padding:12px; display:block; }
+.mail-all-dupe { border-top:1px solid var(--line); padding:8px 0; display:flex; flex-wrap:wrap; gap:6px; }
+.mail-all-dupe > strong, .mail-all-dupe > p { flex-basis:100%; margin:0; }
+.mail-all .mail-back { display:inline-flex; }

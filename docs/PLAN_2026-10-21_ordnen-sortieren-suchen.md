@@ -1,6 +1,7 @@
 # Plan „Ordnen, Sortieren, Suchen“ (2026-10-21)
 
-**Stand: Plan, wartet auf Klaus' Zustimmung. Es wird noch nichts gebaut.**
+**Stand: von Klaus am 2026-10-21 freigegeben („Ja.“). Grundlage und A1 gebaut:
+[Alle Konten und Absender](ALLE-KONTEN-UND-ABSENDER.md). A2–A6 offen.**
 Grundlage: [Brief der Plansitzung](BRIEF_2026-10-21_plansitzung-ordnen-sortieren-suchen.md)
 (liegt auf Zweig `ccr-1b365b80-fw60yy`, PR #47).
 

@@ -617,6 +617,7 @@
   function drawFolders() {
     if (native) {
       nav.replaceChildren();
+      const overview=window.PBMailIndex?.entry?.();if(overview)nav.append(overview);
       for(const entry of entries) {
         const button=shared.folderButton(entry.id,entry.name,folderCount(entry),viewKey===entry.id,()=>run(async()=>{
           if(!leave())return;dirty=false;draft=null;viewKey=entry.id;folder=entry.path;drawFolders();await loadList();
@@ -1174,6 +1175,25 @@
   }, 60000);
   window.PBLiveMail = {
     disconnect,
+    /** Opens one mail of any connected account in the device mailbox (used by "Alle Konten"). */
+    openRemote(ref) {
+      if (!native) return Promise.resolve();
+      return run(async () => {
+        if (!leave()) return;
+        accounts = await native.accounts();
+        if (!accounts.some((a) => a.id === ref.account)) throw new Error(native.text("ACCOUNT_MISSING"));
+        base = native.base; token = "device"; connect.hidden = true;
+        switchMode(true);
+        accountSelect.replaceChildren(...accounts.map((a) => new Option(a.email, a.id)));
+        account = ref.account; accountSelect.value = account; accountTools.hidden = false;
+        await loadFolders();
+        const entry = entries.find((e) => e.path === ref.folder);
+        if (entry && entry.path !== folder) { viewKey = entry.id; folder = entry.path; drawFolders(); await loadList(); }
+        if (folder !== ref.folder || validity !== ref.validity) throw new Error(native.text("FOLDER_CHANGED"));
+        const item = items.find((i) => i.uid === ref.uid) || { uid: ref.uid, subject: ref.subject || "", from: ref.from || "", flags: [], date: ref.date || "" };
+        await open(item);
+      });
+    },
     async getRaw(ref) {
       if (
         !token ||
