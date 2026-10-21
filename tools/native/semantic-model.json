@@ -1,5 +1,5 @@
 {
-  "comment": "Bedeutungs-Modell fest in der App (Klaus 2026-10-21). Modul 03 bleibt byte-1:1; die App liefert seine jsDelivr-Adresse selbst aus. Jede Datei ist per SHA-256 festgelegt; fehlt ein Wert, druckt der Bau ihn aus (Lernlauf) und bricht im strengen Modus ab.",
+  "comment": "Bedeutungs-Modell fest in der App (Klaus 2026-10-21). Modul 03 bleibt byte-1:1; die App liefert seine jsDelivr-Adresse selbst aus. Jede Datei ist per SHA-256 festgelegt; fehlt ein Wert, druckt der Bau ihn aus (Lernlauf) und bricht im strengen Modus ab. Modell-Werte am 2026-10-21 im GitHub-Bau 39635608482 aus Hugging Face (Revision 761b726) gelesen: erstes Vertrauen, seitdem fest.",
   "library": {
     "package": "@xenova/transformers",
     "version": "2.17.2",
@@ -13,12 +13,12 @@
   },
   "model": {
     "id": "Xenova/multilingual-e5-small",
-    "revision": "main",
+    "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
     "files": {
-      "config.json": null,
-      "tokenizer.json": null,
-      "tokenizer_config.json": null,
-      "onnx/model_quantized.onnx": null
+      "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+      "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "onnx/model_quantized.onnx": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
     }
   }
 }

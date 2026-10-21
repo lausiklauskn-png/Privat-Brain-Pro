@@ -26,7 +26,13 @@
 
 ## Grenzen
 
-- Die App wird deutlich größer (Modell, Wörterbuch und Rechenbibliothek, siehe Prüfstand für die gemessene Größe).
+- Die App wird deutlich größer. Gemessen im GitHub-Bau 39635608482 (Dateien, vor dem Packen):
+  Modell `onnx/model_quantized.onnx` 118,3 MB · Wörterbuch `tokenizer.json` 17,1 MB · Rechenbibliothek
+  `ort-wasm-simd.wasm` 10,0 MB und `ort-wasm.wasm` 9,2 MB · `transformers.min.js` 0,9 MB · zusammen etwa 155 MB.
+  Die APK-Größe steht nach dem Bau im Prüfstand.
+- Die Modell-Fingerabdrücke stammen aus diesem ersten Download (Revision `761b726…` bei Hugging Face): erstes
+  Vertrauen. Seitdem bricht jeder Bau ab, wenn eine Datei davon abweicht. Die Bibliothek ist zusätzlich über die
+  npm-Integrität festgelegt.
 - Lädt das Modell aus der App, geht das schnell. Der Modell-Balken kann deshalb auch weiterhin rasch durchlaufen;
   das ist dann echtes, schnelles Laden.
 - Das Modell rechnet auf dem Gerät; ältere Tablets brauchen für das erste Einordnen vieler Dateien Zeit.
@@ -36,5 +42,8 @@
 
 - `tools/native/test-import-progress.mjs` (6 Prüfungen): bei einer Datei mindestens vier Zwischenstände, nur
   vorwärts, Ende 100 %, alle drei Schritte genannt. Gegenprobe mit dem alten Code: die erste Prüfung wird rot.
+- `NativeSemanticTest` (Android, echte App, kein Stellvertreter): App vom Internet getrennt, Modul 03 lädt das
+  Modell aus der App (`getModelSource() === "local"`), 384 Dimensionen, „Rechnung vom Zahnarzt“ liegt näher an einer
+  Zahnarztrechnung als an einem Wetterbericht; danach wird das Internet wieder erlaubt.
 - `BundledLibraryTest` (3 JVM-Tests): leere Adresse = Paket-Eintrag, nur die drei mitgelieferten Dateien, andere
   Adressen und andere Versionen werden nicht beantwortet.
