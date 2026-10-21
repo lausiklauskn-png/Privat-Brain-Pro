@@ -25,7 +25,8 @@ try{
   const errors=[],remote=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('dialog',d=>d.accept());
-  await page.context().route('**/*',r=>{if(r.request().url().startsWith(url))return r.continue();remote.push(r.request().url());return r.abort();});
+  /* Modul 03's library address is answered by the app itself (MainActivity/BundledLibrary), never by the internet. */
+  await page.context().route('**/*',r=>{if(r.request().url().startsWith(url))return r.continue();if(r.request().url().startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))return r.fulfill({status:404,body:''});remote.push(r.request().url());return r.abort();});
   await page.addInitScript(()=>{
     const day=864e5,now=Date.now();
     window.mailCalls=[];window.offline=false;

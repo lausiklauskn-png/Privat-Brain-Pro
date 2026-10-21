@@ -11,6 +11,8 @@ try{
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',async route=>{
     const url=route.request().url();
+    /* Modul 03's library address is answered by the app itself (MainActivity/BundledLibrary), never by the internet. */
+    if(url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))return route.fulfill({status:404,body:''});
     if(!url.startsWith(origin)){requests.push(url);return route.fulfill({status:200,contentType:'text/plain',body:'remote fixture'});}
     const path=resolve(root,'.'+new URL(url).pathname.replace(/\/$/,'/index.html'));
     if(!path.startsWith(root+'/'))return route.abort();
