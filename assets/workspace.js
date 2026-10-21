@@ -48,7 +48,11 @@
   async function restore() {
     if (!db) return;
     const saved = libraryId ? await idbGet('dirs', libraryId) : null;
-    if (saved && saved.handle && localStorage.getItem('pb_library_enabled') === '1') library = saved.handle;
+    if (saved && saved.handle && localStorage.getItem('pb_library_enabled') === '1') {
+      // Boot fills DIR_HANDLES a moment later; register the handle now so refresh() does not
+      // take the not-yet-listed folder for a removed one and switch the library off.
+      library = saved.handle; DIR_HANDLES.set(libraryId, saved.handle);
+    }
     refresh();
   }
   async function chooseLibrary() {
