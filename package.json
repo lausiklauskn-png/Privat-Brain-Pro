@@ -13,7 +13,7 @@
     "build:web": "node tools/native/prepare-web.mjs",
     "sync:android": "npm run build:web && cap sync android",
     "build:android": "npm run sync:android && cd android && ./gradlew --no-daemon --max-workers=2 assembleDebug",
-    "test:native-web": "node tools/native/test-web.mjs && node tools/native/test-recovery.mjs && node tools/native/test-mail-device.mjs && node tools/native/test-mail-accounts.mjs && node tools/native/test-navigation.mjs && node tools/native/test-originals.mjs && node tools/native/test-mail-links.mjs && node tools/native/test-pdf.mjs && node tools/native/test-compact-network.mjs && node tools/native/test-folders-layout.mjs && node tools/native/test-vault.mjs && node tools/native/test-protect.mjs && node tools/native/test-mail-expiry.mjs && node tools/native/test-mail-index.mjs && node tools/native/test-explorer-order.mjs"
+    "test:native-web": "node tools/native/test-web.mjs && node tools/native/test-recovery.mjs && node tools/native/test-mail-device.mjs && node tools/native/test-mail-accounts.mjs && node tools/native/test-navigation.mjs && node tools/native/test-originals.mjs && node tools/native/test-mail-links.mjs && node tools/native/test-pdf.mjs && node tools/native/test-compact-network.mjs && node tools/native/test-folders-layout.mjs && node tools/native/test-vault.mjs && node tools/native/test-protect.mjs && node tools/native/test-mail-expiry.mjs && node tools/native/test-mail-index.mjs && node tools/native/test-explorer-order.mjs && node tools/native/test-categories.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",

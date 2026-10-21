@@ -166,14 +166,22 @@
       b.setAttribute('aria-current',path===folderPath?'location':'false');tree.append(b);
     }
     // App-specific folders (Android: encrypted mail attachments) render their own contents.
+    // Categories (native): views over the catalog, nothing is moved. Path "topic:<key>".
+    const topics=window.PBExplorerTopics, views=topics?.views()||[];
+    for(const v of views){const b=button(v.label+' ('+v.count+')',()=>openFolder('topic:'+v.key));b.dataset.topic=v.key;b.setAttribute('aria-current',folderPath==='topic:'+v.key?'location':'false');tree.append(b);}
+    const view=folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):null;
     const extra=window.PBExplorerExtra;
     extra?.tree(tree,folderPath,openFolder,button);
     if(extra?.owns(folderPath)){el('explorerPath').textContent=extra.label();el('explorerUp').disabled=false;extra.files(files,el('explorerFilter').value,el('explorerSort').value);return;}
-    el('explorerPath').textContent=folderPath || text('all');
+    el('explorerPath').textContent=view?view.label:(folderPath || text('all'));
     el('explorerUp').disabled=!folderPath;
     orderLabel();
+    if(!folderPath)topics?.notice(files);
+    if(view)topics.head(files,view.key);
     const words=foldText(el('explorerFilter').value).split(/\s+/).filter(Boolean);
-    const visible=all.filter(e=>(!folderPath || e.path.startsWith(folderPath+'/')) && explorerMatch(e,words));
+    const seen=new Set();
+    const visible=view?all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r)&&explorerMatch(e,words))
+      :all.filter(e=>(!folderPath || e.path.startsWith(folderPath+'/')) && explorerMatch(e,words));
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
     visible.sort((a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):a.r.name.localeCompare(b.r.name)));
     for (const e of visible) {
@@ -181,7 +189,7 @@
       const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('div');
       name.textContent=(e.r.mail?'✉️ ':'📄 ')+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
       meta.textContent=e.path+' · '+fmtKB(e.r.size||0)+' · '+(window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog'));
-      info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));files.append(row);
+      info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view)row.append(topics.rowTool(e.r,view.key));files.append(row);
     }
     if(!visible.length){const p=document.createElement('p');p.className='explorer-empty';p.textContent=text('empty');files.append(p);}
   }

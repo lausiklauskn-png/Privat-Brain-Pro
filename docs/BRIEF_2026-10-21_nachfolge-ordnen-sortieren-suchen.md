@@ -23,7 +23,7 @@ bei grünen relevanten Prüfungen (CLAUDE.md, „Pro-App: Stand 2026-10-19“).
 | A2: Newsletter nach Ablaufdatum, Papierkorb + Rückgängig, Ist Werbung/wichtig | gebaut, lokal grün; CI siehe PR #48 |
 | A3: Dateien neueste oben/umkehrbar, Inhaltssuche; „Alle Konten“-Mails nicht im Explorer | gebaut, lokal grün |
 | Flache Knöpfe (Klaus 2026-10-21) im Postfach, Alle Konten, Explorer-↕ | gebaut; Regel oben in CLAUDE.md |
-| A4: Kategorien per Vorschlag (Rechnungen, Gehalt, Gesundheit, Verträge, Versicherung) | offen |
+| A4: Kategorien per Vorschlag (Rechnungen, Gehalt, Gesundheit, Verträge, Versicherung) | gebaut, lokal grün ([Doku](KATEGORIEN-VORSCHLAG.md)) |
 | A5: Übergabe aus Workflow PDF Pro über Android-Teilen (`ACTION_SEND`, nur PDF) | offen, Sendeseite baut Codex |
 | A6: Bedeutungssuche nur in Mails | offen, wartet auf Modell im APK |
 | Kapitel im Benutzerhandbuch (PR #47) für Grundlage, A1, A2 | offen (anderer Zweig) |

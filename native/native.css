@@ -469,3 +469,42 @@ button:not(:disabled):active, .btn:active, summary.mail-button:active { transfor
 .explorer-toolbar button { min-height:28px; }
 .mail-all-head > .mail-back, .mail-all-head > .mail-all-refresh, .mail-all-head > details { flex:none; white-space:nowrap; }
 .mail-all-head > details > summary { min-height:28px; padding:3px 8px; }
+
+/* Kategorien per Vorschlag (A4) */
+.topic-suggest { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 10px; margin:0 0 8px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+.topic-suggest > p { flex-basis:100%; margin:0; font-size:.86rem; line-height:1.4; }
+.topic-head { display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between; margin:0 0 6px; }
+.topic-head > .hint { margin:0; }
+.explorer-row [data-topic-not] { font-size:.8rem; }
+/* Ordnerbaum im Explorer flach (Klaus 2026-10-21) */
+#explorerTree button { min-height:28px; padding:3px 10px; font-size:.86rem; }
+#explorerTree { gap:4px; }
+.topic-again { margin:0 0 8px; font-size:.8rem; }
+
+/* Obere Leiste: Knöpfe so breit wie Symbol + Wort, Lupe und Zahnrad als kleine Quadrate
+   (Klaus 2026-10-21: „Die Button angepasst an die Wortgröße … viel kleiner … damit sparen wir eine Reihe“). */
+.native-toolbar-row .tab.compact-icon-only { width:30px!important; min-width:30px!important; padding:0!important; justify-content:center; }
+@media(max-width:1000px) {
+  .native-toolbar-row { display:flex!important; flex-wrap:wrap; align-items:center; gap:4px; }
+  .native-toolbar-row .main-pages { flex:0 1 auto!important; flex-wrap:wrap; gap:4px!important; justify-content:flex-start!important; min-width:0; }
+  .native-toolbar-row .native-more { flex:0 1 auto!important; min-width:0; }
+  .native-more>.workspace-tools { gap:4px!important; flex-wrap:wrap; justify-content:flex-start; }
+  .native-toolbar-row>#sbkim-widget { margin-left:auto; }
+  .native-toolbar-row .main-pages .tab, .native-more .workspace-tools .tab { flex:none!important; width:auto; height:30px; min-height:30px!important; padding:3px 7px!important; gap:4px; }
+  .native-toolbar-row .main-pages .tab.compact-icon-only, .native-more .workspace-tools .tab.compact-icon-only { width:30px!important; padding:0!important; }
+  .native-toolbar-row .main-pages .compact-caption, .native-more .workspace-tools .compact-caption { font-size:.74rem; }
+}
+@media(max-width:1000px) {
+  .native-toolbar-row .main-pages, .native-more>.workspace-tools { display:flex!important; grid-template-columns:none!important; }
+}
+@media(max-width:1000px) {
+  .native-toolbar-row .main-pages { order:1; }
+  .native-toolbar-row>#sbkim-widget { order:2; margin-left:auto; }
+  .native-toolbar-row .native-more { order:3; flex-basis:100%!important; }
+}
+@media(min-width:700px) and (max-width:1000px) { .native-toolbar-row .native-more { flex-basis:auto!important; } }
+@media(max-width:420px) {
+  .native-toolbar-row .main-pages .tab, .native-more .workspace-tools .tab { padding:3px 6px!important; gap:3px; }
+  .native-toolbar-row .main-pages, .native-more>.workspace-tools { gap:3px!important; }
+  .native-toolbar-row #sbkim-widget .sbkim-widget-slot { min-width:20px!important; width:20px!important; max-width:20px!important; padding:2px!important; }
+}

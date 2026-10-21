@@ -86,3 +86,17 @@ Finger drauf gehe, können die Button größer werden … so treffe ich sie bess
 - Proben: `test-mail-index` **61 grün** (Kopf in einer Zeile, Kontoauswahl, ⟳ ohne Text,
   Tippfläche 7 px, Wachsen auf 1,12, „← Zurück“ einzeilig), `test-explorer-order` 17,
   ganze Reihe `test:native-web` grün. Bilder: `docs/design/flach/`, `docs/design/alle-konten/`.
+
+## Dritte Runde (Klaus 2026-10-21): Leistenknöpfe so breit wie ihr Inhalt
+
+Klaus: *„Die Button angepasst an die Wortgröße inklusive des entsprechenden Symbols … die Lupe hat viel
+zu viel Platz … beim Zahnrad würde ein viel kleinerer Button reichen, vielleicht ein quadratischer.“*
+
+- Bis 1000 px Breite ist die obere Leiste kein Raster mehr. Jeder Knopf ist so breit wie Symbol und Wort,
+  Lupe und Zahnrad sind Quadrate (30 × 30 px), alle Leistenknöpfe 30 px hoch. Die Statuslampen stehen in
+  der ersten Zeile hinter Mail.
+- Gemessen, Beginn der Seite unter der Leiste (vorher → nachher): 360 px 156 → **114 px**,
+  390 px 118 → **114 px**, 768 px 118 → **80 px** (alles in einer Zeile). Bei 320 px bleiben es drei
+  Zeilen (104 px). Bilder: `docs/design/flach/leiste-*.png`.
+- `test-compact-network` verlangt jetzt höchstens zwei Zeilen ab 340 px (vorher erlaubt: drei bis 360 px)
+  und quadratische Lupe/Zahnrad; Mindesthöhe der Leistenknöpfe 28 statt 36 px.
