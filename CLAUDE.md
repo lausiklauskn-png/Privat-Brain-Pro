@@ -1,5 +1,10 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Nächste Sitzung (2026-10-21): erst Plansitzung „Ordnen, Sortieren, Suchen“.** Absender-Bündel und Sortierung
+im Postfach, eigene Wort- und Bedeutungssuche in Mails, Newsletter/Werbung aussortieren (nur aktuellste behalten),
+Dateien neueste zuerst, automatische Kategorien, Übergabe aus Workflow PDF Pro. Erst mit Klaus abgleichen, dann bauen.
+[Brief](docs/BRIEF_2026-10-21_plansitzung-ordnen-sortieren-suchen.md). Handbuch: PR #47 (Entwurf, wird ergänzt).
+
 **Vorschau .18 veröffentlicht (2026-10-21): Ersatzschlüssel repariert.**
 [APK .18](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.18/Private-Brain-Pro-0.1.0-preview.18.apk) über die vorhandene App installieren, nicht deinstallieren.
 Unterer Tresor: echte Android-Dateisicherung der fünf Anteile; Einrichtung erst nach erfolgreichem Export und Bestätigung. Abbruch/Fehler, Passwortwechsel und verspätete Antworten nach Schließen abgesichert. Drei Anteile stellen dessen Passwort wieder her, nicht das getrennte Tablet-/SD-Speicherort-Passwort.
