@@ -58,24 +58,27 @@ public class NativeSemanticTest {
         model.install((done, total, file, source) -> Log.i("NativeSemanticTest", "model " + done + "/" + total + " " + file + " from " + source));
         Log.i("NativeSemanticTest", "model loaded in " + (System.currentTimeMillis() - started) + " ms");
         assertTrue("all files loaded and checked", model.installed());
+        // Offline from the first moment: the app starts the model by itself, and nothing may come from the internet.
+        AppNetwork.setOffline(context, true);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             await(scenario, "(window.SbkimEmbedding&&window.PBNetwork&&window.PBNetwork.ready&&window.PBSemantic)?'yes':''", 90, context);
-            evaluate(scenario, "window.__semOff=null;PBNetwork.setOffline(true).then(()=>window.__semOff='ok',e=>window.__semOff='err:'+e.message)");
-            assertEquals("\"ok\"", await(scenario, "window.__semOff||''", 30, context));
+            assertEquals("\"true\"", await(scenario, "String(PBNetwork.offline)", 30, context));
             try {
                 evaluate(scenario, "window.__sem=null;(async()=>{try{await SbkimEmbedding.init();"
                     + "const q=await SbkimEmbedding.embedQuery('Rechnung vom Zahnarzt');"
                     + "const near=await SbkimEmbedding.embedPassage('Zahnarztrechnung über 120 Euro für eine Füllung');"
                     + "const far=await SbkimEmbedding.embedPassage('Wetterbericht: morgen Regen in Hamburg');"
                     + "const dot=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;};"
-                    + "window.__sem=JSON.stringify({dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline});"
-                    + "}catch(e){window.__sem=JSON.stringify({error:String(e&&e.message||e)});}})()");
+                    + "window.__sem=JSON.stringify({fallback:SbkimEmbedding.getModelFallback(),dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline});"
+                    + "}catch(e){window.__sem=JSON.stringify({error:String(e&&e.message||e),fallback:SbkimEmbedding.getModelFallback&&SbkimEmbedding.getModelFallback(),source:SbkimEmbedding.getModelSource()});}})()");
                 String raw = await(scenario, "window.__sem||''", 300, context);
                 JSONObject result = new JSONObject(new JSONObject("{\"v\":" + raw + "}").getString("v"));
                 assertTrue("model did not load: " + result, !result.has("error"));
                 assertEquals("e5-small vectors have 384 dimensions", 384, result.getInt("dim"));
-                assertEquals("model comes from the app", "local", result.getString("source"));
-                assertEquals("from the app's own address", "/models/", result.getString("root"));
+                Log.i("NativeSemanticTest", "result " + result);
+                assertEquals("model comes from the app " + result, "local", result.getString("source"));
+                assertTrue("no fallback to the internet " + result, result.isNull("fallback") || !result.has("fallback"));
+                assertEquals("from the app's own address", "https://localhost/models/", result.getString("root"));
                 assertTrue("app stayed offline", result.getBoolean("offline"));
                 assertTrue("meaning: dentist bill nearer than weather " + result, result.getDouble("near") > result.getDouble("far") + 0.02);
             } finally {

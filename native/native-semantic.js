@@ -8,7 +8,9 @@
   const plugin = window.Capacitor?.Plugins?.ProSemantic;
   if (!plugin) return;
   // Modul 03 reads the model from the app's own address; the files there come from the switch.
-  window.SBKIM_MODEL_ROOT = '/models/';
+  // Full address, not "/models/": Modul 03 loads the model in a worker started from a blob: address,
+  // and there a path without host cannot be resolved (it fell back to Hugging Face).
+  window.SBKIM_MODEL_ROOT = location.origin + '/models/';
   const W = {
     de: { title: '🧠 Modell für die Bedeutungssuche', load: 'Modell laden', cancel: 'Abbrechen', remove: 'Modell entfernen', retry: 'Erneut starten',
       none: 'Noch nicht geladen. Einmal etwa {mb} MB, am besten im WLAN. Danach ohne Internet.',

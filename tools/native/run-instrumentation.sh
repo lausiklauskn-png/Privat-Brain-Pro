@@ -18,7 +18,7 @@ PY
   # What Android said about the app and its WebView process (memory, crashes), for a crash without message.
   if command -v adb >/dev/null; then
     echo '--- logcat (app, WebView, memory) ---'
-    adb logcat -d -v time 2>/dev/null | grep -iE 'PrivateBrainPro|NativeSemanticTest|chromium|cr_|lowmemorykiller|lmkd|am_kill|am_proc_died|AndroidRuntime|FATAL|Out of memory|OOM' | tail -n 400 || true
+    adb logcat -d -v time 2>/dev/null | grep -iE 'Capacitor/Console|MODUL 03|PrivateBrainPro|NativeSemanticTest|chromium|cr_|lowmemorykiller|lmkd|am_kill|am_proc_died|AndroidRuntime|FATAL|Out of memory|OOM' | tail -n 400 || true
   fi
   exit 1
 fi

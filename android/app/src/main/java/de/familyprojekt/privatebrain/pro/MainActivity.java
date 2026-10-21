@@ -42,6 +42,7 @@ public class MainActivity extends BridgeActivity {
                 String address = request.getUrl().toString();
                 if (BundledLibrary.covers(address)) return BundledLibrary.respond(getAssets(), ProSemanticPlugin.model(MainActivity.this), address);
                 if (BundledLibrary.coversModel(address)) return BundledLibrary.respondModel(ProSemanticPlugin.model(MainActivity.this), address);
+                if (address.startsWith(BundledLibrary.REMOTE_MODEL_PREFIX)) return BundledLibrary.missing();
                 if (AppNetwork.isOffline() && AppNetwork.external(request.getUrl().toString()))
                     return new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "App offline",
                         java.util.Collections.emptyMap(), new java.io.ByteArrayInputStream(new byte[0]));

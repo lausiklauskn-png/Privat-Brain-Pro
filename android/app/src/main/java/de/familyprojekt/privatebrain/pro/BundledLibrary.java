@@ -20,6 +20,8 @@ final class BundledLibrary {
     static final String PREFIX = "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
     static final String ASSET_DIR = "public/vendor/transformers-2.17.2/";
     static final String MODEL_PREFIX = "https://localhost/models/Xenova/multilingual-e5-small/";
+    /** The same model at Hugging Face: never loaded inside the view (118 MB in the WebView); the switch loads it natively. */
+    static final String REMOTE_MODEL_PREFIX = "https://huggingface.co/Xenova/multilingual-e5-small/";
     private static final Map<String, String> FILES = new HashMap<>();
     static {
         FILES.put("transformers.min.js", "application/javascript");
@@ -65,7 +67,7 @@ final class BundledLibrary {
         return headers;
     }
 
-    private static WebResourceResponse missing() {
+    static WebResourceResponse missing() {
         return new WebResourceResponse("text/plain", "UTF-8", 404, "Not available", headers(), new ByteArrayInputStream(new byte[0]));
     }
 

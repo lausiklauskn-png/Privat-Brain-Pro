@@ -44,7 +44,7 @@ try{
   const settings=()=>page.evaluate(()=>{window.PBWorkspace?.navigate?.('settings');if(document.querySelector('.tab.on')?.dataset.tab!=='settings')document.querySelector('[data-tab="settings"]')?.click();});
   const box=page.locator('#pb-semantic');await box.waitFor({state:'attached'});await settings();
   await page.waitForFunction(()=>document.getElementById('pb-semantic')?.dataset.state==='none');
-  ok('Modul 03 reads the model from the app address, not from the internet',await page.evaluate(()=>window.SBKIM_MODEL_ROOT==='/models/'));
+  ok('Modul 03 reads the model from the app address, not from the internet',await page.evaluate(()=>window.SBKIM_MODEL_ROOT===location.origin+'/models/'));
   ok('Not loaded: the model does not start and the size is named',await page.evaluate(()=>SbkimEmbedding.inits===0)&&(await box.textContent()).includes('155 MB'));
   ok('The keyword search does not wait for a missing model',await page.evaluate(()=>EMBED.tried===true&&EMBED.ready===false));
   const text=()=>box.locator('[data-s="text"]').textContent();
