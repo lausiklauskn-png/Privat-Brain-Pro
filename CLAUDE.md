@@ -5,7 +5,8 @@ Mails und Dokumente Platz haben, auch am Handy. **Überall** in der Pro-App etwa
 Tippfläche 7 px darüber/darunter (hinter Nachbarn), beim Antippen wächst der Knopf (×1,12). Symbole statt Wörter, wo
 allgemein bekannt: Lupe, Zahnrad, ☰ fürs App-Menü, ⟳ fürs Aktualisieren. Neue Knöpfe nicht größer bauen. [Details](docs/EXPLORER-SORTIEREN-UND-INHALT.md#flache-knöpfe-klaus-2026-10-21).
 
-**Ordnen, Sortieren, Suchen (2026-10-21): Plan freigegeben, Grundlage + A1 + A2 + A3 gebaut, noch keine Vorschau.**
+**Ordnen, Sortieren, Suchen (2026-10-21): Plan freigegeben, Grundlage + A1–A4 gebaut, noch keine Vorschau.**
+A4: Kategorien per Vorschlag im Explorer (nur Ansicht): [Kategorien](docs/KATEGORIEN-VORSCHLAG.md).
 A3: Explorer neueste oben, ↕, „🔎 auch im Inhalt“: [Explorer](docs/EXPLORER-SORTIEREN-UND-INHALT.md).
 Nachfolge: [Brief](docs/BRIEF_2026-10-21_nachfolge-ordnen-sortieren-suchen.md). Klaus: GitHub-Kommentare nicht beobachten; CI selbst prüfen.
 A2 „🧹 Aufräumen“: Newsletter nach Ablaufdatum, Papierkorb des Anbieters + Rückgängig (`locate` über Message-ID),
@@ -14,7 +15,7 @@ Mail → „👥 Alle Konten“: Kopfzeilen und Text aller Konten (12 Monate, ke
 Überschreiben statt Doppeln über `Message-ID`, unsichere Zwillinge in „Doppelte“, Bündel nach
 Absender (↕), Wortsuche über alle Konten; automatisch beim Öffnen und alle 30 Minuten.
 `MailIndex`/`index`/`indexText`, `native/native-mail-index.js`. Echte Konten/Tablet nicht gemessen.
-Nächste Abschnitte A4 (Kategorien) bis A6:
+Nächste Abschnitte A5 (Scanner-Übergabe) und A6:
 [Plan](docs/PLAN_2026-10-21_ordnen-sortieren-suchen.md), [Bedienung/Grenzen](docs/ALLE-KONTEN-UND-ABSENDER.md).
 
 **Vorschau .19 veröffentlicht (2026-10-21), Nachfolgeversion von .18.**

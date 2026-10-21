@@ -469,3 +469,14 @@ button:not(:disabled):active, .btn:active, summary.mail-button:active { transfor
 .explorer-toolbar button { min-height:28px; }
 .mail-all-head > .mail-back, .mail-all-head > .mail-all-refresh, .mail-all-head > details { flex:none; white-space:nowrap; }
 .mail-all-head > details > summary { min-height:28px; padding:3px 8px; }
+
+/* Kategorien per Vorschlag (A4) */
+.topic-suggest { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 10px; margin:0 0 8px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+.topic-suggest > p { flex-basis:100%; margin:0; font-size:.86rem; line-height:1.4; }
+.topic-head { display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between; margin:0 0 6px; }
+.topic-head > .hint { margin:0; }
+.explorer-row [data-topic-not] { font-size:.8rem; }
+/* Ordnerbaum im Explorer flach (Klaus 2026-10-21) */
+#explorerTree button { min-height:28px; padding:3px 10px; font-size:.86rem; }
+#explorerTree { gap:4px; }
+.topic-again { margin:0 0 8px; font-size:.8rem; }
