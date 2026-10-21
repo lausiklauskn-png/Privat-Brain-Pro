@@ -21,3 +21,6 @@ header .tools{max-width:100%;min-width:0}
 .explorer-row button{min-height:44px}.explorer-empty{padding:25px;line-height:1.7;color:var(--mut)}
 #explorerPath{overflow-wrap:anywhere}#libraryStatus{overflow-wrap:anywhere}
 @media(max-width:650px){.main-pages{gap:4px}.main-pages .tab{font-size:.8rem;padding:10px 5px;white-space:normal}.explorer-layout{grid-template-columns:1fr}#explorerTree{border-right:0;border-bottom:1px solid var(--line);max-height:180px;padding:0 0 10px}.explorer-toolbar>*{max-width:100%}.explorer-row{padding:12px}.workspace-tools .tab{flex:1}.search-totals{gap:6px}.search-totals span{font-size:.8rem;padding:10px}.library-setup .btnrow{flex-wrap:wrap}}
+.explorer-order{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center}
+.explorer-content{display:inline-flex;align-items:center;gap:6px;min-height:44px;cursor:pointer}
+.explorer-toolbar .explorer-content input{flex:none;min-width:0;width:22px;height:22px;padding:0;margin:0}

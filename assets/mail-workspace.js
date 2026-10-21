@@ -24,7 +24,7 @@
   async function guard(fn){if(busy)return;busy=true;app.inert=true;app.setAttribute('aria-busy','true');try{await fn();}catch(e){toast(T('error')+' '+(e.message||''),6000);}finally{busy=false;app.inert=false;app.removeAttribute('aria-busy');}}
   function ownFolders(){try{const a=JSON.parse(localStorage.getItem(folderKey)||'[]');return Array.isArray(a)?a.filter(x=>x && typeof x.id==='string' && x.id.startsWith('custom_') && typeof x.name==='string'):[];}catch{return [];}}
   const folders=()=>[...standard.map(id=>({id,name:T(id)})),...ownFolders()];
-  const allMails=()=>CATALOG.filter(r=>r.mail && r.mailBody!=null);
+  const allMails=()=>CATALOG.filter(r=>r.mail && r.mailBody!=null && (!r.mailIndex || r.mailLegacy));
   const where=r=>folders().some(f=>f.id===r.mailFolder)?r.mailFolder:'inbox';
   const record=()=>CATALOG.find(r=>r.hash===current);
   function canLeave(){if(!dirty)return true;if(!confirm(T('discard')))return false;dirty=false;return true;}

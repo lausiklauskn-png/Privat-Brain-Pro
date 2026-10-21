@@ -108,7 +108,7 @@ final class MailEngine {
             if (folders.length > 1000) throw new MailFailure("MESSAGE_TOO_LARGE");
             for (Folder folder : folders) {
                 if ((folder.getType() & Folder.HOLDS_MESSAGES) == 0) continue;
-                result.put(new JSONObject().put("path", folder.getFullName()).put("name", folder.getName()).put("specialUse", special(folder)));
+                result.put(new JSONObject().put("path", folder.getFullName()).put("name", folder.getName()).put("specialUse", special(folder)).put("collection", collection(folder)));
             }
             return result;
         }
@@ -119,6 +119,12 @@ final class MailEngine {
                 if (attribute.equalsIgnoreCase(use)) return use;
         }
         return "";
+    }
+    /** Virtual views such as Gmail's "All Mail" or "Starred" repeat mails of other folders. */
+    private boolean collection(Folder folder) throws Exception {
+        if (folder instanceof IMAPFolder) for (String attribute : ((IMAPFolder) folder).getAttributes())
+            if (attribute.equalsIgnoreCase("\\All") || attribute.equalsIgnoreCase("\\Flagged") || attribute.equalsIgnoreCase("\\Important")) return true;
+        return false;
     }
     private IMAPFolder open(IMAPStore connection, String name, String validity, boolean write) throws Exception {
         MailAccount.header(name, 1000);
@@ -172,6 +178,73 @@ final class MailEngine {
                 }
                 return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("total", folder.getMessageCount()).put("items", items)
                     .put("next", start > 1 && last > 0 ? last : JSONObject.NULL);
+            } finally { folder.close(false); }
+        }
+    }
+    /**
+     * Sorting index: one page of headers received since a date, newest first, below an optional UID.
+     * Reads ENVELOPE, flags and four list headers only; never bodies or attachments, never sets \Seen.
+     */
+    JSONObject index(MailAccount account, String name, long since, long before) throws Exception {
+        if (since < 0 || before < 0 || before > 4294967295L) throw new MailFailure("INVALID_INPUT");
+        try (IMAPStore connection = imap(account)) {
+            IMAPFolder folder = open(connection, name, null, false);
+            try {
+                Message[] found = folder.search(new javax.mail.search.ReceivedDateTerm(javax.mail.search.ComparisonTerm.GE, new Date(since)));
+                FetchProfile uids = new FetchProfile(); uids.add(javax.mail.UIDFolder.FetchProfileItem.UID);
+                folder.fetch(found, uids);
+                java.util.List<Message> candidates = new java.util.ArrayList<>();
+                for (Message message : found) { long uid = folder.getUID(message); if (uid > 0 && (before == 0 || uid < before)) candidates.add(message); }
+                candidates.sort((a, b) -> { try { return Long.compare(folder.getUID(b), folder.getUID(a)); } catch (Exception error) { return 0; } });
+                boolean more = candidates.size() > MailIndex.PAGE;
+                Message[] page = candidates.subList(0, Math.min(MailIndex.PAGE, candidates.size())).toArray(new Message[0]);
+                FetchProfile profile = new FetchProfile();
+                profile.add(FetchProfile.Item.FLAGS); profile.add(FetchProfile.Item.SIZE); profile.add(FetchProfile.Item.ENVELOPE);
+                for (String header : new String[] {"Message-ID", "List-Unsubscribe", "List-Id", "Precedence"}) profile.add(header);
+                folder.fetch(page, profile);
+                JSONArray items = new JSONArray();
+                long last = 0;
+                for (Message message : page) {
+                    MailIndex.Head head = MailIndex.head(message, last = folder.getUID(message));
+                    items.put(new JSONObject().put("uid", head.uid).put("messageId", head.messageId).put("from", head.from).put("subject", head.subject)
+                        .put("date", head.date).put("size", head.size).put("seen", head.seen).put("flagged", head.flagged).put("list", head.list).put("bulk", head.bulk));
+                }
+                return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("items", items)
+                    .put("next", more && last > 0 ? last : JSONObject.NULL);
+            } finally { folder.close(false); }
+        }
+    }
+    /** Undo for "in den Papierkorb": find one mail again by its Message-ID (exact match, read-only). */
+    JSONObject locate(MailAccount account, String name, String messageId) throws Exception {
+        if (MailIndex.messageId(new String[] {messageId}).isEmpty()) throw new MailFailure("INVALID_INPUT");
+        try (IMAPStore connection = imap(account)) {
+            IMAPFolder folder = open(connection, name, null, false);
+            try {
+                Message[] found = folder.search(new javax.mail.search.HeaderTerm("Message-ID", messageId));
+                long uid = 0;
+                for (Message message : found) if (MailIndex.messageId(message.getHeader("Message-ID")).equals(messageId)) uid = Math.max(uid, folder.getUID(message));
+                return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("uid", uid > 0 ? uid : JSONObject.NULL);
+            } finally { folder.close(false); }
+        }
+    }
+    /** Readable text of a few messages for the sorting index; attachment parts are skipped unread. */
+    JSONObject indexText(MailAccount account, String name, String validity, JSONArray uids) throws Exception {
+        if (validity == null || !validity.matches("[0-9]{1,10}") || uids == null || uids.length() < 1 || uids.length() > MailIndex.TEXT_BATCH) throw new MailFailure("INVALID_INPUT");
+        try (IMAPStore connection = imap(account)) {
+            IMAPFolder folder = open(connection, name, validity, false);
+            try {
+                JSONArray items = new JSONArray();
+                for (int i = 0; i < uids.length(); i++) {
+                    long uid = uids.optLong(i, -1);
+                    if (uid < 1 || uid > 4294967295L) throw new MailFailure("INVALID_INPUT");
+                    Message message = folder.getMessageByUID(uid);
+                    if (message == null) continue;
+                    MailIndex.Body body;
+                    try { body = MailIndex.body(message); }
+                    catch (Exception unreadable) { body = new MailIndex.Body(); /* Listed by header only. */ }
+                    items.put(new JSONObject().put("uid", uid).put("text", body.text).put("html", body.html).put("attachments", body.attachments));
+                }
+                return new JSONObject().put("items", items);
             } finally { folder.close(false); }
         }
     }

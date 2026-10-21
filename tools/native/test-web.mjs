@@ -70,7 +70,7 @@ try {
     ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes({de:'Direkte Mailverbindung',en:'Direct mail',ru:'Прямая почта',pl:'Bezpośrednia poczta'}[lang])));
     await page.setViewportSize({width:320,height:640});
     await page.evaluate(()=>document.documentElement.style.fontSize='20px');
-    ok(`${lang}: larger fonts keep all eight names beside icons and inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===8&&nodes.every(e=>{const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
+    ok(`${lang}: larger fonts keep all eight names beside icons and inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===8&&nodes.every(e=>{if(e.classList.contains('compact-icon-only'))return !e.querySelector('.compact-caption')&&e.title.trim()&&['search','settings'].includes(e.dataset.tab);const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
     await page.evaluate(()=>document.documentElement.style.fontSize='');
   }
   // Name the errors: the WebKit job otherwise fails without saying why.

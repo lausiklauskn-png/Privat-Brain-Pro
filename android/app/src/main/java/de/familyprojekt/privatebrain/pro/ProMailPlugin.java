@@ -97,6 +97,9 @@ public class ProMailPlugin extends Plugin {
     @PluginMethod public void folders(PluginCall call) { perform(call, () -> new JSONObject().put("items", engine.folders(account(call)))); }
     @PluginMethod public void createFolder(PluginCall call) { perform(call, () -> { engine.createFolder(account(call), required(call, "name")); return new JSONObject().put("ok", true); }); }
     @PluginMethod public void messages(PluginCall call) { perform(call, () -> engine.messages(account(call), required(call, "folder"), call.getData().optLong("before", 0))); }
+    @PluginMethod public void index(PluginCall call) { perform(call, () -> engine.index(account(call), required(call, "folder"), call.getData().optLong("since", -1), call.getData().optLong("before", 0))); }
+    @PluginMethod public void locate(PluginCall call) { perform(call, () -> engine.locate(account(call), required(call, "folder"), required(call, "messageId"))); }
+    @PluginMethod public void indexText(PluginCall call) { perform(call, () -> engine.indexText(account(call), required(call, "folder"), required(call, "validity"), call.getData().optJSONArray("uids"))); }
     @PluginMethod public void message(PluginCall call) { perform(call, () -> engine.message(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1))); }
     @PluginMethod public void action(PluginCall call) { perform(call, () -> {
         engine.action(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1), required(call, "action"), call.getString("target", ""));

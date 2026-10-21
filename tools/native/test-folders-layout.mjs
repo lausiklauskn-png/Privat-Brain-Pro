@@ -31,7 +31,7 @@ try{
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
  for(const [lang,labels]of [['de',['Suchen','Dateien','Explorer','Mail']],['en',['Search','Files','Explorer','Mail']],['ru',['Поиск','Файлы','Проводник','Почта']],['pl',['Szukaj','Pliki','Eksplorator','Poczta']]]){
   await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-  ok(`${lang}: main navigation shows short translated captions beside its symbols`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.every((e,i)=>e.querySelector('.compact-caption').textContent===labels[i]&&e.getBoundingClientRect().height<=44),labels));
+  ok(`${lang}: main navigation shows short translated captions beside its symbols`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.every((e,i)=>(e.dataset.tab==='search'?!e.querySelector('.compact-caption')&&e.getAttribute('aria-label'):e.querySelector('.compact-caption').textContent===labels[i])&&e.getBoundingClientRect().height<=44),labels));
   const button=page.locator('[data-tab=explorer]');await button.hover();await page.locator('.native-tooltip').waitFor();ok(`${lang}: pointer hover shows an actual visible explanatory tooltip`,(await page.locator('.native-tooltip').textContent())===(await button.getAttribute('aria-label')));await page.mouse.move(1270,890);
   await button.focus();await page.locator('.native-tooltip').waitFor();ok(`${lang}: keyboard focus shows the same tooltip and Escape dismisses it`,await button.getAttribute('aria-describedby')==='native-control-tooltip');await page.keyboard.press('Escape');await page.locator('.native-tooltip').waitFor({state:'hidden'});
  }

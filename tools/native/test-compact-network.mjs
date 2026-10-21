@@ -40,7 +40,7 @@ try{
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
       const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
+      return row.height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab:not(.compact-icon-only)')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
     }));
     if(process.env.PB_CAPTURE_DESIGN==='1'){
       await page.mouse.move(width-2,width<650?638:898);
@@ -65,7 +65,7 @@ try{
   await view.click();await view.hover();await page.waitForFunction(()=>document.querySelector('.native-tooltip').textContent==='Originalansicht');
   ok('View tooltip changes to original view after switching to plain text',await view.getAttribute('aria-label')==='Originalansicht');
   await view.click();await page.mouse.move(1270,890);await page.setViewportSize({width:320,height:640});
-  ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=36&&r.width>=36&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
+  ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=32&&r.width>=32&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
   await page.evaluate(()=>{window.holdMail=true;window.loadPhases=[];const progress=PBMailDevice.progress;PBMailDevice.progress=stage=>{loadPhases.push(stage);progress(stage);};});
   await page.locator('.live-mail .mail-back').click();await page.waitForFunction(()=>document.querySelector('.live-mail').getAttribute('aria-busy')!=='true');await page.evaluate(()=>{window.loadPhases=[];});await page.locator('[data-live-uid="7"]').click();
   await page.waitForFunction(()=>typeof window.releaseMail==='function');

@@ -1,5 +1,21 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Knöpfe flach halten (Klaus 2026-10-21):** „flach wie bei Notion, aber nicht ganz so flach, gut lesbar“ – damit
+Mails und Dokumente Platz haben, auch am Handy. Richtwert 32 px, ohne 3D-Schatten (Vorbild Workflow PDF 30–32 px).
+Neue Knöpfe nicht größer bauen. Obere Leiste: Suche/Einstellungen nur Lupe/Zahnrad, App-Menü ☰. [Details](docs/EXPLORER-SORTIEREN-UND-INHALT.md#flache-knöpfe-klaus-2026-10-21).
+
+**Ordnen, Sortieren, Suchen (2026-10-21): Plan freigegeben, Grundlage + A1 + A2 + A3 gebaut, noch keine Vorschau.**
+A3: Explorer neueste oben, ↕, „🔎 auch im Inhalt“: [Explorer](docs/EXPLORER-SORTIEREN-UND-INHALT.md).
+Nachfolge: [Brief](docs/BRIEF_2026-10-21_nachfolge-ordnen-sortieren-suchen.md). Klaus: GitHub-Kommentare nicht beobachten; CI selbst prüfen.
+A2 „🧹 Aufräumen“: Newsletter nach Ablaufdatum, Papierkorb des Anbieters + Rückgängig (`locate` über Message-ID),
+Freigabe je Absender, Stern/„Ist wichtig“/zurückgeholte Mails nie automatisch: [Aufräumen](docs/AUFRAEUMEN-NEWSLETTER.md).
+Mail → „👥 Alle Konten“: Kopfzeilen und Text aller Konten (12 Monate, keine Anhänge, nur lesen),
+Überschreiben statt Doppeln über `Message-ID`, unsichere Zwillinge in „Doppelte“, Bündel nach
+Absender (↕), Wortsuche über alle Konten; automatisch beim Öffnen und alle 30 Minuten.
+`MailIndex`/`index`/`indexText`, `native/native-mail-index.js`. Echte Konten/Tablet nicht gemessen.
+Nächste Abschnitte A4 (Kategorien) bis A6:
+[Plan](docs/PLAN_2026-10-21_ordnen-sortieren-suchen.md), [Bedienung/Grenzen](docs/ALLE-KONTEN-UND-ABSENDER.md).
+
 **Vorschau .19 veröffentlicht (2026-10-21), Nachfolgeversion von .18.**
 [APK .19](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.19/Private-Brain-Pro-0.1.0-preview.19.apk) über die vorhandene App installieren, nicht deinstallieren.
 Tag `v0.1.0-preview.19` exakt auf main-Commit `418ff2eeced686af8145aecd2d5e82a746a25f18`, VersionCode 19. Enthält PR #44 (Schutz-Prüfstelle) und PR #46 (Versionsnummer), einschließlich der Reparaturen aus .18.

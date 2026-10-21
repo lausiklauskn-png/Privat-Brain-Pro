@@ -12,6 +12,7 @@
   const text=i=>(strings[document.documentElement.lang]||strings.de)[i];
   const captions={de:['Suchen','Dateien','Explorer','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Search','Files','Explorer','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Файлы','Проводник','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Pliki','Eksplorator','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
   const pages=['search','intake','explorer','mail','dash','order','dupes','settings'];
+  const ICON_ONLY=new Set(['search','settings']);
   const paths={
     search:'M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
     intake:'M12 3v12m-4-4 4 4 4-4 M4 14v7h16v-7',
@@ -21,7 +22,7 @@
     settings:'m9 3-.5 2-2 1-2-.5-2 3 1.5 1.5v3L2.5 15l2 3 2-.5 2 1L9 21h4l.5-2.5 2-1 2 .5 2-3-1.5-1.5v-3L19.5 9l-2-3-2 .5-2-1L13 3Z M14.5 12a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0',
     back:'M20 12H4m6-6-6 6 6 6',next:'M4 12h16m-6-6 6 6-6 6',
     refresh:'M20 7V3l-4 4 M20 7a9 9 0 1 0 1 8',compose:'M14 5 19 10 M4 20l5-1L21 7l-5-5L4 14Z',
-    more:'M4 12h.1m7.9 0h.1m7.9 0h.1',reply:'m9 5-7 7 7 7V14c6 0 10 1 13 5-1-8-5-11-13-11Z',
+    more:'M4 12h.1m7.9 0h.1m7.9 0h.1',menu:'M4 6h16M4 12h16M4 18h16',reply:'m9 5-7 7 7 7V14c6 0 10 1 13 5-1-8-5-11-13-11Z',
     forward:'m15 5 7 7-7 7V14c-6 0-10 1-13 5 1-8 5-11 13-11Z',
     trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',
     all:'M5 5h14v14H5Z m3 7 3 3 5-6',view:'M4 3h16v18H4Z m4-13h8m-8 4h8m-8 4h6',
@@ -46,7 +47,9 @@
       node.append(icon(key),content);node.classList.add('compact-tool');
     }
     node.setAttribute('aria-label',label);node.title=label;
-    if(node.dataset.tab){
+    // Klaus 2026-10-21: magnifier and gear are self-explanatory; their words go, the name stays as tooltip.
+    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
+    else if(node.dataset.tab){
       const value=(captions[document.documentElement.lang]||captions.de)[pages.indexOf(node.dataset.tab)];
       let caption=node.querySelector(':scope>.compact-caption');if(!caption){caption=make('span','compact-caption');caption.setAttribute('aria-hidden','true');node.append(caption);}
       if(caption.textContent!==value)caption.textContent=value;
@@ -119,7 +122,7 @@
     if(moreTitle.textContent!==text(0))moreTitle.textContent=text(0);
     if(optionsTitle.textContent!==text(1))optionsTitle.textContent=text(1);
     // Avoid rewriting the label/SVG when no translation has changed.
-    decorate(moreTitle,'more');decorate(optionsTitle,'settings');networkLabel();
+    decorate(moreTitle,'more');decorate(optionsTitle,'menu');networkLabel();
     document.querySelectorAll('.native-toolbar-row .tab').forEach(button=>decorate(button,button.dataset.tab));
     const navigation=document.querySelectorAll('.native-navigation button');decorate(navigation[0],'back');decorate(navigation[1],'next');
     decorate(document.querySelector('#themeToggle'),'moon');decorate(document.querySelector('#hardReload'),'refresh');
