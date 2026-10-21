@@ -200,14 +200,15 @@ final class MailEngine {
                 Message[] page = candidates.subList(0, Math.min(MailIndex.PAGE, candidates.size())).toArray(new Message[0]);
                 FetchProfile profile = new FetchProfile();
                 profile.add(FetchProfile.Item.FLAGS); profile.add(FetchProfile.Item.SIZE); profile.add(FetchProfile.Item.ENVELOPE);
-                for (String header : new String[] {"Message-ID", "List-Unsubscribe", "List-Id", "Precedence"}) profile.add(header);
+                for (String header : new String[] {"Message-ID", "List-Unsubscribe", "List-Unsubscribe-Post", "List-Id", "Precedence"}) profile.add(header);
                 folder.fetch(page, profile);
                 JSONArray items = new JSONArray();
                 long last = 0;
                 for (Message message : page) {
                     MailIndex.Head head = MailIndex.head(message, last = folder.getUID(message));
                     items.put(new JSONObject().put("uid", head.uid).put("messageId", head.messageId).put("from", head.from).put("subject", head.subject)
-                        .put("date", head.date).put("size", head.size).put("seen", head.seen).put("flagged", head.flagged).put("list", head.list).put("bulk", head.bulk));
+                        .put("date", head.date).put("size", head.size).put("seen", head.seen).put("flagged", head.flagged).put("list", head.list).put("bulk", head.bulk)
+                        .put("unsubscribe", head.unsubscribe).put("oneClick", head.oneClick));
                 }
                 return new JSONObject().put("validity", Long.toString(folder.getUIDValidity())).put("items", items)
                     .put("next", more && last > 0 ? last : JSONObject.NULL);

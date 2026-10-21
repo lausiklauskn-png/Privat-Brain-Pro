@@ -114,6 +114,15 @@
       const result = withItems(await invoke('index', args));
       if (typeof result.validity !== 'string' || !/^[0-9]{1,10}$/.test(result.validity) || !(result.next === null || Number.isSafeInteger(result.next))) throw new Error(text('BRIDGE_RESPONSE_INVALID'));
       for (const item of result.items) if (!Number.isSafeInteger(item.uid) || item.uid < 1 || typeof item.subject !== 'string' || typeof item.from !== 'string' || typeof item.messageId !== 'string' || typeof item.date !== 'number') throw new Error(text('BRIDGE_RESPONSE_INVALID'));
+      // Hidden unsubscribe field (older app builds send nothing): only a bounded string and a real boolean pass.
+      for (const item of result.items) { item.unsubscribe = typeof item.unsubscribe === 'string' ? item.unsubscribe.slice(0, 3000) : ''; item.oneClick = item.oneClick === true; }
+      return result;
+    },
+    // One-click newsletter unsubscribe (RFC 8058): Android sends a single POST, nothing else.
+    unsubscribe: async url => {
+      if (typeof url !== 'string' || !/^https:\/\//i.test(url) || url.length > 1500) throw new Error(text('INVALID_INPUT'));
+      const result = await invoke('unsubscribe', {url});
+      if (typeof result?.ok !== 'boolean' || !Number.isSafeInteger(result.status)) throw new Error(text('BRIDGE_RESPONSE_INVALID'));
       return result;
     },
     locate: async args => {

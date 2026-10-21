@@ -95,3 +95,42 @@ Noch **nicht** in einer veröffentlichten Vorschau.
   Finden und Messen neu. Sie misst jetzt in einem Schritt; danach 12 Läufe grün.
 - Android: `locate` neu in `MailEngine`/`ProMailPlugin`; hier gegen JavaMail übersetzt.
   Der Test-IMAP-Server kann kein `SEARCH`, daher erst am Gerät oder in der CI-Übersetzung geprüft.
+
+
+## Newsletter abmelden (Klaus 2026-10-21)
+
+Klaus: *„aus den Newslettern meist den unsichtbaren Bereich herauslesen, Newsletter kündigen … direkt
+aus der E-Mail … automatisch natürlich.“* Entscheidungen: **je Absender einmal freigeben**; eine
+**Abmelde-Mail nur nach Bestätigung**.
+
+- **Unsichtbarer Teil:** Android liest beim Abruf das Kopffeld `List-Unsubscribe` (nur `https://`
+  und `mailto:`, höchstens vier Einträge, ohne Leer- und Steuerzeichen) und `List-Unsubscribe-Post`
+  (RFC 8058, „List-Unsubscribe=One-Click“). Fehlt beides, sucht die App im Mailtext einen
+  https-Link mit „abmelden“, „abbestellen“, „austragen“, „unsubscribe“ usw.
+  (`MailIndex.unsubscribe/oneClick`, `native/native-unsubscribe.js`).
+- **Drei Wege** in „🧹 Aufräumen → 📭 Newsletter abmelden“ und im Lesefenster:
+  - **⚡ direkt:** ein einziger POST `List-Unsubscribe=One-Click` an die https-Adresse.
+    Das geschieht ohne Cookies und ohne Weiterleitungen und beachtet den Internetschalter
+    (`Unsubscribe.java`, `ProMail.unsubscribe`). Eine Antwort ab 400 zählt nicht als abgemeldet.
+  - **✉ per Mail:** Die App fragt mit der Zieladresse nach und schickt dann vom Konto, in dem die
+    Mail liegt, eine kurze Abmelde-Mail (Betreff aus dem Feld, sonst „unsubscribe“).
+  - **🌐 Webseite:** Die Abmelde-Seite öffnet sich im Browser. „✓ Erledigt“ vermerkt die Abmeldung.
+- **Selbst abmelden:** Nach der ersten erfolgreichen Abmeldung fragt die App einmal nach.
+  - Mit Freigabe meldet sie nach jedem Abruf Absender ab, die Klaus als „📰 Ist Werbung“ markiert hat.
+  - Das gilt **nur auf dem ⚡-Weg**; Mails und Webseiten fragen weiter.
+  - Die Freigabe lässt sich ausschalten.
+- **Nie bei Verdacht:** Meldet die Regelprüfung der Schutz-Prüfstelle Betrugsmerkmale
+  (Marken-Imitat, Doppelgänger-Domain, Punycode, IP-Link, Druck-Wörter, Anbieter-Spam,
+  Absender-Prüfung fehlgeschlagen), gibt es keinen Abmelde-Knopf und keine Automatik. Eine
+  Abmeldung würde nur bestätigen, dass die Adresse echt ist. Mails im Spam-Ordner liest der
+  Abruf ohnehin nicht.
+- **Kommt trotzdem weiter:** Kommen 14 Tage nach der Abmeldung noch Mails, steht das beim Absender,
+  zusammen mit „Nochmals abmelden“.
+
+Grenzen:
+- Ob ein Versender die Abmeldung wirklich umsetzt, sieht die App nur daran, ob weiter Mails kommen.
+- Die Regelprüfung sieht hier nur Absender, Betreff und Text, nicht die vollständigen Kopfzeilen.
+- Echte Anbieter und das Tablet sind nicht gemessen.
+
+Probe: `tools/native/test-unsubscribe.mjs` (23 Prüfungen, simulierte Brücke) und die JVM-Probe
+`UnsubscribeTest` (4).

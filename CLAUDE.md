@@ -1,5 +1,7 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Newsletter abmelden (Klaus 2026-10-21):** unsichtbares `List-Unsubscribe` (+ RFC 8058 One-Click) wird gelesen; in „🧹 Aufräumen“ ⚡ direkt, ✉ Abmelde-Mail **nur nach Bestätigung**, 🌐 Webseite. Selbst abmelden nur mit Freigabe und nur ⚡ für „Ist Werbung“-Absender; bei Betrugsverdacht nie. [Details](docs/AUFRAEUMEN-NEWSLETTER.md#newsletter-abmelden-klaus-2026-10-21).
+
 **Siegel und Mycel (Klaus 2026-10-21):** nur der **runde Siegel-Knopf** schwebt (Modul 17, byte-1:1), am Knopf
 ziehen, oben an der Kopfleiste rastet er ein (`data-sbkim-leiste`), ✕ blendet aus, Rückweg in Einstellungen. Das
 **Mycel** ist das Kanon-Fenster `23_rendezvous_ui.js` (byte-1:1, gepinnt) statt `net-widget.js` und öffnet sich **aus
