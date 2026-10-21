@@ -134,12 +134,9 @@
       const key=button.dataset.liveText||button.dataset.mailText||button.dataset.sharedText||button.dataset.nativeSelection||button.dataset.nativeTool;
       if(key||button.tagName==='SUMMARY')decorate(button,keys[key]||key||'more');
     });
-    for(const [id,key] of [['pbNetBtn','external'],['pbPinBtn','view']]){
-      const button=document.getElementById(id);
-      if(button){if(button.parentNode!==optionsPanel)optionsPanel.append(button);decorate(button,key);}
-    }
-    const lamps=document.getElementById('sbkim-widget');
-    if(lamps&&lamps.parentNode!==row)row.append(lamps);
+    const pin=document.getElementById('pbPinBtn');
+    if(pin){if(pin.parentNode!==optionsPanel)optionsPanel.append(pin);decorate(pin,'view');}
+    // Siegel (Modul 17) and Mycel (Modul 23-UI) float and snap to the header themselves (native-mycel.js).
     // One shared account/action row instead of a separate account row above the mailbox.
     const account=document.querySelector('.mail-account-bar'),head=document.querySelector('.live-mail>.mail-head');
     if(account&&head&&account.parentNode!==head)head.insertBefore(account,head.firstChild);

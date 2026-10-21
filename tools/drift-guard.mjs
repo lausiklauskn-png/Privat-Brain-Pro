@@ -23,6 +23,7 @@ const EXPECT = {
   'modules/noble-secp256k1.js': '8f3879ca422c4fdfe7ca0361688636fa7cc550a59bd94d512ed6ec79aa3d55d1',
   'modules/dm_crypto.js':       'e9c973f0459c5f03fa80b47d3cd4505ef6d4bd689e409569370a59db2586ba63',
   'modules/23_rendezvous.js':   '5aa8262638eeaf70f5e5563592a730f240a95ed80daf41a4df5d7d51824afb74',
+  'modules/23_rendezvous_ui.js': '66b2c6b95d27e35cb3b9697a5edc3250dfb50eb960375f9a68ab696ab05b82d2', // Mycel-Fenster des Kanons (Pflicht-Liste B)
   'modules/20_schluessel_safe.js': 'e7e25c9070e93f8267171d2b626109cfd90cb481c2781242f5f7dfc203f031f3',
   'modules/21_spracheingabe.js':   '020ca26ff52f2ed726f6344bd3ac55eb52e3472a7f97bdd41bdd0d54132777ba',
   'modules/07_apoptose.js':        '0acdd6ab2d95e131fa6953061cc0e95a2396e05fff091a7dc690b2668a4c035a',

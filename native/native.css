@@ -218,19 +218,13 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 .native-options-panel .native-offline-switch { display:block;width:100%;min-height:40px;padding:6px 8px;font:inherit;font-size:.8rem;text-align:left;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--field); }
 .native-offline-switch[aria-checked=true] { border-color:var(--acc); }
 .native-network-error { color:var(--ink);font-size:.8rem;margin:0; }
-.native-options-panel>#pbNetBtn,.native-options-panel>#pbPinBtn { position:static!important;inset:auto!important;z-index:auto!important;touch-action:auto!important;width:100%!important;height:auto!important;min-height:36px!important;justify-content:flex-start!important;padding:6px!important;font-size:.8rem!important;box-shadow:none!important; }
-.native-options-panel>#pbNetBtn .compact-label,.native-options-panel>#pbPinBtn .compact-label { position:static!important;width:auto!important;height:auto!important;margin:0!important;clip-path:none;white-space:normal!important; }
-.native-toolbar-row>#sbkim-widget { position:static!important;inset:auto!important;transform:none!important;flex:none;touch-action:auto!important;padding:0 4px!important;gap:0!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:auto!important; }
-.native-toolbar-row #sbkim-widget .sbkim-widget-label { display:none; }
-.native-toolbar-row #sbkim-widget .sbkim-widget-slot { min-height:36px!important;min-width:24px!important;width:24px!important;max-width:24px!important;padding:4px!important;justify-content:center!important; }
-.native-toolbar-row #sbkim-widget .sbkim-widget-btn { display:none; }
+.native-options-panel>#pbPinBtn { position:static!important;inset:auto!important;z-index:auto!important;touch-action:auto!important;width:100%!important;height:auto!important;min-height:36px!important;justify-content:flex-start!important;padding:6px!important;font-size:.8rem!important;box-shadow:none!important; }
+.native-options-panel>#pbPinBtn .compact-label { position:static!important;width:auto!important;height:auto!important;margin:0!important;clip-path:none;white-space:normal!important; }
 #mailWorkspace .mail-item button { min-height:64px;padding:6px 4px; }
 @media(max-width:650px) {
   .native-toolbar-row { gap:2px; }
   .native-toolbar-row .main-pages { gap:0; }
-  .native-toolbar-row>#sbkim-widget { padding:0!important; }
 }
-.native-toolbar-row>#sbkim-widget { --sbkim-widget-lamp-bg:var(--mut); }
 @media(min-width:901px) { #mailWorkspace .live-mail .mail-back { display:none!important; } }
 
 /* Keep names visible without bringing back tall navigation cards. */
@@ -290,7 +284,6 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 @media(max-width:1000px) {
   .native-toolbar-row { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px; }
   .native-toolbar-row .main-pages { grid-column:1;grid-row:1;display:flex;flex-wrap:wrap;min-width:0;gap:2px; }
-  .native-toolbar-row>#sbkim-widget { grid-column:2;grid-row:1; }
   .native-toolbar-row .native-more { grid-column:1/-1;grid-row:2;min-width:0; }
   .native-more>.workspace-tools { position:static;display:flex;flex-direction:row;gap:2px;width:100%;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent; }
   .native-toolbar-row .main-pages .tab,.native-more .workspace-tools .tab { flex:1 0 auto;width:auto;min-width:0;padding:3px 2px!important;flex-direction:row;justify-content:center;gap:2px;height:36px;min-height:36px!important; }
@@ -300,7 +293,6 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 }
 @media(max-width:360px) {
   .native-toolbar-row .main-pages { display:grid;grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .native-toolbar-row>#sbkim-widget { align-self:center; }
   header .brand h1 { white-space:normal; }
 }
 @media(max-width:300px) {
@@ -489,7 +481,6 @@ button:not(:disabled):active, .btn:active, summary.mail-button:active { transfor
   .native-toolbar-row .main-pages { flex:0 1 auto!important; flex-wrap:wrap; gap:4px!important; justify-content:flex-start!important; min-width:0; }
   .native-toolbar-row .native-more { flex:0 1 auto!important; min-width:0; }
   .native-more>.workspace-tools { gap:4px!important; flex-wrap:wrap; justify-content:flex-start; }
-  .native-toolbar-row>#sbkim-widget { margin-left:auto; }
   .native-toolbar-row .main-pages .tab, .native-more .workspace-tools .tab { flex:none!important; width:auto; height:30px; min-height:30px!important; padding:3px 7px!important; gap:4px; }
   .native-toolbar-row .main-pages .tab.compact-icon-only, .native-more .workspace-tools .tab.compact-icon-only { width:30px!important; padding:0!important; }
   .native-toolbar-row .main-pages .compact-caption, .native-more .workspace-tools .compact-caption { font-size:.74rem; }
@@ -499,12 +490,32 @@ button:not(:disabled):active, .btn:active, summary.mail-button:active { transfor
 }
 @media(max-width:1000px) {
   .native-toolbar-row .main-pages { order:1; }
-  .native-toolbar-row>#sbkim-widget { order:2; margin-left:auto; }
   .native-toolbar-row .native-more { order:3; flex-basis:100%!important; }
 }
 @media(min-width:700px) and (max-width:1000px) { .native-toolbar-row .native-more { flex-basis:auto!important; } }
 @media(max-width:420px) {
   .native-toolbar-row .main-pages .tab, .native-more .workspace-tools .tab { padding:3px 6px!important; gap:3px; }
   .native-toolbar-row .main-pages, .native-more>.workspace-tools { gap:3px!important; }
-  .native-toolbar-row #sbkim-widget .sbkim-widget-slot { min-width:20px!important; width:20px!important; max-width:20px!important; padding:2px!important; }
 }
+
+/* Siegel (Modul 17) floats as the canon intends (Klaus 2026-10-21): drag it to the header to
+   snap in, ✕ hides it. The Mycel (Modul 23-UI) opens from the Siegel window; its slot stays empty. */
+header.top .mycel-platz { display:none!important; }
+.native-options-panel>.native-mycel-menu { width:100%;text-align:left; }
+.native-mycel .btnrow { justify-content:flex-start; }
+.native-mycel [hidden],.native-options-panel>.native-mycel-menu[hidden] { display:none!important; }
+/* Klaus 2026-10-21: "mach einfach nur die Symbole" – the Siegel as one round button with a
+   small ✕ on its edge, the Mycel as the small globe. Canon modules stay byte-1:1; only the
+   app's display changes. The status lamps stay in the page (Membran/Siegel read them) but
+   are not shown. */
+#sbkim-widget { padding:0!important;gap:0!important;background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;min-height:0!important; }
+#sbkim-widget .sbkim-widget-slot:not(.siegel),#sbkim-widget .sbkim-widget-minimize { display:none!important; }
+#sbkim-widget .sbkim-widget-slot.siegel { width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:50%!important;justify-content:center!important;align-items:center!important; }
+#sbkim-widget .sbkim-widget-slot.siegel::after,#sbkim-widget .sbkim-widget-close::after { content:none!important; }
+#sbkim-widget .sbkim-widget-close { position:absolute!important;top:-5px;right:-7px;width:16px!important;min-width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;border-radius:50%!important;font-size:9px!important;line-height:16px!important;justify-content:center!important;background:var(--card,#222)!important;border:1px solid var(--line,#888)!important;color:var(--mut,#999)!important;opacity:.85; }
+#sbkim-widget { cursor:grab; }
+#sbkim-widget .sbkim-widget-slot.siegel { pointer-events:none!important; }
+/* Klaus: the Mycel lives inside the Siegel window – its own pill is not shown. */
+#sbkim-rdv-btn { display:none!important; }
+.native-mycel-in-seal { margin:0 0 10px; }
+.native-mycel-in-seal button { width:100%; }

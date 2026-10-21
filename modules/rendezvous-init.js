@@ -2,10 +2,12 @@
  * Private Brain — Rendezvous-Init (Modul 23, Modus A + Identitäts-Erzeuger).
  *
  * App-eigener Klebstoff (NICHT byte-kopiert) nach dem Rezept des Skills
- * `saubere-netz-anmeldung`. Diese Datei macht NUR die saubere Anmeldung möglich —
- * die Bedien-Oberfläche (Verbinden/Wer ist im Raum?/Fragen/Briefkasten/…) baut
- * seit Stufe B EINMALIG `modules/net-widget.js` und montiert sie in BEIDE Orte
- * (schwebender 🌐-Knopf + fester Tab „🌐 Netz"). So driften keine zwei UIs.
+ * `saubere-netz-anmeldung`. Die Bedien-Oberfläche (Verbinden/Wer ist im Raum?/
+ * Fragen/Briefkasten/KI-Richter) ist seit 2026-10-21 das Mycel-Fenster des Kanons,
+ * `modules/23_rendezvous_ui.js` (byte-1:1). Es dockt seine 🌐-Pille in den Platz
+ * `[data-sbkim-mycel-platz]` der Kopfleiste, lässt sich herausziehen, zur Pille
+ * minimieren und mit ✕ bis zum Neuladen ausblenden. Das frühere app-eigene
+ * `net-widget.js` ist damit abgelöst.
  *
  *   - Modus A (SbkimRendezvous.init … ensureIdentity:true): sanft, automatisch
  *     beim Mount, idempotent, NICHT zerstörend, KEINE Netz-Aktion — sichert die
@@ -88,7 +90,6 @@
     if (!window.SbkimEmbedding || !window.SbkimSpore) {
       return Promise.reject(new Error("Bedeutungs-Modell/Spore (Modul 02/03) nicht geladen."));
     }
-    // Fortschritt reist als Event → das Netz-Werkzeug (net-widget.js) zeigt den Balken.
     return window.SbkimEmbedding.init()
       .then(function () { return window.SbkimEmbedding.embedPassage(CFG.domainDescription + ". " + CFG.domainKeywords.join(", ")); })
       .then(function (vec) {
@@ -124,8 +125,16 @@
         try { if (window.SbkimRendezvous && window.SbkimRendezvous.configure) window.SbkimRendezvous.configure({ nodeName: displayNodeName() }); } catch (_e) {}
       });
     } catch (_e) {}
-    // (Kein fester Netz-Tab mehr — „Mit dem Netz verbinden" lebt nur im schwebenden
-    //  Flieger, Klaus 2026-07-19. Der Flieger montiert sich selbst über net-widget.js.)
+    // Mycel-Fenster des Kanons (Modul 23-UI). Ohne Sprachangabe folgt es <html lang>
+    // (DE/EN; RU/PL fallen wie im Kanon auf Deutsch zurück).
+    var UI = window.SbkimRendezvousUI;
+    if (UI && typeof UI.init === "function") {
+      try {
+        UI.init({ nodeName: displayNodeName(), dbSuffix: DB_SUFFIX, createIdentity: createIdentity, prepareCorpus: prepareCorpus });
+      } catch (e) { console.warn("[PrivateBrain] Mycel-Fenster (Modul 23-UI) übersprungen:", e); }
+    } else {
+      console.warn("[PrivateBrain] Mycel-Fenster (Modul 23-UI) nicht geladen.");
+    }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();

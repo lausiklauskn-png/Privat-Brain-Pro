@@ -34,35 +34,36 @@ ok('Relais-Stack geladen (Storage/Spore/Anastomose/Relay/Rendezvous)', globals.s
 ok('Modul 03/04 geladen (Modell + Match)', globals.emb&&globals.match);
 ok('Modus A: eigene Schublade dbSuffix="privatbrain"', globals.suffix==='privatbrain', `(${globals.suffix})`);
 
-// „Mit dem Knotennetz verbinden" lebt jetzt AUSSCHLIESSLICH im schwebenden Flieger
-// (Klaus 2026-07-19: alter Netz-Tab weg). Flieger öffnen, Knöpfe da?
-await page.evaluate(()=>window.PBNetWidget.open());
+// „Mit dem Knotennetz verbinden" ist seit 2026-10-21 das Mycel-Fenster des Kanons (Modul 23-UI),
+// angedockt in der Kopfleiste. Fenster öffnen, Knöpfe da?
+await page.evaluate(()=>window.SbkimRendezvousUI.show());
 await page.waitForTimeout(200);
 const netUi = await page.evaluate(()=>{
-  const tool=document.querySelector('#pbNetPanel .pbnet-tool'); const t=tool?tool.textContent:'';
+  const panel=document.querySelector('#sbkim-rdv-panel'); const t=panel?panel.textContent:'';
   return {
-    open: !!(window.PBNetWidget && window.PBNetWidget.isOpen()),
-    tool: !!tool,
-    btns: /Verbinden & anmelden/.test(t) && /Wer ist im Raum/.test(t) && /Antworten: (an|aus)/.test(t) && /Aufräumen & neu anmelden/.test(t),
-    out: !!(tool && tool.querySelector('pre')),
+    open: !!(window.SbkimRendezvousUI && window.SbkimRendezvousUI.isOpen()),
+    btns: /Mit dem Knotennetz verbinden/.test(t) && /Wer ist im Raum/.test(t) && /Antworten: (an|aus)/.test(t),
+    out: !!document.querySelector('#sbkim-rdv-out'),
     noTab: !document.querySelector('.tab[data-tab="net"]') && !document.querySelector('#pbNetTabMount'),
-    noForeign: !document.querySelector('#sbkim-rdv-btn') && !window.SbkimRendezvousUI,
+    docked: !!document.querySelector('header.top [data-sbkim-mycel-platz] #sbkim-rdv-btn'),
+    noOld: !window.PBNetWidget && !document.querySelector('#pbNetBtn'),
   };
 });
-ok('Flieger „🌐 Netz" zeigt das Werkzeug (alle Knöpfe + Ausgabe)', netUi.open && netUi.tool && netUi.btns && netUi.out);
-ok('Kein fester Netz-Tab mehr (nur der Flieger)', netUi.noTab===true);
-ok('Kein fremdes Modul-23-UI (eigenes natives Werkzeug)', netUi.noForeign===true);
+ok('Mycel-Fenster (Modul 23-UI) zeigt das Werkzeug (Knöpfe + Ausgabe)', netUi.open && netUi.btns && netUi.out);
+ok('Kein fester Netz-Tab', netUi.noTab===true);
+ok('🌐-Pille in der Kopfleiste angedockt, altes app-eigenes Fenster weg', netUi.docked && netUi.noOld);
 
+const button = text => page.evaluate(text => { const b=[...document.querySelectorAll('#sbkim-rdv-panel button')].find(x=>x.textContent.trim()===text); if(b) b.click(); return !!b; }, text);
 // „Wer ist im Raum?" offline -> saubere Degradierung, kein Crash
-await page.click('#pbNetPanel .pbnet-tool >> text=👥 Wer ist im Raum?');
+ok('„👥 Wer ist im Raum?" vorhanden', await button('👥 Wer ist im Raum?'));
 await page.waitForTimeout(2500);
-const out1 = await page.$eval('#pbNetPanel .pbnet-tool pre', el=>el.textContent);
-ok('„Wer ist im Raum?" degradiert sauber (kein Crash offline)', /Raum|Relais|Kollege|niemand|Suche/i.test(out1||''), `("${(out1||'').slice(0,70)}")`);
+const out1 = await page.$eval('#sbkim-rdv-out', el=>el.textContent);
+ok('„Wer ist im Raum?" degradiert sauber (kein Crash offline)', /Raum|Relais|Knoten|niemand|Suche|Netz/i.test(out1||''), `("${(out1||'').slice(0,70)}")`);
 
 // „Verbinden" offline -> fail-soft Meldung (Modell/Relais unerreichbar), kein Crash
-await page.click('#pbNetPanel .pbnet-tool >> text=🌐 Verbinden & anmelden');
+ok('„🌐 Mit dem Knotennetz verbinden" vorhanden', await button('🌐 Mit dem Knotennetz verbinden'));
 await page.waitForTimeout(2500);
-const out2 = await page.$eval('#pbNetPanel .pbnet-tool pre', el=>el.textContent);
+const out2 = await page.$eval('#sbkim-rdv-out', el=>el.textContent);
 ok('„Verbinden" fail-soft offline (kein Crash)', out2 && out2.length>0);
 
 ok('Keine unbehandelten Seiten-Fehler', errors.length===0, errors.slice(0,3).join(' | '));

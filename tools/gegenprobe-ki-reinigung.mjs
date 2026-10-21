@@ -27,7 +27,7 @@ const F = [
   ['C: PDF-Text mit verstecktem Text', 'modules/ki-reinigung.js', "if (k.g) { liste.push({ seite: i, text: k.s, grund: k.g }); return; }", "if (k.g) { liste.push({ seite: i, text: k.s, grund: k.g }); }", 'der versteckte Text geht NICHT an die KI'],
   ['D: Pinnwand schickt alle Antworten', 'modules/pinnwand-widget.js', "    var gesendet = wahl.senden.map(function (i) { return view.answers[i]; });", "    var gesendet = view.answers;", 'judgeView schickt die Antwort mit Anweisung NICHT an die KI'],
   ['D: ohne Liste geht alles hinaus', 'modules/pinnwand-widget.js', "    if (!L || typeof L.pruefeMail !== 'function') return true;   // ohne Liste: nichts hinaus", "    if (!L || typeof L.pruefeMail !== 'function') return false;", 'ohne Liste geht nichts an die KI'],
-  ['E: Mycel-Fenster verschweigt den Ausschluss', 'modules/net-widget.js', 'o.ausgeschlossen = v.ausgeschlossen || null;', '', 'nicht an die KI" da'],
+  ['E: Richter verschweigt den Ausschluss', 'modules/04_match.js', 'begruendung: AUSGESCHLOSSEN_BEGRUENDUNG,', 'begruendung: "",', 'nicht an die KI gegeben"'],
 ];
 const nurAnker = process.env.NUR_ANKER === '1', nurFall = process.env.NUR_FALL || '';
 let gefangen = 0, durch = 0, falsch = 0, tot = 0;

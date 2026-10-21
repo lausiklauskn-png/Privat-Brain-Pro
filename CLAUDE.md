@@ -1,5 +1,12 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Siegel und Mycel (Klaus 2026-10-21):** nur der **runde Siegel-Knopf** schwebt (Modul 17, byte-1:1), am Knopf
+ziehen, oben an der Kopfleiste rastet er ein (`data-sbkim-leiste`), ✕ blendet aus, Rückweg in Einstellungen. Das
+**Mycel** ist das Kanon-Fenster `23_rendezvous_ui.js` (byte-1:1, gepinnt) statt `net-widget.js` und öffnet sich **aus
+dem Siegel-Fenster** (eigene Pille ausgeblendet, „nicht so viel Platz verschwenden“). Lampen nicht angezeigt. Glue
+`native/native-mycel.js`, Probe `tools/native/test-mycel.mjs`. Eigene Identität „Private Brain Pro“ noch offen.
+[Bedienung, Abweichungen, Grenzen](docs/SIEGEL-UND-MYCEL.md).
+
 **Knöpfe flach halten (Klaus 2026-10-21):** „flach wie bei Notion, aber nicht ganz so flach, gut lesbar“ – damit
 Mails und Dokumente Platz haben, auch am Handy. **Überall** in der Pro-App etwa 28 px, ohne Schatten; unsichtbare
 Tippfläche 7 px darüber/darunter (hinter Nachbarn), beim Antippen wächst der Knopf (×1,12). Symbole statt Wörter, wo
