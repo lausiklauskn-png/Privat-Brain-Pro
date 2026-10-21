@@ -90,13 +90,26 @@
   offlineButton.setAttribute('role','switch');
   const offlineError=make('p','native-network-error');offlineError.setAttribute('role','status');offlineError.hidden=true;
   optionsPanel.append(offlineButton,offlineError);
-  function networkLabel(){const label=offText(window.PBNetwork?.offline?1:0);if(offlineButton.textContent!==label)offlineButton.textContent=label;offlineButton.setAttribute('aria-checked',String(Boolean(window.PBNetwork?.offline)));offlineButton.title=offlineButton.textContent;}
+  // Klaus 2026-10-21: a small lamp up in the bar, green = internet allowed, red = app cut off.
+  // Tap toggles; the tooltip says what a tap will do. The menu entry stays.
+  const lamp=make('button','native-net-lamp compact-tool');lamp.type='button';lamp.setAttribute('role','switch');
+  const dot=make('span','native-net-dot');dot.setAttribute('aria-hidden','true');lamp.append(dot);
+  const nav=tools.querySelector('.native-navigation');if(nav)nav.before(lamp);else options.before(lamp);
+  function networkLabel(){
+    const off=Boolean(window.PBNetwork?.offline),label=offText(off?1:0);
+    if(offlineButton.textContent!==label)offlineButton.textContent=label;
+    offlineButton.setAttribute('aria-checked',String(off));offlineButton.title=label;
+    if(lamp.getAttribute('aria-label')!==label){lamp.setAttribute('aria-label',label);lamp.title=label;}
+    lamp.setAttribute('aria-checked',String(off));lamp.dataset.state=off?'off':'on';
+  }
   addEventListener('pb:network',networkLabel);
-  offlineButton.onclick=async()=>{offlineButton.disabled=true;offlineError.hidden=true;
+  async function toggleNetwork(button){button.disabled=true;offlineError.hidden=true;
     try{await window.PBNetwork.setOffline(!window.PBNetwork.offline);}
     catch{offlineError.textContent=offText(2);offlineError.hidden=false;options.open=true;}
-    finally{offlineButton.disabled=false;networkLabel();}
-  };networkLabel();
+    finally{button.disabled=false;networkLabel();}
+  }
+  lamp.onclick=()=>toggleNetwork(lamp);
+  offlineButton.onclick=()=>toggleNetwork(offlineButton);networkLabel();
   const phone=matchMedia('(max-width:650px)');
   function resize(){more.open=true;options.open=false;}
   phone.addEventListener('change',resize);resize();

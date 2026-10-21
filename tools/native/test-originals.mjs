@@ -42,6 +42,7 @@ try{
  ok('Legacy missing original still retains its preview',await page.locator('#lightboxImg').evaluate(e=>Boolean(e.src)));
  await page.click('#lightboxOpen');await page.locator('.native-original-reconnect').waitFor();
  ok('Missing original offers reconnect instead of pretending preview is original',await page.locator('.native-original-reconnect').textContent().then(t=>t.includes('Originaldatei fehlt')));
+ ok('Reconnect shows exactly one "Datei auswählen" (the file field itself stays hidden)',await page.evaluate(()=>{const d=document.querySelector('.native-original-reconnect');const f=d.querySelector('input[type=file]');return getComputedStyle(f).display==='none'&&[...d.querySelectorAll('button')].filter(b=>b.textContent==='Datei auswählen').length===1;}));
  await page.setInputFiles('.native-original-reconnect input[type=file]',{name:'wrong.txt',mimeType:'text/plain',buffer:Buffer.from('unrelated')});await page.getByText('Diese Datei passt nicht zum Original.',{exact:false}).waitFor();
  ok('Wrong replacement cannot overwrite catalog or publish a copy',saved.size===0&&await page.evaluate(()=>CATALOG.length===1));
  await page.setInputFiles('.native-original-reconnect input[type=file]',source);await page.locator('.native-file-image').waitFor();

@@ -94,6 +94,12 @@ try{
   const first=[];
   for(const width of [360,412,768,1280]){await page.setViewportSize({width,height:780});await pause(250);first.push([width,await clear()]);}
   await page.setViewportSize({width:360,height:780});await pause(250);
+  // .20 seeded 128 px before the internet lamp existed: that untouched seed moves, a chosen place stays.
+  const key='sbkim_widget_position__root',seeded=abstand=>JSON.stringify({corner:null,offsetX:16,offsetY:16,x:null,y:null,oben:{seite:'rechts',abstand}});
+  const after=async value=>{await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,value]);await page.reload();await page.waitForFunction(()=>window.SbkimWidget);await pause(300);return page.evaluate(k=>JSON.parse(localStorage.getItem(k)).oben?.abstand,key);};
+  const moved=await after(seeded(128)),kept=await after(seeded(200));
+  ok('The untouched .20 start place moves clear of the internet lamp; a place Klaus chose stays',moved===152&&kept===200||console.log(moved,kept));
+  await after(seeded(152));
   ok('On first start the Siegel sits in the top bar on the right, between the title and ← → ☰ (360–1280 px)',first.every(([,c])=>c.oben==='rechts'&&c.inBar&&c.afterTitle&&c.beforeTools)||console.log(JSON.stringify(first)));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/siegel-mycel',{recursive:true});await page.mouse.move(180,600);await pause(200);
     await page.screenshot({path:'docs/design/siegel-mycel/oben-eingerastet.png'});}

@@ -25,8 +25,8 @@ final class MailIndex {
 
     static final class Head {
         long uid, date, size;
-        String messageId = "", from = "", subject = "";
-        boolean seen, flagged, list, bulk;
+        String messageId = "", from = "", subject = "", unsubscribe = "";
+        boolean seen, flagged, list, bulk, oneClick;
     }
     static final class Body {
         String text = "", html = "";
@@ -49,10 +49,44 @@ final class MailIndex {
         head.seen = message.isSet(Flags.Flag.SEEN);
         head.flagged = message.isSet(Flags.Flag.FLAGGED);
         head.list = present(message.getHeader("List-Unsubscribe")) || present(message.getHeader("List-Id"));
+        head.unsubscribe = unsubscribe(message.getHeader("List-Unsubscribe"));
+        head.oneClick = !head.unsubscribe.isEmpty() && oneClick(message.getHeader("List-Unsubscribe-Post"));
         String[] precedence = message.getHeader("Precedence");
         if (precedence != null) for (String value : precedence)
             if (value != null && value.trim().toLowerCase(Locale.ROOT).matches("bulk|list|junk")) head.bulk = true;
         return head;
+    }
+
+    /**
+     * The hidden unsubscribe field (RFC 2369): keeps only <https://…> and <mailto:…> entries,
+     * without spaces or control characters, at most four, joined by ", ". Anything else is dropped.
+     */
+    static String unsubscribe(String[] values) {
+        if (values == null) return "";
+        StringBuilder result = new StringBuilder();
+        int count = 0;
+        for (String value : values) {
+            if (value == null) continue;
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("<([^<>]{1,1500})>").matcher(value.replaceAll("\\r?\\n[ \\t]+", ""));
+            while (m.find() && count < 4) {
+                String uri = m.group(1).trim();
+                String lower = uri.toLowerCase(Locale.ROOT);
+                if (!(lower.startsWith("https://") || lower.startsWith("mailto:"))) continue;
+                if (!uri.matches("[^\\s\\p{Cntrl}]+")) continue;
+                if (result.length() > 0) result.append(", ");
+                result.append('<').append(uri).append('>');
+                count++;
+            }
+        }
+        return cut(result.toString(), 3000);
+    }
+
+    /** RFC 8058: the sender allows a single POST without visiting the page. */
+    static boolean oneClick(String[] values) {
+        if (values == null) return false;
+        for (String value : values)
+            if (value != null && value.replaceAll("\\s", "").equalsIgnoreCase("List-Unsubscribe=One-Click")) return true;
+        return false;
     }
 
     /** Only one syntactically plain identifier; anything unusual counts as missing. */

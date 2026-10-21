@@ -58,6 +58,12 @@ Neue native Java-Teile: `MailIndex.java`, `MailEngine.index/indexText/locate`, `
    - **A5:** In Workflow PDF Pro den Knopf „An Private Brain“ einbauen, über Android-Teilen
      (`ACTION_SEND`, nur PDF). Die Empfangsseite in Private Brain Pro ist noch nicht gebaut; sie wird
      abgestimmt, sobald die Sendeseite steht.
+   - **405 beim Teilen an Workflow PDF (PWA) und Workflow PDF Pro (native)**, gemeldet von Klaus 2026-10-21:
+     Android bietet die App im Teilen-Menü an, nach dem Tippen erscheint „405 Not Allowed“. Das ist die Antwort
+     von GitHub Pages auf ein POST. Vermutung: das `share_target` im Manifest schickt per POST an eine Adresse,
+     die kein Service Worker abfängt (SW nicht aktiv, falscher `scope` oder `action`, oder die Pro-App lädt
+     dieselbe Adresse aus dem Netz). Bitte in beiden Workflow-PDF-Repos prüfen und reparieren; Private Brain Pro
+     ist hier nur der Absender.
    - Die alten Inline-Befunde des Review-Bots auf PR #11–#21 sind ungeprüft. Seit etwa #26 meldet der
      Bot „Codex usage limits“. Beispiele:
      - #14 P1 „Stream large originals…“

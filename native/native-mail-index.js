@@ -83,12 +83,33 @@
     gone: ['nicht mehr im Papierkorb', 'no longer in trash', 'уже нет в корзине', 'nie ma już w koszu'],
     noTrash: ['Kein Papierkorb beim Anbieter gefunden; nichts wurde verschoben.', 'No provider trash found; nothing was moved.', 'Корзина у провайдера не найдена; ничего не перемещено.', 'Nie znaleziono kosza u dostawcy; nic nie przeniesiono.'],
     noId: ['Ohne Mail-Kennung wird nicht verschoben (kein sicherer Rückweg).', 'Without a message ID nothing is moved (no safe way back).', 'Без идентификатора письмо не перемещается (нет надёжного возврата).', 'Bez identyfikatora nic nie jest przenoszone (brak bezpiecznego powrotu).'],
+    unsubH: ['📭 Newsletter abmelden', '📭 Unsubscribe newsletters', '📭 Отписаться от рассылок', '📭 Wypisz się z newsletterów'],
+    unsubIntro: ['Der Abmelde-Weg steht unsichtbar in der Mail. ⚡ direkt: die App meldet Sie selbst ab. ✉ per Mail: die App schickt nach Ihrer Bestätigung eine kurze Abmelde-Mail. 🌐 Webseite: die Abmelde-Seite öffnet sich, dort bestätigen Sie.', 'The unsubscribe way is hidden in the mail. ⚡ direct: the app unsubscribes for you. ✉ by mail: after you confirm, the app sends a short unsubscribe mail. 🌐 web page: the unsubscribe page opens and you confirm there.', 'Способ отписки скрыт в письме. ⚡ напрямую: приложение отпишет само. ✉ письмом: после подтверждения приложение отправит короткое письмо. 🌐 сайт: откроется страница отписки.', 'Sposób wypisania jest ukryty w mailu. ⚡ bezpośrednio: aplikacja wypisze sama. ✉ mailem: po potwierdzeniu aplikacja wyśle krótki mail. 🌐 strona: otworzy się strona wypisania.'],
+    unsub: ['Abmelden', 'Unsubscribe', 'Отписаться', 'Wypisz się'],
+    wayOne: ['⚡ direkt', '⚡ direct', '⚡ напрямую', '⚡ bezpośrednio'],
+    wayMail: ['✉ per Mail', '✉ by mail', '✉ письмом', '✉ mailem'],
+    wayPage: ['🌐 Webseite', '🌐 web page', '🌐 сайт', '🌐 strona'],
+    unsubbed: ['abgemeldet am', 'unsubscribed on', 'отписка', 'wypisano'],
+    unsubPage: ['Seite geöffnet – dort bestätigen', 'Page opened – confirm there', 'Страница открыта – подтвердите там', 'Strona otwarta – potwierdź tam'],
+    unsubDone: ['✓ Erledigt', '✓ Done', '✓ Готово', '✓ Gotowe'],
+    unsubOk: ['Abgemeldet.', 'Unsubscribed.', 'Отписка выполнена.', 'Wypisano.'],
+    unsubFail: ['Der Versender hat die Abmeldung nicht bestätigt. Bitte über die Webseite abmelden.', 'The sender did not confirm. Please unsubscribe on the web page.', 'Отправитель не подтвердил. Отпишитесь на сайте.', 'Nadawca nie potwierdził. Wypisz się na stronie.'],
+    unsubSuspect: ['⚠ Verdacht auf Spam oder Betrug – nicht abmelden, das bestätigt nur Ihre Adresse.', '⚠ Possible spam or fraud – do not unsubscribe, it only confirms your address.', '⚠ Подозрение на спам или мошенничество – не отписывайтесь, это лишь подтвердит адрес.', '⚠ Podejrzenie spamu lub oszustwa – nie wypisuj się, to tylko potwierdza adres.'],
+    confirmUnsubMail: ['Abmelde-Mail jetzt senden an', 'Send unsubscribe mail now to', 'Отправить письмо об отписке на', 'Wysłać teraz mail wypisania do'],
+    unsubNoWay: ['kein Abmelde-Weg gefunden', 'no unsubscribe way found', 'способ отписки не найден', 'nie znaleziono sposobu wypisania'],
+    unsubAsk: ['Künftig Absender, die Sie als „📰 Ist Werbung“ markieren, selbst abmelden? Nur wo es direkt geht (⚡); Mails und Webseiten fragen weiter.', 'From now on, unsubscribe senders you mark as “📰 Is advertising” by yourself? Only where it works directly (⚡); mails and web pages still ask.', 'Впредь отписываться самостоятельно от отправителей с пометкой «📰 Это реклама»? Только где можно напрямую (⚡).', 'Odtąd samodzielnie wypisywać nadawców oznaczonych „📰 To reklama”? Tylko tam, gdzie da się bezpośrednio (⚡).'],
+    unsubAutoYes: ['Ja, selbst abmelden', 'Yes, unsubscribe by itself', 'Да, отписываться самому', 'Tak, wypisuj sam'],
+    unsubAutoNo: ['Nein, immer fragen', 'No, always ask', 'Нет, всегда спрашивать', 'Nie, zawsze pytaj'],
+    unsubAutoOn: ['Werbe-Absender werden selbst abgemeldet (nur ⚡ direkt).', 'Advertising senders are unsubscribed by themselves (⚡ direct only).', 'От рекламных отправителей отписка автоматически (только ⚡).', 'Nadawcy reklam są wypisywani automatycznie (tylko ⚡).'],
+    unsubAutoOff: ['Ausschalten', 'Turn off', 'Выключить', 'Wyłącz'],
+    unsubStill: ['kommt weiter, obwohl abgemeldet am', 'still arriving although unsubscribed on', 'продолжает приходить после отписки', 'nadal przychodzi mimo wypisania'],
+    unsubAgain: ['Nochmals abmelden', 'Unsubscribe again', 'Отписаться снова', 'Wypisz ponownie'],
     unnamed: ['(ohne Absender)', '(no sender)', '(без отправителя)', '(bez nadawcy)'],
     noSubject: ['(kein Betreff)', '(no subject)', '(без темы)', '(bez tematu)']
   };
   const t = key => (labels[key] || [key])[Math.max(0, languages.indexOf(document.documentElement.lang.slice(0, 2)))] || labels[key]?.[0] || key;
   const DAY = 864e5, YEAR = 365 * DAY, INTERVAL = 30 * 60 * 1000;
-  const KEYS = { since: 'pb_mail_index_since', state: 'pb_mail_index_state', view: 'pb_mail_index_view', last: 'pb_mail_index_last' };
+  const KEYS = { since: 'pb_mail_index_since', state: 'pb_mail_index_state', view: 'pb_mail_index_view', last: 'pb_mail_index_last', unsubAuto: 'pb_mail_unsub_auto' };
   function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; } }
   function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Preference only. */ } }
   const view = Object.assign({ mode: 'senders', order: 'newest', account: 'all' }, load(KEYS.view, {}));
@@ -141,6 +162,13 @@
     list.push(loc); rec.mailRemotes = list.slice(-20);
     rec.mailRemote = { base: device.base, ...rec.mailRemotes[0] };
   }
+  /** The hidden unsubscribe field, else a visible "abmelden" link from the text. Kept as found, never sent anywhere. */
+  function unsubInfo(item, body, before) {
+    const U = window.PBUnsub; if (!U) return before;
+    const head = U.parse(item.unsubscribe || ''), page = body ? U.pageLink(body.html, body.text) : before?.page || '';
+    const info = { https: head.https || before?.https || '', mailto: head.mailto || before?.mailto || '', oneClick: Boolean(item.oneClick && head.https) || Boolean(before?.oneClick && !item.unsubscribe), page: page || before?.page || '' };
+    return info.https || info.mailto || info.page ? info : undefined;
+  }
   /** Overwrite in place: server facts change, the user's own marks and folders stay. */
   function overwrite(rec, item, body, loc, accountEmail) {
     const before = JSON.stringify([rec.name, rec.mail?.from, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody?.length, rec.mailRemotes]);
@@ -150,6 +178,7 @@
     if (item.date) rec.date = item.date;
     rec.mailIndex = 1; rec.mailSeen = Boolean(item.seen); rec.mailFlagged = Boolean(item.flagged);
     rec.mailList = Boolean(item.list || item.bulk); rec.mailMessageId = item.messageId || rec.mailMessageId || '';
+    const unsub = unsubInfo(item, body, rec.mailUnsub); if (unsub) rec.mailUnsub = unsub;
     if (body) { rec.mailHasAttachments = Boolean(body.attachments); const text = body.text || htmlToText(body.html); if (text && text.length >= (rec.mailBody || '').length) { rec.mailBody = text.slice(0, 8000); rec.size = text.length; } }
     if (rec.mailBody == null) rec.mailBody = '';
     addLocation(rec, loc); rec.tags = rec.tags || []; rec.dupes = rec.dupes || [];
@@ -173,6 +202,7 @@
       mail: { from: item.from || '', to: accountEmail || '', cc: '', subject, date: item.date ? new Date(item.date).toUTCString() : '' },
       mailIndex: 1, mailMessageId: item.messageId || '', mailSeen: Boolean(item.seen), mailFlagged: Boolean(item.flagged),
       mailList: Boolean(item.list || item.bulk), mailHasAttachments: Boolean(body?.attachments) };
+    const unsub = unsubInfo(item, body); if (unsub) rec.mailUnsub = unsub;
     addLocation(rec, loc); textFields(rec);
     const known = ctx.senders.get(senderAddress(item.from));
     if (known?.mark) rec.mailSenderMark = known.mark;
@@ -283,6 +313,7 @@
       if (!stopRequested && accounts.length) {
         const due = sorted().expired.filter(r => r.mailSenderRule === 'auto');
         if (due.length) await trashRecords(due, 'auto');
+        await autoUnsubscribe();
       }
     })().finally(() => { running = null; progressText = stopRequested ? t('stopped') : ''; rebuildIndex(); refreshAll(); draw(); drawDupes(); });
     return running;
@@ -308,6 +339,7 @@
       const key = senderAddress(r.mail.from), s = map.get(key) || {};
       if (r.mailSenderMark) s.mark = r.mailSenderMark;
       if (r.mailSenderRule) s.rule = r.mailSenderRule;
+      if (r.mailUnsubbed && (!s.unsubbed || r.mailUnsubbed.at > s.unsubbed.at)) s.unsubbed = r.mailUnsubbed;
       map.set(key, s);
     }
     return map;
@@ -388,6 +420,82 @@
     rebuildIndex(); refreshAll(); draw();
     await sync(true).catch(() => {}); // the restored mails get their new place on the server
   }
+  // ---------- unsubscribe: hidden field, one-click, mail, page ----------
+  function suspect(r) {
+    try { return Boolean(window.PBSchutz && window.PBUnsub?.suspicious(PBSchutz.rules({ from: r.mail?.from || '', subject: r.name || '', text: r.mailBody || '' }))); }
+    catch { return false; }
+  }
+  function newestWay(mails) {
+    for (const r of [...mails].sort((a, b) => (b.date || 0) - (a.date || 0))) { const w = window.PBUnsub?.way(r.mailUnsub); if (w) return { w, r }; }
+    return null;
+  }
+  const wayLabel = w => t(w.kind === 'oneclick' ? 'wayOne' : w.kind === 'mail' ? 'wayMail' : 'wayPage');
+  /** One sender, one way. Mails are only sent after a confirmation, pages only opened, nothing retried by itself. */
+  async function unsubscribe(address, mails, auto = false) {
+    const found = newestWay(mails); if (!found) return false;
+    const { w, r } = found;
+    if (mails.some(suspect)) { progressText = t('unsubSuspect'); draw(); return false; }
+    let state = null;
+    try {
+      if (w.kind === 'oneclick') {
+        if (typeof device.unsubscribe !== 'function') return false;
+        const res = await device.unsubscribe(w.url);
+        if (res.ok) state = { at: Date.now(), way: 'oneclick' }; else lastProblem = t('unsubFail');
+      } else if (auto) return false;
+      else if (w.kind === 'mail') {
+        const account = (r.mailRemotes || [])[0]?.account;
+        if (!account || !confirm(t('confirmUnsubMail') + ' ' + w.to + '?')) return false;
+        await device.request('/' + encodeURIComponent(account) + '/send', { submission: crypto.randomUUID(), to: w.to, subject: w.subject, text: w.text, cc: '', bcc: '' }, 'POST');
+        state = { at: Date.now(), way: 'mail', to: w.to };
+      } else {
+        const links = window.Capacitor?.Plugins?.ProLinks;
+        if (typeof links?.open !== 'function') return false;
+        await links.open({ url: w.url });
+        state = { at: Date.now(), way: 'page', pending: true };
+      }
+    } catch (error) { lastProblem = /APP_OFFLINE/.test(error.message) ? t('offline') : error.message; }
+    if (state) { await setSender(address, 'mailUnsubbed', state); if (state.way !== 'page') toast(t('unsubOk')); }
+    draw(); return Boolean(state);
+  }
+  // After a sync: with Klaus' consent, senders marked "Ist Werbung" are unsubscribed where it works directly.
+  async function autoUnsubscribe() {
+    if (!load(KEYS.unsubAuto, false) || !window.PBUnsub) return;
+    const bySender = new Map();
+    for (const r of indexed()) if (r.mailSenderMark === 'ad' && !r.mailUnsubbed) { const a = senderAddress(r.mail.from); bySender.set(a, [...(bySender.get(a) || []), r]); }
+    for (const [address, mails] of bySender) { if (stopRequested) break; if (newestWay(mails)?.w.kind === 'oneclick') await unsubscribe(address, mails, true); }
+  }
+  function drawUnsub(list) {
+    const bySender = new Map(), settings = senderSettings();
+    for (const r of shown().filter(isNewsletter)) { const a = senderAddress(r.mail.from); bySender.set(a, [...(bySender.get(a) || []), r]); }
+    const rows = [...bySender].map(([address, mails]) => ({ address, mails, found: newestWay(mails), state: settings.get(address)?.unsubbed }))
+      .sort((a, b) => Number(Boolean(a.state)) - Number(Boolean(b.state)) || b.mails.length - a.mails.length);
+    if (!rows.length) return;
+    const head = el('h3', 'mail-all-section', t('unsubH') + ' (' + rows.filter(x => !x.state).length + ')'); head.dataset.mailClean = 'unsubH'; list.append(head);
+    list.append(el('p', 'mail-muted', t('unsubIntro')));
+    const auto = load(KEYS.unsubAuto, null);
+    if (auto === true) { const p = el('p', 'mail-muted', t('unsubAutoOn') + ' '); p.append(button(t('unsubAutoOff'), () => { store(KEYS.unsubAuto, false); draw(); })); p.dataset.mailUnsubAuto = 'on'; list.append(p); }
+    else if (auto === null && rows.some(x => x.state && x.state.way !== 'page')) {
+      const box = el('div', 'mail-report mail-all-ask'); box.dataset.mailUnsubAsk = '1';
+      box.append(el('p', '', t('unsubAsk')), button(t('unsubAutoYes'), () => { store(KEYS.unsubAuto, true); draw(); autoUnsubscribe().then(draw); }, 'mail-primary'), button(t('unsubAutoNo'), () => { store(KEYS.unsubAuto, false); draw(); }));
+      list.append(box);
+    }
+    for (const { address, mails, found, state } of rows.slice(0, 200)) {
+      const row = el('div', 'mail-all-unsub'); row.dataset.mailUnsub = address;
+      const newest = Math.max(...mails.map(m => m.date || 0));
+      const info = [senderName(mails[0].mail.from), many(mails.length)];
+      const still = state && newest > state.at + 14 * DAY && state.way !== 'page';
+      if (still) info.push(t('unsubStill') + ' ' + fmtDate(state.at));
+      else if (state?.pending) info.push(t('unsubPage'));
+      else if (state) info.push(t('unsubbed') + ' ' + fmtDate(state.at));
+      else info.push(found ? wayLabel(found.w) : t('unsubNoWay'));
+      row.append(el('span', 'mail-all-unsub-name', info.join(' · ')));
+      if (!found) { /* nothing to offer */ }
+      else if (mails.some(suspect)) row.append(el('span', 'mail-muted', t('unsubSuspect')));
+      else if (state?.pending) row.append(button(t('unsubDone'), async () => { await setSender(address, 'mailUnsubbed', { ...state, pending: false, at: Date.now() }); draw(); }));
+      else if (!state || still) { const b = button(still ? t('unsubAgain') : t('unsub'), () => unsubscribe(address, mails), 'mail-primary'); b.dataset.mailUnsubGo = found.w.kind; row.append(b); }
+      list.append(row);
+    }
+  }
   function runs() {
     const map = new Map();
     for (const r of indexed()) if (r.mailTrashed) { const x = map.get(r.mailTrashed.run) || { id: r.mailTrashed.run, at: r.mailTrashed.at, reason: r.mailTrashed.reason, count: 0 }; x.count++; map.set(x.id, x); }
@@ -410,6 +518,7 @@
         button(t('noAuto'), async () => { await setSender(address, 'mailSenderRule', 'no'); draw(); }));
       list.append(box);
     }
+    drawUnsub(list);
     const section = (key, mails, extra) => {
       const head = el('h3', 'mail-all-section', t(key) + ' (' + mails.length + ')'); head.dataset.mailClean = key; list.append(head);
       if (extra) list.append(extra);
@@ -490,6 +599,9 @@
       const b = button(t(key), async () => { await setSender(address, 'mailSenderMark', r.mailSenderMark === value ? '' : value); draw(); });
       b.setAttribute('aria-pressed', String(r.mailSenderMark === value)); b.dataset.mailMark = value; tools.append(b);
     }
+    const readerWay = isNewsletter(r) && window.PBUnsub?.way(r.mailUnsub);
+    if (readerWay && !r.mailUnsubbed && !suspect(r)) { const b = button(t('unsub') + ' · ' + wayLabel(readerWay), () => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address))); b.dataset.mailUnsubGo = readerWay.kind; tools.append(b); }
+    else if (r.mailUnsubbed) tools.append(el('span', 'mail-muted', t('unsubbed') + ' ' + fmtDate(r.mailUnsubbed.at)));
     if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
     box.append(tools);
     box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
@@ -604,5 +716,5 @@
   setInterval(autoRun, INTERVAL);
   setTimeout(autoRun, 5000);
   drawDupes();
-  window.PBMailIndex = { entry, sync, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName };
+  window.PBMailIndex = { entry, sync, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
 })();
