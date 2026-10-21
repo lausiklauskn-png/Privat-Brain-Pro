@@ -954,6 +954,16 @@ Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/act
 Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
 
 
+## Veröffentlichte Version .23 — 2026-10-21
+
+- **Inhalt:** PR #56 (Bedeutungs-Modell per Schalter laden, Absturzschutz, App Bundle, Ablageordner nach Neustart, ProProtect bei geschlossener Ansicht), Quelle main `8ee68c64ada630f63d7ca450be16faf265e87e2b`, VersionCode 23.
+- **Main-CI:** 39661901310 grün, einschließlich native-smoke mit `NativeSemanticTest`: echter Download von `family-projekt.de` (155,5 MB in 21 s im Emulator), danach ohne Internet aus dem App-Speicher geladen, Bedeutung erkannt.
+- **Release-Lauf:** [39664148878](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39664148878): Signatur, signiertes Update .22 → .23 ohne Deinstallation, Veröffentlichung.
+- **Download:** unabhängig geladen und gegen `SHA256SUMS` geprüft:
+  - APK SHA-256 `bc4d52ad08e5953e5d3b8472c4e3bb11ada857b1d9120d1d16911296acf19be3`, 5.788.208 Bytes.
+  - App Bundle (.aab, für Google Play, gleiches Zertifikat) SHA-256 `97aeddaac557c0e8e3dfa2b6b142e78b2567096f0db87c8eeaf4ba3f1dda5192`, 5.601.799 Bytes.
+- **Nicht geprüft:** Messung an Klaus' Tablet, Speicherbedarf des Modells auf echten Geräten, Hochladen bei Google Play.
+
 ## Veröffentlichte Version .22 — 2026-10-21
 
 - **Inhalt:** PR #54 (Teilen an Private Brain Pro, Ladebalken in Schritten beim Einlesen, 🤖 KI beim Schreiben mit Verdecken), Quelle main `64046085730fa56992678e1c5091e2382f360465`, VersionCode 22.

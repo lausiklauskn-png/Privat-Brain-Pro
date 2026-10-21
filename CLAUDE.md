@@ -1,5 +1,9 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .23 veröffentlicht (2026-10-21).** [APK .23](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.23/Private-Brain-Pro-0.1.0-preview.23.apk) über die vorhandene App installieren, nicht deinstallieren; daneben `Private-Brain-Pro-0.1.0-preview.23.aab` für Google Play.
+PR #56, VersionCode 23, Quelle main `8ee68c64ada630f63d7ca450be16faf265e87e2b` (Main-CI 39661901310 grün inkl. native-smoke mit echtem Modell-Download und Offline-Start). Release-Lauf 39664148878: Signatur, Updateprobe .22 → .23, Veröffentlichung.
+APK SHA-256 `bc4d52ad…cf19be3` (5.788.208 Bytes), AAB `97aeddaa…1dda5192` (5.601.799 Bytes), beide gleich SHA256SUMS. Tablet nicht gemessen.
+
 **Bedeutungs-Modell per Schalter, App Bundle (Klaus 2026-10-21, für .23):** Einstellungen → „🧠 Modell für die
 Bedeutungssuche“ lädt ~155 MB nativ in den App-Speicher (zuerst `family-projekt.de/models/`, sonst Hugging Face;
 Bibliothek jsDelivr/unpkg; jede Datei per SHA-256 aus `semantic-model.json`), Weitermachen nach Abbruch, Entfernen.
