@@ -533,3 +533,15 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .native-net-dot { display:block;width:10px;height:10px;border-radius:50%;background:#2fb344;box-shadow:0 0 0 2px color-mix(in srgb,#2fb344 25%,transparent); }
 .native-net-lamp[data-state=off] .native-net-dot { background:#d63939;box-shadow:0 0 0 2px color-mix(in srgb,#d63939 25%,transparent); }
 .native-net-lamp:active { transform:scale(1.12); }
+
+/* 🤖 KI beim Schreiben (Klaus 2026-10-21): flach, gut lesbar. */
+.mail-ai-panel { display:grid; gap:8px; margin:8px 0; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--field); }
+.mail-ai-panel h4 { margin:0; font-size:.95rem; }
+.mail-ai-panel textarea { width:100%; box-sizing:border-box; font:inherit; font-size:.88rem; }
+.mail-ai-panel .mail-ai-mode { display:inline-flex; gap:4px; align-items:center; font-size:.88rem; }
+.mail-ai-panel .mail-ai-names { display:grid; gap:4px; font-size:.84rem; }
+.mail-ai-chips { display:flex; flex-wrap:wrap; gap:4px; align-items:center; font-size:.84rem; }
+.mail-ai-chips[hidden], .mail-ai-panel[hidden], .mail-ai-panel button[hidden] { display:none!important; }
+.mail-ai-chip { min-height:24px!important; padding:1px 8px!important; border-radius:12px; font-size:.82rem; }
+#pb-mail-ai-preview { max-height:30vh; overflow:auto; white-space:pre-wrap; }
+.mail-ai-limit { font-size:.8rem; }

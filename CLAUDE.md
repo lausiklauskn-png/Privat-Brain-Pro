@@ -1,5 +1,11 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**🤖 KI beim Schreiben (Klaus 2026-10-21, für .23):** Im Schreiben-Fenster gegenlesen oder Entwurf schreiben lassen,
+per Mistral-Schlüssel (EU) oder Kopieren fürs eigene Abo. Vorher verdeckt Modul 25 neuen Text, Zitat und Betreff, dazu
+Namen aus An/Cc/Bcc und Zitatzeilen, Telefon mit Leerzeichen und alles, was Klaus festlegt (Liste, Vorschläge, markierter
+Text). Vorschau „Das sieht die KI“, Halt bei KI-Anweisung, Rückweg mit Rückgängig. `native/native-mail-ai.js`.
+[Details](docs/KI-BEIM-SCHREIBEN.md).
+
 **Bedeutungs-Modell fest in der App, Ladebalken in Schritten (Klaus 2026-10-21, für .22):** Das Modell lud in der
 Pro-App nie (CSP sperrte jsDelivr). Jetzt bringt der Bau e5-small (118 MB) und transformers.js 2.17.2 mit
 (`tools/native/fetch-semantic-model.mjs`, Fingerabdrücke in `semantic-model.json`, auf GitHub streng);
