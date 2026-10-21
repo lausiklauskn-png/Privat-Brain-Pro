@@ -59,3 +59,30 @@ Notion-Button. Müssen ja immer noch gut lesbar sein.“*
 - Nur in der Pro-App (`native/native.css`). Die PWA bleibt unverändert.
 - Grenze: 32 px liegen unter der oft empfohlenen Tippfläche von 44 px. Das ist so gewollt;
   am Tablet ist das noch nicht gemessen.
+
+## Zweite Runde (Klaus 2026-10-21): überall flach, wachsen unter dem Finger
+
+Klaus: *„die Knöpfe sollen überall flach sein, vielleicht noch etwas flacher … wenn ich mit dem
+Finger drauf gehe, können die Button größer werden … so treffe ich sie besser.“*
+
+- **Alle Knöpfe der Pro-App** (Grundregel `button`/`.btn` in `native/native.css`, überstimmt
+  `index.html`; die PWA bleibt unverändert): sichtbar etwa **28 px**, Innenabstand 3 px oben und unten,
+  ohne Schatten. Leistenknöpfe 30 px, auf Touch-Geräten 32 px. Explorer-Felder 30 px.
+- **Größere Tippfläche ohne mehr Platz:** Ein unsichtbarer Rand reicht 7 px über und unter jeden
+  Knopf hinaus. Er liegt *hinter* allem anderen (`z-index:-1`) und greift deshalb nur in freien
+  Lücken, nie über einem Nachbarknopf.
+  - Erster Versuch ohne diese Sicherung: Im App-Menü fing der Rand eines Knopfs das Tippen auf den
+    Knopf darüber ab (gefangen von `test-compact-network`).
+  - Davor ragte der Rand auch 3 px zur Seite und machte die Suche bei 280 px seitlich schiebbar
+    (gefangen von `test-web`). Jetzt reicht er nur nach oben und unten.
+- **Wachsen beim Antippen:** Ein gedrückter Knopf wird um 12 % größer (mit der Maus darüber 4 %).
+  Ganze Zeilen und Kacheln wachsen nicht, sie färben sich nur. Wer Bewegung abgeschaltet hat,
+  sieht stattdessen einen Rahmen.
+- **Aktualisieren** ist nur noch das Kreispfeil-Symbol ⟳ (zwei gegenläufige Pfeile), auch in der
+  Werkzeugleiste des Postfachs. Der Name steht als Tooltip und für Vorlesehilfen da.
+- **„Alle Konten“, Kopfzeile in einer Zeile:** „← Zurück“ (statt „← Zurück zum Postfach“), dann eine
+  **Kontoauswahl**, die „Alle Konten“ oder die Adresse des gewählten Kontos zeigt, dann ⟳ und ⋯.
+  Mit einem einzelnen Konto zeigen Liste, Absender, Suche und Aufräumen nur dessen Mails.
+- Proben: `test-mail-index` **61 grün** (Kopf in einer Zeile, Kontoauswahl, ⟳ ohne Text,
+  Tippfläche 7 px, Wachsen auf 1,12, „← Zurück“ einzeilig), `test-explorer-order` 17,
+  ganze Reihe `test:native-web` grün. Bilder: `docs/design/flach/`, `docs/design/alle-konten/`.

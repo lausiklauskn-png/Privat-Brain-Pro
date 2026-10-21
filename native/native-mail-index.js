@@ -8,10 +8,12 @@
   const languages = ['de', 'en', 'ru', 'pl'];
   const labels = {
     open: ['👥 Alle Konten', '👥 All accounts', '👥 Все аккаунты', '👥 Wszystkie konta'],
-    close: ['← Zurück zum Postfach', '← Back to mailbox', '← Назад к почте', '← Wróć do poczty'],
+    close: ['← Zurück', '← Back', '← Назад', '← Wstecz'],
+    closeLong: ['Zurück zum Postfach', 'Back to mailbox', 'Назад к почте', 'Wróć do poczty'],
+    chooseAccount: ['Konto wählen', 'Choose account', 'Выбрать аккаунт', 'Wybierz konto'],
     title: ['Alle Konten', 'All accounts', 'Все аккаунты', 'Wszystkie konta'],
     fetch: ['📥 Alle Konten abrufen und einordnen', '📥 Fetch and sort all accounts', '📥 Загрузить и упорядочить все аккаунты', '📥 Pobierz i uporządkuj wszystkie konta'],
-    refresh: ['📥 Jetzt aktualisieren', '📥 Update now', '📥 Обновить сейчас', '📥 Aktualizuj teraz'],
+    refresh: ['Jetzt aktualisieren', 'Update now', 'Обновить сейчас', 'Aktualizuj teraz'],
     stop: ['⏹ Anhalten', '⏹ Stop', '⏹ Остановить', '⏹ Zatrzymaj'],
     older: ['Ältere nachholen (weitere 12 Monate)', 'Fetch older (another 12 months)', 'Загрузить старше (ещё 12 месяцев)', 'Pobierz starsze (kolejne 12 miesięcy)'],
     more: ['Weitere Aktionen', 'More actions', 'Другие действия', 'Więcej działań'],
@@ -89,7 +91,7 @@
   const KEYS = { since: 'pb_mail_index_since', state: 'pb_mail_index_state', view: 'pb_mail_index_view', last: 'pb_mail_index_last' };
   function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; } }
   function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Preference only. */ } }
-  const view = Object.assign({ mode: 'senders', order: 'newest' }, load(KEYS.view, {}));
+  const view = Object.assign({ mode: 'senders', order: 'newest', account: 'all' }, load(KEYS.view, {}));
   if (!['senders', 'list', 'clean'].includes(view.mode)) view.mode = 'senders';
   if (!['newest', 'oldest'].includes(view.order)) view.order = 'newest';
 
@@ -119,6 +121,11 @@
   const hashText = async text => sha256(new TextEncoder().encode(text).buffer);
   const indexed = () => CATALOG.filter(r => r.mailIndex && r.mail);
   const visible = () => indexed().filter(r => !r.mailTrashed);
+  // The header choice "Alle Konten" or one account narrows every list, search and clean-up view.
+  const shown = () => view.account === 'all' ? visible() : visible().filter(r => (r.mailRemotes || []).some(l => l.account === view.account));
+  function knownAccounts() { const map = new Map(); for (const r of indexed()) for (const l of r.mailRemotes || []) if (l.email && !map.has(l.account)) map.set(l.account, l.email); return map; }
+  const SVG = 'http://www.w3.org/2000/svg';
+  function refreshIcon() { const svg = document.createElementNS(SVG, 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true'); svg.classList.add('mail-all-icon'); const path = document.createElementNS(SVG, 'path'); path.setAttribute('d', 'M20 11a8 8 0 0 0-14.9-3.9M4 4v4h4M4 13a8 8 0 0 0 14.9 3.9M20 20v-4h-4'); svg.append(path); return svg; }
   function fmtDate(ms) { return ms ? new Date(ms).toLocaleDateString(document.documentElement.lang || 'de', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''; }
   function fmtTime(ms) { return ms ? new Date(ms).toLocaleString(document.documentElement.lang || 'de', { dateStyle: 'short', timeStyle: 'short' }) : ''; }
 
@@ -317,7 +324,7 @@
   const guarded = r => r.mailFlagged || r.mailStar || r.mailSenderMark === 'important' || r.mailKeep || !r.mailMessageId;
   function sorted() {
     const out = { expired: [], check: [], running: [] };
-    for (const r of visible().filter(isNewsletter)) {
+    for (const r of shown().filter(isNewsletter)) {
       const v = validUntil(r);
       if (!v.until) out.check.push(r);
       else if (PBMailExpiry.expired(v.until) && !guarded(r)) out.expired.push(r);
@@ -497,16 +504,24 @@
     if (panel.hidden) return;
     const keepFocus = document.activeElement?.dataset?.mailAll === 'search', caret = keepFocus ? document.activeElement.selectionStart : 0;
     panel.replaceChildren();
-    const head = el('div', 'mail-head'), last = load(KEYS.last, null);
-    head.append(button(t('close'), () => show(false), 'mail-back'), el('h2', '', t('title')));
+    const head = el('div', 'mail-head mail-all-head'), last = load(KEYS.last, null);
+    const back = button(t('close'), () => show(false), 'mail-back'); back.title = t('closeLong'); back.setAttribute('aria-label', t('closeLong'));
+    // One row: Zurück · Kontoauswahl (zeigt „Alle Konten“ oder die Adresse) · ⟳ · ⋯
+    const accounts = knownAccounts(), pick = el('select', 'mail-all-account'); pick.setAttribute('aria-label', t('chooseAccount')); pick.dataset.mailAll = 'account';
+    pick.append(new Option(t('title'), 'all'), ...[...accounts].map(([id, email]) => new Option(email, id)));
+    if (view.account !== 'all' && !accounts.has(view.account)) view.account = 'all';
+    pick.value = view.account; pick.onchange = () => { view.account = pick.value; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); };
+    const title = el('h2', 'mail-all-title', t('title')); title.hidden = accounts.size > 0;
+    head.append(back, title); if (accounts.size) head.append(pick);
     if (running) head.append(button(t('stop'), () => { stopRequested = true; progress(t('stopped')); }));
-    else head.append(button(last ? t('refresh') : t('fetch'), () => sync(false), 'mail-primary'));
+    else if (last) { const again = button('', () => sync(false), 'mail-all-refresh'); again.append(refreshIcon()); again.title = t('refresh'); again.setAttribute('aria-label', t('refresh')); again.dataset.mailAll = 'refresh'; head.append(again); }
+    else head.append(button(t('fetch'), () => sync(false), 'mail-primary'));
     const tools = el('details', 'mail-account-tools'), summary = el('summary', 'mail-button', t('more')), menu = el('div', 'mail-account-menu');
     menu.append(button(t('older'), () => { tools.open = false; store(KEYS.since, (load(KEYS.since, 0) || Date.now() - YEAR) - YEAR); sync(false); }));
     tools.append(summary, menu); if (!running) head.append(tools);
     panel.append(head);
     status = el('p', 'mail-notice'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-    const all = visible(), since = load(KEYS.since, 0);
+    const all = shown(), since = load(KEYS.since, 0);
     status.textContent = running ? progressText : [progressText, lastProblem, last ? t('last') + ' ' + fmtTime(last.at) + ' · ' + all.length + ' ' + t('mails') + ' · ' + last.accounts + ' ' + t('accounts') + (since ? ' · ' + t('since') + ' ' + fmtDate(since) : '') : t('never')].filter(Boolean).join(' · ');
     panel.append(status);
     if (lastRun && !running) {

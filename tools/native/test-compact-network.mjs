@@ -65,7 +65,7 @@ try{
   await view.click();await view.hover();await page.waitForFunction(()=>document.querySelector('.native-tooltip').textContent==='Originalansicht');
   ok('View tooltip changes to original view after switching to plain text',await view.getAttribute('aria-label')==='Originalansicht');
   await view.click();await page.mouse.move(1270,890);await page.setViewportSize({width:320,height:640});
-  ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=32&&r.width>=32&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
+  ok('Icon actions retain usable touch areas and meaningful hover labels',await page.locator('.main-pages .tab,.native-navigation button,.live-mail>.mail-head .compact-tool').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.height>=28&&r.width>=28&&e.title.trim()&&e.getAttribute('aria-label')===e.title;})));
   await page.evaluate(()=>{window.holdMail=true;window.loadPhases=[];const progress=PBMailDevice.progress;PBMailDevice.progress=stage=>{loadPhases.push(stage);progress(stage);};});
   await page.locator('.live-mail .mail-back').click();await page.waitForFunction(()=>document.querySelector('.live-mail').getAttribute('aria-busy')!=='true');await page.evaluate(()=>{window.loadPhases=[];});await page.locator('[data-live-uid="7"]').click();
   await page.waitForFunction(()=>typeof window.releaseMail==='function');

@@ -218,7 +218,7 @@ try{
   // Offline: nothing breaks, the reason is shown
   await page.locator('[data-tab="mail"]').click();
   await page.evaluate(()=>{window.offline=true;});
-  await panel.getByRole('button',{name:'📥 Jetzt aktualisieren'}).click();
+  await panel.locator('[data-mail-all=refresh]').click();
   await page.waitForFunction(()=>!PBMailIndex.running());
   ok('App internet off: fetching waits and says why',(await panel.locator('[role=status]').textContent()).includes('App-Internet ist aus'));
   await page.evaluate(()=>{window.offline=false;});
@@ -238,7 +238,25 @@ try{
   const kept=await page.evaluate(async()=>{const p=document.getElementById('pb-mail-all');p.scrollTop=400;const before=p.scrollTop;await PBMailIndex.sync();await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return [before,p.scrollTop];});
   ok('Background update keeps the scroll position ('+kept.join(' → ')+')',kept[0]>100&&Math.abs(kept[0]-kept[1])<2);
   await page.setViewportSize({width:1280,height:900});
-  await panel.getByRole('button',{name:'← Zurück zum Postfach'}).click();
+  await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
+  // One header row: Zurück, account choice, ⟳ (no text), ⋯
+  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await panel.locator('[data-mail-all=list]').click();
+  const head=await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head'),kids=[...h.children].filter(x=>!x.hidden);const mids=kids.map(x=>{const r=x.getBoundingClientRect();return r.top+r.height/2;});return {rows:Math.max(...mids)-Math.min(...mids)<6?1:2,back:h.querySelector('.mail-back').textContent,refresh:h.querySelector('[data-mail-all=refresh]')?.textContent.trim(),label:h.querySelector('[data-mail-all=refresh]')?.getAttribute('aria-label'),options:[...h.querySelector('[data-mail-all=account]').options].map(o=>o.textContent)};});
+  ok('Header is one row: "← Zurück", account choice, refresh symbol without text',head.rows===1&&head.back==='← Zurück'&&head.refresh===''&&head.label==='Jetzt aktualisieren'&&JSON.stringify(head.options)===JSON.stringify(['Alle Konten','klaus@example.invalid','zweit@example.invalid']));
+  await panel.locator('[data-mail-all=account]').selectOption('22222222-2222-4222-8222-222222222222');
+  const only=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all [data-mail-all-id]')].map(b=>CATALOG.find(r=>r.hash===b.dataset.mailAllId)).every(r=>r.mailRemotes.some(l=>l.account==='22222222-2222-4222-8222-222222222222'))&&document.querySelectorAll('#pb-mail-all [data-mail-all-id]').length>0);
+  ok('Choosing one account shows only its mails, the header names it',only&&await panel.locator('[data-mail-all=account] option:checked').textContent()==='zweit@example.invalid');
+  await panel.locator('[data-mail-all=account]').selectOption('all');
+  // Slim buttons, larger touch area, grow under the finger
+  const touch=await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all [data-mail-all=refresh]'),after=getComputedStyle(b,'::after');return {h:b.getBoundingClientRect().height,top:parseFloat(after.top),bottom:parseFloat(after.bottom)};});
+  ok('Touch area reaches beyond the slim button ('+touch.h+' px visible, +7 px above and below)',touch.h<=32&&touch.top<=-7&&touch.bottom<=-7);
+  await panel.locator('[data-mail-all=refresh]').hover();await page.mouse.down();await page.waitForTimeout(250);
+  const grow=await page.evaluate(()=>getComputedStyle(document.querySelector('#pb-mail-all [data-mail-all=refresh]')).transform);
+  await page.mouse.up();
+  ok('Button grows while pressed ('+grow+')',/matrix\((1\.1[0-9]*|1\.12)/.test(grow));
+  await page.waitForFunction(()=>!PBMailIndex.running());
+  await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
   // Languages and phone width
   await mail.locator('.live-mail [data-mail-all=open]').click();
   await page.evaluate(()=>{document.documentElement.lang='en';});
@@ -249,9 +267,10 @@ try{
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));
   // Measured in one step: a background fetch may redraw the panel between finding and measuring.
   const small=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all .mail-all-switch .mail-button')].map(b=>Math.round(b.getBoundingClientRect().height)));
+  ok('Phone: "← Zurück" stays on one line',await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all .mail-all-head .mail-back');return b.getBoundingClientRect().height<=32;}));
   ok('Phone: view buttons stay in one row and are not cut off',await page.evaluate(()=>{const row=document.querySelector('#pb-mail-all .mail-all-switch'),b=[...row.children];return new Set(b.map(x=>Math.round(x.getBoundingClientRect().top))).size===1&&row.clientHeight>=b[0].getBoundingClientRect().height;}));
-  ok('Buttons are flat but still easy to tap, 30–36 px ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=30&&h<=36));
-  await panel.getByRole('button',{name:'← Zurück zum Postfach'}).click();
+  ok('Buttons are flat, 26–32 px ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=26&&h<=32));
+  await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
   ok('"Zurück zum Postfach" returns to the normal mailbox',await panel.isHidden()&&await mail.locator('.live-mail').isVisible());
   ok('No runtime errors',errors.length===0);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
