@@ -74,4 +74,6 @@ for name in mail_tests:
                 and case.get('name') == name]
     if len(matching) != 1:
         raise SystemExit(f'Expected exactly one executed native mail test: {name}')
+semantic=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeSemanticTest' and case.get('name')=='modelLoadedWithTheSwitchRunsOfflineFromAppStorage']
+if len(semantic)!=1:raise SystemExit('Expected exactly one executed meaning-model test (download with the switch, offline start)')
 print(f'Android startup and mail tests passed; {len(cases)} test case(s), no failures/skips.')

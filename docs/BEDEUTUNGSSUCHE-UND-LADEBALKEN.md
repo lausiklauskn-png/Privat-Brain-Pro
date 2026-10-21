@@ -24,6 +24,20 @@ Damit .22 mit Teilen, Ladebalken und KI-Knopf erscheinen kann, steht `"enabled":
 `tools/native/semantic-model.json`: der Bau lädt das Modell nicht, `NativeSemanticTest` ist bis dahin herausgenommen.
 Die Bedeutungssuche bleibt in .22 wie bisher bei Stichworten. Alles andere unten ist gebaut und geprüft.
 
+## Stand für .23: Laden per Schalter (Klaus 2026-10-21)
+
+Klaus: *„Kannst du nicht einen Schalter einbauen, der das Laden des Modells direkt aus der App startet? … von meinem
+Server … oder von der entsprechenden Seite.“* Das Modell kommt deshalb nicht mehr ins APK (es bleibt etwa 6 MB groß),
+sondern wird auf Wunsch geladen.
+
+| | |
+|---|---|
+| Bedienung | Einstellungen → „🧠 Modell für die Bedeutungssuche“ → **Modell laden** (einmal etwa 155 MB, am besten im WLAN). Balken mit „x von 155 MB“ und Quelle, **Abbrechen**, später **Modell entfernen** (mit Rückfrage). Danach ohne Internet. |
+| Quellen | Modell zuerst `https://family-projekt.de/models/Xenova/multilingual-e5-small/…`, sonst Hugging Face (Revision `761b726`). transformers.js 2.17.2 von jsDelivr, sonst unpkg. Jede Datei nur mit dem Fingerabdruck aus `tools/native/semantic-model.json`; passt er nicht, wird die nächste Quelle gefragt. |
+| Ablage | Android lädt in den App-Speicher (`files/semantic/`), nicht die WebView. Nach einem Abbruch geht es an derselben Stelle weiter. Der Internetschalter der App stoppt das Laden. |
+| Start | Modul 03 bleibt byte-1:1. Die App setzt `SBKIM_MODEL_ROOT` auf `/models/` und beantwortet diese Adresse und die jsDelivr-Adresse aus dem App-Speicher (`BundledLibrary`). Das Modell startet erst, wenn alle Dateien geprüft da sind. |
+| Absturzschutz | Endet der WebView-Prozess (`onRenderProcessGone`), öffnet sich die App neu, statt zu schließen. Geschah das während des Modellstarts, startet das Modell nicht mehr von selbst; der Schalter sagt es und bietet **Erneut starten**. |
+
 ## Wie es gebaut ist
 
 | | |
@@ -47,7 +61,17 @@ Die Bedeutungssuche bleibt in .22 wie bisher bei Stichworten. Alles andere unten
 - Das Modell rechnet auf dem Gerät; ältere Tablets brauchen für das erste Einordnen vieler Dateien Zeit.
 - Am Tablet nicht gemessen.
 
-## Nachweise
+## Nachweise (.23)
+
+- `SemanticModelTest` (6 JVM-Tests): zweite Quelle bei Serverfehler und falscher Datei, Weitermachen mit `Range` nach
+  Abbruch, eine Datei mit fremdem Fingerabdruck wird nie übernommen, geänderte Pins heißen „nicht geladen“, Entfernen,
+  Internetschalter, sichere Pfade. `BundledLibraryTest` +1 für die Modell-Adressen.
+- `tools/native/test-semantic.mjs` (14 Prüfungen im Browser, Stellvertreter für Android und Modul 03).
+- `NativeSemanticTest` (Android-Emulator): echter Download, dann App vom Internet getrennt, Modul 03 lädt aus dem
+  App-Speicher (`local`, `/models/`), 384 Dimensionen, Zahnarzt näher als Wetter. Endet die WebView, nennt der Test den
+  Grund; der Lauf schreibt dann das Android-Protokoll (Speicher, Absturz) mit.
+
+## Nachweise (.22)
 
 - `tools/native/test-import-progress.mjs` (6 Prüfungen): bei einer Datei mindestens vier Zwischenstände, nur
   vorwärts, Ende 100 %, alle drei Schritte genannt. Gegenprobe mit dem alten Code: die erste Prüfung wird rot.

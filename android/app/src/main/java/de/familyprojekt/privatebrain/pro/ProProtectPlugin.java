@@ -33,10 +33,15 @@ public class ProProtectPlugin extends Plugin {
     @Override public void load() { protection = Protection.create(getContext()); }
     private interface Work { JSONObject run() throws Exception; }
     private void work(ExecutorService executor, PluginCall call, Work task) {
-        executor.execute(() -> {
-            try { call.resolve(JSObject.fromJSONObject(task.run())); }
-            catch (Exception error) { String code = ProVaultPlugin.vaultCode(error); call.reject(code, code); }
-        });
+        try {
+            executor.execute(() -> {
+                try { call.resolve(JSObject.fromJSONObject(task.run())); }
+                catch (Exception error) { String code = ProVaultPlugin.vaultCode(error); call.reject(code, code); }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException closed) {
+            // A late call from a view that is being closed: answer it instead of ending the app.
+            call.reject("CLOSED", "CLOSED");
+        }
     }
     @PluginMethod public void state(PluginCall call) { work(lookups, call, () -> protection.state()); }
     @PluginMethod public void update(PluginCall call) { work(downloads, call, () -> protection.update(call.getBoolean("force", false))); }

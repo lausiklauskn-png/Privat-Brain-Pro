@@ -125,7 +125,8 @@ jobs:
           if [[ "$RELEASE_CHANNEL" == stable ]]; then
             ./gradlew --no-daemon --max-workers=2 assembleRelease bundleRelease lintRelease
           else
-            ./gradlew --no-daemon --max-workers=2 assemblePreview lintPreview
+            # The App Bundle (.aab) for Google Play carries the same identity as the APK (Klaus 2026-10-21).
+            ./gradlew --no-daemon --max-workers=2 assemblePreview bundlePreview lintPreview
             ./gradlew --no-daemon --max-workers=2 -p "$RUNNER_TEMP/upgrade-probe" assembleRelease
           fi
       - name: Signatur, Paket, Name, Debug-Flag und Versionsfortschritt prüfen
@@ -172,6 +173,16 @@ jobs:
             "$signer" verify --print-certs upgrade-inputs/probe.apk > "$RUNNER_TEMP/probe-signature.txt"
             test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/probe-signature.txt")" = "$expected"
             echo "Updateprobe: $previous (Code $previous_code) → $RELEASE_TAG (Code $current)" >> "$GITHUB_STEP_SUMMARY"
+            # Google Play: signed App Bundle with the same certificate as the APK.
+            aab="release-files/Private-Brain-Pro-${RELEASE_TAG#v}.aab"
+            cp android/app/build/outputs/bundle/preview/app-preview.aab "$aab"
+            keytool -printcert -jarfile "$aab" > "$RUNNER_TEMP/aab-cert.txt"
+            aab_digest=$(sed -n 's/^[[:space:]]*SHA256: //p' "$RUNNER_TEMP/aab-cert.txt" | head -n1 | tr -d ':' | tr 'A-F' 'a-f')
+            test "$aab_digest" = "$expected"
+            test "$(grep -c 'SHA256:' "$RUNNER_TEMP/aab-cert.txt")" = 1
+            unzip -l "$aab" > "$RUNNER_TEMP/aab-files.txt"
+            grep -q 'base/manifest/AndroidManifest.xml' "$RUNNER_TEMP/aab-files.txt"
+            echo "App Bundle für Google Play: $(basename "$aab"), Zertifikat wie die APK" >> "$GITHUB_STEP_SUMMARY"
           else
             cp android/app/build/outputs/bundle/release/app-release.aab release-files/Private-Brain-Pro.aab
           fi
@@ -265,7 +276,8 @@ jobs:
             --title "Private Brain Pro $RELEASE_TAG" --generate-notes "${options[@]}"
           gh release edit "$RELEASE_TAG" --draft=false
           mkdir public-download
-          for apk in release-files/*.apk; do
+          shopt -s nullglob
+          for apk in release-files/*.apk release-files/*.aab; do
             name=$(basename "$apk")
             curl --fail --location --retry 5 --retry-all-errors \
               "https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/$name" -o "public-download/$name"

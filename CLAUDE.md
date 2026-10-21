@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Bedeutungs-Modell per Schalter, App Bundle (Klaus 2026-10-21, für .23):** Einstellungen → „🧠 Modell für die
+Bedeutungssuche“ lädt ~155 MB nativ in den App-Speicher (zuerst `family-projekt.de/models/`, sonst Hugging Face;
+Bibliothek jsDelivr/unpkg; jede Datei per SHA-256 aus `semantic-model.json`), Weitermachen nach Abbruch, Entfernen.
+`SemanticModel`, `ProSemanticPlugin`, `native/native-semantic.js`; Modul 03 byte-1:1 über `/models/`. Endet die WebView,
+öffnet die App neu und startet das Modell nicht von selbst wieder. Jeder Release trägt zusätzlich ein signiertes
+App Bundle `.aab` (gleiches Zertifikat wie die APK, Paket `…pro.preview`) für Google Play.
+[Details](docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md#stand-für-23-laden-per-schalter-klaus-2026-10-21).
+
 **🤖 KI beim Schreiben (Klaus 2026-10-21, für .23):** Im Schreiben-Fenster gegenlesen oder Entwurf schreiben lassen,
 per Mistral-Schlüssel (EU) oder Kopieren fürs eigene Abo. Vorher verdeckt Modul 25 neuen Text, Zitat und Betreff, dazu
 Namen aus An/Cc/Bcc und Zitatzeilen, Telefon mit Leerzeichen und alles, was Klaus festlegt (Liste, Vorschläge, markierter
