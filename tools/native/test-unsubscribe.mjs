@@ -105,9 +105,12 @@ try{
   ok('🌐 opens the unsubscribe page in the browser',(await calls()).find(x=>x.method==='openLink').args.url==='https://mode.invalid/newsletter/x9');
   await page.waitForFunction(()=>document.querySelector('[data-mail-unsub="info@mode.invalid"]')?.textContent.includes('Seite geöffnet'));
   await row('info@mode.invalid').getByRole('button',{name:'✓ Erledigt'}).click();
-  ok('"✓ Erledigt" marks it unsubscribed',(await row('info@mode.invalid').textContent()).includes('abgemeldet am'));
+  // Saving runs through IndexedDB before the row is drawn again: wait for the drawn result, not a fixed time.
+  await page.waitForFunction(()=>document.querySelector('[data-mail-unsub="info@mode.invalid"]')?.textContent.includes('abgemeldet am'),null,{timeout:5000}).catch(()=>{});
+  ok('"✓ Erledigt" marks it unsubscribed',(await row('info@mode.invalid').textContent()).includes('abgemeldet am')&&await page.evaluate(()=>CATALOG.filter(r=>r.mail?.from?.includes('info@mode')).every(r=>r.mailUnsubbed&&!r.mailUnsubbed.pending)));
   // automatic for senders marked "Ist Werbung"
   await panel.locator('[data-mail-unsub-ask]').getByRole('button',{name:'Ja, selbst abmelden'}).click();
+  await page.waitForFunction(()=>document.querySelector('[data-mail-unsub-auto=on]'),null,{timeout:5000}).catch(()=>{});
   ok('Consent is remembered and can be turned off',await page.evaluate(()=>localStorage.getItem('pb_mail_unsub_auto')==='true')&&await panel.locator('[data-mail-unsub-auto=on]').count()===1);
   const before=(await calls()).filter(x=>x.method==='unsubscribe').length;
   await page.evaluate(()=>PBMailIndex.sync(true));
@@ -121,6 +124,7 @@ try{
   await page.evaluate(async()=>{const r=CATALOG.find(x=>x.name==='Angebote');for(const x of CATALOG.filter(y=>y.mail?.from?.includes('news@aldi'))){x.mailUnsubbed={at:Date.now()-20*864e5,way:'oneclick'};await idbPut('catalog',x);}});
   await page.evaluate(()=>PBMailIndex.sync(true));
   await panel.locator('[data-mail-all=clean]').click();
+  await page.waitForFunction(()=>document.querySelector('[data-mail-unsub="news@aldi.invalid"]')?.textContent.includes('kommt weiter'),null,{timeout:5000}).catch(()=>{});
   ok('Mails still arriving 14 days after unsubscribing are named, with "Nochmals abmelden"',(await row('news@aldi.invalid').textContent()).includes('kommt weiter')&&await row('news@aldi.invalid').getByRole('button',{name:'Nochmals abmelden'}).count()===1);
   // refused by sender
   await page.evaluate(()=>{window.unsubStatus=500;});
