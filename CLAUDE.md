@@ -1,8 +1,9 @@
 # Private Brain Pro — Sitzungs-Anker
 
 **Knöpfe flach halten (Klaus 2026-10-21):** „flach wie bei Notion, aber nicht ganz so flach, gut lesbar“ – damit
-Mails und Dokumente Platz haben, auch am Handy. Richtwert 32 px, ohne 3D-Schatten (Vorbild Workflow PDF 30–32 px).
-Neue Knöpfe nicht größer bauen. Obere Leiste: Suche/Einstellungen nur Lupe/Zahnrad, App-Menü ☰. [Details](docs/EXPLORER-SORTIEREN-UND-INHALT.md#flache-knöpfe-klaus-2026-10-21).
+Mails und Dokumente Platz haben, auch am Handy. **Überall** in der Pro-App etwa 28 px, ohne Schatten; unsichtbare
+Tippfläche 7 px darüber/darunter (hinter Nachbarn), beim Antippen wächst der Knopf (×1,12). Symbole statt Wörter, wo
+allgemein bekannt: Lupe, Zahnrad, ☰ fürs App-Menü, ⟳ fürs Aktualisieren. Neue Knöpfe nicht größer bauen. [Details](docs/EXPLORER-SORTIEREN-UND-INHALT.md#flache-knöpfe-klaus-2026-10-21).
 
 **Ordnen, Sortieren, Suchen (2026-10-21): Plan freigegeben, Grundlage + A1 + A2 + A3 gebaut, noch keine Vorschau.**
 A3: Explorer neueste oben, ↕, „🔎 auch im Inhalt“: [Explorer](docs/EXPLORER-SORTIEREN-UND-INHALT.md).

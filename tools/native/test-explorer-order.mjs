@@ -62,7 +62,7 @@ try{
   ok('English labels',(await page.locator('#explorerOrder').textContent())==='↕ Oldest first'&&(await page.locator('.explorer-content').textContent()).includes('also in content'));
   await page.setViewportSize({width:360,height:740});
   ok('Toolbar fits a phone without sideways scrolling',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  ok('Order button and switch are flat but easy to tap (30–36 px)',await page.evaluate(()=>['#explorerOrder','.explorer-content'].every(s=>{const h=document.querySelector(s).getBoundingClientRect().height;return h>=30&&h<=36;})));
+  ok('Order button and switch are flat but easy to tap (26–32 px)',await page.evaluate(()=>['#explorerOrder','.explorer-content'].every(s=>{const h=document.querySelector(s).getBoundingClientRect().height;return h>=26&&h<=32;})));
   ok('No runtime errors',errors.length===0);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} explorer order checks passed (seeded catalog; no files written).`);

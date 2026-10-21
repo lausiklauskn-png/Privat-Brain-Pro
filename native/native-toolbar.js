@@ -9,6 +9,8 @@
   const offlineWords={de:['App vom Internet trennen','Internetzugriff wieder erlauben','Netzwerkeinstellung konnte nicht geändert werden.'],en:['Disconnect app from internet','Allow internet access again','Unable to change the network setting.'],ru:['Отключить приложение от интернета','Снова разрешить интернет','Не удалось изменить настройку сети.'],pl:['Odłącz aplikację od internetu','Ponownie zezwól na internet','Nie można zmienić ustawienia sieci.']};
   const offText=i=>(offlineWords[document.documentElement.lang]||offlineWords.de)[i];
   document.querySelector('header .badge-off')?.remove();
+  // Lets the WebView show :active (the button grows under the finger) on touch.
+  document.addEventListener('touchstart',()=>{},{passive:true});
   const text=i=>(strings[document.documentElement.lang]||strings.de)[i];
   const captions={de:['Suchen','Dateien','Explorer','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Search','Files','Explorer','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Файлы','Проводник','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Pliki','Eksplorator','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
   const pages=['search','intake','explorer','mail','dash','order','dupes','settings'];
@@ -21,7 +23,7 @@
     dupes:'m5 19 8-8m-3-1 4 4m-5 1 4 4m-9 2 1-5 4 4-5 1 M15 4l5 5m-5 0 5-5',
     settings:'m9 3-.5 2-2 1-2-.5-2 3 1.5 1.5v3L2.5 15l2 3 2-.5 2 1L9 21h4l.5-2.5 2-1 2 .5 2-3-1.5-1.5v-3L19.5 9l-2-3-2 .5-2-1L13 3Z M14.5 12a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0',
     back:'M20 12H4m6-6-6 6 6 6',next:'M4 12h16m-6-6 6 6-6 6',
-    refresh:'M20 7V3l-4 4 M20 7a9 9 0 1 0 1 8',compose:'M14 5 19 10 M4 20l5-1L21 7l-5-5L4 14Z',
+    refresh:'M20 11a8 8 0 0 0-14.9-3.9M4 4v4h4M4 13a8 8 0 0 0 14.9 3.9M20 20v-4h-4',compose:'M14 5 19 10 M4 20l5-1L21 7l-5-5L4 14Z',
     more:'M4 12h.1m7.9 0h.1m7.9 0h.1',menu:'M4 6h16M4 12h16M4 18h16',reply:'m9 5-7 7 7 7V14c6 0 10 1 13 5-1-8-5-11-13-11Z',
     forward:'m15 5 7 7-7 7V14c-6 0-10 1-13 5 1-8 5-11 13-11Z',
     trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',
