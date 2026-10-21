@@ -545,3 +545,11 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .mail-ai-chip { min-height:24px!important; padding:1px 8px!important; border-radius:12px; font-size:.82rem; }
 #pb-mail-ai-preview { max-height:30vh; overflow:auto; white-space:pre-wrap; }
 .mail-ai-limit { font-size:.8rem; }
+
+/* 🧠 Modell für die Bedeutungssuche (Klaus 2026-10-21): flache Knöpfe wie überall, schmaler Balken. */
+.pb-semantic{display:grid;gap:6px;margin:6px 0 10px;padding:10px 12px;border:1px solid var(--line,#d9d6cc);border-radius:10px}
+.pb-semantic p{margin:0;color:var(--mut2,inherit)}
+.pb-semantic-bar{height:6px;border-radius:3px;background:var(--line,#d9d6cc);overflow:hidden}
+.pb-semantic-bar>span{display:block;height:100%;width:0;background:#5b43c9;transition:width .25s}
+.pb-semantic-actions{display:flex;flex-wrap:wrap;gap:6px}
+.pb-semantic [hidden]{display:none!important}

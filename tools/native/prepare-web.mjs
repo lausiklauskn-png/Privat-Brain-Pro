@@ -38,7 +38,11 @@ html = html.replace(worker, '// Native assets are updated by Android; no service
 html = html.replace(/<script src="assets\/installieren\.js[^>]*><\/script>/, '');
 html = html.replace(/<link[^>]*rel="manifest"[^>]*>/g, '');
 const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
-html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>\n<script src="native-seal-place.js"></script>`);
+html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>\n<script src="native-semantic.js"></script>\n<script src="native-seal-place.js"></script>`);
+const start = 'initEmbedding();  // echtes Bedeutungs-Modell laden';
+if (!html.includes(start)) throw new Error('Review native model start after source changes');
+// The model starts only through the switch (native-semantic.js): when loaded, checked and not after a crash.
+html = html.replace(start, '(window.PBSemantic ? PBSemantic.start(initEmbedding) : initEmbedding());  // Bedeutungs-Modell über den Schalter');
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
 html = adaptRecovery(html);
 html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
@@ -52,8 +56,10 @@ if (!statusInit.includes(origins)) throw new Error('Review native status origin 
 statusInit = statusInit.replace(origins, 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost"];');
 await writeFile(statusPath, statusInit);
 await writeFile(join(out, 'index.html'), html);
-for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js']) await cp(join(root, 'native', name), join(out, name));
+for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js', 'native-semantic.js']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
 await bundleSemanticModel(out);
+// The same fixed hashes and sources for loading the model with the switch in the app.
+await cp(join(root, 'tools/native/semantic-model.json'), join(out, 'semantic-model.json'));
 console.log('Native web bundle prepared from explicit public inputs.');

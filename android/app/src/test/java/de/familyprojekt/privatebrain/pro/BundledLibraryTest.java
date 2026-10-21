@@ -31,4 +31,14 @@ public class BundledLibraryTest {
         assertFalse(BundledLibrary.covers(null));
         assertTrue(BundledLibrary.covers(P + "/dist/anything"));
     }
+
+    @Test public void modelAddressesMapOnlyToPlainFileNames() {
+        String M = BundledLibrary.MODEL_PREFIX;
+        assertEquals("model/config.json", BundledLibrary.modelPath(M + "config.json"));
+        assertEquals("model/onnx/model_quantized.onnx", BundledLibrary.modelPath(M + "onnx/model_quantized.onnx?download=1"));
+        assertNull(BundledLibrary.modelPath(M + "../../index.html"));
+        assertNull(BundledLibrary.modelPath(M + "a/b/c.json"));
+        assertNull(BundledLibrary.modelPath("https://localhost/models/Xenova/other-model/config.json"));
+        assertNull(BundledLibrary.modelPath("https://huggingface.co/Xenova/multilingual-e5-small/resolve/main/config.json"));
+    }
 }

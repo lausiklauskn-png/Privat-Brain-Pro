@@ -22,5 +22,23 @@
       "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
       "onnx/model_quantized.onnx": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
     }
+  },
+  "download": {
+    "comment": "Laden per Schalter in der App (Klaus 2026-10-21): Modell zuerst von Klaus' Server, sonst Hugging Face; die Bibliothek von jsDelivr, sonst unpkg. Jede Datei muss den Fingerabdruck oben tragen.",
+    "model": [
+      "https://family-projekt.de/models/{id}/{file}",
+      "https://huggingface.co/{id}/resolve/{revision}/{file}"
+    ],
+    "library": [
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@{version}/dist/{file}",
+      "https://unpkg.com/@xenova/transformers@{version}/dist/{file}"
+    ]
+  },
+  "sizes": {
+    "lib/transformers.min.js": 897938,
+    "lib/ort-wasm-simd.wasm": 10014674,
+    "lib/ort-wasm.wasm": 9223228,
+    "model/tokenizer.json": 17082730,
+    "model/onnx/model_quantized.onnx": 118308185
   }
 }
