@@ -19,9 +19,11 @@
     try{
       const result=await files.beginImport({hash,size:file.size,name:file.name,type:file.type});ticket=result.ticket;
       if(!result.stored){
+        window.PBImportStep?.(0,0);
         for(let offset=0;offset<file.size;offset+=chunk){
           const bytes=new Uint8Array(await file.slice(offset,offset+chunk).arrayBuffer());
           await files.appendImport({ticket,offset,data:b64(bytes)});
+          window.PBImportStep?.(0.4*Math.min(1,(offset+chunk)/file.size),0);   // the copy is the first 40 % of a file
         }
         await files.finishImport({ticket});
       }

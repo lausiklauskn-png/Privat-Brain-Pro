@@ -1,4 +1,5 @@
 import { adaptRecovery } from './adapt-recovery.mjs';
+import { bundleSemanticModel } from './fetch-semantic-model.mjs';
 import { cp, mkdir, readFile, rm, writeFile, lstat, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -36,7 +37,7 @@ if (!html.includes(worker)) throw new Error('Review native service-worker adapta
 html = html.replace(worker, '// Native assets are updated by Android; no service worker.');
 html = html.replace(/<script src="assets\/installieren\.js[^>]*><\/script>/, '');
 html = html.replace(/<link[^>]*rel="manifest"[^>]*>/g, '');
-const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
 html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>\n<script src="native-seal-place.js"></script>`);
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
 html = adaptRecovery(html);
@@ -53,4 +54,6 @@ await writeFile(statusPath, statusInit);
 await writeFile(join(out, 'index.html'), html);
 for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
+// Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
+await bundleSemanticModel(out);
 console.log('Native web bundle prepared from explicit public inputs.');

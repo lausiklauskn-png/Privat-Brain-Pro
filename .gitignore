@@ -27,3 +27,6 @@ android/local.properties
 keystore.properties
 .env
 .test-support/
+
+# Downloaded build inputs (meaning model, transformers.js), checked by hash
+.cache/
