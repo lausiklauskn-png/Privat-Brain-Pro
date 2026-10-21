@@ -954,6 +954,17 @@ Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/act
 Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
 
 
+## Veröffentlichte Version .22 — 2026-10-21
+
+- **Inhalt:** PR #54 (Teilen an Private Brain Pro, Ladebalken in Schritten beim Einlesen, 🤖 KI beim Schreiben mit Verdecken), Quelle main `64046085730fa56992678e1c5091e2382f360465`, VersionCode 22.
+- **Main-CI:** 39640944240 grün, einschließlich native-smoke.
+- **Release-Lauf:** [39643202428](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39643202428).
+  - Start über `workflow_dispatch` (auf Klaus' Bitte „Schick mir den Link, sobald .22 da ist“): channel `test`, tag `v0.1.0-preview.22`, `source_commit` wie oben.
+  - Erfolgreich: Signatur und Metadaten, signiertes Update .21 → .22 ohne Deinstallation, Veröffentlichung als Pre-Release.
+- **Download:** unabhängig geladen, SHA-256 `479abec09a686d9ec46231ec60ea21754054e4f301559b2d2a67aac4e5bd3fa5`, 5.774.747 Bytes. Beides stimmt mit `SHA256SUMS` und dem Digest des GitHub-Assets überein.
+- **Nicht enthalten:** Bedeutungs-Modell in der App (`enabled: false`, Absturz im Emulator; Lösung für .23).
+- **Nicht geprüft:** Messung an Klaus' Tablet, Teilen aus echten Apps, echte Mistral-Antwort.
+
 ## Veröffentlichte Version .21 — 2026-10-21
 
 - **Inhalt:** PR #53 (Newsletter abmelden, Internet-Lampe, Spracheingabe über Android, ein „Datei auswählen“), Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d`, VersionCode 21.

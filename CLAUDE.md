@@ -17,6 +17,11 @@ innerhalb einer Datei (`PBImportStep`). **In .22 noch aus** (`enabled: false`): 
 durch denselben Import wie „Dateien hinzufügen“ (`signBatch`, 80 MB je Datei, Mail-Exporte bis 200 MB), Text ohne
 Datei wird eine Textdatei. Nur `content://` der sendenden App. Tablet nicht gemessen. [Details](docs/TEILEN-EMPFANG.md).
 
+**Vorschau .22 veröffentlicht (2026-10-21).** [APK .22](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.22/Private-Brain-Pro-0.1.0-preview.22.apk) über die vorhandene App installieren, nicht deinstallieren.
+Enthält PR #54 (Teilen, Ladebalken in Schritten, KI beim Schreiben), VersionCode 22, Quelle main `64046085730fa56992678e1c5091e2382f360465` (Main-CI 39640944240 grün inkl. native-smoke).
+Release-Lauf 39643202428 erfolgreich: Signatur, Updateprobe .21 → .22, Veröffentlichung. Unabhängiger Download: SHA-256 `479abec09a686d9ec46231ec60ea21754054e4f301559b2d2a67aac4e5bd3fa5`, 5.774.747 Bytes, gleich SHA256SUMS.
+Bedeutungs-Modell **nicht** enthalten (aus; für .23: Laden per Schalter aus der App, zuerst Klaus' Server, sonst Hugging Face, plus Absturz klären). Tablet nicht gemessen.
+
 **Vorschau .21 veröffentlicht (2026-10-21).** [APK .21](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.21/Private-Brain-Pro-0.1.0-preview.21.apk) über die vorhandene App installieren, nicht deinstallieren.
 Enthält PR #53 (Newsletter abmelden, Internet-Lampe, Android-Spracheingabe, ein „Datei auswählen“), VersionCode 21, Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d` (Main-CI 39627948087 grün inkl. native-smoke).
 Release-Lauf 39630287203 (workflow_dispatch, auf Klaus' Bitte) erfolgreich: Signatur, Updateprobe .20 → .21, Veröffentlichung.
