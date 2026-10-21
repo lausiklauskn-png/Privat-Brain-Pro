@@ -1,5 +1,10 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .21 veröffentlicht (2026-10-21).** [APK .21](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.21/Private-Brain-Pro-0.1.0-preview.21.apk) über die vorhandene App installieren, nicht deinstallieren.
+Enthält PR #53 (Newsletter abmelden, Internet-Lampe, Android-Spracheingabe, ein „Datei auswählen“), VersionCode 21, Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d` (Main-CI 39627948087 grün inkl. native-smoke).
+Release-Lauf 39630287203 (workflow_dispatch, auf Klaus' Bitte) erfolgreich: Signatur, Updateprobe .20 → .21, Veröffentlichung.
+Unabhängiger Download: SHA-256 `552fa8d53a026cc339ee1fb4074aaed04d611ae1d15008e333e329d770a98b38`, 5.759.643 Bytes, gleich SHA256SUMS. Teilen an Private Brain Pro **nicht** enthalten (.22). Tablet nicht gemessen.
+
 **Vorschau .20 veröffentlicht (2026-10-21).** [APK .20](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.20/Private-Brain-Pro-0.1.0-preview.20.apk) über die vorhandene App installieren, nicht deinstallieren.
 Enthält PR #48–#52 (Alle Konten, Aufräumen, Explorer ↕/Inhalt, Kategorien, flache Knöpfe, rundes Siegel mit Mycel), VersionCode 20, Quelle main `ca2e4dccf39599b65f4de70848ef8bc6595f0e07` (Main-CI 39609980272 grün inkl. native-smoke).
 Release-Lauf 39613483028 (workflow_dispatch mit `source_commit`, von dieser Claude-Sitzung auf Klaus' ausdrückliche Bitte gestartet; der Tag-Push war gesperrt) erfolgreich: Signatur, Updateprobe .19 → .20, Veröffentlichung.

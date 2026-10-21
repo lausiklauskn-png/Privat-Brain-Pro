@@ -954,6 +954,17 @@ Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/act
 Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
 
 
+## Veröffentlichte Version .21 — 2026-10-21
+
+- **Inhalt:** PR #53 (Newsletter abmelden, Internet-Lampe, Spracheingabe über Android, ein „Datei auswählen“), Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d`, VersionCode 21.
+- **Main-CI:** 39627948087 grün, einschließlich native-smoke.
+- **Release-Lauf:** [39630287203](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39630287203).
+  - Start über `workflow_dispatch` (auf Klaus' Bitte „ich benötige die aktuelle Version zum Herunterladen“): channel `test`, tag `v0.1.0-preview.21`, `source_commit` wie oben.
+  - Erfolgreich: Signatur und Metadaten, signiertes Update .20 → .21 ohne Deinstallation, Veröffentlichung als Pre-Release.
+- **Download:** unabhängig geladen, SHA-256 `552fa8d53a026cc339ee1fb4074aaed04d611ae1d15008e333e329d770a98b38`, 5.759.643 Bytes. Beides stimmt mit `SHA256SUMS` und dem Digest des GitHub-Assets überein.
+- **Nicht enthalten:** Teilen an Private Brain Pro (geplant für .22).
+- **Nicht geprüft:** Messung an Klaus' Tablet, echtes Android-Sprachfenster, echte Mailanbieter.
+
 ## Veröffentlichte Version .20 — 2026-10-21
 
 - **Inhalt:** PR #48–#52, Quelle main `ca2e4dccf39599b65f4de70848ef8bc6595f0e07`, VersionCode 20.
