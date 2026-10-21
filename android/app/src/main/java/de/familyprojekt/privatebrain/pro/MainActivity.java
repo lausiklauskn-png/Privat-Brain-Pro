@@ -19,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProProtectPlugin.class);
         registerPlugin(ProLinksPlugin.class);
         registerPlugin(ProSpeechPlugin.class);
+        registerPlugin(ProSharePlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);
         bridge.getWebView().getSettings().setBlockNetworkLoads(AppNetwork.isOffline());
@@ -36,6 +37,8 @@ public class MainActivity extends BridgeActivity {
                 return super.shouldOverrideUrlLoading(view, request);
             }
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+                // Modul 03's library address is answered from the APK, before the offline switch: it is local.
+                if (BundledLibrary.covers(request.getUrl().toString())) return BundledLibrary.respond(getAssets(), request.getUrl().toString());
                 if (AppNetwork.isOffline() && AppNetwork.external(request.getUrl().toString()))
                     return new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "App offline",
                         java.util.Collections.emptyMap(), new java.io.ByteArrayInputStream(new byte[0]));

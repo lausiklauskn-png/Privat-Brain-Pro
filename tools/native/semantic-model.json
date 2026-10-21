@@ -1,0 +1,26 @@
+{
+  "enabled": false,
+  "enabledNote": "2026-10-21: aus für .22. Im Android-Emulator stürzte die App beim Laden des 118-MB-Modells ab (NativeSemanticTest, Lauf 39637009672, „Process crashed“). Wieder an, sobald das gelöst ist.",
+  "comment": "Bedeutungs-Modell fest in der App (Klaus 2026-10-21). Modul 03 bleibt byte-1:1; die App liefert seine jsDelivr-Adresse selbst aus. Jede Datei ist per SHA-256 festgelegt; fehlt ein Wert, druckt der Bau ihn aus (Lernlauf) und bricht im strengen Modus ab. Modell-Werte am 2026-10-21 im GitHub-Bau 39635608482 aus Hugging Face (Revision 761b726) gelesen: erstes Vertrauen, seitdem fest.",
+  "library": {
+    "package": "@xenova/transformers",
+    "version": "2.17.2",
+    "tarball": "https://registry.npmjs.org/@xenova/transformers/-/transformers-2.17.2.tgz",
+    "integrity": "sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==",
+    "files": {
+      "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+      "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
+      "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    }
+  },
+  "model": {
+    "id": "Xenova/multilingual-e5-small",
+    "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+    "files": {
+      "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+      "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "onnx/model_quantized.onnx": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193"
+    }
+  }
+}

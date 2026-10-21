@@ -1,5 +1,27 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**🤖 KI beim Schreiben (Klaus 2026-10-21, für .23):** Im Schreiben-Fenster gegenlesen oder Entwurf schreiben lassen,
+per Mistral-Schlüssel (EU) oder Kopieren fürs eigene Abo. Vorher verdeckt Modul 25 neuen Text, Zitat und Betreff, dazu
+Namen aus An/Cc/Bcc und Zitatzeilen, Telefon mit Leerzeichen und alles, was Klaus festlegt (Liste, Vorschläge, markierter
+Text). Vorschau „Das sieht die KI“, Halt bei KI-Anweisung, Rückweg mit Rückgängig. `native/native-mail-ai.js`.
+[Details](docs/KI-BEIM-SCHREIBEN.md).
+
+**Bedeutungs-Modell fest in der App, Ladebalken in Schritten (Klaus 2026-10-21, für .22):** Das Modell lud in der
+Pro-App nie (CSP sperrte jsDelivr). Jetzt bringt der Bau e5-small (118 MB) und transformers.js 2.17.2 mit
+(`tools/native/fetch-semantic-model.mjs`, Fingerabdrücke in `semantic-model.json`, auf GitHub streng);
+`BundledLibrary` beantwortet Modul 03s jsDelivr-Adresse aus dem APK, Modul 03 bleibt byte-1:1. Einlesen zeigt den Stand
+innerhalb einer Datei (`PBImportStep`). **In .22 noch aus** (`enabled: false`): im Emulator stürzte die App beim Laden des Modells ab; Lösung für .23. [Details](docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md).
+
+**Teilen an Private Brain Pro (Klaus 2026-10-21, für .22):** Die App steht in Androids Teilen-Liste
+(`ACTION_SEND`/`SEND_MULTIPLE`, `ProSharePlugin`, `ShareInbox`, `native/native-share.js`). Geteilte Dateien gehen
+durch denselben Import wie „Dateien hinzufügen“ (`signBatch`, 80 MB je Datei, Mail-Exporte bis 200 MB), Text ohne
+Datei wird eine Textdatei. Nur `content://` der sendenden App. Tablet nicht gemessen. [Details](docs/TEILEN-EMPFANG.md).
+
+**Vorschau .21 veröffentlicht (2026-10-21).** [APK .21](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.21/Private-Brain-Pro-0.1.0-preview.21.apk) über die vorhandene App installieren, nicht deinstallieren.
+Enthält PR #53 (Newsletter abmelden, Internet-Lampe, Android-Spracheingabe, ein „Datei auswählen“), VersionCode 21, Quelle main `114989a05e37a7261fbd88a98a97fbdeea29686d` (Main-CI 39627948087 grün inkl. native-smoke).
+Release-Lauf 39630287203 (workflow_dispatch, auf Klaus' Bitte) erfolgreich: Signatur, Updateprobe .20 → .21, Veröffentlichung.
+Unabhängiger Download: SHA-256 `552fa8d53a026cc339ee1fb4074aaed04d611ae1d15008e333e329d770a98b38`, 5.759.643 Bytes, gleich SHA256SUMS. Teilen an Private Brain Pro **nicht** enthalten (.22). Tablet nicht gemessen.
+
 **Vorschau .20 veröffentlicht (2026-10-21).** [APK .20](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.20/Private-Brain-Pro-0.1.0-preview.20.apk) über die vorhandene App installieren, nicht deinstallieren.
 Enthält PR #48–#52 (Alle Konten, Aufräumen, Explorer ↕/Inhalt, Kategorien, flache Knöpfe, rundes Siegel mit Mycel), VersionCode 20, Quelle main `ca2e4dccf39599b65f4de70848ef8bc6595f0e07` (Main-CI 39609980272 grün inkl. native-smoke).
 Release-Lauf 39613483028 (workflow_dispatch mit `source_commit`, von dieser Claude-Sitzung auf Klaus' ausdrückliche Bitte gestartet; der Tag-Push war gesperrt) erfolgreich: Signatur, Updateprobe .19 → .20, Veröffentlichung.

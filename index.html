@@ -1391,7 +1391,9 @@ async function signFile(entryFile, path, dirId){
     }
     return {skipped:true, hash, dup:true};
   }
+  window.PBImportStep?.(0.45, 1);
   const {text, via, needsCap, kiEntfernt} = await readContent(file, buf);
+  window.PBImportStep?.(0.85, 2);
   const toks = tokens((file.name+" ").repeat(2) + " " + text); // Name doppelt gewichten
   const rec = {
     hash, name:file.name, path: path||file.name, type:(file.type||extOf(file.name)),
@@ -1432,9 +1434,19 @@ async function signBatch(items){ // items: [{file, path, dirId}]
   const prog=$("#prog"), fill=$("#barFill"), cur=$("#progCur"), cnt=$("#progCount");
   prog.classList.add("on");
   let done=0, skipped=0, added=0, failed=0; const total=items.length;
+  // Klaus 2026-10-21: der Balken sprang erst am Ende einer Datei. Kopie und Lesen melden jetzt
+  // ihren Stand innerhalb der Datei (0…1) und den Schritt; der Balken zeigt (fertige + Anteil) / alle.
+  const STEP={de:["Kopie wird abgelegt","Text wird gelesen","wird signiert"],en:["Saving copy","Reading text","Signing"],
+    ru:["Сохраняю копию","Читаю текст","Подписываю"],pl:["Zapisywanie kopii","Czytanie tekstu","Podpisywanie"]};
+  let stepName="";
+  window.PBImportStep=(fraction, phase)=>{
+    const x=Math.max(0,Math.min(1,Number(fraction)||0));
+    fill.style.width=((done+x)/total*100).toFixed(1)+"%";
+    if(phase!==undefined){ const w=(STEP[document.documentElement.lang]||STEP.de)[phase]; if(w) cur.textContent=stepName+" · "+w+" …"; }
+  };
   for(const it of items){
     if(cancelReq) break;
-    cur.textContent = it.path||it.file.name;
+    cur.textContent = stepName = it.path||it.file.name;
     diag("Import: "+(it.path||it.file.name)+" ("+((it.file.size||0)/1048576).toFixed(2)+" MB)");
     try{
       const local = window.PBWorkspace ? await PBWorkspace.storeItem(it) : it;
@@ -1447,6 +1459,7 @@ async function signBatch(items){ // items: [{file, path, dirId}]
     cnt.textContent = `${done} / ${total}`;
     if(done%5===0) await new Promise(r=>setTimeout(r)); // UI atmen lassen
   }
+  delete window.PBImportStep;
   rebuildIndex();
   refreshAll();
   embedBackfill();   // neue Dateien mit echtem Bedeutungs-Vektor nachziehen (fail-soft)
