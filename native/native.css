@@ -404,3 +404,34 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 .mail-all-run { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin:4px 12px; padding:6px 0; border-top:1px solid var(--line); }
 .mail-all > .mail-undo { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 12px; }
 .mail-all .mail-reader-actions .mail-button[aria-pressed=true] { background:var(--mail-soft); border-color:var(--mail-accent); font-weight:bold; }
+
+/* Flache Knöpfe (Klaus 2026-10-21: „flach wie bei Notion … nicht ganz so flach, müssen gut lesbar sein“;
+   Vorbild Workflow PDF, dort 30–32 px). Mehr Platz für Mails, Texte und Dokumente, auch am Handy. */
+#mailWorkspace .mail-app .mail-button, #pb-mail-dupes .mail-button {
+  min-height:32px; padding:4px 10px; font-size:.88rem; line-height:1.2; border-radius:8px;
+  box-shadow:none; background:var(--card); border:1px solid var(--line);
+}
+#mailWorkspace .mail-app .mail-button.mail-primary, #pb-mail-dupes .mail-button.mail-primary {
+  background:var(--mail-accent); border-color:var(--mail-accent); color:var(--card); font-weight:600;
+}
+#mailWorkspace .mail-app .mail-button:active, #pb-mail-dupes .mail-button:active { transform:none; background:var(--mail-soft); }
+#mailWorkspace .mail-app .mail-button.mail-primary:active { background:var(--mail-accent); filter:brightness(.92); }
+.mail-all-list .mail-item button { min-height:48px; padding:6px; }
+.mail-all-clean-row > .mail-button { min-height:32px; margin:0 12px 6px; }
+.mail-all > input[type=search] { min-height:36px; }
+.mail-all-switch { gap:4px; padding:6px 12px; }
+#explorerOrder { min-height:32px; padding:4px 10px; box-shadow:none; }
+.explorer-content { min-height:32px; font-size:.88rem; }
+@media(max-width:650px) {
+  .mail-all-switch { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .mail-all-switch > .mail-button { flex:none; white-space:nowrap; }
+}
+@media(max-width:650px) { .mail-all-order-label { display:none; } }
+
+/* Obere Leiste flacher (Klaus 2026-10-21); Suche und Einstellungen nur als Lupe und Zahnrad,
+   das App-Menü als ☰ statt eines zweiten Zahnrads. */
+.native-toolbar-row .tab { min-height:32px; padding:4px 8px!important; }
+.native-toolbar-row .tab.compact-icon-only { padding:4px 8px!important; }
+@media(pointer:coarse) { .compact-tool { min-height:36px!important; height:36px; min-width:36px; width:36px; } }
+.mail-all > * { flex-shrink:0; }
+.mail-all > input[type=search] { height:36px; padding:4px 10px; font-size:.9rem; }

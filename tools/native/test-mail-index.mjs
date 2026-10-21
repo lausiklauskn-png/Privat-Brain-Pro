@@ -243,13 +243,14 @@ try{
   await mail.locator('.live-mail [data-mail-all=open]').click();
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.waitForFunction(()=>document.querySelector('#pb-mail-all h2')?.textContent==='All accounts');
-  ok('Switches to English without reload',(await panel.textContent()).includes('By sender'));
+  ok('Switches to English without reload',(await panel.textContent()).includes('Senders')&&(await panel.textContent()).includes('Clean up'));
   await page.evaluate(()=>{document.documentElement.lang='de';});
   await page.setViewportSize({width:360,height:740});
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));
   // Measured in one step: a background fetch may redraw the panel between finding and measuring.
-  const small=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all .mail-all-switch .mail-button')].map(b=>b.offsetHeight));
-  ok('Buttons stay large enough for one-handed use ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=40));
+  const small=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all .mail-all-switch .mail-button')].map(b=>Math.round(b.getBoundingClientRect().height)));
+  ok('Phone: view buttons stay in one row and are not cut off',await page.evaluate(()=>{const row=document.querySelector('#pb-mail-all .mail-all-switch'),b=[...row.children];return new Set(b.map(x=>Math.round(x.getBoundingClientRect().top))).size===1&&row.clientHeight>=b[0].getBoundingClientRect().height;}));
+  ok('Buttons are flat but still easy to tap, 30–36 px ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=30&&h<=36));
   await panel.getByRole('button',{name:'← Zurück zum Postfach'}).click();
   ok('"Zurück zum Postfach" returns to the normal mailbox',await panel.isHidden()&&await mail.locator('.live-mail').isVisible());
   ok('No runtime errors',errors.length===0);

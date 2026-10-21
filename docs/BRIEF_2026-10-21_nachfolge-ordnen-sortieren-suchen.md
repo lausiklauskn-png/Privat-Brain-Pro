@@ -21,7 +21,8 @@ bei grünen relevanten Prüfungen (CLAUDE.md, „Pro-App: Stand 2026-10-19“).
 | Grundlage: alle Konten, 12 Monate, automatisch, Überschreiben statt Doppeln | gebaut, CI grün (inkl. native-smoke) |
 | A1: Bündel nach Absender, ↕, Wortsuche über alle Konten | gebaut, CI grün |
 | A2: Newsletter nach Ablaufdatum, Papierkorb + Rückgängig, Ist Werbung/wichtig | gebaut, lokal grün; CI siehe PR #48 |
-| A3: Dateien neueste oben/umkehrbar, Inhaltssuche | offen |
+| A3: Dateien neueste oben/umkehrbar, Inhaltssuche; „Alle Konten“-Mails nicht im Explorer | gebaut, lokal grün |
+| Flache Knöpfe (Klaus 2026-10-21) im Postfach, Alle Konten, Explorer-↕ | gebaut; Regel oben in CLAUDE.md |
 | A4: Kategorien per Vorschlag (Rechnungen, Gehalt, Gesundheit, Verträge, Versicherung) | offen |
 | A5: Übergabe aus Workflow PDF Pro über Android-Teilen (`ACTION_SEND`, nur PDF) | offen, Sendeseite baut Codex |
 | A6: Bedeutungssuche nur in Mails | offen, wartet auf Modell im APK |
@@ -68,9 +69,8 @@ offen und die CI grün, zusammenführen; sonst zuerst die CI reparieren.
 
 1. PR #48 zusammenführen, sobald die CI grün ist. Codex oder Klaus um eine Vorschau bitten.
    Die Versionsnummer wird in einem eigenen kleinen PR erhöht (wie PR #46).
-2. A3 (Explorer): ↕ bei „Datum“, Standard neueste oben, „🔎 auch im Inhalt“ über den
-   Katalogtext. `assets/workspace.js` `explorerSort`; Rückweg muss die Sortierung behalten
-   (`explorerState`).
+2. Klaus fragen, ob die flachen Knöpfe auch im übrigen App-Rahmen (Kopfleiste, Einstellungen,
+   Dateien hinzufügen) gelten sollen; bisher nur Postfach, „Alle Konten“, Explorer-↕.
 3. A4: Kategorien per Vorschlag, nur Ansicht, „Gehört nicht hierher“ lernt.
 4. Handbuch-Kapitel in PR #47 nachtragen.
 5. Am Gerät zu prüfen (Klaus): echter Erstabruf mit allen Konten, Dauer, „Beim Anbieter öffnen“,

@@ -33,9 +33,11 @@
     search: ['In allen Mails suchen', 'Search all emails', 'Поиск по всем письмам', 'Szukaj we wszystkich wiadomościach'],
     hits: ['Treffer', 'results', 'найдено', 'wyników'],
     list: ['📋 Liste', '📋 List', '📋 Список', '📋 Lista'],
-    senders: ['👤 Nach Absender', '👤 By sender', '👤 По отправителю', '👤 Według nadawcy'],
-    newest: ['↕ Neueste oben', '↕ Newest first', '↕ Сначала новые', '↕ Najnowsze u góry'],
-    oldest: ['↕ Älteste oben', '↕ Oldest first', '↕ Сначала старые', '↕ Najstarsze u góry'],
+    senders: ['👤 Absender', '👤 Senders', '👤 Отправители', '👤 Nadawcy'],
+    newest: ['Neueste', 'Newest', 'Новые', 'Najnowsze'],
+    oldest: ['Älteste', 'Oldest', 'Старые', 'Najstarsze'],
+    newestLong: ['Neueste oben', 'Newest first', 'Сначала новые', 'Najnowsze u góry'],
+    oldestLong: ['Älteste oben', 'Oldest first', 'Сначала старые', 'Najstarsze u góry'],
     back: ['← Alle Absender', '← All senders', '← Все отправители', '← Wszyscy nadawcy'],
     backList: ['← Zurück', '← Back', '← Назад', '← Wstecz'],
     empty: ['Keine Mails gefunden.', 'No emails found.', 'Писем не найдено.', 'Nie znaleziono wiadomości.'],
@@ -521,8 +523,10 @@
     const modeClean = button(t('clean'), () => { view.mode = 'clean'; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); });
     modeList.setAttribute('aria-pressed', String(view.mode === 'list')); modeSenders.setAttribute('aria-pressed', String(view.mode === 'senders')); modeClean.setAttribute('aria-pressed', String(view.mode === 'clean'));
     modeClean.dataset.mailAll = 'clean'; modeList.dataset.mailAll = 'list'; modeSenders.dataset.mailAll = 'senders';
-    const order = button(view.order === 'newest' ? t('newest') : t('oldest'), () => { view.order = view.order === 'newest' ? 'oldest' : 'newest'; store(KEYS.view, view); draw(); });
-    order.dataset.mailAll = 'order';
+    const order = button('↕ ', () => { view.order = view.order === 'newest' ? 'oldest' : 'newest'; store(KEYS.view, view); draw(); });
+    // On a phone only the arrow shows; the full name stays for tooltips and screen readers.
+    order.append(el('span', 'mail-all-order-label', view.order === 'newest' ? t('newest') : t('oldest')));
+    order.dataset.mailAll = 'order'; order.title = view.order === 'newest' ? t('newestLong') : t('oldestLong'); order.setAttribute('aria-label', order.title);
     switches.append(modeList, modeSenders, modeClean, order);
     panel.append(search, switches);
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
