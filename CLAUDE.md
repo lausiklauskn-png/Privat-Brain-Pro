@@ -1,5 +1,12 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .27 veröffentlicht (2026-10-22).** [APK .27](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.27/Private-Brain-Pro-0.1.0-preview.27.apk) über die vorhandene App installieren; daneben `.aab`.
+PR #64, VersionCode 27, Quelle main `7530505d08f8409498972061e4a66295993340ad` (Main-CI 39807480053 Versuch 2 grün inkl. native-smoke; Versuch 1 hing in „Browser-Engine installieren“ für WebKit). Release-Lauf 39818777974: Signatur, Updateprobe .26 → .27, Veröffentlichung.
+APK SHA-256 `8011f622…5bc52a9c` (7.375.750 Bytes), AAB `dde15fd6…00744481b` (7.195.337 Bytes), gleich SHA256SUMS.
+Enthält: 🧠 Passwort-Probe und 🧩 Ersatzschlüssel fürs Studio. Tablet nicht gemessen. Lehre: ein Neustart der Main-CI setzt
+`native-smoke` zurück, der Release-Gate verlangt es grün; erst nach dem Neustart-Lauf veröffentlichen.
+Geschenkseite für Jens mit allen Apps: `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`. Nächste Sitzung: [Windows](BRIEF_NACHFOLGE_2026-10-22_WINDOWS.md).
+
 **Vorschau .26 veröffentlicht (2026-10-22).** [APK .26](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.26/Private-Brain-Pro-0.1.0-preview.26.apk) über die vorhandene App installieren; daneben `.aab`.
 PR #63, VersionCode 26, Quelle main `e21b286ff9773580505fd4665f7405ede67a6855` (Main-CI 39801158046 grün inkl. native-smoke). Release-Lauf 39803351849: Signatur, Updateprobe .25 → .26, Veröffentlichung.
 APK SHA-256 `824497dd…af4de30b` (7.372.114 Bytes), AAB `24757fe7…dd937c4ca` (7.191.695 Bytes), gleich SHA256SUMS.

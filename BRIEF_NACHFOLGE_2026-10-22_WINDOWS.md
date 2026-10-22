@@ -82,7 +82,7 @@ Dazu: Kennung `de.familyprojekt.privatebrain.pro` (eigene feste Windows-Kennung)
 
 - Link für Klaus: direkter Download der Setup.exe plus Hinweis SmartScreen („Weitere Informationen“ →
   „Trotzdem ausführen“).
-- Geschenkseite „Alle meine Apps“ (Claude-Artefakt aus der .27-Sitzung, Link in Klaus' Unterhaltung) bekommt bei
+- Geschenkseite „Für Jens“ (Claude-Artefakt `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`) bekommt bei
   Private Brain Pro unter „Windows“ den Download statt „kommt bald“. Updateseite
   `https://claude.ai/artifact/DY4mXc3ymT4iENCXyzFp6C` um eine Windows-Kachel ergänzen.
 - `CLAUDE.md`-Anker, Baustand `docs/BAUSTAND-WINDOWS.md`, `README.md` nachziehen.
