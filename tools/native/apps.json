@@ -1,0 +1,9 @@
+{
+  "_": "Klaus' tools bundled in the app (Klaus 2026-10-22). Copied unchanged from their repositories by tools/native/vendor-apps.mjs; the small in-app adjustments happen only in www/ while packaging (tools/native/prepare-web.mjs).",
+  "apps": [
+    { "id": "pinnwand", "dir": "kimboard", "repo": "lausiklauskn-png/Kimboard",
+      "files": ["index.html", "sicherheit.html", "impressum.html", "assets", "modules", "sbkim/spore.json", "sbkim/sperrliste.json", "icon-128.png", "icon-192.png", "LICENSE", "RECHTE.md"] },
+    { "id": "suche", "dir": "kimseek", "repo": "lausiklauskn-png/Kimseek",
+      "files": ["index.html", "sicherheit.html", "impressum.html", "assets", "modules", "sbkim/spore.json", "icon-192.png", "LICENSE", "RECHTE.md", "THIRD_PARTY.md"] }
+  ]
+}
