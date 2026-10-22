@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Klaus' Test .23 am Tablet (2026-10-22), Reparaturen für .24:** Modell laden klappt am Tablet. 🎤: die WebView meldet
+`webkitSpeechRecognition`, verweigert es aber („Mikrofon nicht verfügbar oder abgelehnt“) → in der App immer Androids
+Sprachfenster (`native-speech.js`). Mehrere Mails löschen/verschieben dauerte Minuten (je Mail eine Anmeldung) → ein
+Aufruf, eine Verbindung (`MailEngine.actions`, Route `messages/batch/action`, je 200). „Bedeutungssuche“ führt, solange
+das Modell fehlt, direkt zum Schalter in den Einstellungen. Gmail: „Löschen“ verschiebt in den Ordner mit `\\Trash`
+(Gmails Papierkorb); ob Klaus' 50 Mails dort liegen, ist am Gerät noch zu sehen. Probe-IMAP-Server kann kein MOVE:
+Sammel-Verschieben nur im Browser-Test geprüft.
+
 **Vorschau .23 veröffentlicht (2026-10-21).** [APK .23](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.23/Private-Brain-Pro-0.1.0-preview.23.apk) über die vorhandene App installieren, nicht deinstallieren; daneben `Private-Brain-Pro-0.1.0-preview.23.aab` für Google Play.
 PR #56, VersionCode 23, Quelle main `8ee68c64ada630f63d7ca450be16faf265e87e2b` (Main-CI 39661901310 grün inkl. native-smoke mit echtem Modell-Download und Offline-Start). Release-Lauf 39664148878: Signatur, Updateprobe .22 → .23, Veröffentlichung.
 APK SHA-256 `bc4d52ad…cf19be3` (5.788.208 Bytes), AAB `97aeddaa…1dda5192` (5.601.799 Bytes), beide gleich SHA256SUMS. Tablet nicht gemessen.

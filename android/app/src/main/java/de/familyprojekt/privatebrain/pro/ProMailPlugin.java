@@ -105,6 +105,8 @@ public class ProMailPlugin extends Plugin {
         engine.action(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1), required(call, "action"), call.getString("target", ""));
         return new JSONObject().put("ok", true);
     }); }
+    @PluginMethod public void actions(PluginCall call) { perform(call, () ->
+        engine.actions(account(call), required(call, "folder"), required(call, "validity"), call.getData().optJSONArray("uids"), required(call, "action"), call.getString("target", ""))); }
     @PluginMethod public void unsubscribe(PluginCall call) { perform(call, () -> { Unsubscribe.Result r = Unsubscribe.oneClick(required(call, "url"), url -> (java.net.HttpURLConnection) url.openConnection()); return new JSONObject().put("ok", r.ok).put("status", r.status); }); }
     @PluginMethod public void send(PluginCall call) { perform(call, () -> engine.send(account(call), draft(call))); backup(); }
     @PluginMethod public void saveDraft(PluginCall call) { perform(call, () -> { engine.saveDraft(account(call), draft(call)); return new JSONObject().put("ok", true); }); backup(); }

@@ -21,7 +21,8 @@
       crashed: 'Beim letzten Start des Modells wurde die Ansicht beendet (vermutlich zu wenig Speicher). Es startet deshalb nicht von selbst.',
       offline: 'Die App ist vom Internet getrennt. Zum Laden die Lampe oben auf Grün stellen.',
       space: 'Zu wenig freier Speicher auf dem Gerät.', failed: 'Laden hat nicht geklappt: {why}. Nochmal „Modell laden“ tippen, es geht dort weiter.',
-      confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.' },
+      confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.',
+      goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. Tippen führt zum Laden.' },
     en: { title: '🧠 Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
       none: 'Not loaded yet. About {mb} MB once, ideally on Wi-Fi. Works without internet afterwards.',
       partial: 'Partly loaded ({done} of {mb} MB). “Load model” continues there.',
@@ -31,7 +32,8 @@
       crashed: 'The view ended while the model was starting last time (probably not enough memory). It will not start by itself.',
       offline: 'The app is cut off from the internet. Turn the lamp at the top green to load.',
       space: 'Not enough free storage on the device.', failed: 'Loading failed: {why}. Tap “Load model” again, it continues there.',
-      confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.' },
+      confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.',
+      goLoad: 'The meaning-search model is not loaded yet. Tap to load it.' },
     ru: { title: '🧠 Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
       none: 'Ещё не загружена. Один раз около {mb} МБ, лучше по Wi-Fi. Потом работает без интернета.',
       partial: 'Загружено частично ({done} из {mb} МБ). «Загрузить модель» продолжит.',
@@ -41,7 +43,8 @@
       crashed: 'При последнем запуске модели окно закрылось (вероятно, мало памяти). Сама она больше не запускается.',
       offline: 'Приложение отключено от интернета. Для загрузки переключите лампу вверху на зелёный.',
       space: 'Недостаточно свободной памяти.', failed: 'Загрузка не удалась: {why}. Нажмите «Загрузить модель» ещё раз.',
-      confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.' },
+      confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.',
+      goLoad: 'Модель для поиска по смыслу ещё не загружена. Нажмите, чтобы загрузить.' },
     pl: { title: '🧠 Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
       none: 'Jeszcze nie pobrany. Jednorazowo około {mb} MB, najlepiej przez Wi-Fi. Potem działa bez internetu.',
       partial: 'Pobrano częściowo ({done} z {mb} MB). „Pobierz model” kontynuuje.',
@@ -51,7 +54,8 @@
       crashed: 'Przy ostatnim uruchomieniu modelu widok został zamknięty (prawdopodobnie za mało pamięci). Nie uruchomi się sam.',
       offline: 'Aplikacja jest odłączona od internetu. Aby pobrać, przełącz lampkę u góry na zielono.',
       space: 'Za mało wolnego miejsca.', failed: 'Pobieranie nie powiodło się: {why}. Stuknij „Pobierz model” ponownie.',
-      confirmRemove: 'Usunąć model z urządzenia? Wyszukiwanie wróci do słów kluczowych.' }
+      confirmRemove: 'Usunąć model z urządzenia? Wyszukiwanie wróci do słów kluczowych.',
+      goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Stuknij, aby pobrać.' }
   };
   const t = (k, v = {}) => ((W[document.documentElement.lang] || W.de)[k] || W.de[k]).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
   const mb = n => String(Math.round((n || 0) / 1048576));
@@ -102,12 +106,31 @@
     btn('cancel').hidden = !running;
     btn('retry').hidden = !(state.installed && (state.crashes > 0 || phase === 'startFailed'));
     btn('remove').hidden = running || !(state.installed || state.present > 0);
+    const meaning = document.querySelector('#mode [data-m="mean"]');
+    if (meaning) { if (state.installed) meaning.removeAttribute('data-semantic-missing'); else { meaning.dataset.semanticMissing = '1'; meaning.title = t('goLoad'); } }
     box.dataset.state = running ? 'loading' : state.installed ? (state.crashes > 0 ? 'crashed' : phase || 'ready') : state.present > 0 ? 'partial' : 'none';
   }
 
   async function refresh() { try { state = await plugin.getState(); } catch {} render(); }
 
   plugin.addListener?.('progress', p => { live = p; render(); });
+
+  // Klaus 2026-10-22: a new user would not know where to load the model. While it is missing,
+  // "Bedeutungssuche" leads straight to the switch in the settings.
+  function showSwitch() {
+    if (window.PBWorkspace?.navigate) window.PBWorkspace.navigate('settings');
+    else document.querySelector('[data-tab="settings"]')?.click();
+    const box = panel(); if (!box) return;
+    box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    box.classList.remove('pb-semantic-flash'); void box.offsetWidth; box.classList.add('pb-semantic-flash');
+    box.querySelector('[data-semantic="load"]:not([hidden])')?.focus({ preventScroll: true });
+  }
+  document.addEventListener('click', event => {
+    const meaning = event.target.closest?.('#mode [data-m="mean"]');
+    if (!meaning || state.installed) return;
+    // The search mode still switches to meaning (keywords stand in until the model is there).
+    setTimeout(showSwitch, 0);
+  }, true);
 
   async function load() {
     message = ''; live = { done: state.present, total: state.total, source: '' }; render();
@@ -153,7 +176,7 @@
       // Not loaded (or stopped after a crash): the search stays on keywords, without waiting.
       try { if (typeof EMBED === 'object') { EMBED.tried = true; renderEmbFlag(); } } catch {}
     },
-    refresh, get state() { return state; }
+    refresh, showSwitch, get state() { return state; }
   };
   const boot = () => refresh();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();

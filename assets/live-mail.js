@@ -679,7 +679,11 @@
     const chosen=items.filter(item=>!item.local&&selected.has(item.uid));if(!chosen.length)return;
     if(!leave()||(type==='delete'&&!confirm(T('remove')+' ('+chosen.length+')?')))return;
     const context={account,folder,validity};let failed=null;
-    try{for(const item of chosen)await api('/'+encodeURIComponent(context.account)+'/messages/'+item.uid+'/action',{folder:context.folder,validity:context.validity,action:type,...(target?{target}:{})});}
+    try{
+      // On the device: all chosen mails in one call and one connection (in steps of 200), not one login per mail.
+      if(native)for(let i=0;i<chosen.length;i+=200)await api('/'+encodeURIComponent(context.account)+'/messages/batch/action',{folder:context.folder,validity:context.validity,action:type,uids:chosen.slice(i,i+200).map(item=>item.uid),...(target?{target}:{})});
+      else for(const item of chosen)await api('/'+encodeURIComponent(context.account)+'/messages/'+item.uid+'/action',{folder:context.folder,validity:context.validity,action:type,...(target?{target}:{})});
+    }
     catch(error){failed=error;}
     finally{await loadList();}
     if(failed)throw failed;

@@ -13,8 +13,10 @@ try{
   const page=await browser.newPage({viewport:{width:360,height:780}}),url=`http://127.0.0.1:${server.address().port}/`,errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
   await page.addInitScript(()=>{
-    // The Android WebView has no Web Speech API.
-    delete window.SpeechRecognition;delete window.webkitSpeechRecognition;
+    // The Android WebView announces webkitSpeechRecognition but refuses it (Klaus 2026-10-22:
+    // "Mikrofon nicht verfügbar oder abgelehnt"). The app must use Android's dialog anyway.
+    delete window.SpeechRecognition;
+    window.webkitSpeechRecognition=function(){const r={start(){setTimeout(()=>r.onerror&&r.onerror({error:'not-allowed'}),10);},stop(){},abort(){}};return r;};
     window.speechCalls=[];window.speechAnswer={cancelled:false,text:'Rechnung Zahnarzt'};
     window.Capacitor={Plugins:{ProSpeech:{async listen(args){window.speechCalls.push(args);await new Promise(r=>setTimeout(r,80));
       if(window.speechAnswer==='missing'){const e=new Error('No speech recognizer');e.code='SPEECH_UNAVAILABLE';throw e;}return window.speechAnswer;}}}};

@@ -4,7 +4,9 @@
 (() => {
   'use strict';
   const plugin = window.Capacitor?.Plugins?.ProSpeech;
-  if (window.SpeechRecognition || window.webkitSpeechRecognition || !plugin) return;
+  // Klaus 2026-10-22: the WebView announces webkitSpeechRecognition but refuses it ("Mikrofon nicht verfügbar oder
+  // abgelehnt"). In the app, Android's own speech dialog is used always.
+  if (!plugin) return;
   const LANG = { de: 'de-DE', en: 'en-US', ru: 'ru-RU', pl: 'pl-PL' };
   const WORDS = {
     de: ['Sprechen Sie jetzt', 'Auf diesem Gerät ist keine Spracherkennung eingerichtet. Tippen geht immer.', 'Spracheingabe hat nicht geklappt.'],
