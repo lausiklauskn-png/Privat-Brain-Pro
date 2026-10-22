@@ -32,6 +32,25 @@
   }
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   render();
+  // Klaus 2026-10-22: the diagnosis log stays in the app but is hidden; seven taps on the version line bring it back
+  // (and hide it again) when we need it to improve the app. It keeps recording either way.
+  const diagBox = document.getElementById('diagLog')?.closest('.note');
+  const diagShown = () => { try { return localStorage.getItem('pb_diag_visible') === '1'; } catch { return false; } };
+  const diagApply = () => { if (diagBox) diagBox.hidden = !diagShown(); };
+  diagApply();
+  let taps = 0, tapTimer = 0;
+  status.addEventListener('click', () => {
+    taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { taps = 0; }, 2500);
+    if (taps < 7) return;
+    taps = 0;
+    try { localStorage.setItem('pb_diag_visible', diagShown() ? '0' : '1'); } catch { /* stays as it is */ }
+    diagApply();
+    const on = { de: '🔬 Analyse eingeblendet', en: '🔬 Diagnosis shown', ru: '🔬 Диагностика показана', pl: '🔬 Diagnostyka widoczna' };
+    const off = { de: '🔬 Analyse ausgeblendet', en: '🔬 Diagnosis hidden', ru: '🔬 Диагностика скрыта', pl: '🔬 Diagnostyka ukryta' };
+    const lang = document.documentElement.lang;
+    if (typeof window.toast === 'function') window.toast((diagShown() ? on : off)[lang] || (diagShown() ? on : off).de);
+    if (diagShown()) diagBox?.scrollIntoView({ block: 'center' });
+  });
   if (nativeMail) {
     const licenses = document.createElement('a');
     licenses.href = 'assets/licenses/mail.html';

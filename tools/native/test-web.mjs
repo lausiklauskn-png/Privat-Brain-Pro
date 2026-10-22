@@ -73,6 +73,13 @@ try {
     ok(`${lang}: larger fonts keep all eight names beside icons and inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===8&&nodes.every(e=>{if(e.classList.contains('compact-icon-only'))return !e.querySelector('.compact-caption')&&e.title.trim()&&['search','settings'].includes(e.dataset.tab);const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
     await page.evaluate(()=>document.documentElement.style.fontSize='');
   }
+  // Klaus 2026-10-22: the diagnosis stays in the app but hidden; seven taps on the version line show it.
+  const diagHidden=()=>page.evaluate(()=>document.getElementById('diagLog').closest('.note').hidden);
+  ok('The diagnosis box is hidden by default',await diagHidden());
+  await page.evaluate(()=>{const s=document.querySelector('.native-status');for(let i=0;i<7;i++)s.click();});
+  ok('Seven taps on the version line show it again',!(await diagHidden()));
+  await page.evaluate(()=>{const s=document.querySelector('.native-status');for(let i=0;i<7;i++)s.click();});
+  ok('Seven more taps hide it again',await diagHidden());
   // Name the errors: the WebKit job otherwise fails without saying why.
   ok('No runtime errors'+(errors.length?': '+errors.join(' | '):''),errors.length===0);
   ok('No service worker registered',await page.evaluate(async()=>(await navigator.serviceWorker.getRegistrations()).length===0));

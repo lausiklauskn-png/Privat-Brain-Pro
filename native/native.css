@@ -581,3 +581,4 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .pb-check-entrance-list li>span{flex:1 1 220px;overflow-wrap:anywhere}
 .pb-check-entrance-list li[data-check="found"]>span{color:#b3261e;font-weight:600}
 .pb-check-entrance-list li[data-check="partly"]>span{color:#8a5a00}
+#panel-settings .note[hidden]{display:none!important}
