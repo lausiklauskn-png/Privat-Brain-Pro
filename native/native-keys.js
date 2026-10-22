@@ -1,27 +1,34 @@
 /* Links to get the AI keys (Klaus 2026-10-22: "Nutzer wissen oft nicht, wie schnell sie zu den entsprechenden Stellen
-   kommen"). Next to the key field in the settings: one tap opens the provider's key page in the browser.
+   kommen" · "direkt einen Link zu Google Vision … direkt auf die Seite, wo ich die Keys erstellen kann").
+   Next to the key field in the settings: one tap opens the provider's page in the browser. Google has no single key page:
+   step 1 turns on the Cloud Vision API in a project, step 2 is the page where the API key is created.
    Nothing is filled in automatically; the key is still typed or pasted by the person. */
 (() => {
   'use strict';
   const links = window.Capacitor?.Plugins?.ProLinks;
   if (typeof links?.open !== 'function') return;
   const PAGES = {
-    mistral: 'https://console.mistral.ai/api-keys',
-    google: 'https://console.cloud.google.com/apis/credentials'
+    googleVision: 'https://console.cloud.google.com/flows/enableapi?apiid=vision.googleapis.com',
+    googleKey: 'https://console.cloud.google.com/apis/credentials',
+    mistral: 'https://console.mistral.ai/api-keys'
   };
   const W = {
-    de: { mistral: 'Mistral-Schlüssel holen', google: 'Google-Schlüssel holen',
-      hintMistral: 'Bei Mistral anmelden, „API Keys“ → „Create new key“, den Schlüssel kopieren und oben einfügen.',
-      hintGoogle: 'Bei Google Cloud anmelden, die „Cloud Vision API“ einschalten, dann „Anmeldedaten erstellen“ → „API-Schlüssel“, kopieren und oben einfügen.' },
-    en: { mistral: 'Get Mistral key', google: 'Get Google key',
-      hintMistral: 'Sign in at Mistral, "API Keys" → "Create new key", copy the key and paste it above.',
-      hintGoogle: 'Sign in at Google Cloud, turn on the "Cloud Vision API", then "Create credentials" → "API key", copy and paste it above.' },
-    ru: { mistral: 'Получить ключ Mistral', google: 'Получить ключ Google',
-      hintMistral: 'Войдите в Mistral, «API Keys» → «Create new key», скопируйте ключ и вставьте его выше.',
-      hintGoogle: 'Войдите в Google Cloud, включите «Cloud Vision API», затем «Создать учётные данные» → «Ключ API», скопируйте и вставьте выше.' },
-    pl: { mistral: 'Pobierz klucz Mistral', google: 'Pobierz klucz Google',
-      hintMistral: 'Zaloguj się w Mistral, „API Keys” → „Create new key”, skopiuj klucz i wklej go powyżej.',
-      hintGoogle: 'Zaloguj się w Google Cloud, włącz „Cloud Vision API”, potem „Utwórz dane logowania” → „Klucz API”, skopiuj i wklej powyżej.' }
+    de: { googleVision: '① Google Vision einschalten', googleKey: '② Google-Schlüssel erstellen', mistral: 'Mistral-Schlüssel holen',
+      hintGoogle: 'Google Vision: ① tippen, Projekt wählen, „Aktivieren“. Dann ② tippen, „Anmeldedaten erstellen“ → „API-Schlüssel“, kopieren und oben einfügen. Google verlangt dafür ein Konto mit Zahlungsangabe; die ersten 1.000 Seiten im Monat sind laut Google kostenlos.',
+      hintMistral: 'Mistral: anmelden, „Create new key“, kopieren und oben einfügen.',
+      wrongKey: '⚠ Das sieht nicht wie ein Google-Schlüssel aus (sie beginnen mit „AIza“). Bitte den Google-Schlüssel einfügen, sonst geht der falsche Schlüssel an Google.' },
+    en: { googleVision: '① Turn on Google Vision', googleKey: '② Create Google key', mistral: 'Get Mistral key',
+      hintGoogle: 'Google Vision: tap ①, choose a project, "Enable". Then tap ②, "Create credentials" → "API key", copy and paste it above. Google asks for an account with billing details; according to Google the first 1,000 pages a month are free.',
+      hintMistral: 'Mistral: sign in, "Create new key", copy and paste it above.',
+      wrongKey: '⚠ This does not look like a Google key (they start with "AIza"). Please paste the Google key, otherwise the wrong key goes to Google.' },
+    ru: { googleVision: '① Включить Google Vision', googleKey: '② Создать ключ Google', mistral: 'Получить ключ Mistral',
+      hintGoogle: 'Google Vision: нажмите ①, выберите проект, «Включить». Затем ②, «Создать учётные данные» → «Ключ API», скопируйте и вставьте выше. Google требует аккаунт с платёжными данными; по данным Google первые 1000 страниц в месяц бесплатны.',
+      hintMistral: 'Mistral: войдите, «Create new key», скопируйте и вставьте выше.',
+      wrongKey: '⚠ Это не похоже на ключ Google (он начинается с «AIza»). Вставьте ключ Google, иначе в Google уйдёт чужой ключ.' },
+    pl: { googleVision: '① Włącz Google Vision', googleKey: '② Utwórz klucz Google', mistral: 'Pobierz klucz Mistral',
+      hintGoogle: 'Google Vision: dotknij ①, wybierz projekt, „Włącz”. Potem ②, „Utwórz dane logowania” → „Klucz API”, skopiuj i wklej powyżej. Google wymaga konta z danymi płatności; według Google pierwsze 1000 stron miesięcznie jest bezpłatne.',
+      hintMistral: 'Mistral: zaloguj się, „Create new key”, skopiuj i wklej powyżej.',
+      wrongKey: '⚠ To nie wygląda na klucz Google (zaczyna się od „AIza”). Wklej klucz Google, inaczej do Google trafi zły klucz.' }
   };
   const t = k => (W[document.documentElement.lang] || W.de)[k];
 
@@ -32,24 +39,33 @@
     if (!row) {
       row = document.createElement('div');
       row.id = 'pb-ai-key-links'; row.className = 'pb-ai-key-links';
-      for (const provider of Object.keys(PAGES)) {
+      for (const page of Object.keys(PAGES)) {
         const b = document.createElement('button');
-        b.type = 'button'; b.className = 'ghost'; b.dataset.keyPage = provider;
-        b.addEventListener('click', event => { if (event.isTrusted) void links.open({ url: PAGES[provider] }); });
+        b.type = 'button'; b.className = 'ghost'; b.dataset.keyPage = page;
+        b.addEventListener('click', event => { if (event.isTrusted) void links.open({ url: PAGES[page] }); });
         row.append(b);
       }
-      const hint = document.createElement('p'); hint.className = 'pb-ai-key-hint'; row.append(hint);
+      for (const cls of ['pb-ai-key-hint', 'pb-ai-key-hint', 'pb-ai-key-warn']) {
+        const p = document.createElement('p'); p.className = cls; row.append(p);
+      }
       field.after(row);
     }
+    // All buttons stay visible: Google for the text recognition, Mistral also for "KI beim Schreiben".
+    for (const b of row.querySelectorAll('[data-key-page]')) b.textContent = '↗ ' + t(b.dataset.keyPage);
+    const [hintGoogle, hintMistral] = row.querySelectorAll('.pb-ai-key-hint');
+    hintGoogle.dataset.for = 'google'; hintGoogle.textContent = t('hintGoogle');
+    hintMistral.dataset.for = 'mistral'; hintMistral.textContent = t('hintMistral');
     const chosen = document.getElementById('aiProvider')?.value || '';
-    for (const b of row.querySelectorAll('[data-key-page]')) {
-      b.textContent = '↗ ' + t(b.dataset.keyPage);
-      // Show the page for the chosen provider; with none chosen, both (the Mistral key also serves "KI beim Schreiben").
-      b.hidden = Boolean(chosen) && b.dataset.keyPage !== chosen;
-    }
-    row.querySelector('.pb-ai-key-hint').textContent = chosen === 'google' ? t('hintGoogle') : t('hintMistral');
+    const key = (document.getElementById('aiKey')?.value || '').trim();
+    const warn = row.querySelector('.pb-ai-key-warn');
+    warn.hidden = !(chosen === 'google' && key && !key.startsWith('AIza'));
+    warn.textContent = t('wrongKey');
   }
-  const start = () => { render(); document.getElementById('aiProvider')?.addEventListener('change', render); };
+  const start = () => {
+    render();
+    document.getElementById('aiProvider')?.addEventListener('change', render);
+    document.getElementById('aiKey')?.addEventListener('input', render);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })();

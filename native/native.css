@@ -561,3 +561,4 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .pb-ai-key-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px}
 .pb-ai-key-links [hidden]{display:none!important}
 .pb-ai-key-hint{flex-basis:100%;margin:0;font-size:.84rem;color:var(--mut,inherit)}
+.pb-ai-key-warn{flex-basis:100%;margin:0;font-size:.84rem;color:#b3261e;font-weight:600}
