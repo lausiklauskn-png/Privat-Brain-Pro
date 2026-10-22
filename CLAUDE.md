@@ -1,5 +1,22 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .25 veröffentlicht (2026-10-22).** [APK .25](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.25/Private-Brain-Pro-0.1.0-preview.25.apk) über die vorhandene App installieren; daneben `.aab`.
+PR #60–#62, VersionCode 25, Quelle main `edf76aa70d30a98ba5bbfdc327544dd7b2264378` (Main-CI grün inkl. native-smoke). Release-Lauf 39773902642: Signatur, Updateprobe .24 → .25, Veröffentlichung.
+APK SHA-256 `09e37ee1…b985b4a735` (6.220.958 Bytes), AAB `b26970bb…58754e7d` (6.034.985 Bytes), gleich SHA256SUMS.
+Enthält: Prüfung beim Hinzufügen mit Befund je Datei, Marken, „Alle prüfen“, Mail-Anhänge im Speicherort geprüft
+(`native/native-check.js`), pdf.js unter `vendor/pdfjs/`, Explorer nach Art, Originale wiederfinden, 🎤 in Textfeldern,
+Google-Vision-Knöpfe, Diagnose versteckt (7 Tipps auf die Versionszeile). Text in Bildern noch ungeprüft. Tablet nicht gemessen.
+
+**Logo neu (Klaus 2026-10-22, für .26):** wie Workflow PDF Pro: außen hellgrau `#a3a6ad`, zur Mitte weicher heller
+Verlauf, ohne gemalten Rahmen; 3D-Motiv unverändert. Vorlage `artwork/private-brain-pro-grey.png`, gebaut von
+`tools/native/icon/make-pro-icon.py` aus `private-brain-pro-light.png`; Größen über `export-pro-icons.mjs`. Adaptives Icon:
+Hintergrund `#a3a6ad`, Vordergrund `inset 13%`. Grenze: feiner heller Glasrand (1–2 px) um die Kugeln.
+
+**🧰 Werkzeuge und 🔑 Freischalt-Codes (Klaus 2026-10-22, nach .25):** ☰ → Werkzeuge; Pinnwand (Kimboard) und Such-Tool
+(Kimseek) laufen im App-Fenster, Dateien daraus gehen ins Einlesen. Freigabe je Käufer per signiertem Code aus dem
+Herausgeber-Studio; Klaus' öffentlicher Schlüssel fehlt noch in `native/license-keys.json`. Tools nur über
+`tools/native/vendor-apps.mjs` kopieren, nie in `apps/` von Hand ändern. [Details](docs/WERKZEUGE-UND-FREISCHALTUNG.md).
+
 **Vorschau .24 veröffentlicht (2026-10-22).** [APK .24](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.24/Private-Brain-Pro-0.1.0-preview.24.apk) über die vorhandene App installieren, nicht deinstallieren; daneben `.aab` für Google Play.
 PR #58, VersionCode 24, Quelle main `18a2edc38c42b4562c169603437cc4e5e8dcec22` (Main-CI 39711900162 grün inkl. native-smoke). Release-Lauf 39714226568: Signatur, Updateprobe .23 → .24, Veröffentlichung.
 APK SHA-256 `ac255ddd…caf8d21f` (5.791.582 Bytes), AAB `f10fe265…293548fe` (5.605.275 Bytes), beide gleich SHA256SUMS. Neu: Links „Mistral-/Google-Schlüssel holen“ neben dem KI-Schlüssel (`native/native-keys.js`). Tablet nicht gemessen.

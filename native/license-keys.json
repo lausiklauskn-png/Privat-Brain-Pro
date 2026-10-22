@@ -1,0 +1,4 @@
+{
+  "_": "Public keys of the publisher (not secret). A code signed with one of these unlocks tools in every copy of the app. Klaus creates his key in Settings → 🔑 Werkzeuge freischalten → Herausgeber-Studio and sends only the PUBLIC key; the secret key never leaves his device.",
+  "publishers": []
+}

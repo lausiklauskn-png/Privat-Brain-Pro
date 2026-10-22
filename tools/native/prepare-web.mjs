@@ -45,7 +45,7 @@ if (!html.includes(start)) throw new Error('Review native model start after sour
 html = html.replace(start, '(window.PBSemantic ? PBSemantic.start(initEmbedding) : initEmbedding());  // Bedeutungs-Modell über den Schalter');
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n</head>');
 html = adaptRecovery(html);
-html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-keys.js"></script>\n<script src="native-check.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
+html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-keys.js"></script>\n<script src="native-check.js"></script>\n<script src="native-license.js"></script>\n<script src="native-tools.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
 if (!html.includes('<script src="assets/live-mail.js')) throw new Error('Review native mail adapter injection after source changes');
 html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="native-mail-folders.js"></script>\n<script src="assets/live-mail.js');
 // The app-owned status initializer must accept the native local asset origin.
@@ -56,7 +56,35 @@ if (!statusInit.includes(origins)) throw new Error('Review native status origin 
 statusInit = statusInit.replace(origins, 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost"];');
 await writeFile(statusPath, statusInit);
 await writeFile(join(out, 'index.html'), html);
-for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js', 'native-semantic.js', 'native-keys.js', 'native-check.js']) await cp(join(root, 'native', name), join(out, name));
+// Klaus' tools (tools/native/apps.json): copied unchanged into apps/<dir>/, adjusted here only for the app window.
+const apps = JSON.parse(await readFile(join(root, 'tools/native/apps.json'), 'utf8')).apps;
+// Tools hand files out as blob: addresses; reading one back must be allowed in their pages.
+const toolCsp = csp.replace("connect-src 'self'", "connect-src 'self' blob: data:");
+if (toolCsp === csp) throw new Error('Review tool CSP after source changes');
+for (const app of apps) {
+  const from = join(root, 'apps', app.dir), to = join(out, app.dir);
+  await cp(from, to, { recursive: true });
+  for (const name of await readdir(to)) {
+    if (!name.endsWith('.html')) continue;
+    let page = await readFile(join(to, name), 'utf8');
+    if (!page.includes('<head>')) throw new Error('Review tool page head: ' + app.dir + '/' + name);
+    page = page.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${toolCsp}">\n<script>window.PB_TOOL_ID=${JSON.stringify(app.id)};</script>\n<script src="../tool-gate.js"></script>`);
+    page = page.replace(/<link[^>]*rel=["']manifest["'][^>]*>/g, '');
+    await writeFile(join(to, name), page);
+  }
+  // The tools' status initialiser must accept the app's local origin (as for Private Brain Pro above).
+  const init = join(to, 'assets/schutz-init.js');
+  let text = await readFile(init, 'utf8').catch(() => null);
+  if (text !== null) {
+    if (!text.includes(origins)) throw new Error('Review tool status origin: ' + app.dir);
+    await writeFile(init, text.replace(origins, 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost"];'));
+  }
+  // Module 24 reads PDFs with pdf.js from Workflow PDF's address; in the app the same pdf.js is bundled.
+  const ocr = join(to, 'modules/24_ocr_eingabe.js');
+  text = await readFile(ocr, 'utf8').catch(() => null);
+  if (text !== null && text.includes('/Workflow-PDF/vendor/pdfjs/')) await writeFile(ocr, text.split('/Workflow-PDF/vendor/pdfjs/').join('/vendor/pdfjs/'));
+}
+for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-originals.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js', 'native-semantic.js', 'native-keys.js', 'native-check.js', 'native-license.js', 'native-tools.js', 'tool-gate.js', 'license-keys.json']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
 await bundleSemanticModel(out);

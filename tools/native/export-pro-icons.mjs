@@ -1,7 +1,8 @@
-// Export Android/header sizes from the approved light Pro artwork; never touch the PWA checkout.
+// Export Android/header sizes from the approved Pro artwork (Klaus 2026-10-22: grey rim, light centre like Workflow PDF
+// Pro, built by tools/native/icon/make-pro-icon.py from private-brain-pro-light.png); never touch the PWA checkout.
 import { readFile, writeFile, copyFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
-const source = await readFile(new URL('../../artwork/private-brain-pro-light.png', import.meta.url));
+const source = await readFile(new URL('../../artwork/private-brain-pro-grey.png', import.meta.url));
 const browser = await chromium.launch({ executablePath: process.env.CB_CHROMIUM || '/usr/bin/chromium', args: ['--no-sandbox'] });
 try {
   const page = await browser.newPage();

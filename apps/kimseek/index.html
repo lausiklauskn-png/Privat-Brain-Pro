@@ -1,0 +1,384 @@
+<!doctype html>
+<!-- FP-COPYRIGHT
+  ╔═══════════════════════════════════════════════════════════════════╗
+  ║  Kimseek — semantische Bedeutungs-Suche  ©  2026  Klaus Nitzsche  ║
+  ║  info@family-projekt.de                                           ║
+  ║  MIT-Lizenz: nutzen, kopieren, veraendern und weitergeben ist     ║
+  ║  erlaubt, auch geschaeftlich - Bedingung ist die Namensnennung.   ║
+  ║  MIT licensed - see LICENSE.                                      ║
+  ║  https://github.com/lausiklauskn-png/Kimseek                      ║
+  ╚═══════════════════════════════════════════════════════════════════╝
+-->
+<!--
+  ╔═════════════════════════════════════════════════════════════════╗
+  ║  Kimseek — semantisches Such-Werkzeug + SBKIM-Endknoten          ║
+  ║  eigenständige, installierbare PWA · v0.1 · 2026                 ║
+  ║  Server-los · BYOK · keine Tracker · privater Schlüssel lokal.   ║
+  ║  https://github.com/lausiklauskn-png/Kimseek                     ║
+  ╚═════════════════════════════════════════════════════════════════╝
+
+  Kimseek ist das SBKIM-Such-Werkzeug (aus Sage·Protokol/such-tool) als
+  eigenständiger SBKIM-Endknoten — nach dem Kim-Bell-Muster:
+    · Such-Widget (Modul 22): semantische Suche nach Bedeutung, Sprache, OCR,
+      KI-Brücke — bleibt unverändert.
+    · Endknoten-Stack: eigene Identität + Spore (Modul 01/02/03), Rendezvous
+      (Modul 23, „🌐 Mit dem Netz verbinden"), Status-Lampen-Leiste + Selbst-
+      Siegel (Modul 17/15/16), Apoptose (07), Empfangsmodus-Lauschen (05/05b).
+
+  Saubere Netz-Anmeldung (Skill „saubere-netz-anmeldung"):
+    · Modus A — sanft/automatisch beim Laden: eigene Schublade `sbkim_kimseek`
+      + stabile Identität sicherstellen (nicht zerstörend).
+    · Modus B — Nutzer-Knopf „🧹 Aufräumen & neu anmelden": reinigt NUR die
+      eigene Origin, dann frische Identität + Spore + Anmelden + „hart neu laden".
+
+  self-contained: modules/ (byte-1:1-Kopien der SBKIM-Kern-Module, Drift-Guard
+  im Smoke-Test) + assets/ (Kimseek-eigene Inits) + Icons. Wer den Endknoten in
+  eine andere App einbaut, ändert nur DB_SUFFIX + CFG-Werte in
+  assets/storage-init.js und assets/rendezvous-init.js.
+-->
+<html lang="de">
+<head>
+<script>/* FP-COPYRIGHT */window._CR=Object.freeze({c:'\u00a9 2026 Klaus Nitzsche',m:'info@family-projekt.de',r:'All rights reserved',repo:'Kimseek'});</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kimseek — semantische Bedeutungs-Suche</title>
+  <meta name="description" content="Kimseek — semantisches Such-Werkzeug, das die Bedeutung hinter den Worten versteht. Server-los, im Browser, eigener Schlüssel bleibt lokal. Ein SBKIM-Endknoten.">
+  <meta name="theme-color" content="#10102A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kimseek">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icon-192.png?v=2">
+  <link rel="apple-touch-icon" href="./icon-192.png?v=2">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh;
+      font-family: 'Geist', system-ui, -apple-system, Arial, sans-serif;
+      color: #F5F5FF;
+      background:
+        radial-gradient(1100px 600px at 78% -10%, rgba(167,139,250,0.18), transparent 60%),
+        radial-gradient(900px 500px at 10% 110%, rgba(110,231,211,0.14), transparent 60%),
+        #0B0B1A;
+      display: flex; flex-direction: column;
+    }
+    main { flex: 1; max-width: 680px; margin: 0 auto; padding: 13vh 22px 40px; }
+    /* Installieren-Knopf (2026-10-18): keine Einstellungen, kein Menü → eine kleine Zeile oben in der Seite.
+       #install-anker ist nur der Platzhalter, VOR den assets/installieren.js den Knopf setzt. */
+    .kopf-leiste { display: flex; justify-content: flex-end; margin: -8vh 0 1.2rem; min-height: 36px; }
+    .kopf-knopf {
+      display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 10px;
+      font: inherit; font-size: .9rem; cursor: pointer; color: rgba(245,245,255,.85);
+      border: 1px solid rgba(110,231,211,.35); background: rgba(255,255,255,.04);
+    }
+    .kopf-knopf:hover { border-color: #6EE7D3; color: #6EE7D3; }
+    #install-anker { display: none; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(110,231,211,0.9);
+      border: 1px solid rgba(110,231,211,0.32); border-radius: 999px;
+      padding: 0.25rem 0.7rem; margin-bottom: 1.4rem;
+    }
+    .badge .badge-mush {
+      width: 1.5em; height: 1.5em; border-radius: 50%; object-fit: cover;
+      box-shadow: 0 0 6px rgba(244,196,80,0.45);
+    }
+    h1 { font-size: clamp(1.8rem, 6vw, 2.7rem); line-height: 1.1; margin: 0 0 0.6rem; }
+    h1 .accent { color: #6EE7D3; }
+    .lead { font-size: 1.04rem; line-height: 1.55; color: rgba(245,245,255,0.82); margin: 0 0 1.6rem; }
+    .points { list-style: none; padding: 0; margin: 0 0 2rem; display: grid; gap: 0.6rem; }
+    .points li { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.94rem; color: rgba(245,245,255,0.78); }
+    .points li b { color: #F5F5FF; font-weight: 600; }
+    .points .dot { flex-shrink: 0; width: 1.4rem; text-align: center; }
+    .hint {
+      font-size: 0.9rem; color: rgba(245,245,255,0.6);
+      border-left: 2px solid rgba(110,231,211,0.5); padding: 0.2rem 0 0.2rem 0.8rem;
+    }
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 22px 28px; font-size: 0.78rem; color: rgba(245,245,255,0.5);
+      max-width: 680px; margin: 0 auto; width: 100%;
+    }
+    footer a { color: #6EE7D3; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer details { margin-top: 0.6rem; }
+    footer summary { cursor: pointer; color: rgba(245,245,255,0.7); }
+    footer p { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="kopf-leiste"><span id="install-anker" class="kopf-knopf" aria-hidden="true"></span></div>
+    <span class="badge"><img class="badge-mush" src="./icon-192.png" alt="" aria-hidden="true"> SBKIM · Endknoten · server-los</span>
+    <h1>Kimseek — sucht nach <span class="accent">Bedeutung</span>, nicht nach Stichwörtern.</h1>
+    <p class="lead">
+      Ein kleines, eigenständiges Such-Tool, das die <b>Absicht</b> hinter deiner
+      Frage versteht. Es läuft komplett im Browser — kein Server, kein Konto.
+      Optional sprichst du deine Frage, lässt eine KI mit Web-Suche die Quellen
+      holen und sortierst sie nach Bedeutung. Zugleich ein vollwertiger
+      <b>SBKIM-Knoten</b>: melde dich mit „🌐 Mit dem Netz verbinden" im gemeinsamen
+      Raum an und finde andere Knoten.
+    </p>
+    <ul class="points">
+      <li><span class="dot">🔍</span><span><b>Semantisch &amp; gratis.</b> Treffer werden nach Bedeutungs-Nähe geordnet (Embedding-Cosinus) — ohne Schlüssel, ohne Kosten.</span></li>
+      <li><span class="dot">🎤</span><span><b>Sprich oder tippe.</b> Spracheingabe Deutsch/Englisch/Russisch (Browser oder EU-Cloud, dein Schlüssel).</span></li>
+      <li><span class="dot">🤖</span><span><b>KI-Brücke.</b> Prompt bauen → bei ChatGPT/Claude/Gemini/Perplexity laufen lassen → Antwort einfügen → nach Bedeutung sortiert.</span></li>
+      <li><span class="dot">🌐</span><span><b>Eigener Knoten.</b> Eigene Identität + Spore (im Browser signiert), Status-Lampen-Leiste + Selbst-Siegel, server-loser Handshake mit anderen Knoten.</span></li>
+      <li><span class="dot">🔐</span><span><b>Dein Schlüssel bleibt lokal.</b> BYOK im verschlüsselten Widget-Tresor (Shamir 2-von-3). Nie ins Netz, nie auf GitHub.</span></li>
+    </ul>
+    <p class="hint">Tipp: Das Such-Werkzeug erscheint als 🔍-Blase. Antippen öffnet es; den Griff unten rechts ziehen macht es größer. „🌐 Mit dem Netz verbinden" liegt unten links.</p>
+
+    <!-- Gerätename: frei wählbarer Anzeige-Name (nur Anzeige, kein Vertrauens-Beweis). -->
+    <div class="geraetename-box" style="margin-top:1.4rem;padding:0.9rem 1rem;border:1px solid rgba(245,245,255,0.14);border-radius:12px;background:rgba(255,255,255,0.03);">
+      <label for="geraetename" style="display:block;font-size:0.92rem;font-weight:600;color:#F5F5FF;margin-bottom:0.5rem;">🏷️ Gerätename (frei wählbar)</label>
+      <input id="geraetename" type="text" maxlength="40" placeholder="z. B. Klaus-Handy"
+             style="width:100%;box-sizing:border-box;padding:0.5rem 0.7rem;border:1px solid rgba(245,245,255,0.18);border-radius:8px;background:rgba(0,0,0,0.25);color:#F5F5FF;font:inherit;font-size:0.95rem;">
+      <p class="hint" style="margin:0.5rem 0 0;">Erscheint im Netz-Raum neben „Kimseek" (z. B. „Kimseek · Klaus-Handy"), damit du zwei Geräte unterscheiden kannst. Nur ein Hinweis, kein Vertrauens-Beweis — die kryptische Kennung bleibt daneben.</p>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 · Kimseek · SBKIM-Endknoten · server-los, keine Tracker.</span>
+    <a href="./brain.html">🧠 Kim-Brain (Probe)</a>
+    <a href="./impressum.html">Impressum &amp; Datenschutz</a>
+    <details>
+      <summary>Datenschutz in einem Satz</summary>
+      <p>
+        Dieses Werkzeug arbeitet <b>server-los</b>: Es gibt keinen eigenen Server,
+        keine Analyse-Tracker und kein Nutzerkonto. Ein optionaler API-Schlüssel
+        (für Sprach-Cloud oder KI-Richter) wird <b>nur lokal</b> im Browser
+        gespeichert (verschlüsselter Tresor) und ausschließlich an den von dir
+        gewählten Anbieter gesendet — nie an uns, nie ins Mycel, nie auf GitHub.
+        Dein privater SBKIM-Schlüssel verlässt diesen Browser nie; im Raum hängt
+        nur die öffentliche Visitenkarte (Spore). Das Embedding-Modell wird
+        einmalig von einem öffentlichen CDN geladen.
+      </p>
+    </details>
+  </footer>
+
+  <!-- ⚠ ERUDA IST AM 2026-08-23 HERAUSGEFLOGEN, auf Klaus' Wort: „macht die
+       App nur größer als sie ist."
+       Hier stand ein festes Skript-Tag, das eruda von einem CDN nachlud.
+       Das kostete bei JEDEM Start rund ein halbes Megabyte von einem fremden
+       Server — für ein Werkzeug, das kein Besucher je hervorholt. Drei Folgen,
+       dieselben, die 2026-08-01 schon an Mein-Rezeptbuch und Mein-Mixarium
+       gemessen wurden:
+         · die App war beim ERSTEN Laden nicht offline-fähig (fremder Server nötig),
+         · jeder Besucher schickte eine Anfrage an einen Dritt-Anbieter,
+         · die Startzeit litt, ohne dass jemand etwas davon hatte.
+       Dort wurde es damals auf Nachladen umgestellt; hier ist es ganz weg.
+       Wer es zurück will: die Fassung steht in der Git-Historie dieser Datei. -->
+
+
+  <!-- ── SBKIM-Endknoten-Stack (byte-1:1-Kopien, Drift-Guard im Smoke-Test) ── -->
+  <!-- Identitäts-Isolierung (2026-07-11): App-Suffix GLOBAL + FRÜH setzen, damit
+       Modul 01 die eigene Schublade `sbkim_kimseek` reihenfolge-unabhängig als
+       Default nimmt (schließt die Race, wenn ein Modul vor storage-init öffnet). -->
+  <script>window.SBKIM_DB_SUFFIX="kimseek"; window.SBKIM_VORRAT_PRAEFIX="kimseek-"; /* fuer den ⟳ des Such-Widgets (Modul 22): nur EIGENE Vorraete */</script>
+  <script>/* Sprachmodell vom eigenen Server (Klaus 2026-10-13, Weg A: die App setzt die Adresse, Modul 03 bleibt neutral). Antwortet er nicht, nimmt Modul 03 Hugging Face. */window.SBKIM_MODEL_ROOT=window.SBKIM_MODEL_ROOT||"https://family-projekt.de/models/";</script>
+  <script src="./modules/01_storage.js"></script>
+  <script src="modules/20_schluessel_safe.js"></script>
+  <!-- Modus A / eigene Schublade: MUSS direkt nach dem Storage-Kern laufen -->
+  <script src="./assets/storage-init.js"></script>
+  <script src="./modules/03_embedding.js"></script>
+  <script src="./modules/04_match.js"></script>
+  <script src="./modules/pruefer-mail.js"></script>  <!-- Prüfliste vor dem KI-Richter (Sage Bau 04.J), direkt nach 04 -->
+  <script src="./modules/02_spore.js"></script>
+  <script src="./modules/05_anastomose.js"></script>
+  <!-- Relais-Client (Modul 05b) ist ES-Modul + importiert noble relativ -->
+  <script type="module" src="./modules/05b_nostr_relay.js"></script>
+  <script src="./modules/23_rendezvous.js"></script>
+  <script src="./modules/23_rendezvous_ui.js"></script>
+  <!-- Status-Lampen-Leiste (Modul 17): LEBT / VERKEHR / FREMD / SIEGEL.
+       MUSS vor Membran(15)/Siegel(16) geladen + inited sein (legt die
+       Proxy-Spans #lamp-fremd + #sbkim-siegel-badge an). -->
+  <script src="./modules/17_floating_widget.js"></script>
+  <script src="./modules/07_apoptose.js"></script>
+  <script src="./modules/15_membran.js"></script>
+  <script src="./modules/16_siegel.js"></script>
+  <!-- Empfangsmodus: lauscht, damit ein Gegenknoten andocken kann -->
+  <script src="./assets/nostr-listen-init.js"></script>
+  <!-- Modus A fahren + 🌐-Knopf mounten -->
+  <script src="./assets/rendezvous-init.js"></script>
+  <!-- Voller Knoten: Widget → Membran → Siegel (+ Apoptose) in dieser Reihenfolge -->
+  <script src="./assets/schutz-init.js"></script>
+  <!-- Andock-Werkzeug IM Siegel-Modal (🔑 Identität & Spore · ✍ Semantik · 🛡 Schutz) -->
+  <script src="./assets/siegel-inhalt.js"></script>
+  <script src="./assets/sbkim-andock-wizard.js"></script>
+  <script src="./assets/installieren.js" data-name="Kimseek" data-vor="install-anker" defer></script>
+
+  <!-- ── Such-Widget (Modul 22) + seine Eingabe-Module (21 Sprache, 24 OCR) ── -->
+  <script src="./modules/21_spracheingabe.js"></script>
+  <script src="./modules/24_ocr_eingabe.js"></script>
+  <script src="./modules/22_such_widget.js"></script>
+
+  <script>
+    // ── Gerätename (lokal, kein PII): frei wählbarer Anzeige-Name, reist als
+    //    Hinweis mit. SICHERHEIT: nur Anzeige, nie Vertrauen — immer zusammen mit
+    //    der Kennung zeigen. Geteilt über alle Apps derselben Origin (ein Name pro
+    //    Gerät/Browser-Instanz).
+    var LS_GERAETENAME = 'sbkim_geraetename';
+    function getGeraetename() { try { return (localStorage.getItem(LS_GERAETENAME) || '').trim().slice(0, 40); } catch (_e) { return ''; } }
+    function setGeraetename(v) { try { localStorage.setItem(LS_GERAETENAME, String(v || '').trim().slice(0, 40)); } catch (_e) { /* */ } }
+
+    // Feld: laden, beim Tippen speichern + Kopplungs-Event feuern (der
+    // Rendezvous-Glue hört darauf und re-konfiguriert den Anzeige-Namen).
+    (function wireGeraetename() {
+      var gn = document.getElementById('geraetename');
+      if (!gn) return;
+      gn.value = getGeraetename();
+      gn.addEventListener('input', function () {
+        setGeraetename(gn.value);
+        try { window.dispatchEvent(new CustomEvent('sbkim:geraetename-changed')); } catch (_e) {}
+      });
+    })();
+  </script>
+
+  <script>
+    // Service-Worker registrieren → macht die Seite installierbar (eigene App).
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sbkim-sw.js").catch(function (err) {
+          console.warn("[Kimseek] Service-Worker-Registrierung fehlgeschlagen:", err);
+        });
+      });
+    }
+
+    // Such-Widget mounten. Kimseek ist ein NETZ-FINDER (keine eigene Domäne):
+    //   • „App" ausgeblendet (Kimseek hat keinen eigenen Inhalt)
+    //   • „Knoten" LIVE ans gemeinsame Netz verdrahtet (Rendezvous-Raum + Relais)
+    //   • „Internet" (KI-Brücke) an. Richter aus (gratis, semantisch); EU frei.
+    // Klaus 2026-07-12: „wenn ich Knoten anhake, will ich wirklich Knoten finden".
+    (function () {
+      // Knoten-Korpus = die Karten aus dem gemeinsamen Rendezvous-Raum (wer sich
+      // angemeldet hat). Jede Karte trägt die Domänen-Sporen mit domainVector →
+      // direkt rankbar. Fail-soft: kein Rendezvous/leerer Raum → leere Liste.
+      async function kimseekBuildKnotenKorpus() {
+        if (!window.SbkimRendezvous || typeof window.SbkimRendezvous.discover !== "function") return [];
+        try {
+          var res = await window.SbkimRendezvous.discover({});
+          var cards = (res && Array.isArray(res.cards)) ? res.cards : [];
+          return cards.map(function (c) {
+            var sp = c && c.spore ? c.spore : null;
+            var dv = sp && Array.isArray(sp.domainVector) ? sp.domainVector : null;
+            var text = (sp && (sp.domainText || sp.description)) || c.nodeName || "";
+            return {
+              label: c.nodeName || c.nodeId || "Knoten",
+              text: text,
+              anchorId: (sp && sp.endpoint) || null,
+              nodeId: c.nodeId || null,
+              passageVec: dv ? new Float32Array(dv) : null,
+            };
+          }).filter(function (e) { return e.passageVec && e.nodeId; });
+        } catch (e) {
+          console.warn("[Kimseek] Knoten-Raum lesen fehlgeschlagen:", e);
+          return [];
+        }
+      }
+      // Live-Cross-Knoten-Frage übers Relais (wie Sage): den top-rangierten Nachbarn
+      // live fragen und seine echten Treffer nachreichen. Fail-soft → leere Liste.
+      async function kimseekQueryNode(nodeId, text) {
+        try {
+          if (!window.SbkimAnastomose || typeof window.SbkimAnastomose.queryNostr !== "function") return [];
+          var res = await window.SbkimAnastomose.queryNostr(nodeId, text, { timeoutMs: 300000 });
+          if (res && res.outcome === "answered" && Array.isArray(res.results)) return res.results;
+          return [];
+        } catch (e) { return []; }
+      }
+      // A11B-Inc-3 — Verbinden aus dem Such-Widget (nach einer Antwort): liest den
+      // Raum (Modul 23 discover), findet die lebende Karte zum nodeId und handshaked
+      // sie (0.80-Andock-Riegel entscheidet unverändert). Fail-soft, ehrliche Meldung.
+      async function kimseekConnectNode(nodeId) {
+        try {
+          if (!window.SbkimRendezvous || typeof window.SbkimRendezvous.discover !== "function"
+              || typeof window.SbkimRendezvous.handshakeCard !== "function") {
+            return { ok: false, reason: "Verbinden hier nicht verfügbar (Modul 23 fehlt)." };
+          }
+          var d = await window.SbkimRendezvous.discover({});
+          var cards = (d && Array.isArray(d.cards)) ? d.cards : (Array.isArray(d) ? d : []);
+          var card = null;
+          for (var i = 0; i < cards.length; i++) {
+            var c = cards[i];
+            var cid = c && (c.nodeId || (c.spore && c.spore.id));
+            if (cid === nodeId) { card = c; break; }
+          }
+          if (!card) {
+            return { ok: false, reason: "Dieser Knoten ist gerade nicht im Raum (keine frische Visitenkarte). Bitte später erneut." };
+          }
+          var r = await window.SbkimRendezvous.handshakeCard(card);
+          var oc = r && r.outcome;
+          return {
+            ok: oc === "established",
+            outcome: oc,
+            score: (r && typeof r.score === "number") ? r.score : undefined,
+            reason: r && r.reason,
+            nodeName: card.nodeName || null,
+          };
+        } catch (e) { return { ok: false, reason: (e && e.message) ? e.message : String(e) }; }
+      }
+      function start() {
+        if (!window.SbkimSearchWidget) {
+          console.warn("[Kimseek] Modul 22 (Such-Widget) nicht geladen.");
+          return;
+        }
+        window.SbkimSearchWidget.init({
+          euPolicy: "frei",
+          queryLabel: "Kimseek",
+          areas: { app: false, knoten: true, internet: true },
+          areasHidden: { app: true },
+          prepareNodeCorpus: kimseekBuildKnotenKorpus,
+          queryNode: kimseekQueryNode,
+          connectNode: kimseekConnectNode,
+          richter: false,
+          startExpanded: true,
+          reloadButton: true,
+        }).catch(function (err) {
+          console.warn("[Kimseek] Widget-Init fehlgeschlagen:", err);
+        });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start, { once: true });
+      } else {
+        start();
+      }
+    })();
+  </script>
+
+<!-- ── family-projekt.de · dezenter Fuß-Verweis (netzweit identisch) ──────────
+     Zweck: Wer diese App irgendwo findet (GitHub-Download, Fork, geteilter Link),
+     kommt von hier zurück zum Marktplatz. Bewusst KLEIN und ganz unten — nicht
+     dominant auf der ersten Seite (Klaus 2026-07-28). Farbwelt = family-project
+     (--accent #6ee7d3). Selbst-enthalten, kein CDN, keine Abhängigkeit. -->
+<style>
+  .fp-badge-wrap{max-width:960px;margin:30px auto 18px;padding:0 16px;text-align:center;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
+  .fp-badge{display:inline-flex;align-items:center;gap:.5em;padding:7px 15px;
+    border-radius:999px;border:1px solid rgba(110,231,211,.38);color:#6ee7d3;
+    background:rgba(110,231,211,.06);font-size:.82rem;text-decoration:none;
+    transition:background .18s ease,border-color .18s ease;}
+  .fp-badge:hover,.fp-badge:focus-visible{background:rgba(110,231,211,.15);
+    border-color:rgba(110,231,211,.72);outline:none;}
+  .fp-badge.fp-strong{background:rgba(110,231,211,.13);
+    border-color:rgba(110,231,211,.55);font-size:.86rem;padding:8px 17px;}
+  .fp-badge .fp-dot{width:7px;height:7px;border-radius:50%;background:#6ee7d3;
+    box-shadow:0 0 7px rgba(110,231,211,.85);flex:none;}
+  .fp-copy{margin-top:9px;font-size:.72rem;line-height:1.5;color:#9aa7b6;opacity:.78;}
+  @media (prefers-color-scheme: light){
+    .fp-badge{color:#0f766e;border-color:rgba(15,118,110,.35);background:rgba(15,118,110,.05);}
+    .fp-badge:hover,.fp-badge:focus-visible{background:rgba(15,118,110,.12);}
+    .fp-badge .fp-dot{background:#0f766e;box-shadow:0 0 7px rgba(15,118,110,.5);}
+    .fp-copy{color:#5b6b7a;}
+  }
+</style>
+<div class="fp-badge-wrap">
+  <a class="fp-badge fp-strong" href="https://family-projekt.de" target="_blank" rel="noopener"
+     title="Zum Marktplatz family-projekt.de — weitere Werkzeuge und Apps">
+    <span class="fp-dot"></span> Mehr Werkzeuge auf family-projekt.de
+  </a>
+  <div class="fp-copy">&copy; 2026 Klaus Nitzsche &middot; kostenlos, ohne Konto, offline nutzbar</div>
+</div>
+</body>
+</html>

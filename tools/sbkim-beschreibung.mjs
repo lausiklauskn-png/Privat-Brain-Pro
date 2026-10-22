@@ -37,7 +37,7 @@ function finde(endung) {
   const treffer = [];
   (function geh(d) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-      if (e.name === "node_modules" || e.name === ".git") continue;
+      if (e.name === "node_modules" || e.name === ".git" || (d === WURZEL && (e.name === "apps" || e.name === "www"))) continue;   // apps/: other nodes copied in (Werkzeuge), www/: build output
       const p = path.join(d, e.name);
       if (e.isDirectory()) geh(p);
       else if (endung.some((x) => e.name === x)) treffer.push(p);
