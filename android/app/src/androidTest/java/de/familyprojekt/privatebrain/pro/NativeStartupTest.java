@@ -112,7 +112,9 @@ public class NativeStartupTest {
             awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q') && document.querySelectorAll('.main-pages .tab').length === 4)");
             scenario.onActivity(activity -> assertEquals("Private Brain Pro",
                 activity.getApplicationInfo().loadLabel(activity.getPackageManager()).toString()));
-            assertEquals("\"Private Brain Pro\"", evaluate(scenario, "document.querySelector('.brand h1').textContent"));
+            // Since .28 a small version tag (v1.0.28) stands next to the name (Klaus 2026-10-22).
+            assertEquals("\"Private Brain Pro\"", evaluate(scenario, "[...document.querySelector('.brand h1').childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim()"));
+            awaitTrue(scenario, "/^v\\d+\\.\\d+\\.\\d+$/.test(document.getElementById('pbVersion')?.textContent || '')");
             assertEquals("\"https://localhost\"", evaluate(scenario, "location.origin"));
             evaluate(scenario, "window.Capacitor.Plugins.ProDevice.getInfo().then(info => window.__nativeSmokeInfo = info); true");
             awaitTrue(scenario, "Boolean(window.__nativeSmokeInfo && window.__nativeSmokeInfo.platform === 'android' && window.__nativeSmokeInfo.versionName && window.__nativeSmokeInfo.nativeMail === true)");
