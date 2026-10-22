@@ -7,6 +7,11 @@ Enthält: Prüfung beim Hinzufügen mit Befund je Datei, Marken, „Alle prüfen
 (`native/native-check.js`), pdf.js unter `vendor/pdfjs/`, Explorer nach Art, Originale wiederfinden, 🎤 in Textfeldern,
 Google-Vision-Knöpfe, Diagnose versteckt (7 Tipps auf die Versionszeile). Text in Bildern noch ungeprüft. Tablet nicht gemessen.
 
+**Logo neu (Klaus 2026-10-22, für .26):** wie Workflow PDF Pro: außen hellgrau `#a3a6ad`, zur Mitte weicher heller
+Verlauf, ohne gemalten Rahmen; 3D-Motiv unverändert. Vorlage `artwork/private-brain-pro-grey.png`, gebaut von
+`tools/native/icon/make-pro-icon.py` aus `private-brain-pro-light.png`; Größen über `export-pro-icons.mjs`. Adaptives Icon:
+Hintergrund `#a3a6ad`, Vordergrund `inset 13%`. Grenze: feiner heller Glasrand (1–2 px) um die Kugeln.
+
 **🧰 Werkzeuge und 🔑 Freischalt-Codes (Klaus 2026-10-22, nach .25):** ☰ → Werkzeuge; Pinnwand (Kimboard) und Such-Tool
 (Kimseek) laufen im App-Fenster, Dateien daraus gehen ins Einlesen. Freigabe je Käufer per signiertem Code aus dem
 Herausgeber-Studio; Klaus' öffentlicher Schlüssel fehlt noch in `native/license-keys.json`. Tools nur über
