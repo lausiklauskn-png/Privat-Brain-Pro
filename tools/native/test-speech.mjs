@@ -40,6 +40,7 @@ try{
   await page.locator('#kiQ').waitFor();
   const kiQ=page.locator('#kiQ');
   const dict=page.locator('#kiQ + .pb-dictate');
+  await dict.waitFor({timeout:5000}).catch(()=>{});   // the 🎤 is added in the next frame after the field appears
   ok('The question field for the AI has a 🎤 next to it',await dict.count()===1&&(await dict.getAttribute('title')).includes('Diktieren'));
   ok('Recovery codes get no 🎤',await page.locator('#trShares + .pb-dictate').count()===0);
   await page.evaluate(()=>{speechAnswer={cancelled:false,text:'was steht im Vertrag'};const q=document.getElementById('kiQ');q.value='Bitte sagen:';});
