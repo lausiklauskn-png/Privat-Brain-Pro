@@ -21,13 +21,17 @@ for(const dep of deps){
 }
 await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
 const receipt=[];
-const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault'];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks'];
 for(const name of names){
   const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
   text=text.replace(/^import android\.[^;]+;\r?\n/gm,'');
   text=text.replace(/\bContext\b/g,'DesktopState').replace(/\bSharedPreferences\b/g,'DesktopState.Preferences');
   if(name==='MailMime')text=text.replaceAll('Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(bodies.html)');
+  if(name==='BrowserLinks'){
+    const start=text.indexOf('    static synchronized String resolve(');if(start<0)throw Error('Review mail link boundary');
+    text=text.slice(0,start)+'    static synchronized String resolve(String value) {\n        try { URI uri=new URI(value); if(!"https".equals(uri.getScheme())||!"tauri.localhost".equals(uri.getAuthority())||uri.getQuery()!=null||uri.getFragment()!=null||!uri.getPath().startsWith(PREFIX))return null; return links.get(uri.getPath().substring(PREFIX.length())); } catch(Exception error) { return null; }\n    }\n}\n';
+  }
   if(name==='Protection'){
     const a=text.indexOf('    static Protection create('),b=text.indexOf('    // Package-private:',a);
     if(a<0||b<0)throw Error('Review shared protection platform factory');

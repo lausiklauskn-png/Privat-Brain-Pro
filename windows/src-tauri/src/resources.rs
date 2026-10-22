@@ -26,10 +26,11 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                         if let Some(path)=response.as_ref().and_then(|r|r.get("path")).and_then(|p|p.as_str()){
                             let path=std::path::PathBuf::from(path);
                             if path.starts_with(host.data.join("semantic"))&&win::no_links(&path).is_ok(){
-                                let stream=SHCreateStreamOnFileEx(&HSTRING::from(path.to_string_lossy().as_ref()),(STGM_READ|STGM_SHARE_DENY_WRITE).0,0,false,None)?;
-                                let mime=match path.extension().and_then(|x|x.to_str()).unwrap_or(""){"js"=>"text/javascript","json"=>"application/json","wasm"=>"application/wasm",_=>"application/octet-stream"};
-                                let headers=format!("Content-Type: {}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store",mime);
-                                let response=environment.CreateWebResourceResponse(&stream,200,&HSTRING::from("OK"),&HSTRING::from(headers))?;arguments.SetResponse(&response)?;return Ok(());
+                                if let Ok(stream)=SHCreateStreamOnFileEx(&HSTRING::from(path.to_string_lossy().as_ref()),(STGM_READ|STGM_SHARE_DENY_WRITE).0,0,false,None){
+                                    let mime=match path.extension().and_then(|x|x.to_str()).unwrap_or(""){"js"=>"text/javascript","json"=>"application/json","wasm"=>"application/wasm",_=>"application/octet-stream"};
+                                    let headers=format!("Content-Type: {}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store",mime);
+                                    let response=environment.CreateWebResourceResponse(&stream,200,&HSTRING::from("OK"),&HSTRING::from(headers))?;arguments.SetResponse(&response)?;return Ok(());
+                                }
                             }
                         }
                         let response=environment.CreateWebResourceResponse(None::<&IStream>,404,&HSTRING::from("Local model unavailable"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;return Ok(());

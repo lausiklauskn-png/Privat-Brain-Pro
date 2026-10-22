@@ -43,9 +43,16 @@ final class DesktopService {
             case "ProMail" -> mail(method,o);
             case "ProProtect" -> protect(method,o);
             case "ProSemantic" -> model.call(method);
+            case "ProLinks" -> {
+                if(method.equals("prepare"))yield new JSONObject().put("tickets",BrowserLinks.prepare(o.getJSONArray("urls")));
+                if(!method.equals("open"))throw new MailFailure("INVALID_INPUT");
+                String safe=BrowserLinks.allowed(required(o,"url"));if(safe==null)throw new MailFailure("LINK_UNAVAILABLE");
+                yield host.call("external",new JSONObject().put("url",safe));
+            }
             case "DesktopInternal" -> {
-                if(!method.equals("modelAsset"))throw new MailFailure("INVALID_INPUT");
-                yield model.asset(required(o,"url"));
+                if(method.equals("modelAsset"))yield model.asset(required(o,"url"));
+                if(method.equals("mailLink"))yield new JSONObject().put("url",BrowserLinks.resolve(required(o,"url")));
+                throw new MailFailure("INVALID_INPUT");
             }
             default -> throw new MailFailure("INVALID_INPUT");
         };

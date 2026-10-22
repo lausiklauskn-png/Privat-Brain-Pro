@@ -24,7 +24,8 @@ impl Host {
     pub fn call(&self,plugin:&str,method:&str,mut options:Value)->Result<Value,String>{
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
         if let Some(map)=options.as_object_mut(){map.remove("_language");}
-        if serde_json::to_vec(&options).map_err(|_|"INVALID_INPUT")?.len()>2*1024*1024{return Err("INVALID_INPUT".into());}
+        let limit=if plugin=="ProMail"&&["send","saveDraft"].contains(&method){26*1024*1024}else{2*1024*1024};
+        if serde_json::to_vec(&options).map_err(|_|"INVALID_INPUT")?.len()>limit{return Err("INVALID_INPUT".into());}
         if plugin=="ProNetwork"&&method=="setOffline"&&options.get("offline").and_then(Value::as_bool)==Some(true){self.offline.store(true,Ordering::SeqCst);}
         let engine=self.engine.lock().unwrap().clone().ok_or("APP_RUNTIME_UNAVAILABLE".to_owned())?;
         let result=engine.call(plugin,method,options);
@@ -43,6 +44,11 @@ impl Host {
             "browser"=>{
                 let url=tauri::Url::parse(text("url")).map_err(|_|"INVALID_INPUT")?;
                 if url.scheme()!="https"||url.host_str()!=Some("accounts.google.com")||url.path()!="/o/oauth2/v2/auth"||!url.username().is_empty()||url.password().is_some(){return Err("NOT_ALLOWED".into());}
+                win::open(url.as_str())?;Ok(json!({"ok":true}))
+            }
+            "external"=>{
+                let url=tauri::Url::parse(text("url")).map_err(|_|"LINK_UNAVAILABLE")?;
+                if !["https","http"].contains(&url.scheme())||url.host_str().is_none()||!url.username().is_empty()||url.password().is_some(){return Err("LINK_UNAVAILABLE".into());}
                 win::open(url.as_str())?;Ok(json!({"ok":true}))
             }
             "folder"=>{
