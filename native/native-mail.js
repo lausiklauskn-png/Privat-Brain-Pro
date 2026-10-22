@@ -159,6 +159,8 @@
         return result;
       }
       if (kind === 'messages' && parts.length === 3 && verb === 'GET') return invoke('message',{...params,uid:Number(parts[2])});
+      // Many mails at once over one connection (POST /messages/batch/action {uids:[…]}).
+      if (kind === 'messages' && parts.length === 4 && parts[2] === 'batch' && parts[3] === 'action' && verb === 'POST') return invoke('actions',{...params,...body});
       if (kind === 'messages' && parts.length === 4 && parts[3] === 'action' && verb === 'POST') return invoke('action',{...params,...body,uid:Number(parts[2])});
       throw new Error(text('INVALID_INPUT'));
     }

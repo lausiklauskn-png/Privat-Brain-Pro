@@ -348,6 +348,41 @@ final class MailEngine {
             } finally { folder.close(false); }
         }
     }
+    /** The same actions for many mails over ONE connection (Klaus 2026-10-22: 50 mails took minutes, one login each). */
+    JSONObject actions(MailAccount account, String name, String validity, JSONArray uids, String action, String target) throws Exception {
+        if (validity == null || !validity.matches("[0-9]{1,10}") || uids == null || uids.length() < 1 || uids.length() > 500) throw new MailFailure("INVALID_INPUT");
+        long[] list = new long[uids.length()];
+        for (int i = 0; i < list.length; i++) {
+            list[i] = uids.optLong(i, -1);
+            if (list[i] < 1 || list[i] > 4294967295L) throw new MailFailure("INVALID_INPUT");
+        }
+        try (IMAPStore connection = imap(account)) {
+            IMAPFolder folder = open(connection, name, validity, true);
+            try {
+                java.util.ArrayList<Message> found = new java.util.ArrayList<>();
+                for (Message message : folder.getMessagesByUID(list)) if (message != null) found.add(message);
+                Message[] messages = found.toArray(new Message[0]);
+                if (messages.length > 0) switch (action) {
+                    case "read": case "unread": folder.setFlags(messages, new Flags(Flags.Flag.SEEN), action.equals("read")); break;
+                    case "star": case "unstar": folder.setFlags(messages, new Flags(Flags.Flag.FLAGGED), action.equals("star")); break;
+                    case "move":
+                        MailAccount.header(target, 1000);
+                        if (name.equals(target) || !connection.hasCapability("MOVE")) throw new MailFailure("MOVE_UNSUPPORTED");
+                        Folder destination = connection.getFolder(target);
+                        if (!destination.exists()) throw new MailFailure("FOLDER_FAILED");
+                        folder.moveMessages(messages, destination);
+                        break;
+                    case "delete":
+                        if (!special(folder).equals("\\Trash") || !connection.hasCapability("UIDPLUS")) throw new MailFailure("DELETE_UNSUPPORTED");
+                        folder.setFlags(messages, new Flags(Flags.Flag.DELETED), true);
+                        folder.expunge(messages);
+                        break;
+                    default: throw new MailFailure("INVALID_INPUT");
+                }
+                return new JSONObject().put("ok", true).put("done", messages.length).put("missing", list.length - messages.length);
+            } finally { folder.close(false); }
+        }
+    }
     JSONObject send(MailAccount account, JSONObject draft) throws Exception {
         AppNetwork.check();
         Session session = session();

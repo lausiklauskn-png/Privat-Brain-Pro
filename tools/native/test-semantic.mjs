@@ -48,6 +48,13 @@ try{
   ok('Not loaded: the model does not start and the size is named',await page.evaluate(()=>SbkimEmbedding.inits===0)&&(await box.textContent()).includes('155 MB'));
   ok('The keyword search does not wait for a missing model',await page.evaluate(()=>EMBED.tried===true&&EMBED.ready===false));
   const text=()=>box.locator('[data-s="text"]').textContent();
+  // Klaus 2026-10-22: while the model is missing, "Bedeutungssuche" leads straight to the switch.
+  await page.evaluate(()=>window.PBWorkspace?.navigate?.('search'));
+  const meaningMode=page.locator('#mode [data-m="mean"]');
+  ok('While the model is missing the meaning button says so',(await meaningMode.getAttribute('title')||'').includes('noch nicht geladen'));
+  await meaningMode.click();
+  await page.waitForFunction(()=>document.getElementById('pb-semantic')?.classList.contains('pb-semantic-flash'));
+  ok('Tapping "Bedeutungssuche" opens the settings at the load switch',await box.isVisible()&&await box.locator('[data-semantic="load"]').isVisible());
   await box.locator('[data-semantic="load"]').click();
   await page.waitForFunction(()=>/Wird geladen: (20|90) von 155 MB/.test(document.querySelector('#pb-semantic [data-s="text"]').textContent));
   ok('While loading the bar moves and names the source',parseFloat(await box.locator('.pb-semantic-bar>span').evaluate(e=>e.style.width))>0&&(await text()).includes('family-projekt.de'));

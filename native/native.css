@@ -553,3 +553,11 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .pb-semantic-bar>span{display:block;height:100%;width:0;background:#5b43c9;transition:width .25s}
 .pb-semantic-actions{display:flex;flex-wrap:wrap;gap:6px}
 .pb-semantic [hidden]{display:none!important}
+.pb-semantic-flash{animation:pb-semantic-flash 1.6s ease-out}
+@keyframes pb-semantic-flash{0%,40%{box-shadow:0 0 0 3px #5b43c9}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.pb-semantic-flash{animation:none;outline:3px solid #5b43c9}}
+
+/* Links zu den KI-Schlüsseln (Klaus 2026-10-22). */
+.pb-ai-key-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px}
+.pb-ai-key-links [hidden]{display:none!important}
+.pb-ai-key-hint{flex-basis:100%;margin:0;font-size:.84rem;color:var(--mut,inherit)}
