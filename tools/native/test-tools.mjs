@@ -28,13 +28,14 @@ try{
   // ---------- a buyer without a code ----------
   let {page,errors}=await app(browser,null);
   ok('Menu lists the tools, locked without a code',(await menuItem(page,'pinnwand').textContent()).replace(/\s/g,'').startsWith('🔒Pinnwand')&&(await menuItem(page,'kimsync').getAttribute('data-open'))==='false');
+  await page.waitForLoadState('load');
+  ok('Only one pin board entry exists: the licensed tool, with no legacy floating board',await page.evaluate(()=>document.querySelectorAll('.native-options-panel [data-tool="pinnwand"]').length===1&&!document.getElementById('pbPinBtn')&&!document.getElementById('pbPinPanel')&&!document.querySelector('script[src="modules/pinnwand-widget.js"]')));
   // Klaus 2026-10-22: each program shows its own icon, and it really loads (no emoji fallback).
   await page.waitForFunction(()=>[...document.querySelectorAll('.pb-tools-menu img.pb-tool-icon')].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:20000});
   ok('Every menu entry shows the program\'s own icon',await page.evaluate(()=>{const items=[...document.querySelectorAll('.pb-tools-menu .pb-tools-item')];return items.length===9&&items.every(b=>{const i=b.querySelector('img.pb-tool-icon');return i&&i.naturalWidth>0&&new URL(i.src).pathname==='/tool-icons/'+b.dataset.tool+(b.dataset.tool==='dateipost'?'.svg':'.png');});}));
   await menuItem(page,'pinnwand').evaluate(b=>b.click());
   ok('A locked tool says where the code goes and leads to settings',await page.evaluate(()=>alerts.at(-1).includes('Werkzeuge freischalten')&&document.getElementById('panel-settings').classList.contains('on')));
-  await page.evaluate(()=>{const b=document.createElement('button');b.id='pbPinBtn';document.body.append(b);window.pinClicks=0;b.addEventListener('click',()=>pinClicks++);b.click();});
-  ok('The built-in pin board does not open without a code',await page.evaluate(()=>pinClicks===0&&alerts.length===2));
+  ok('A locked pin board opens no tool frame or legacy panel',await page.locator('.pb-tool-frame,#pbPinPanel').count()===0);
   // ---------- the publisher on his device ----------
   await settings(page);
   // The visible box is plain: tools, code field, button; no studio, no long explanations (Klaus 2026-10-22).

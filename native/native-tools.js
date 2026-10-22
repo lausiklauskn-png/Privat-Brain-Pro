@@ -120,12 +120,6 @@
   new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   const wait = setInterval(() => { if (document.querySelector('.native-options-panel')) { clearInterval(wait); paint(); } }, 200);
 
-  // The built-in pin board (📌 in the menu) is a tool too (Klaus: "für das Öffnen von der Pinnwand … nur mit Passwort").
-  document.addEventListener('click', event => {
-    const pin = event.target.closest?.('#pbPinBtn');
-    if (!pin || license.unlocked('pinnwand')) return;
-    event.preventDefault(); event.stopImmediatePropagation(); alert(t('lockedAsk')); goUnlock();
-  }, true);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && frameBox) close(); });
 
   window.PBTools = { open: openTool, close, offer, PAGES, LINKS };
