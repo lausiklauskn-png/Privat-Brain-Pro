@@ -10,8 +10,11 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
         use webview2_com::{Microsoft::Web::WebView2::Win32::{ICoreWebView2_22,COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL},WebResourceRequestedEventHandler,NavigationStartingEventHandler,take_pwstr};
         let navigate=window.clone();
         window.with_webview(move|view|{
+            let probe=host.data.join("startup-probe.txt");
             let setup=(||->windows::core::Result<()>{unsafe{
                 let core=view.controller().CoreWebView2()?;
+                #[cfg(feature="messprobe")]
+                {let mut version=PWSTR::null();view.environment().BrowserVersionString(&mut version)?;let _=std::fs::write(&probe,format!("WebView2 {}\n",take_pwstr(version)));}
                 let advanced:ICoreWebView2_22=core.cast()?;let environment=view.environment();
                 advanced.AddWebResourceRequestedFilterWithRequestSourceKinds(&HSTRING::from("*"),COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL)?;
                 let nav_host=host.clone();
@@ -59,10 +62,16 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                     }
                     Ok(())
                 }));
-                core.add_NavigationStarting(&navigation,&mut token)?;core.add_FrameNavigationStarting(&navigation,&mut token)?;Ok(())
+                core.add_NavigationStarting(&navigation,&mut token)?;core.add_FrameNavigationStarting(&navigation,&mut token)?;
+                // Already on the WebView UI thread: use its controller directly,
+                // rather than queueing another Tauri window operation from here.
+                core.Navigate(&HSTRING::from("https://tauri.localhost/index.html"))?;Ok(())
             }})();
-            if setup.is_ok(){let _=navigate.navigate(tauri::Url::parse("https://tauri.localhost/index.html").unwrap());}
-            else {let _=navigate.close();}
+            if let Err(error)=setup{
+                #[cfg(feature="messprobe")]
+                {let _=std::fs::write(&probe,format!("WebView setup: {:?}\n",error));}
+                let _=navigate.close();
+            }
         }).map_err(|_|"APP_WEBVIEW_UNAVAILABLE")?;
         Ok(())
     }

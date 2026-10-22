@@ -32,6 +32,7 @@ function pdf(){
 try{
   await connect();
   for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/'||p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}
+  if(!page)console.error('Observed app pages',browser.contexts().flatMap(c=>c.pages()).map(p=>p.url()));
   assert.ok(page,'Installed main page exists');
   page.on('pageerror',error=>report.errors.push(error.message));
   await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});

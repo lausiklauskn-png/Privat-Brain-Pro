@@ -14,6 +14,8 @@ function Phase($name) {
   $app = Start-Process -FilePath $exe -PassThru
   node windows/pruefung/installed.mjs $name "windows/pruef-out/$name.json"
   $code = $LASTEXITCODE
+  $probe = Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro\startup-probe.txt'
+  if (Test-Path $probe) { Copy-Item $probe "windows/pruef-out/$name-startup.txt"; Get-Content $probe }
   $java = Get-CimInstance Win32_Process -Filter "name='javaw.exe'" | Select-Object ProcessId, ParentProcessId
   $children = @($java | Where-Object ParentProcessId -eq $app.Id | ForEach-Object ProcessId)
   $children += @($java | Where-Object { $_.ParentProcessId -in $children } | ForEach-Object ProcessId)
