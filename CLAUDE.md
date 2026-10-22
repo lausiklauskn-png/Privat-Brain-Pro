@@ -1,6 +1,11 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Gebaut für .28 (Klaus 2026-10-22), noch nicht veröffentlicht.** Explorer als echter Ordnerbaum (E-Mails › Absender ›
+**Vorschau .28 veröffentlicht (2026-10-22), in der App „v1.0.28“.** [APK .28](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.28/Private-Brain-Pro-1.0.0-preview.28.apk) über die vorhandene App installieren; daneben `.aab`.
+PR #66, VersionCode 28, Tag `v1.0.0-preview.28`, Quelle main `8dae28113f7fa19a4446406f492e0c307c4ef0cb` (Main-CI 39857714825: native-smoke grün). Release-Lauf 39859560733: Signatur, Updateprobe .27 → .28, Veröffentlichung.
+APK SHA-256 `a8a4de0e…d424a647` (7.446.584 Bytes), AAB `dcd69685…6055641b9` (7.267.253 Bytes), unabhängig geladen, gleich SHA256SUMS.
+Geschenk- und Updateseite auf .28 umgestellt. Tablet nicht gemessen.
+
+**Inhalt .28 (Klaus 2026-10-22):** Explorer als echter Ordnerbaum (E-Mails › Absender ›
 Mail › Anhänge, jede Datei einmal; Handy eine Ebene mit Pfad, breit Baum ▸/▾ mit ⊟), ehrlicher Prüfstand („⊘ Original
 fehlt · nicht prüfbar“, Zeile über alle Dateien, „Originale suchen“), Prüfbericht in einfachen Worten. Mail: Löschen in
 den Papierkorb des Anbieters, ♻ Wiederherstellen, ✓ Kein Spam, Spam in den Spam-Ordner, Zahlen vom Server (STATUS),
@@ -8,7 +13,7 @@ Anbieter-Ordner unter „▸ Weitere Ordner“ (`MailEngine.moveTo`, Java nur in
 (`native/tool-icons/`). Freischalt-Kasten schlicht; **Herausgeber-Studio erst nach langem Druck (1,5 s) auf „© 2026“
 unten in den Einstellungen**, wie bei den anderen Studios; Käuferfeld „Pseudonym“. Version **v1.0.28** klein neben dem Namen (`versionName` 1.0.0-preview.28,
 Code 28). [Ordnerbaum/Prüfstand/Papierkorb](docs/ORDNERBAUM-PRUEFSTAND-PAPIERKORB.md),
-[Werkzeuge](docs/WERKZEUGE-UND-FREISCHALTUNG.md). Release nur auf Klaus' Bitte.
+[Werkzeuge](docs/WERKZEUGE-UND-FREISCHALTUNG.md).
 
 **Vorschau .27 veröffentlicht (2026-10-22).** [APK .27](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.27/Private-Brain-Pro-0.1.0-preview.27.apk) über die vorhandene App installieren; daneben `.aab`.
 PR #64, VersionCode 27, Quelle main `7530505d08f8409498972061e4a66295993340ad` (Main-CI 39807480053 Versuch 2 grün inkl. native-smoke; Versuch 1 hing in „Browser-Engine installieren“ für WebKit). Release-Lauf 39818777974: Signatur, Updateprobe .26 → .27, Veröffentlichung.
