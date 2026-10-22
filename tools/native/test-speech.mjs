@@ -35,6 +35,20 @@ try{
   await page.evaluate(()=>{document.documentElement.lang='de';speechAnswer='missing';});
   await mic.click();await page.waitForFunction(()=>speechCalls.length===3&&document.getElementById('mic').textContent==='🎤');
   ok('Without a speech recognizer on the device the app says so plainly',(await page.locator('#toast').textContent()).includes('keine Spracherkennung eingerichtet'));
+  // Dictation in text fields (Klaus 2026-10-22): the question to the AI about a file gets 🎤 too.
+  await page.evaluate(async()=>{const t='Mietvertrag ab 1. Mai';const r={hash:await sha256(new TextEncoder().encode(t).buffer),name:'Vertrag.txt',path:'Vertrag.txt',type:'text/plain',ext:'txt',date:Date.now(),size:t.length,snippet:t,via:'test',vector:buildVector(tokens(t)),tf:termFreq(tokens(t)),summary:'',category:'',dirId:null,nameTokens:tokens('Vertrag'),dupes:[],tags:[]};CATALOG.push(r);openKiModal(r.hash);});
+  await page.locator('#kiQ').waitFor();
+  const kiQ=page.locator('#kiQ');
+  const dict=page.locator('#kiQ + .pb-dictate');
+  ok('The question field for the AI has a 🎤 next to it',await dict.count()===1&&(await dict.getAttribute('title')).includes('Diktieren'));
+  ok('Recovery codes get no 🎤',await page.locator('#trShares + .pb-dictate').count()===0);
+  await page.evaluate(()=>{speechAnswer={cancelled:false,text:'was steht im Vertrag'};const q=document.getElementById('kiQ');q.value='Bitte sagen:';});
+  await dict.evaluate(b=>b.click());
+  await page.waitForFunction(()=>speechCalls.length===4&&document.querySelector('#kiQ + .pb-dictate').textContent==='🎤');
+  ok('The spoken words are added at the cursor, typed text stays',await kiQ.inputValue()==='Bitte sagen: was steht im Vertrag');
+  await page.evaluate(()=>{const t=document.createElement('textarea');t.id='later';document.body.append(t);});
+  await page.waitForFunction(()=>document.querySelector('#later + .pb-dictate'));
+  ok('A text field that appears later (e.g. writing a mail) gets 🎤 as well',true);
   ok('No runtime errors',errors.length===0||console.log(errors));
   console.log(`${count} speech input checks passed (Android speech dialog simulated; real recognizer tested on the device).`);
 }finally{await browser?.close();server.close();}

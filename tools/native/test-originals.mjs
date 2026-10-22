@@ -33,7 +33,7 @@ try{
  ok('Native import does not require desktop folder API',await page.locator('#libraryStatus').textContent().then(t=>t.includes('Dauerhafte Originalkopien')));
  await page.reload();await page.waitForFunction(()=>window.PBOriginals&&CATALOG.length===1);
  ok('Session memory is empty after restart',await page.evaluate(()=>SESSION_FILES.size===0));
- await page.click('[data-tab=explorer]');await page.locator('#explorerFiles button').first().click();await page.locator('.native-file-image').waitFor();
+ await page.click('[data-tab=explorer]');await page.locator('#explorerFiles .explorer-row > button').first().click();await page.locator('.native-file-image').waitFor();
  ok('Catalog original opens after restart, read from native storage',readCalls>0&&await page.locator('.native-file-image').evaluate(e=>e.complete&&e.naturalWidth===96));
  ok('Restored file hash and bytes match the imported original',await page.evaluate(async()=>{const f=await resolveFile(CATALOG[0]);return await sha256(await f.arrayBuffer())===CATALOG[0].hash&&f.size===CATALOG[0].size&&f.pbOriginalHash===CATALOG[0].hash;}));
  await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});
@@ -41,7 +41,7 @@ try{
  await page.evaluate(()=>openLightbox(CATALOG[0].hash));await page.locator('#lightboxBg.on').waitFor();
  ok('Legacy missing original still retains its preview',await page.locator('#lightboxImg').evaluate(e=>Boolean(e.src)));
  await page.click('#lightboxOpen');await page.locator('.native-original-reconnect').waitFor();
- ok('Missing original offers reconnect instead of pretending preview is original',await page.locator('.native-original-reconnect').textContent().then(t=>t.includes('Originaldatei fehlt')));
+ ok('Missing original offers reconnect instead of pretending preview is original',await page.locator('.native-original-reconnect').textContent().then(t=>t.includes('ist im Katalog, aber die Datei selbst')));
  ok('Reconnect shows exactly one "Datei auswählen" (the file field itself stays hidden)',await page.evaluate(()=>{const d=document.querySelector('.native-original-reconnect');const f=d.querySelector('input[type=file]');return getComputedStyle(f).display==='none'&&[...d.querySelectorAll('button')].filter(b=>b.textContent==='Datei auswählen').length===1;}));
  await page.setInputFiles('.native-original-reconnect input[type=file]',{name:'wrong.txt',mimeType:'text/plain',buffer:Buffer.from('unrelated')});await page.getByText('Diese Datei passt nicht zum Original.',{exact:false}).waitFor();
  ok('Wrong replacement cannot overwrite catalog or publish a copy',saved.size===0&&await page.evaluate(()=>CATALOG.length===1));

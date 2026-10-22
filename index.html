@@ -1455,7 +1455,7 @@ async function signBatch(items){ // items: [{file, path, dirId}]
       else {
         const r = await signFile(local.file, local.path, local.dirId); r.skipped?skipped++:added++;
         const rec = r.rec || CATALOG.find(x=>x.hash===r.hash);
-        if(rec && window.PBWorkspace && PBWorkspace.kindOf) filed.push({kind:PBWorkspace.kindOf(rec, rec.path), known:!!r.skipped});
+        if(rec && window.PBWorkspace && PBWorkspace.kindOf) filed.push({kind:PBWorkspace.kindOf(rec, rec.path), known:!!r.skipped, hash:rec.hash});
       }
     }
     catch(e){ failed++; diag("✗ Import fehlgeschlagen: "+(it.path||it.file.name)+" — "+(e&&e.message||e)); /* eine Datei darf nicht alles stoppen */ }

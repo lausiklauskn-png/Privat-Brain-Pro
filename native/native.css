@@ -562,3 +562,22 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .pb-ai-key-links [hidden]{display:none!important}
 .pb-ai-key-hint{flex-basis:100%;margin:0;font-size:.84rem;color:var(--mut,inherit)}
 .pb-ai-key-warn{flex-basis:100%;margin:0;font-size:.84rem;color:#b3261e;font-weight:600}
+/* 🛡 Check marks and report (native-check.js) */
+.pb-check-badge{display:inline-block;margin:4px 6px 0 0;padding:2px 8px;min-height:24px;font-size:.8rem;border-radius:999px;border:1px solid var(--line,#ccc);background:transparent;cursor:pointer}
+.pb-check-badge[data-check="clean"]{color:#1e6b34;border-color:#8fc79c}
+.pb-check-badge[data-check="found"]{color:#b3261e;border-color:#e3a19c;font-weight:600}
+.pb-check-badge[data-check="partly"]{color:#8a5a00;border-color:#e0c27a}
+.pb-check-badge[data-check="open"],.pb-check-badge[data-check="running"]{color:var(--mut,#666)}
+.pb-check-report{max-width:min(680px,94vw)}
+.pb-check-report .pb-check-name{font-weight:600;overflow-wrap:anywhere}
+.pb-check-report .pb-check-found li{color:#b3261e;margin:4px 0}
+.pb-check-report .pb-check-whatnow{font-weight:600}
+.pb-check-summary{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pb-check-summary[data-check="found"]{color:#b3261e;font-weight:600}
+/* 🎤 Dictation next to text fields (native-speech.js) */
+.pb-dictate{display:inline-flex;align-items:center;justify-content:center;min-height:26px;min-width:34px;margin:4px 0;padding:0 8px;font-size:.95rem}
+.pb-check-entrance-list{list-style:none;margin:6px 0;padding:0}
+.pb-check-entrance-list li{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:3px 0;border-top:1px solid var(--line,#ddd)}
+.pb-check-entrance-list li>span{flex:1 1 220px;overflow-wrap:anywhere}
+.pb-check-entrance-list li[data-check="found"]>span{color:#b3261e;font-weight:600}
+.pb-check-entrance-list li[data-check="partly"]>span{color:#8a5a00}

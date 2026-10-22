@@ -215,6 +215,8 @@
       const go=button('→ '+text('showIn'),()=>showKind(key));go.dataset.show=key;
       line.append(label,go);box.append(line);
     }
+    // 🛡 One line about the check of these files (native/native-check.js), with the way to the findings.
+    const checked=window.PBCheck?.summary((list||[]).map(x=>x.hash).filter(Boolean));if(checked)box.append(checked);
     const close=button('✕',()=>{box.hidden=true;});close.className='ghost pb-import-close';close.title=close.ariaLabel=text('doneClose');
     box.append(close);
   }
@@ -262,7 +264,7 @@
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
     visible.sort((a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):a.r.name.localeCompare(b.r.name)));
     for (const e of visible) {
-      const row=document.createElement('article');row.className='explorer-row';
+      const row=document.createElement('article');row.className='explorer-row';row.dataset.hash=e.r.hash;
       const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('div');
       const kind=kindOf(e.r,e.path),sender=kind==='attach'?attachSender(e.path):'';row.dataset.kind=kind;
       name.textContent=kindIcon(kind)+' '+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';

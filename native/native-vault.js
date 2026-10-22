@@ -254,10 +254,14 @@
     try { items = (await api.attachments()).items || []; } catch (error) { problem = errorText(error); items = []; }
     finally { itemsLoaded = true; }
   }
-  async function view(entry) {
-    if (entry.size > 64 * 1024 * 1024) { alert(t('tooBigView')); return; }
+  async function bytesOf(entry) {
     const parts = [];
     for (let offset = 0; offset < entry.size; offset += 262144) parts.push(unb64((await api.readAttachment({ id: entry.ref || entry.id, offset })).data));
+    return parts;
+  }
+  async function view(entry) {
+    if (entry.size > 64 * 1024 * 1024) { alert(t('tooBigView')); return; }
+    const parts = await bytesOf(entry);
     const file = new File(parts, entry.name, { type: entry.type || 'application/octet-stream' });
     if (file.size !== entry.size) throw new Error('VAULT_DAMAGED');
     // The viewer's own "Open with …" must warn as well: mark the origin.
@@ -279,6 +283,7 @@
     viewButton.onclick = () => view(entry).catch(error => alert(errorText(error)));
     out.onclick = () => handOut(entry.id).catch(error => alert(errorText(error)));
     row.append(info, viewButton, out);
+    if (window.PBCheck) info.append(PBCheck.vaultBadge(entry));
     if (window.PBSchutz && entry.sha256) info.append(PBSchutz.attachmentStatus(entry, { handOut: () => handOut(entry.id, true).catch(error => alert(errorText(error))) }));
     return row;
   }
@@ -309,7 +314,14 @@
         note = t('cleared').replace('{n}', result.removed);
         await loadItems(); window.PBWorkspace.refresh();
       });
-      head.append(sumLine, clear); target.append(head);
+      head.append(sumLine, clear);
+      if (window.PBCheck && items.length) {
+        const open = PBCheck.vaultOpen(items), all = make('button', open ? PBCheck.words('all') + PBCheck.words('allOpen').replace('{n}', open) : PBCheck.words('allNone'), 'ghost pb-check-all-button');
+        all.type = 'button'; all.disabled = !open || busy;
+        all.onclick = () => PBCheck.checkVaultAll(items, all, () => window.PBWorkspace.refresh());
+        head.append(all);
+      }
+      target.append(head);
       const needle = filter.toLocaleLowerCase();
       const shown = items.filter(e => (e.name + ' ' + (e.subject || '') + ' ' + (e.from || '')).toLocaleLowerCase().includes(needle));
       shown.sort((a, b) => sort === 'date' ? (Number(b.date) || b.stored) - (Number(a.date) || a.stored) : sort === 'size' ? b.size - a.size : a.name.localeCompare(b.name));
@@ -345,6 +357,10 @@
       return box;
     },
     uncheckedText: () => t('unchecked'),
+    // A catalog entry whose original is missing may be the same file as an attachment kept here (same fingerprint).
+    async findByHash(hash) { if (!state.configured || !state.unlocked) return null; if (!itemsLoaded) await loadItems(); return items.find(e => e.sha256 === hash && e.size <= 256 * 1024 * 1024) || null; },
+    // 🛡 The check reads the bytes from the folder (decrypted by Android) only for the check itself.
+    async bytes(entry) { const parts = await bytesOf(entry); const all = new Uint8Array(parts.reduce((n, p) => n + p.length, 0)); let at = 0; for (const p of parts) { all.set(p, at); at += p.length; } return all; },
     /** Folder attachments are read back for forwarding only within the device sending limit. */
     async forwardable(list, limit) {
       const out = []; let total = 0, skipped = false;

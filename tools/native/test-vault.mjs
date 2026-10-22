@@ -113,7 +113,9 @@ try{
   ok('A 40 MB mail opens with its attachment as a reference in the folder',await page.locator('.native-vault-attachment').first().textContent().then(t=>t.includes('schreiben.txt')&&t.includes('im Anhang-Ordner')));
   ok('Over-1-GB attachments are named, not silently dropped',await page.locator('.native-vault-attachment').nth(1).textContent().then(t=>t.includes('über 1 GB')));
   await page.waitForFunction(()=>document.querySelector('.mail-report')?.textContent.includes('nicht im Browser geprüft'));
-  ok('Check report says the folder copy was not checked in the browser',await page.locator('.mail-report').textContent().then(t=>t.includes('nicht im Browser geprüft')));
+  ok('An attachment too large for the folder is still named as not checked',await page.locator('.mail-report').textContent().then(t=>t.includes('nicht im Browser geprüft')));
+  await page.waitForFunction(()=>document.querySelector('.mail-report .pb-check-line'));
+  ok('🛡 The attachment kept in the folder is checked for hidden content (Klaus 2026-10-22)',await page.locator('.mail-report .pb-check-line').first().textContent().then(t=>t.includes('schreiben.txt')&&t.includes('✓ Geprüft · kein Fund')));
   await page.locator('.native-vault-attachment button',{hasText:'Ansehen'}).click();
   await page.locator('.native-file-text').waitFor();
   ok('Viewing reads the decrypted bytes into the in-app viewer only',await page.locator('.native-file-text').textContent()===textBytes.toString());
