@@ -3384,6 +3384,7 @@ boot();
     var text=[msg.subject, "Von: "+msg.from, "An: "+msg.to, msg.body].filter(Boolean).join("\n");
     var key=(msg.from||"")+"|"+(msg.subject||"")+"|"+(msg.date||"")+"|"+(msg.body||"").slice(0,4000);
     var hash=await sha256(new TextEncoder().encode(key).buffer);
+    msg._pbHash=hash; // attachments remember their mail (explorer tree, Klaus 2026-10-22)
     if(msg.raw) rawMails.set(hash,msg.raw);
     if(HASHSET.has(hash)) {
       var old=CATALOG.find(r=>r.hash===hash);
@@ -3419,6 +3420,12 @@ boot();
       var f=new File([att.bytes], att.filename, {type: att.ct||""});
       var item=window.PBWorkspace ? await PBWorkspace.storeItem({file:f,path:path,dirId:null}) : {file:f,path:path,dirId:null};
       var r=await signFile(item.file, item.path, item.dirId);
+      // Every attachment knows the mail it came with, also when it was already known (reading the file again links it).
+      try{
+        var ah=r&&r.hash?r.hash:await sha256(await f.arrayBuffer());
+        var arec=CATALOG.find(function(x){return x.hash===ah;});
+        if(arec && msg._pbHash && arec.fromMail!==msg._pbHash){arec.fromMail=msg._pbHash;await idbPut("catalog",arec);}
+      }catch(e){}
       return r && !r.skipped ? 1 : 0;
     }catch(e){ return 0; }
   }

@@ -58,6 +58,24 @@
     mailPart: ['Geprüft wurde der Text der E-Mail. Anhänge stehen als eigene Dateien da.', 'The text of the email was checked. Attachments are listed as their own files.', 'Проверен текст письма. Вложения — отдельные файлы.', 'Sprawdzono tekst e-maila. Załączniki są osobnymi plikami.'],
     throwAway: ['Wegwerfen (fragt vorher)', 'Throw away (asks first)', 'Удалить (спросит)', 'Wyrzuć (zapyta)'],
     inconspicuous: ['unauffällig', 'inconspicuous', 'без замечаний', 'bez zastrzeżeń'],
+    missingBadge: ['⊘ Original fehlt · nicht prüfbar', '⊘ Original missing · cannot be checked', '⊘ Нет оригинала · нельзя проверить', '⊘ Brak oryginału · nie można sprawdzić'],
+    standButton: ['🛡 Prüfstand · ⊘ {n} ohne Original', '🛡 Check status · ⊘ {n} without original', '🛡 Состояние · ⊘ {n} без оригинала', '🛡 Stan · ⊘ {n} bez oryginału'],
+    stand: ['🛡 Prüfstand aller {n} Dateien', '🛡 Check status of all {n} files', '🛡 Состояние всех {n} файлов', '🛡 Stan wszystkich {n} plików'],
+    standClean: ['✓ {n} ohne Fund', '✓ {n} nothing found', '✓ {n} без находок', '✓ {n} bez znalezisk'],
+    standFound: ['⚠ {n} mit Fund', '⚠ {n} with a finding', '⚠ {n} с находкой', '⚠ {n} ze znaleziskiem'],
+    standPartly: ['◐ {n} teilweise geprüft', '◐ {n} partly checked', '◐ {n} частично', '◐ {n} częściowo'],
+    standMissing: ['⊘ {n} nicht prüfbar, weil das Original fehlt', '⊘ {n} cannot be checked, the original is missing', '⊘ {n} без оригинала', '⊘ {n} bez oryginału'],
+    standOpen: ['○ {n} noch nicht geprüft', '○ {n} not checked yet', '○ {n} не проверено', '○ {n} niesprawdzone'],
+    thisRun: ['In diesem Durchgang neu geprüft: {n}', 'Newly checked in this run: {n}', 'Проверено сейчас: {n}', 'Sprawdzono teraz: {n}'],
+    findOriginals: ['📁 Originale suchen ({n})', '📁 Find originals ({n})', '📁 Найти оригиналы ({n})', '📁 Znajdź oryginały ({n})'],
+    missingHelp: ['Von diesen Dateien hat die App nur den gelesenen Text behalten, nicht die Datei selbst. Wähle den Ordner, in dem die Dateien liegen, oder lies die E-Mail-Datei (.mbox/.eml) noch einmal ein. Danach lassen sie sich prüfen.', 'For these files the app kept only the text it read, not the file itself. Choose the folder that holds them, or add the email file (.mbox/.eml) again. Then they can be checked.', 'Для этих файлов сохранён только текст. Выберите папку с файлами или добавьте файл письма ещё раз.', 'Dla tych plików zachowano tylko tekst. Wybierz folder z plikami lub dodaj plik e-maila ponownie.'],
+    partlyWhy: ['Warum nur teilweise:', 'Why only partly:', 'Почему частично:', 'Dlaczego częściowo:'],
+    partlyOk: ['Im geprüften Teil wurde nichts gefunden, was täuschen soll.', 'Nothing meant to deceive was found in the part that was checked.', 'В проверенной части ничего обманного не найдено.', 'W sprawdzonej części nie znaleziono niczego zwodniczego.'],
+    whyPages: ['Nur die ersten {n} Seiten wurden gelesen.', 'Only the first {n} pages were read.', 'Прочитаны только первые {n} страниц.', 'Przeczytano tylko pierwsze {n} stron.'],
+    whyHidden: ['Auf unsichtbaren Text wurden nur die ersten {n} Seiten geprüft.', 'Only the first {n} pages were checked for invisible text.', 'Невидимый текст проверен только на первых {n} страницах.', 'Niewidoczny tekst sprawdzono tylko na pierwszych {n} stronach.'],
+    whyOcr: ['Text in Bildern und auf eingescannten Seiten wurde nicht gelesen: die Texterkennung fehlt in der App noch.', 'Text in images and on scanned pages was not read: the text recognition is not in the app yet.', 'Текст на изображениях не читался: нет распознавания текста.', 'Tekst na obrazach nie był czytany: brak rozpoznawania tekstu.'],
+    whyPacked: ['Ein Teil des Dateiinhalts ist gepackt und wurde nicht ausgepackt.', 'Part of the file content is packed and was not unpacked.', 'Часть содержимого упакована и не распакована.', 'Część zawartości jest spakowana i nie została rozpakowana.'],
+    details: ['Einzelheiten (technisch)', 'Details (technical)', 'Подробности (технические)', 'Szczegóły (techniczne)'],
     germanOnly: ['Die Einzelheiten der Funde stehen auf Deutsch.', 'Details of the findings are in German.', 'Подробности находок — на немецком.', 'Szczegóły znalezisk są po niemiecku.']
   };
   const t = k => { const v = W[k]; if (!v) return k; return v[Math.max(0, L.indexOf(String(document.documentElement.lang || 'de').slice(0, 2)))] || v[0]; };
@@ -79,6 +97,19 @@
     if (result.funde && result.funde.length) return 'found';
     if (result.ungeprueft) return 'partly';
     return 'clean';
+  }
+  // Klaus 2026-10-22: "0 Befund … 13 können nicht gelesen werden … und ich habe 2 Befunde": the state of a file says
+  // honestly what is possible. Without the file itself on the device it is "Original fehlt", never "jetzt prüfen".
+  function canCheck(rec) {
+    if (rec.mail) return true;
+    if (window.PBOriginals?.stored?.has(rec.hash)) return true;
+    if (typeof SESSION_FILES !== 'undefined' && SESSION_FILES.has(rec.hash)) return true;
+    return !window.PBOriginals && Boolean(rec.dirId);
+  }
+  function stateFor(rec) {
+    if (running.has(rec.hash)) return 'running';
+    if (rec.pruefung) return stateOf(rec.pruefung);
+    return canCheck(rec) ? 'open' : 'missing';
   }
   async function checkBytes(name, bytes) {
     const A = await core();
@@ -168,7 +199,34 @@
   }
 
   // 🛡 Alle prüfen: every entry without a result, one after the other; the files themselves stay unchanged.
-  const openOnes = () => CATALOG.filter(r => !r.mailIndex && !r.pruefung);
+  const openOnes = () => CATALOG.filter(r => !r.mailIndex && !r.pruefung && canCheck(r));
+  const missingOnes = () => CATALOG.filter(r => !r.mailIndex && !r.pruefung && !canCheck(r));
+  // One honest line over ALL files (not only the ones of this run), with a list of the findings.
+  function standBlock(dialog, newly) {
+    const recs = CATALOG.filter(r => !r.mailIndex), c = { clean: 0, found: 0, partly: 0, missing: 0, open: 0, running: 0 };
+    for (const r of recs) c[stateFor(r)]++;
+    const ul = make('ul', null, 'pb-check-stand'); ul.dataset.total = String(recs.length);
+    for (const [k, w] of [['found', 'standFound'], ['partly', 'standPartly'], ['clean', 'standClean'], ['missing', 'standMissing'], ['open', 'standOpen']])
+      if (c[k]) { const li = make('li', t(w).replace('{n}', c[k])); li.dataset.state = k; ul.append(li); }
+    dialog.append(make('h3', t('stand').replace('{n}', recs.length)), ul);
+    if (newly != null) dialog.append(make('p', t('thisRun').replace('{n}', newly), 'hint'));
+    const found = recs.filter(r => stateFor(r) === 'found');
+    if (found.length) {
+      dialog.append(make('h3', t('allList')));
+      const list = make('ul', null, 'pb-check-found');
+      for (const rec of found) { const li = make('li'); const b = make('button', '⚠ ' + rec.name + ' — ' + t(rec.pruefung.funde[0].k), 'ghost'); b.type = 'button'; b.onclick = () => { dialog.close(); report(rec); }; li.append(b); list.append(li); }
+      dialog.append(list);
+    }
+    if (c.missing) {
+      dialog.append(make('p', t('missingHelp'), 'hint pb-check-missing-help'));
+      if (window.PBOriginals?.searchFolder) {
+        const st = make('p', null, 'hint'); st.setAttribute('role', 'status');
+        const b = make('button', t('findOriginals').replace('{n}', c.missing), 'ghost pb-check-find'); b.type = 'button';
+        b.onclick = async () => { b.disabled = true; try { await PBOriginals.searchFolder(st); } finally { b.disabled = false; } };
+        dialog.append(b, st);
+      }
+    }
+  }
   let allBusy = false;
   async function checkAll(button) {
     if (allBusy) return; allBusy = true;
@@ -181,16 +239,9 @@
         if (i % 3 === 0) await new Promise(r => setTimeout(r));
       }
     } finally { allBusy = false; allButtons(); }
-    const found = todo.filter(r => stateOf(r.pruefung) === 'found');
     const dialog = make('dialog', null, 'live-dialog pb-check-report pb-check-all');
-    const head = make('p', t('allDone') + ': ' + (todo.length - missing) + ' · ⚠ ' + found.length + t('sumFound') + (missing ? t('allMissing').replace('{n}', missing) : ''));
-    dialog.append(make('h2', t('report')), head);
-    if (found.length) {
-      dialog.append(make('h3', t('allList')));
-      const ul = make('ul', null, 'pb-check-found');
-      for (const rec of found) { const li = make('li'); const b = make('button', '⚠ ' + rec.name + ' — ' + t(rec.pruefung.funde[0].k), 'ghost'); b.type = 'button'; b.onclick = () => { dialog.close(); report(rec); }; li.append(b); ul.append(li); }
-      dialog.append(ul);
-    }
+    dialog.append(make('h2', t('report')));
+    standBlock(dialog, todo.length - missing);
     const close = make('button', t('close')); close.type = 'button'; close.onclick = () => dialog.close();
     dialog.append(make('p', t('noVirus'), 'hint'), close); document.body.append(dialog);
     dialog.addEventListener('close', () => dialog.remove()); dialog.showModal();
@@ -201,21 +252,38 @@
       if (!spot) continue;
       let b = spot.querySelector(':scope > .pb-check-all-button');
       if (!b) { b = make('button', '', 'ghost pb-check-all-button'); b.type = 'button'; b.onclick = () => checkAll(b); spot.append(b); }
-      if (!allBusy) { const text = n ? t('all') + t('allOpen').replace('{n}', n) : t('allNone'); if (b.textContent !== text) b.textContent = text; if (b.disabled !== !n) b.disabled = !n; }
+      const m = missingOnes().length;
+      if (!allBusy) { const text = n ? t('all') + t('allOpen').replace('{n}', n) : m ? t('standButton').replace('{n}', m) : t('allNone'); if (b.textContent !== text) b.textContent = text; if (b.disabled !== !n) b.disabled = !n; }
+      // Without anything to check the button still opens the honest status of all files.
+      if (!n && !allBusy) { b.disabled = false; b.onclick = () => showStand(); } else if (!allBusy) b.onclick = () => checkAll(b);
     }
   }
 
+  function showStand() {
+    const dialog = make('dialog', null, 'live-dialog pb-check-report pb-check-all');
+    dialog.append(make('h2', t('report')));
+    standBlock(dialog, null);
+    const close = make('button', t('close')); close.type = 'button'; close.onclick = () => dialog.close();
+    dialog.append(make('p', t('noVirus'), 'hint'), close); document.body.append(dialog);
+    dialog.addEventListener('close', () => dialog.remove()); dialog.showModal();
+  }
   const make = (tag, text, cls) => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
   function badgeText(rec) {
-    if (running.has(rec.hash)) return t('running');
-    const s = stateOf(rec.pruefung);
+    const s = stateFor(rec);
+    if (s === 'running') return t('running');
     if (s === 'found') return t('found') + t(rec.pruefung.funde[0].k);
+    if (s === 'missing') return t('missingBadge');
     return t(s);
   }
   function badge(rec) {
     const b = make('button', badgeText(rec), 'pb-check-badge');
-    b.type = 'button'; b.dataset.check = running.has(rec.hash) ? 'running' : stateOf(rec.pruefung); b.dataset.hash = rec.hash;
-    b.onclick = event => { event.stopPropagation(); if (stateOf(rec.pruefung) === 'open') void checkRecord(rec).then(r => { if (r) report(rec); }); else report(rec); };
+    b.type = 'button'; b.dataset.check = stateFor(rec); b.dataset.hash = rec.hash;
+    b.onclick = event => {
+      event.stopPropagation();
+      const s = stateFor(rec);
+      if (s === 'missing') { if (window.PBOriginals?.reconnect) PBOriginals.reconnect(rec); else alert(t('missing')); return; }
+      if (s === 'open') void checkRecord(rec).then(r => { if (r) report(rec); }); else report(rec);
+    };
     return b;
   }
   function report(rec) {
@@ -230,10 +298,12 @@
       const list = make('ul', null, 'pb-check-found');
       for (const f of r.funde) { const li = make('li'); li.append(make('b', t(f.k)), document.createTextNode(' — ' + f.satz)); li.dataset.k = f.k; list.append(li); }
       dialog.append(list, make('p', t('whatNow'), 'pb-check-whatnow'));
-    } else dialog.append(make('p', '✓ ' + t('none'), 'pb-check-clean'));
+    } else dialog.append(make('p', '✓ ' + (r.ungeprueft ? t('partlyOk') : t('none')), 'pb-check-clean'));
     const notes = [...r.hinweise.filter(h => /NICHT|ungeprüft|nicht geprüft|nicht erreichbar|nicht gelesen/i.test(h))];
-    if (r.bild) notes.unshift(t('imageText'));
-    if (notes.length) { dialog.append(make('h3', t('notes'))); const ul = make('ul', null, 'pb-check-notes'); for (const n of notes) ul.append(make('li', n)); dialog.append(ul); }
+    // Klaus 2026-10-22: in plain words first, the technical list folded away underneath.
+    const why = plainWhy(r, notes);
+    if (why.length) { dialog.append(make('h3', t('partlyWhy'))); const ul = make('ul', null, 'pb-check-why'); for (const w of why) ul.append(make('li', w)); dialog.append(ul); }
+    if (notes.length) { const d = make('details', null, 'pb-check-tech'); d.append(make('summary', t('details'))); const ul = make('ul', null, 'pb-check-notes'); for (const n of notes) ul.append(make('li', n)); d.append(ul); dialog.append(d); }
     if (r.angaben.length) {
       const d = make('details', null, 'pb-check-info'); d.append(make('summary', t('info')));
       const ul = make('ul'); for (const a of r.angaben) ul.append(make('li', a.k + ': ' + a.satz)); d.append(ul); dialog.append(d);
@@ -248,6 +318,16 @@
     dialog.addEventListener('close', () => dialog.remove()); dialog.showModal();
   }
 
+  function plainWhy(r, notes) {
+    const out = [], all = notes.join('\n'), add = s => { if (!out.includes(s)) out.push(s); };
+    const read = /NICHT gelesen \(höchstens (\d+)\)/.exec(all); if (read) add(t('whyPages').replace('{n}', read[1]));
+    const hidden = /nicht gegengelesen \(höchstens (\d+)\)/.exec(all); if (hidden) add(t('whyHidden').replace('{n}', hidden[1]));
+    if (r.bild || /Texterkennung/.test(all)) add(t('whyOcr'));
+    if (/gepackte Ströme/.test(all)) add(t('whyPacked'));
+    for (const n of notes) if (n === t('tooBig') || n.startsWith(t('failed'))) add(n);
+    if (r.ungeprueft && !out.length) add(t('imageText'));
+    return out;
+  }
   // Marks next to every file: search results and catalog cards (".openBtn[data-hash]") and explorer rows.
   let painting = false;
   function paint() {
@@ -350,5 +430,5 @@
     return b;
   }
 
-  window.PBCheck = { checkAll, checkMail, checkVault, checkVaultAll, vaultOpen, line, vaultBadge, show, checkBytes, checkFile, checkRecord, report, summary, stateOf, badgeText, words: t };
+  window.PBCheck = { stateFor, canCheck, vaultState: v => { const k = vaultMemory()[v.sha256 || v.ref || v.id]; return k ? stateOf(k) : 'open'; }, showStand, checkAll, checkMail, checkVault, checkVaultAll, vaultOpen, line, vaultBadge, show, checkBytes, checkFile, checkRecord, report, summary, stateOf, badgeText, words: t };
 })();

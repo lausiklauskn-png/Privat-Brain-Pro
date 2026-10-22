@@ -40,6 +40,7 @@
     restoredRecords: [', Entwürfe/Versandstatus ', ', drafts/send status ', ', черновики/статусы ', ', szkice/stany '],
     restoredCatalog: [', Katalogeinträge ', ', catalog entries ', ', записи каталога ', ', wpisy katalogu '],
     restoreNote: ['Originale kommen beim Öffnen aus dem Ordner zurück. Google-Konten brauchen auf dem neuen Gerät eine neue Freigabe.', 'Originals return from the folder when opened. Google accounts need a new authorization on the new device.', 'Оригиналы возвращаются из папки при открытии. Для Google нужно новое разрешение.', 'Oryginały wracają z folderu przy otwarciu. Konta Google wymagają ponownej autoryzacji.'],
+    inStore: ['📎 Anhänge aus dem Postfach im Speicherort', '📎 Mailbox attachments in the storage folder', '📎 Вложения из почты в хранилище', '📎 Załączniki ze skrzynki w magazynie'],
     folderName: ['📎 Mail-Anhänge', '📎 Email attachments', '📎 Вложения', '📎 Załączniki'],
     clear: ['🗑 Ganzen Ordner leeren', '🗑 Empty whole folder', '🗑 Очистить папку', '🗑 Opróżnij folder'],
     clearAsk: ['Alle {n} Mail-Anhänge ({size}) endgültig aus dem Ordner löschen? Die Mails bleiben; sie zeigen danach „Anhang gelöscht“. Beim Mailanbieter bleiben die Anhänge erhalten.', 'Permanently delete all {n} email attachments ({size}) from the folder? The emails stay and show “Attachment deleted”. Your provider keeps the attachments.', 'Удалить все {n} вложений ({size}) из папки навсегда? Письма останутся с пометкой «Вложение удалено». У провайдера вложения сохранятся.', 'Trwale usunąć wszystkie {n} załączników ({size}) z folderu? Wiadomości zostaną z dopiskiem „Załącznik usunięty”. U dostawcy załączniki pozostaną.'],
@@ -287,27 +288,21 @@
     if (window.PBSchutz && entry.sha256) info.append(PBSchutz.attachmentStatus(entry, { handOut: () => handOut(entry.id, true).catch(error => alert(errorText(error))) }));
     return row;
   }
+  // The explorer (assets/workspace.js) puts these attachments under the mail they came with, in one tree with the
+  // attachments of imported email files (Klaus 2026-10-22: "Mail-Anhänge und Anhänge aus E-Mails sind zweimal dasselbe").
   window.PBExplorerExtra = {
-    owns: path => path === FOLDER,
-    tree(tree, current, open, button) {
-      if (!state.configured) return;
-      const b = button(t('folderName'), () => open(FOLDER));
-      b.setAttribute('aria-current', current === FOLDER ? 'location' : 'false');
-      b.classList.add('native-vault-folder');
-      tree.children[0]?.after(b);
+    items() {
+      if (!state.configured || !state.unlocked) return [];
+      if (!itemsLoaded) { itemsLoaded = true; void loadItems().then(() => window.PBWorkspace.refresh()); }
+      return items;
     },
-    label: () => t('folderName'),
-    files(target, filter, sort) {
-      if (!state.unlocked) {
-        const p = make('p', t('lockedFolder') + ' ', 'explorer-empty'), b = make('button', t('unlock'), 'ghost'); b.type = 'button';
-        b.onclick = () => act(async () => { if (await unlock()) { await loadItems(); window.PBWorkspace.refresh(); } });
-        p.append(b); target.append(p); return;
-      }
-      if (!itemsLoaded) { void loadItems().then(() => window.PBWorkspace.refresh()); }
+    row: rowFor,
+    head(target) {
+      if (!state.configured || !state.unlocked || !items.length) return;
       const total = items.reduce((s, e) => s + (e.size || 0), 0);
       const head = make('div', null, 'native-vault-head');
-      const sumLine = make('span', items.length + ' · ' + size(total));
-      const clear = make('button', t('clear'), 'ghost native-vault-clear'); clear.type = 'button'; clear.disabled = !items.length || busy;
+      const sumLine = make('span', t('inStore') + ': ' + items.length + ' · ' + size(total));
+      const clear = make('button', t('clear'), 'ghost native-vault-clear'); clear.type = 'button'; clear.disabled = busy;
       clear.onclick = () => act(async () => {
         if (!confirm(t('clearAsk').replace('{n}', items.length).replace('{size}', size(total)))) return;
         const result = await api.clearAttachments();
@@ -315,19 +310,20 @@
         await loadItems(); window.PBWorkspace.refresh();
       });
       head.append(sumLine, clear);
-      if (window.PBCheck && items.length) {
+      if (window.PBCheck) {
         const open = PBCheck.vaultOpen(items), all = make('button', open ? PBCheck.words('all') + PBCheck.words('allOpen').replace('{n}', open) : PBCheck.words('allNone'), 'ghost pb-check-all-button');
         all.type = 'button'; all.disabled = !open || busy;
         all.onclick = () => PBCheck.checkVaultAll(items, all, () => window.PBWorkspace.refresh());
         head.append(all);
       }
       target.append(head);
-      const needle = filter.toLocaleLowerCase();
-      const shown = items.filter(e => (e.name + ' ' + (e.subject || '') + ' ' + (e.from || '')).toLocaleLowerCase().includes(needle));
-      shown.sort((a, b) => sort === 'date' ? (Number(b.date) || b.stored) - (Number(a.date) || a.stored) : sort === 'size' ? b.size - a.size : a.name.localeCompare(b.name));
-      for (const entry of shown) target.append(rowFor(entry));
-      if (!shown.length) target.append(make('p', t('emptyFolder'), 'explorer-empty'));
       if (note || problem) target.append(make('p', [note, problem].filter(Boolean).join(' · '), 'hint'));
+    },
+    lockedRow(target) {
+      if (!state.configured || state.unlocked) return;
+      const p = make('p', t('lockedFolder') + ' ', 'explorer-empty native-vault-locked'), b = make('button', t('unlock'), 'ghost'); b.type = 'button';
+      b.onclick = () => act(async () => { if (await unlock()) { await loadItems(); window.PBWorkspace.refresh(); } });
+      p.append(b); target.append(p);
     }
   };
 
