@@ -600,3 +600,8 @@ html.pb-tool-open body{overflow:hidden}
 .pb-studio-pub code{overflow-wrap:anywhere;font-size:.78rem}
 .pb-studio-tools{display:flex;flex-wrap:wrap;gap:4px 14px;border:1px solid var(--line,#ddd);border-radius:8px;margin:6px 0}
 .pb-studio-tools label{white-space:nowrap}
+.pb-studio-tools input,.pb-studio-share input,.pb-studio-shares-out label input{display:inline-block;width:auto}
+.pb-studio-shares,.pb-studio-forgot{margin-top:10px;padding-top:8px;border-top:1px solid var(--line,#ddd)}
+.pb-studio-share{margin:6px 0}.pb-studio-share b{display:block;font-size:.85rem}
+.pb-studio-probe input{display:block;margin:8px 0;width:min(100%,360px)}
+.pb-studio-probe [data-ok="true"]{color:#1d7a3a}.pb-studio-probe [data-ok="false"]{color:#b3261e}
