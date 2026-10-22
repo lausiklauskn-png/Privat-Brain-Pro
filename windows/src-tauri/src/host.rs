@@ -1,7 +1,7 @@
 use crate::{engine::Engine,win};
 use base64::{Engine as _,engine::general_purpose::STANDARD as B64};
 use serde_json::{Value,json};
-use std::{path::PathBuf,sync::{Arc,Mutex,mpsc},time::Duration};
+use std::{path::PathBuf,sync::{Arc,Mutex,mpsc,atomic::{AtomicBool,Ordering}},time::Duration};
 use tauri::{Manager,WebviewUrl,WebviewWindowBuilder};
 use tauri_plugin_dialog::DialogExt;
 
@@ -9,12 +9,13 @@ pub struct Host {
     pub app:tauri::AppHandle,pub data:PathBuf,pub engine:Mutex<Option<Arc<Engine>>>,
     pub dialog:Mutex<Option<mpsc::Sender<Value>>>,pub dialog_config:Mutex<Value>,
     pub language:Mutex<String>,
+    pub offline:AtomicBool,
 }
 impl Host {
     pub fn new(app:tauri::AppHandle)->Result<Arc<Self>,String>{
         let data=app.path().app_local_data_dir().map_err(|_|"STORAGE_UNAVAILABLE")?;
         win::no_links(&data)?;std::fs::create_dir_all(&data).map_err(|_|"STORAGE_UNAVAILABLE")?;
-        Ok(Arc::new(Self{app,data,engine:Mutex::new(None),dialog:Mutex::new(None),dialog_config:Mutex::new(Value::Null),language:Mutex::new("de".into())}))
+        Ok(Arc::new(Self{app,data,engine:Mutex::new(None),dialog:Mutex::new(None),dialog_config:Mutex::new(Value::Null),language:Mutex::new("de".into()),offline:AtomicBool::new(true)}))
     }
     pub fn start(self:&Arc<Self>)->Result<(),String>{
         let runtime=self.app.path().resource_dir().map_err(|_|"APP_RUNTIME_UNAVAILABLE")?.join("runtime");
@@ -24,8 +25,11 @@ impl Host {
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
         if let Some(map)=options.as_object_mut(){map.remove("_language");}
         if serde_json::to_vec(&options).map_err(|_|"INVALID_INPUT")?.len()>2*1024*1024{return Err("INVALID_INPUT".into());}
+        if plugin=="ProNetwork"&&method=="setOffline"&&options.get("offline").and_then(Value::as_bool)==Some(true){self.offline.store(true,Ordering::SeqCst);}
         let engine=self.engine.lock().unwrap().clone().ok_or("APP_RUNTIME_UNAVAILABLE".to_owned())?;
-        engine.call(plugin,method,options)
+        let result=engine.call(plugin,method,options);
+        if plugin=="ProNetwork" {if let Ok(value)=&result{if let Some(offline)=value.get("offline").and_then(Value::as_bool){self.offline.store(offline,Ordering::SeqCst);}}}
+        result
     }
     pub fn private_call(&self,method:&str,o:Value)->Result<Value,String>{
         let text=|key:&str|o.get(key).and_then(Value::as_str).unwrap_or("");

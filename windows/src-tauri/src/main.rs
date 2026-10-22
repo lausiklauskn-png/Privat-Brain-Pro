@@ -2,6 +2,7 @@
 mod engine;
 mod host;
 mod win;
+mod resources;
 use host::Host;
 use serde_json::{Value,json};
 use std::sync::Arc;
@@ -29,15 +30,15 @@ fn main(){
         .plugin(tauri_plugin_single_instance::init(|app,_,_|{if let Some(window)=app.get_webview_window("main"){let _=window.set_focus();}}))
         .invoke_handler(tauri::generate_handler![pb_call,pb_dialog])
         .setup(|app|{
-            let host=Host::new(app.handle().clone()).map_err(std::io::Error::other)?;host.start().map_err(std::io::Error::other)?;app.manage(host);
-            let mut window=WebviewWindowBuilder::new(app,"main",WebviewUrl::App("index.html".into()))
+            let host=Host::new(app.handle().clone()).map_err(std::io::Error::other)?;host.start().map_err(std::io::Error::other)?;app.manage(host.clone());
+            let mut window=WebviewWindowBuilder::new(app,"main",WebviewUrl::App("windows/start.html".into()))
                 .title("Private Brain Pro").inner_size(1280.,900.).min_inner_size(360.,480.).use_https_scheme(true)
                 .devtools(cfg!(feature="messprobe")).disable_drag_drop_handler()
                 .initialization_script(include_str!("../../bridge/capacitor-tauri.js"))
-                .on_navigation(|url|url.scheme()=="https"&&url.host_str()==Some("tauri.localhost")&&["/","/index.html"].contains(&url.path()))
+                .on_navigation(|url|url.scheme()=="https"&&url.host_str()==Some("tauri.localhost")&&["/","/index.html","/windows/start.html"].contains(&url.path()))
                 .on_new_window(|_,_|tauri::webview::NewWindowResponse::Deny);
             #[cfg(feature="messprobe")] {window=window.additional_browser_args("--remote-debugging-port=9223");}
-            window.build()?;Ok(())
+            let window=window.build()?;resources::install(&window,host).map_err(std::io::Error::other)?;Ok(())
         })
         .on_window_event(|window,event|{
             if let tauri::WindowEvent::Destroyed=event {

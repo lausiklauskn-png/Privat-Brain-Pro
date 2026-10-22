@@ -20,6 +20,22 @@ final class DesktopModel {
         return new JSONObject().put("installed",model.installed()).put("running",running.get()).put("present",model.present())
             .put("total",model.total()).put("files",model.entries().size()).put("crashes",prefs.getInt("crashes",0)).put("lastGone",prefs.getString("lastGone",""));
     }
+    JSONObject asset(String value)throws Exception {
+        java.net.URI uri=java.net.URI.create(value);String path=uri.getPath(),relative=null;
+        String base="/npm/@xenova/transformers@2.17.2";
+        if("https".equals(uri.getScheme())&&"cdn.jsdelivr.net".equals(uri.getHost())){
+            if(path.equals(base)||path.equals(base+"/"))relative="lib/transformers.min.js";
+            else if(path.startsWith(base+"/"))relative="lib/"+path.substring(base.length()+1);
+        }else if("https".equals(uri.getScheme())&&"tauri.localhost".equals(uri.getHost())&&path.startsWith("/models/Xenova/multilingual-e5-small/")){
+            relative="model/"+path.substring("/models/Xenova/multilingual-e5-small/".length());
+        }
+        if(relative==null)return new JSONObject().put("missing",true);
+        java.io.File file=model.file(relative);if(file==null)return new JSONObject().put("missing",true);
+        DesktopFiles.noLinks(file.toPath());
+        SemanticModel.Entry found=null;for(SemanticModel.Entry entry:model.entries())if(entry.path.equals(relative))found=entry;
+        if(found==null||!found.sha256.equals(OriginalFileStore.digest(file)))throw new VaultCrypto.Failure("VAULT_DAMAGED");
+        return new JSONObject().put("path",file.toString()).put("size",file.length());
+    }
     JSONObject call(String method)throws Exception {
         switch(method){
             case "getState":return state();

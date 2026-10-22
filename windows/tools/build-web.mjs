@@ -12,6 +12,7 @@ for(const path of ['assets/schutz-init.js','kimboard/assets/schutz-init.js','kim
   await writeFile(file,text.replace(origin,'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost", "https://tauri.localhost"];'));
 }
 await mkdir(join(dist,'windows'),{recursive:true});
+await writeFile(join(dist,'windows/start.html'),'<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'"><title>Private Brain Pro</title>');
 await cp(join(windows,'dialog'),join(dist,'windows/dialog'),{recursive:true});
 await cp(join(root,'icon-512.png'),join(dist,'windows/icon.png'));
 let html=await readFile(join(dist,'index.html'),'utf8');

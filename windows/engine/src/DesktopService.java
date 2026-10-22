@@ -43,6 +43,10 @@ final class DesktopService {
             case "ProMail" -> mail(method,o);
             case "ProProtect" -> protect(method,o);
             case "ProSemantic" -> model.call(method);
+            case "DesktopInternal" -> {
+                if(!method.equals("modelAsset"))throw new MailFailure("INVALID_INPUT");
+                yield model.asset(required(o,"url"));
+            }
             default -> throw new MailFailure("INVALID_INPUT");
         };
     }
