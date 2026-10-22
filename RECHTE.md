@@ -15,7 +15,7 @@ ausdrücklich an den Nutzer ab. Getragen wird der Schutz von der menschlichen
 Prägung: Entwurf, Auswahl und Anordnung, Nachbearbeitung, Dokumentation und die
 Git-Historie mit Datum.
 
-**Fremde Bestandteile** behalten ihre eigenen Lizenzen (noble-secp256k1, three.js,
+**Fremde Bestandteile** behalten ihre eigenen Lizenzen (noble-secp256k1, three.js, PDF.js 3.11.174 von Mozilla unter `vendor/pdfjs/` (Apache 2.0, byte-gleich aus Workflow PDF),
 GSAP und andere — erkennbar am Lizenz-Kopf der Datei). Die **SBKIM-Module** aus
 dem Sage-Protokol stehen unter der MIT-Lizenz und dürfen frei weiterverwendet
 werden; diese Lizenz beschränkt nur die App selbst.

@@ -32,6 +32,43 @@
       note(say(String(error?.code || error?.message || '').includes('UNAVAILABLE') ? 1 : 2));
     } finally { busy = false; mic.textContent = was; mic.removeAttribute('aria-busy'); }
   }
+  // Klaus 2026-10-22: "Wenn der Text eingegeben werden kann, dann bitte auch mit Mikrofon". Every larger text
+  // field (question to the AI about a file, writing a mail, notes …) gets 🎤; the spoken text goes in at the cursor.
+  const DICTATE = { de: 'Diktieren (Android-Spracheingabe)', en: 'Dictate (Android voice input)', ru: 'Диктовать (голосовой ввод Android)', pl: 'Dyktuj (wprowadzanie głosowe Android)' };
+  async function dictate(mic, field) {
+    if (busy) return;
+    busy = true; mic.textContent = '🔴'; mic.setAttribute('aria-busy', 'true');
+    try {
+      const result = await plugin.listen({ language: LANG[lang()], prompt: say(0) });
+      const text = typeof result?.text === 'string' ? result.text.trim().slice(0, 2000) : '';
+      if (result?.cancelled || !text) return;
+      const start = field.selectionStart ?? field.value.length, end = field.selectionEnd ?? start;
+      const before = field.value.slice(0, start), after = field.value.slice(end);
+      const glue = before && !/\s$/.test(before) ? ' ' : '';
+      field.value = before + glue + text + after;
+      const at = (before + glue + text).length; field.focus(); field.setSelectionRange?.(at, at);
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (error) {
+      note(say(String(error?.code || error?.message || '').includes('UNAVAILABLE') ? 1 : 2));
+    } finally { busy = false; mic.textContent = '🎤'; mic.removeAttribute('aria-busy'); }
+  }
+  function equip() {
+    // Not for codes (recovery shares): dictating them makes no sense.
+    for (const field of document.querySelectorAll('textarea:not([data-pb-dictate]):not(#trShares):not([data-no-dictate])')) {
+      if (field.readOnly || field.disabled) continue;
+      field.dataset.pbDictate = '1';
+      const mic = document.createElement('button');
+      mic.type = 'button'; mic.className = 'ghost pb-dictate'; mic.textContent = '🎤';
+      mic.title = mic.ariaLabel = DICTATE[lang()];
+      mic.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); dictate(mic, field); });
+      field.after(mic);
+    }
+    for (const mic of document.querySelectorAll('.pb-dictate')) mic.title = mic.ariaLabel = DICTATE[lang()];
+  }
+  let pending = false;
+  new MutationObserver(() => { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; equip(); }); })
+    .observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['lang'] });
+  equip();
   // Capture phase: the page's own handler would only say "Dein Browser kann keine Sprach-Eingabe".
   document.addEventListener('click', event => {
     const mic = event.target.closest?.('#mic');

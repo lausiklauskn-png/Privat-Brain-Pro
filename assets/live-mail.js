@@ -831,8 +831,15 @@
     for (const a of data.attachments || []) {
       // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
       if (!a.data && window.PBVault) {
-        risky = true;
-        container.append(el("p", "", a.name + " · " + PBVault.uncheckedText()));
+        // 🛡 Klaus 2026-10-22: attachments in the folder are checked too (native/native-check.js).
+        const checked = window.PBCheck && a.stored && a.ref ? await PBCheck.checkVault(a).catch(() => null) : null;
+        if (!checked) {
+          risky = true;
+          container.append(el("p", "", a.name + " · " + PBVault.uncheckedText()));
+          continue;
+        }
+        if (checked.funde.length || checked.ungeprueft) risky = true;
+        container.append(PBCheck.line(a.name, checked, a));
         continue;
       }
       let result;
