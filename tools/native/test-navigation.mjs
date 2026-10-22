@@ -28,7 +28,7 @@ try{
   await page.waitForFunction(()=>CATALOG.length===2);
   await page.evaluate(()=>{window.imageHash=CATALOG.find(r=>r.name==='navigation-image.png').hash;window.noteHash=CATALOG.find(r=>r.name==='navigation-note.txt').hash;CATALOG.find(r=>r.hash===imageHash).path='Root/Photos/Deep/navigation-image.png';PBWorkspace.refresh();});
   await page.click('[data-tab=explorer]');
-  await page.locator('#explorerTree button').filter({hasText:'Root/Photos/Deep'}).click();
+  await page.locator('#explorerTree button[data-path="Root/Photos/Deep"]').click();
   await page.fill('#explorerFilter','navigation-image');
   await page.evaluate(()=>openFile(imageHash));
   await page.locator('.native-file-image').waitFor();

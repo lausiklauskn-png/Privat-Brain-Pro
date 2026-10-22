@@ -1,6 +1,6 @@
 /* Private Brain — Service Worker (offline App-Schale, cache-first).
    Fremde Origins werden durchgereicht (z. B. bewusst freigeschaltete EU-KI). */
-const CACHE = "private-brain-v90";
+const CACHE = "private-brain-v91";
 
 /* ⚠ NUR EIGENE VORRAETE AUFRAEUMEN — `caches` gehoert dem URSPRUNG, nicht dem
  * Pfad. Auf lausiklauskn-png.github.io liegen rund zwanzig Apps; ein Filter,

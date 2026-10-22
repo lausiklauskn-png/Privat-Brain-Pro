@@ -18,7 +18,19 @@
     empty:['Keine Dateien in dieser Ansicht. Füge Dateien hinzu oder wähle einen anderen Ordner.','No files in this view. Add files or choose another folder.','В этом разделе нет файлов. Добавьте файлы или выберите другую папку.','Brak plików. Dodaj pliki lub wybierz inny folder.'],filter:['Dateiliste filtern','Filter files','Фильтр файлов','Filtruj pliki'],
     permission:['Bitte gib den Zugriff auf den Ablageordner frei. Es wurde nichts kopiert.','Please grant access to the library folder. Nothing was copied.','Разрешите доступ к папке. Ничего не скопировано.','Zezwól na dostęp do folderu. Nic nie skopiowano.'],
     unavailable:['Datei nicht erreichbar. Prüfe den Ordner und seine Freigabe. Der Katalogeintrag bleibt erhalten.','File unavailable. Check the folder and permission. The catalog entry is preserved.','Файл недоступен. Проверьте папку и разрешение. Запись в каталоге сохранена.','Plik niedostępny. Sprawdź folder i uprawnienia. Wpis w katalogu pozostaje.'],
-    emails:['E-Mails','Emails','Письма','Wiadomości'],documents:['Dateien','Files','Файлы','Pliki'],stored:['lokal verknüpft','linked locally','локальные ссылки','powiązane lokalnie']
+    emails:['E-Mails','Emails','Письма','Wiadomości'],
+    // Klaus 2026-10-22: "nicht eindeutig zugeordnet" · "er sagt nicht, wo er die hingeladen hat".
+    kind_mail:['E-Mails','Emails','Письма','Wiadomości'],kind_doc:['Dokumente','Documents','Документы','Dokumenty'],
+    kind_photo:['Fotos und Bilder','Photos and images','Фото и изображения','Zdjęcia i obrazy'],kind_note:['Notizen','Notes','Заметки','Notatki'],
+    kind_attach:['Anhänge aus E-Mails','Attachments from emails','Вложения из писем','Załączniki z e-maili'],
+    byKind:['Nach Art','By type','По типу','Według rodzaju'],folders:['Ordner','Folders','Папки','Foldery'],
+    mailFolder:['Gespeicherte E-Mails','Saved emails','Сохранённые письма','Zapisane e-maile'],
+    unknownSender:['Absender unbekannt','Unknown sender','Отправитель неизвестен','Nieznany nadawca'],
+    fromMail:['aus der E-Mail von','from the email of','из письма от','z e-maila od'],
+    doneNew:['✓ Fertig. So ist es eingeordnet:','✓ Done. This is where it went:','✓ Готово. Вот куда это попало:','✓ Gotowe. Tu trafiło:'],
+    doneKnown:['schon vorher da','already there','уже было','już było'],
+    showIn:['Im Explorer zeigen','Show in Explorer','Показать в проводнике','Pokaż w eksploratorze'],
+    doneClose:['Hinweis schließen','Close note','Закрыть','Zamknij'],documents:['Dateien','Files','Файлы','Pliki'],stored:['lokal verknüpft','linked locally','локальные ссылки','powiązane lokalnie']
   };
   function text(key) { return (words[key] || [key])[Math.max(0,['de','en','ru','pl'].indexOf(document.documentElement.lang.slice(0,2)))] || key; }
   const pages=new Set([...document.querySelectorAll('.tab[data-tab]')].map(t=>t.dataset.tab));
@@ -159,14 +171,73 @@
     if(window.PBNavigation)return window.PBNavigation.folder(path,clear);
     folderPath=path;if(clear)el('explorerFilter').value='';renderExplorer();
   }
+  // What kind an entry is, so the explorer and the import note can say where a file is.
+  const KINDS=[['mail','✉️'],['doc','📄'],['photo','🖼️'],['note','📝'],['attach','📎']];
+  const kindIcon=k=>(KINDS.find(x=>x[0]===k)||KINDS[1])[1];
+  const ATTACH_DIR='Mail-Anhang', MAIL_DIR='Mail';
+  function attachSender(path){const p=String(path||'').split('/'),i=p.indexOf(ATTACH_DIR);return i>=0&&p.length>i+2?p[i+1]:'';}
+  function kindOf(r,path){
+    if(r.mail)return 'mail';
+    if(String(path||r.path||'').split('/').includes(ATTACH_DIR))return 'attach';
+    const n=String(r.name||'');
+    if(/\.(png|jpe?g|webp|gif|bmp|tiff?|heic|heif)$/i.test(n)||String(r.type||'').startsWith('image/'))return 'photo';
+    if(/\.(txt|md|markdown|rtf)$/i.test(n)||r.category==='Text/Notiz')return 'note';
+    return 'doc';
+  }
+  function senderLabel(seg){const s=String(seg||'').replace(/\s+/g,' ').trim();return '👤 '+(!s||s==='?'?text('unknownSender'):s);}
+  function folderLabel(path){
+    const p=path.split('/'),seg=p[p.length-1],parent=p[p.length-2];
+    if(seg===MAIL_DIR&&p.length===1)return '✉️ '+text('mailFolder');
+    if(seg===ATTACH_DIR)return '📎 '+text('kind_attach');
+    if((parent===MAIL_DIR&&p.length===2)||parent===ATTACH_DIR)return senderLabel(seg);
+    return '📁 '+seg;
+  }
+  function heading(label){const h=document.createElement('p');h.className='explorer-tree-head';h.textContent=label;return h;}
+  function showKind(key){
+    const path='kind:'+key;
+    if(window.PBNavigation)return window.PBNavigation.folder(path,true);
+    navigate('explorer');openFolder(path,true);
+  }
+  // After "Dateien hinzufügen": say where the files went, with one tap to get there.
+  function importSummary(list){
+    let box=el('pbImportDone');
+    if(!box){box=document.createElement('div');box.id='pbImportDone';box.className='pb-import-done';box.setAttribute('role','status');el('prog')?.after(box);}
+    box.replaceChildren();
+    const counts=new Map();
+    for(const item of list||[]){const c=counts.get(item.kind)||{fresh:0,known:0};item.known?c.known++:c.fresh++;counts.set(item.kind,c);}
+    if(!counts.size){box.hidden=true;return;}
+    box.hidden=false;box.append(heading(text('doneNew')));
+    for(const [key,icon] of KINDS){
+      const c=counts.get(key);if(!c)continue;
+      const line=document.createElement('p');line.dataset.kind=key;
+      const label=document.createElement('span');
+      label.textContent=icon+' '+text('kind_'+key)+': '+(c.fresh+c.known)+(c.known?' ('+c.known+' '+text('doneKnown')+')':'');
+      const go=button('→ '+text('showIn'),()=>showKind(key));go.dataset.show=key;
+      line.append(label,go);box.append(line);
+    }
+    const close=button('✕',()=>{box.hidden=true;});close.className='ghost pb-import-close';close.title=close.ariaLabel=text('doneClose');
+    box.append(close);
+  }
   function renderExplorer() {
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
     tree.append(button('📁 '+text('all'),()=>openFolder('')));
-    const folders = new Set();
-    for (const e of all) { const parts=e.path.split('/'); parts.pop(); for(let i=1;i<=parts.length;i++) folders.add(parts.slice(0,i).join('/')); }
-    for(const path of [...folders].sort((a,b)=>a.localeCompare(b))) {
-      const b=button('📁 '+path,()=>openFolder(path));
+    // By type first: these are the places a new person looks for a file.
+    const kindCount=new Map(),seenKind=new Set();
+    for(const e of all){if(seenKind.has(e.r.hash))continue;seenKind.add(e.r.hash);const k=kindOf(e.r,e.path);kindCount.set(k,(kindCount.get(k)||0)+1);}
+    if(kindCount.size)tree.append(heading(text('byKind')));
+    for(const [key,icon] of KINDS){
+      const n=kindCount.get(key);if(!n)continue;
+      const b=button(icon+' '+text('kind_'+key)+' ('+n+')',()=>openFolder('kind:'+key));b.dataset.kind=key;
+      b.setAttribute('aria-current',folderPath==='kind:'+key?'location':'false');tree.append(b);
+    }
+    // Real folders, nested, with readable names: "Mail" holds saved emails by sender, "Mail-Anhang" the attachments.
+    const folders = new Map();
+    for (const e of all) { const parts=e.path.split('/'); parts.pop(); for(let i=1;i<=parts.length;i++){const f=parts.slice(0,i).join('/');folders.set(f,(folders.get(f)||0)+1);} }
+    if(folders.size)tree.append(heading(text('folders')));
+    for(const [path,n] of [...folders].sort((a,b)=>a[0].localeCompare(b[0]))) {
+      const b=button(folderLabel(path)+' ('+n+')',()=>openFolder(path));
+      b.dataset.path=path;b.title=path;b.classList.add('explorer-folder');b.style.setProperty('--depth',String(path.split('/').length-1));
       b.setAttribute('aria-current',path===folderPath?'location':'false');tree.append(b);
     }
     // App-specific folders (Android: encrypted mail attachments) render their own contents.
@@ -177,7 +248,8 @@
     const extra=window.PBExplorerExtra;
     extra?.tree(tree,folderPath,openFolder,button);
     if(extra?.owns(folderPath)){el('explorerPath').textContent=extra.label();el('explorerUp').disabled=false;extra.files(files,el('explorerFilter').value,el('explorerSort').value);return;}
-    el('explorerPath').textContent=view?view.label:(folderPath || text('all'));
+    const kindView=folderPath.startsWith('kind:')?folderPath.slice(5):'';
+    el('explorerPath').textContent=view?view.label:kindView?kindIcon(kindView)+' '+text('kind_'+kindView):folderPath?folderPath.split('/').map((x,i,a)=>folderLabel(a.slice(0,i+1).join('/'))).join(' › '):text('all');
     el('explorerUp').disabled=!folderPath;
     orderLabel();
     if(!folderPath)topics?.notice(files);
@@ -185,14 +257,16 @@
     const words=foldText(el('explorerFilter').value).split(/\s+/).filter(Boolean);
     const seen=new Set();
     const visible=view?all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r)&&explorerMatch(e,words))
+      :kindView?all.filter(e=>!seen.has(e.r.hash)&&kindOf(e.r,e.path)===kindView&&seen.add(e.r.hash)&&explorerMatch(e,words))
       :all.filter(e=>(!folderPath || e.path.startsWith(folderPath+'/')) && explorerMatch(e,words));
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
     visible.sort((a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):a.r.name.localeCompare(b.r.name)));
     for (const e of visible) {
       const row=document.createElement('article');row.className='explorer-row';
       const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('div');
-      name.textContent=(e.r.mail?'✉️ ':'📄 ')+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
-      meta.textContent=e.path+' · '+fmtKB(e.r.size||0)+' · '+(window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog'));
+      const kind=kindOf(e.r,e.path),sender=kind==='attach'?attachSender(e.path):'';row.dataset.kind=kind;
+      name.textContent=kindIcon(kind)+' '+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
+      meta.textContent=(kind==='attach'?'📎 '+text('fromMail')+' '+senderLabel(sender).slice(3)+' · ':'')+e.path+' · '+fmtKB(e.r.size||0)+' · '+(window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog'));
       info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view)row.append(topics.rowTool(e.r,view.key));files.append(row);
     }
     if(!visible.length){const p=document.createElement('p');p.className='explorer-empty';p.textContent=text('empty');files.append(p);}
@@ -222,7 +296,7 @@
   new MutationObserver(syncNavigation).observe(el('panel-search'),{attributes:true,attributeFilter:['class']});
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer};
+  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();
