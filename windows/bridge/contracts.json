@@ -1,0 +1,108 @@
+{
+  "ProDevice": [
+    "getInfo"
+  ],
+  "ProFiles": [
+    "saveRecoveryKeys",
+    "listOriginals",
+    "originalInfo",
+    "beginImport",
+    "appendImport",
+    "finishImport",
+    "abortImport",
+    "readOriginal",
+    "open",
+    "share",
+    "openPdf",
+    "pdfPage",
+    "closePdf"
+  ],
+  "ProFolders": [
+    "state",
+    "pause",
+    "chooseLibrary",
+    "chooseSource",
+    "readSource",
+    "finishSource",
+    "copyOriginal"
+  ],
+  "ProLinks": [
+    "prepare",
+    "open"
+  ],
+  "ProMail": [
+    "accounts",
+    "removeAccount",
+    "folders",
+    "createFolder",
+    "messages",
+    "index",
+    "locate",
+    "indexText",
+    "message",
+    "action",
+    "actions",
+    "unsubscribe",
+    "send",
+    "saveDraft",
+    "forgetMessage",
+    "saved",
+    "savedDraft",
+    "openOriginal",
+    "openAttachment",
+    "addAccount"
+  ],
+  "ProNetwork": [
+    "getState",
+    "setOffline"
+  ],
+  "ProProtect": [
+    "state",
+    "update",
+    "setAuto",
+    "checkHashes",
+    "checkUrls",
+    "virusTotal",
+    "setKey"
+  ],
+  "ProSemantic": [
+    "getState",
+    "install",
+    "cancel",
+    "remove",
+    "markLoading",
+    "markLoaded",
+    "clearCrash"
+  ],
+  "ProShare": [
+    "pending",
+    "read",
+    "done"
+  ],
+  "ProSpeech": [
+    "listen"
+  ],
+  "ProUpdates": [
+    "check",
+    "openDownload"
+  ],
+  "ProVault": [
+    "state",
+    "volumes",
+    "choose",
+    "unlock",
+    "lock",
+    "migrate",
+    "backupMail",
+    "attachments",
+    "clearAttachments",
+    "readAttachment",
+    "openAttachment",
+    "catalogBegin",
+    "catalogAppend",
+    "catalogFinish",
+    "catalogAbort",
+    "catalogInfo",
+    "catalogRead"
+  ]
+}

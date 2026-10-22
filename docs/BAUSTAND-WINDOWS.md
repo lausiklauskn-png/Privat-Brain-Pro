@@ -27,7 +27,8 @@ Android-Neustartprobe und native App-Prüfungen. Keine Abnahme auf Klaus' Tablet
 
 1. Dieselbe lokal gebündelte Oberfläche und alle geschützten Module übernehmen;
    Tauri-Brücke für die vorhandenen zwölf Geräteplugins. Windows-spezifische
-   Dialoge bleiben außerhalb der Hauptseite, Geheimnisse außerhalb der WebView.
+   Dialoge bleiben außerhalb der Hauptseite; Passwörter und Kontodaten werden nur
+   im eigenen, getrennten Dialogfenster eingegeben.
 2. Bewährten Mail-/Kryptografiekern wiederverwenden. Postfach-/MIME-Verhalten,
    Versandzustände und PBV1 sollen nicht durch unabhängige Neuimplementierungen
    auseinanderlaufen. Die Desktop-Laufzeit wird mitgeliefert, keine zusätzliche
@@ -57,9 +58,12 @@ Android-Neustartprobe und native App-Prüfungen. Keine Abnahme auf Klaus' Tablet
 | ProShare | Öffnen mit/Zweitstart; keine nicht vorhandene Windows-Teilen-Zielregistrierung behaupten |
 | ProUpdates | Windows-Kanal, geprüfter Release-Link, manuelle Installation |
 
-Gmail braucht auf Windows einen eigenen Desktop-OAuth-Client im bestehenden
-Google-Projekt. Androids Play-Services-Client ist dafür kein Ersatz; Rückfrage
-läuft, keine Geheimnisse im Chat. Microsoft bleibt wie in Androids V28 eine
+Gmail verwendet den von Klaus bestätigten Desktop-OAuth-Client im bestehenden
+Google-Projekt (`windows/gmail-desktop.json`, ausschließlich öffentliche ID).
+Ein Empfänger benötigt keinen eigenen OAuth-Client, meldet sich aber mit seinem
+eigenen Google-Konto an. Testnutzer-/Verifizierungsstand des Google-Projekts und
+eine tatsächliche Google-Anmeldung sind noch zu prüfen. Keine Client-Secrets
+oder Tokens im Repository. Microsoft bleibt wie in Androids V28 eine
 benannte, noch nicht eingerichtete Anbieteranbindung.
 
 ## Grenzen und Freigaben
@@ -68,3 +72,35 @@ Noch kein Windows-Bau-/Installationsnachweis. Kein eigener PC beim Nutzer
 vorausgesetzt. Keine Apple-Arbeiten oder kostenpflichtige Signierung.
 Die Übernahme in main ist seit der automatischen Freigabeablehnung offen;
 Entwürfe und Installer zuerst konkret fertigstellen, dann explizit freigeben.
+
+## Tatsächlich implementierter Zwischenstand
+
+`windows/engine/build.mjs` erzeugt den Desktop-Kern aus 17 vorhandenen
+Android-Quelldateien, davon 11 bytegleich. Protokoll- und Kryptografiekern werden
+nicht separat nachgebaut. Explizite Adapter ersetzen Android-Dateizugriff,
+HTML-Textextraktion und Gerätespeicherung. Jede Quelldatei und das erzeugte
+Ergebnis stehen mit SHA-256 im Baubeleg. Abhängigkeiten sind mit SHA-256 gepinnt.
+Die Java-Laufzeit wird beim Windows-Bau mitgeliefert.
+
+34 Prüfungen auf realen Dateien bestanden: verschlüsselte Gerätespeicherung mit
+ausdrücklichem Testprovider, Erhalt bei Schreib-/Schutzfehlern, portable Ordner
+zwischen zwei getrennten Geräten, falsches Passwort ohne Dateiänderung,
+Originalwiederherstellung, beschädigte Sicherungen, PBV1-Blockgrenzen und AAD,
+unklarer SMTP-Versand ohne Wiederholung nach Neustart, Abbruch echter Sockets,
+PKCE/Loopback einschließlich falschem State, Gmail-Alias, Token-Erneuerung und
+Abbruch. Dies ist noch kein Test von Windows-DPAPI oder echtem Google-Zugriff.
+
+Tauri-Host mit privatem Kindprozessprotokoll, DPAPI-Adapter, getrenntem
+Passwort-/Kontodialog und den vorhandenen Geräteverträgen ist angelegt.
+Windows-CI baut zunächst einen klar benannten Prüfbau. Noch offen: native
+Baufehler/Abnahme, fehlende Adapter (Ordner, PDF, Schutz, Modell, Sprache,
+Teilen und Updates), vollständige Postfach-Gegenprobe, Herkunft/Framegrenzen,
+Installer/Neustart/Neuinstallation und Auslieferungsbau ohne Prüfzugang.
+
+Klaus' Menübefund ist für beide Pro-Plattformen korrigiert: kein zweiter
+Pinnwand-Zugang; Werkzeuge freischalten zeigt eine senkrechte Liste mit ganzen
+Namen und nur Schloss-Symbolen. 62 Werkzeugfälle bestanden, einschließlich
+aller vier Sprachen und Breiten 320/360/1280/2560. Screenshots unter
+`docs/design/werkzeuge/`. Im aktuellen Quellstand von Privat-Brain (reine PWA)
+existiert der Freischaltkasten nicht. Die Darstellung stammt aus der gemeinsam
+für Android und Windows gebündelten Pro-Oberfläche.

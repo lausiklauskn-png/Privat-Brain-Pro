@@ -1,0 +1,16 @@
+{
+  "$schema":"https://schema.tauri.app/config/2",
+  "productName":"Private Brain Pro",
+  "mainBinaryName":"private-brain-pro",
+  "version":"1.0.0-preview.29",
+  "identifier":"de.familyprojekt.privatebrain.pro",
+  "build":{"frontendDist":"../dist","beforeBuildCommand":"node tools/build-web.mjs"},
+  "app":{"withGlobalTauri":false,"windows":[],"security":{"csp":null}},
+  "bundle":{
+    "active":true,"targets":["nsis"],"publisher":"Private Brain Pro",
+    "category":"Productivity","shortDescription":"Eigene Dokumente und E-Mails privat sammeln, ordnen und finden",
+    "resources":{"../runtime/":"runtime/"},
+    "icon":["icons/icon.ico"],
+    "windows":{"webviewInstallMode":{"type":"downloadBootstrapper","silent":true},"nsis":{"installMode":"currentUser","languages":["German","English","Russian","Polish"]}}
+  }
+}

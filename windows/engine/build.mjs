@@ -1,0 +1,57 @@
+import {readFile,writeFile,mkdir,readdir,rm} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {join,delimiter} from 'node:path';
+const here=fileURLToPath(new URL('.',import.meta.url));
+const root=join(here,'../..'),build=join(here,'build'),generated=join(build,'source');
+const source=join(root,'android/app/src/main/java/de/familyprojekt/privatebrain/pro');
+const hash=b=>createHash('sha256').update(b).digest('hex');
+await mkdir(join(build,'lib'),{recursive:true});
+const deps=JSON.parse(await readFile(join(here,'dependencies.json'),'utf8')).dependencies;
+for(const dep of deps){
+  const path=join(build,'lib',`${dep.name}-${dep.version}.jar`);
+  let bytes=await readFile(path).catch(()=>null);
+  if(!bytes||hash(bytes)!==dep.sha256){
+    const response=await fetch(dep.url);if(!response.ok)throw Error('Dependency download failed: '+dep.name);
+    bytes=Buffer.from(await response.arrayBuffer());
+    if(hash(bytes)!==dep.sha256)throw Error('Dependency hash mismatch: '+dep.name);
+    await writeFile(path,bytes);
+  }
+}
+await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
+const receipt=[];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault'];
+for(const name of names){
+  const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
+  // Explicit platform imports only. Protocol and crypto bodies stay shared.
+  text=text.replace(/^import android\.[^;]+;\r?\n/gm,'');
+  text=text.replace(/\bContext\b/g,'DesktopState').replace(/\bSharedPreferences\b/g,'DesktopState.Preferences');
+  if(name==='MailMime')text=text.replaceAll('Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(bodies.html)');
+  if(name==='Vault'){
+    function replaceSection(start,end,body){const a=text.indexOf(start),b=text.indexOf(end,a+start.length);if(a<0||b<0)throw Error('Review shared Vault platform section: '+start);text=text.slice(0,a)+body+text.slice(b);}
+    text=text.replace('private final ContentResolver resolver;','').replace('resolver = context.getContentResolver();','');
+    text=text.replace('DocumentsContract.Document.MIME_TYPE_DIR','"vnd.android.document/directory"');
+    replaceSection('    // ---------- Storage Access Framework ----------','    /** Pending encrypted write.',await readFile(join(here,'adapters/vault-files.java'),'utf8'));
+    replaceSection('    private SecretKey deviceKey(', '    private void install(',await readFile(join(here,'adapters/vault-remember.java'),'utf8'));
+    replaceSection('    static String location(', '    /** Returns the existing vault folder',
+      '    static String location(DesktopState context, String tree) { return "device"; }\n    private String displayName(String tree, String id) { return java.nio.file.Path.of(id).getFileName().toString(); }\n');
+    replaceSection('    long free() {','    // ---------- Account/draft snapshot ----------',
+      '    long free() { try { bind(); return java.nio.file.Files.getFileStore(path(rootId)).getUsableSpace(); } catch (Exception error) { return -1; } }\n\n');
+    text=text.replace(/\bUri\b/g,'String').replace('String.parse(prefs().getString("tree", ""))','prefs().getString("tree", "")');
+    text=text.replaceAll('DocumentsContract.getTreeDocumentId(chosen)','chosen');
+    text=text.replace('resolver.openOutputStream(doc(p.id), "w")','openSink(p.id)');
+  }
+  if(/\bandroid\.|\bDocumentsContract\b|\bresolver\b/.test(text.replaceAll('vnd.android.document/directory','directory')))throw Error('Unadapted platform reference: '+name);
+  await writeFile(join(generated,name+'.java'),text);
+  receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/'+name+'.java',sha256:hash(original),generatedSha256:hash(text),byteIdentical:text===original});
+}
+const files=(await readdir(join(here,'src'))).filter(n=>n.endsWith('.java')).map(n=>join(here,'src',n));
+await rm(join(build,'classes'),{recursive:true,force:true});
+await mkdir(join(build,'classes'),{recursive:true});
+const libraries=deps.map(d=>join(build,'lib',`${d.name}-${d.version}.jar`)).join(delimiter);
+const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),...files];
+execFileSync('java',args,{stdio:'inherit'});
+await writeFile(join(build,'shared-source.json'),JSON.stringify({sources:receipt,dependencies:deps},null,2)+'\n');
+console.log(`${receipt.length} shared Android sources compiled for Windows (${receipt.filter(x=>x.byteIdentical).length} byte-identical).`);
+export const classpath=[join(build,'classes'),join(build,'lib','*')].join(delimiter);
