@@ -21,7 +21,7 @@ zeroize = "1"
 webview2-com = "=0.39.1"
 windows = { version = "=0.62.2", features = [
   "Win32_Foundation", "Win32_Security_Cryptography", "Win32_UI_Shell",
-  "Win32_UI_WindowsAndMessaging", "Win32_Storage_FileSystem", "Win32_System_Com",
+  "Win32_UI_WindowsAndMessaging", "Win32_Storage_FileSystem", "Win32_System_Com", "Win32_System_JobObjects",
   "Networking_Connectivity", "Media_SpeechRecognition", "Globalization", "Foundation",
 ] }
 

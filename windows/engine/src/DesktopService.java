@@ -15,6 +15,7 @@ final class DesktopService {
     private final DesktopOAuth oauth;
     private final Protection protection;
     private final DesktopModel model;
+    private final DesktopPdf pdf=new DesktopPdf();
     DesktopService(DesktopState state,Path resources,Host host)throws Exception {
         this.state=state;this.host=host;AppNetwork.initialize(state);
         storage=new EncryptedMailStore(state);vault=Vault.get(state);originals=new OriginalFileStore(state);
@@ -97,13 +98,31 @@ final class DesktopService {
             }
             case "abortImport" -> {originals.abort(required(o,"ticket"));yield yes();}
             case "readOriginal" -> bytes(originals.read(hash,o.optLong("offset",-1)));
-            case "open","share" -> {
-                java.io.File file=originals.file(hash);JSONObject meta=originals.info(hash);
-                if(meta==null||!OriginalFileStore.digest(file).equals(hash))throw new java.io.IOException("ORIGINAL_UNAVAILABLE");
-                yield host.call("openVerified",new JSONObject().put("path",file.toString()).put("name",meta.optString("name","file")));
-            }
+            case "open","share" -> {Selected selected=selected(o);yield host.call("openVerified",new JSONObject().put("path",selected.file.toString()).put("name",selected.name).put("share",method.equals("share")));}
+            case "openPdf" -> pdf.open(selected(o).file);
+            case "pdfPage" -> pdf.page(required(o,"id"),o.optInt("page",-1),o.optInt("width",1200));
+            case "closePdf" -> {pdf.close(required(o,"id"));yield yes();}
             default -> throw new MailFailure("INVALID_INPUT");
         };
+    }
+    private record Selected(java.io.File file,String name){}
+    private Selected selected(JSONObject o)throws Exception {
+        if(o.has("hash")){
+            String hash=required(o,"hash");JSONObject meta=originals.info(hash);java.io.File file=originals.file(hash);
+            if(meta==null||!hash.equals(OriginalFileStore.digest(file)))throw new java.io.IOException("ORIGINAL_UNAVAILABLE");
+            DesktopFiles.noLinks(file.toPath());return new Selected(file,MailMime.filename(meta.getString("name")));
+        }
+        String encoded=o.getString("data"),name=o.optString("name","file");
+        if(encoded.length()>22369624||name.length()>1024)throw new MailFailure("INVALID_INPUT");
+        byte[] bytes=Base64.decode(encoded,Base64.NO_WRAP);if(bytes.length>16*1024*1024)throw new MailFailure("INVALID_INPUT");
+        Path folder=state.directory.resolve("cache/exports/files");DesktopFiles.noLinks(folder);Files.createDirectories(folder);long used=0;
+        try(DirectoryStream<Path> files=Files.newDirectoryStream(folder)){
+            for(Path file:files){DesktopFiles.noLinks(file);if(!Files.isRegularFile(file))throw new java.io.IOException("FILE_UNAVAILABLE");
+                if(System.currentTimeMillis()-Files.getLastModifiedTime(file).toMillis()>24L*60*60*1000)Files.delete(file);else used+=Files.size(file);}
+        }
+        if(used+bytes.length>64L*1024*1024)throw new java.io.IOException("STORAGE_FULL");
+        String safe=MailMime.filename(name);Path target=folder.resolve(java.util.UUID.randomUUID()+"-"+safe);
+        DesktopFiles.atomic(target,bytes);return new Selected(target.toFile(),safe);
     }
     private JSONObject vault(String method,JSONObject o)throws Exception {
         return switch(method){

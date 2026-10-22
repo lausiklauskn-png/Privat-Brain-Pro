@@ -7,20 +7,23 @@ type Reply = Result<Value, String>;
 pub struct Engine {
     child: Mutex<Child>, input: Mutex<ChildStdin>,
     pending: Mutex<HashMap<String, mpsc::Sender<Reply>>>, next: AtomicU64,
+    job: Mutex<Option<crate::win::Job>>,
 }
 impl Engine {
     pub fn start(runtime: &Path, data: &Path, host: &Arc<Host>) -> Result<Arc<Self>, String> {
         let java = runtime.join(if cfg!(windows) { "jre/bin/javaw.exe" } else { "jre/bin/java" });
         let classpath = std::env::join_paths([runtime.join("engine/classes"), runtime.join("engine/lib/*")]).map_err(|_| "APP_RUNTIME_UNAVAILABLE")?;
         let mut command = Command::new(java);
+        command.env_remove("JAVA_TOOL_OPTIONS").env_remove("_JAVA_OPTIONS").env_remove("JDK_JAVA_OPTIONS");
         command.args(["-Xmx512m", "-Dfile.encoding=UTF-8", "-cp"]).arg(classpath)
             .arg("de.familyprojekt.privatebrain.pro.EngineMain").arg(data).arg(runtime)
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
         #[cfg(windows)] { use std::os::windows::process::CommandExt; command.creation_flags(0x08000000); }
         let mut child = command.spawn().map_err(|_| "APP_RUNTIME_UNAVAILABLE")?;
+        let job=match crate::win::Job::attach(&child){Ok(job)=>job,Err(error)=>{let _=child.kill();return Err(error);}};
         let input = child.stdin.take().ok_or("APP_RUNTIME_UNAVAILABLE")?;
         let output = child.stdout.take().ok_or("APP_RUNTIME_UNAVAILABLE")?;
-        let engine = Arc::new(Self { child: Mutex::new(child), input: Mutex::new(input), pending: Mutex::new(HashMap::new()), next: AtomicU64::new(1) });
+        let engine = Arc::new(Self { child: Mutex::new(child), input: Mutex::new(input), pending: Mutex::new(HashMap::new()), next: AtomicU64::new(1),job:Mutex::new(Some(job)) });
         let reader_engine = engine.clone(); let weak_host = Arc::downgrade(host);
         std::thread::spawn(move || {
             let mut reader = BufReader::new(output);
@@ -68,5 +71,5 @@ impl Engine {
         let result=receive.recv_timeout(Duration::from_secs(900)).unwrap_or_else(|_|Err("APP_OPERATION_TIMEOUT".into()));
         self.pending.lock().unwrap().remove(&id);result
     }
-    pub fn stop(&self) { if let Ok(mut child)=self.child.lock() { let _=child.kill();let _=child.wait(); } }
+    pub fn stop(&self) { if let Ok(mut child)=self.child.lock() { let _=child.kill();let _=child.wait(); }self.job.lock().unwrap().take(); }
 }

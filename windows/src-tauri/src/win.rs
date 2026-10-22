@@ -48,3 +48,25 @@ pub fn metered()->bool {
 }
 #[cfg(not(windows))]
 pub fn metered()->bool {true}
+
+/// Closing/crashing the app also terminates its Java and isolated PDF processes.
+pub struct Job(usize);
+#[cfg(windows)]
+impl Job {
+    pub fn attach(child:&std::process::Child)->Result<Self,String>{
+        use std::os::windows::io::AsRawHandle;
+        use windows::{core::PCWSTR,Win32::{Foundation::{HANDLE,CloseHandle},System::JobObjects::*}};
+        unsafe{
+            let handle=CreateJobObjectW(None,PCWSTR::null()).map_err(|_|"APP_RUNTIME_UNAVAILABLE")?;
+            let mut information=JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();information.BasicLimitInformation.LimitFlags=JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            let result=SetInformationJobObject(handle,JobObjectExtendedLimitInformation,&information as *const _ as *const core::ffi::c_void,std::mem::size_of_val(&information) as u32)
+                .and_then(|_|AssignProcessToJobObject(handle,HANDLE(child.as_raw_handle())));
+            if result.is_err(){let _=CloseHandle(handle);return Err("APP_RUNTIME_UNAVAILABLE".into());}
+            Ok(Self(handle.0 as usize))
+        }
+    }
+}
+#[cfg(windows)]
+impl Drop for Job {fn drop(&mut self){unsafe{let _=windows::Win32::Foundation::CloseHandle(windows::Win32::Foundation::HANDLE(self.0 as *mut core::ffi::c_void));}}}
+#[cfg(not(windows))]
+impl Job {pub fn attach(_:&std::process::Child)->Result<Self,String>{Ok(Self(0))}}

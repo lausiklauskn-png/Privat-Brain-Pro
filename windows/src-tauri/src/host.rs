@@ -24,7 +24,7 @@ impl Host {
     pub fn call(&self,plugin:&str,method:&str,mut options:Value)->Result<Value,String>{
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
         if let Some(map)=options.as_object_mut(){map.remove("_language");}
-        let limit=if plugin=="ProMail"&&["send","saveDraft"].contains(&method){26*1024*1024}else{2*1024*1024};
+        let limit=if (plugin=="ProMail"&&["send","saveDraft"].contains(&method))||(plugin=="ProFiles"&&["open","share","openPdf"].contains(&method)){26*1024*1024}else{2*1024*1024};
         if serde_json::to_vec(&options).map_err(|_|"INVALID_INPUT")?.len()>limit{return Err("INVALID_INPUT".into());}
         if plugin=="ProNetwork"&&method=="setOffline"&&options.get("offline").and_then(Value::as_bool)==Some(true){self.offline.store(true,Ordering::SeqCst);}
         let engine=self.engine.lock().unwrap().clone().ok_or("APP_RUNTIME_UNAVAILABLE".to_owned())?;

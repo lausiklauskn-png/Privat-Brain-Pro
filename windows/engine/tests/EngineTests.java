@@ -81,6 +81,28 @@ public final class EngineTests {
         fails("CANCELLED",()->denied.authorize(null));
         fails("GMAIL_DESKTOP_CLIENT_REQUIRED",()->new DesktopOAuth("",store,browser).authorize(null));
     }
+    static void pdf(Path root)throws Exception {
+        Path file=root.resolve("native-preview.pdf");
+        try(var document=new org.apache.pdfbox.pdmodel.PDDocument()){
+            var page=new org.apache.pdfbox.pdmodel.PDPage();document.addPage(page);
+            try(var content=new org.apache.pdfbox.pdmodel.PDPageContentStream(document,page)){
+                content.setNonStrokingColor(java.awt.Color.BLUE);content.addRect(40,40,200,200);content.fill();
+            }
+            document.save(file.toFile());
+        }
+        try(DesktopPdf preview=new DesktopPdf()){
+            JSONObject opened=preview.open(file.toFile());String id=opened.getString("id");
+            ok(opened.getInt("pages")==1,"isolated renderer opens a real PDF");
+            JSONObject page=preview.page(id,0,900);
+            byte[] png=Base64.decode(page.getString("data"),Base64.NO_WRAP);
+            var image=javax.imageio.ImageIO.read(new ByteArrayInputStream(png));
+            ok(image!=null&&image.getWidth()>=320&&image.getWidth()<=2048&&image.getHeight()<=2048,"PDF worker returns a bounded real PNG page");
+            ok((image.getRGB(100,image.getHeight()-100)&0xffffff)==0x0000ff,"PDF page content is actually rendered");
+            preview.close(id);fails("PDF_UNAVAILABLE",()->preview.page(id,0,900));
+            Path bad=root.resolve("broken.pdf");Files.writeString(bad,"not a PDF");fails("PDF_UNAVAILABLE",()->preview.open(bad.toFile()));
+            ok(preview.open(file.toFile()).getInt("pages")==1,"a malformed PDF does not break later rendering or the vault engine");
+        }
+    }
     public static void main(String[] args) throws Exception {
         Path root = Files.createTempDirectory("pb-engine-");
         TestProtection protection = new TestProtection();
@@ -149,6 +171,7 @@ public final class EngineTests {
         }
         AppNetwork.setOffline(state,false);
         oauth(new DesktopState(root.resolve("oauth-device"), new TestProtection()));
+        pdf(root);
         if(!System.getProperty("os.name").startsWith("Windows")){
             Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
             fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));

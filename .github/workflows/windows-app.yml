@@ -37,6 +37,11 @@ jobs:
           java-version: '21'
       - run: npm ci --ignore-scripts
       - run: npm ci --ignore-scripts --prefix windows
+      - name: Rust-Abhängigkeiten und Zwischenergebnisse
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+        with:
+          workspaces: windows/src-tauri -> target
+          cache-on-failure: true
       - name: Gemeinsamer Kern auf dem Windows-Dateisystem
         run: node windows/engine/test.mjs
       - name: Eigene Windows-Laufzeit ohne zusätzliche Nutzerinstallation

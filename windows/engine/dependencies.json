@@ -3,6 +3,7 @@
     {"name":"jakarta.mail","version":"1.6.8","url":"https://repo.maven.apache.org/maven2/com/sun/mail/jakarta.mail/1.6.8/jakarta.mail-1.6.8.jar","sha256":"c83f1a1ed580a35878957de7367071be27026d02d34ace6267d0c3da23e193c2","license":"EPL-2.0 OR GPL-2.0-with-classpath-exception"},
     {"name":"jakarta.activation","version":"1.2.2","url":"https://repo.maven.apache.org/maven2/com/sun/activation/jakarta.activation/1.2.2/jakarta.activation-1.2.2.jar","sha256":"02156773e4ae9d048d14a56ad35d644bee9f1052a791d072df3ded3c656e6e1a","license":"EDL-1.0"},
     {"name":"json","version":"20250517","url":"https://repo.maven.apache.org/maven2/org/json/json/20250517/json-20250517.jar","sha256":"3ea61b2a06e31edf1c91134fe9106b0ebb16628be169f3db75bc7a2b06b45796","license":"Public Domain"},
-    {"name":"jsoup","version":"1.18.3","url":"https://repo.maven.apache.org/maven2/org/jsoup/jsoup/1.18.3/jsoup-1.18.3.jar","sha256":"5be1ccd3228ae5fd6eed1bd6d827bac2bc65b91c20e9957d16ea65f739f15302","license":"MIT"}
+    {"name":"jsoup","version":"1.18.3","url":"https://repo.maven.apache.org/maven2/org/jsoup/jsoup/1.18.3/jsoup-1.18.3.jar","sha256":"5be1ccd3228ae5fd6eed1bd6d827bac2bc65b91c20e9957d16ea65f739f15302","license":"MIT"},
+    {"name":"pdfbox-app","version":"3.0.8","url":"https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox-app/3.0.8/pdfbox-app-3.0.8.jar","sha256":"f6b3a80c39747ff0ef5d06708bc03882152403de58dbef4a1fbffbee568eceb1","license":"Apache-2.0; bundled dependency notices included in jar"}
   ]
 }
