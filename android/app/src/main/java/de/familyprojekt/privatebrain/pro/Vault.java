@@ -379,6 +379,7 @@ final class Vault {
             catch (IOException error) { last = error; }
         }
         if (last != null && "VAULT_FOLDER_UNAVAILABLE".equals(last.getMessage())) throw last;
+        if (last != null) throw fail("VAULT_DAMAGED");
         return null;
     }
     private Pending beginVersion(String dirName, String base, String kind, long limit) throws IOException {
@@ -646,14 +647,17 @@ final class Vault {
     synchronized void catalogAbort(String ticket) { Pending p = pending.remove(ticket); if (p != null) abort(p); }
     synchronized JSONObject catalogInfo() throws Exception {
         requireUnlocked();
+        boolean damagedBackup = false;
         for (Entry e : versions(CATALOG, "katalog")) {
             try (VaultCrypto.Reader r = reader(e.id, "cat/" + number(e.name))) {
                 r.chunk(r.size() == 0 ? 0 : (r.size() - 1) / VaultCrypto.CHUNK);
                 return new JSONObject().put("exists", true).put("size", r.size()).put("version", number(e.name));
             } catch (VaultCrypto.Failure damaged) {
                 if ("VAULT_FOLDER_UNAVAILABLE".equals(damaged.getMessage())) throw damaged;
+                damagedBackup = true;
             }
         }
+        if (damagedBackup) throw fail("VAULT_DAMAGED");
         return new JSONObject().put("exists", false);
     }
     byte[] catalogRead(long version, long offset) throws Exception {

@@ -1,12 +1,25 @@
 # Qualitätsprüfung der bestehenden Pro-App
 
-Ausgangspunkt: main `8dae28113f7fa19a4446406f492e0c307c4ef0cb` (Entwicklung .28),
-zuletzt veröffentlichte Android-Vorschau bei Beginn der Prüfung .27.
-Ein Windows-Host ist noch nicht gebaut; der vorhandene Windows-Brief ist ein
-Bauauftrag für eine Folgesitzung, kein Installer. Die separate PWA liegt im
+Ausgangspunkt: main `8dae28113f7fa19a4446406f492e0c307c4ef0cb`, inzwischen als
+`v1.0.0-preview.28` veröffentlicht. Die öffentliche APK wurde erneut heruntergeladen:
+SHA256SUMS, ZIP-Integrität, Paket/Version und ursprünglicher APK-v2-Signierer stimmen.
+Der Windows-Bau ist seit Klaus' Auftrag vom 23.10.2026 ausdrücklich in Arbeit;
+noch kein fertiger Installer. Die separate PWA liegt im
 Repository Privat-Brain. iOS von Workflow PDF Pro ist auf Klaus' Wunsch geparkt.
 
 ## Behobene Speicherfehler
+
+Zusätzliche Befunde vom 23.10.2026: Die alte schwebende Pinnwand erzeugte einen
+zweiten Menüeintrag und reagierte vor der Klicksperre auf Zeigerereignisse. Im
+nativen Bündel startet nur noch das freigeschaltete Werkzeug. Geschützte Module
+und vorhandene Daten bleiben unverändert. 46 echte Werkzeug-/Freischaltungsfälle
+bestanden; der neue Menüfall scheitert am ursprünglichen Stand.
+
+Sind sämtliche Versionen eines Katalogs oder kleinen Tresordokuments beschädigt,
+wurde bisher teilweise „nicht vorhanden“ gemeldet. Der gemeinsame Tresorkern
+meldet nun `VAULT_DAMAGED`; eine intakte ältere Version bleibt der Rückfall.
+Auf realen Desktop-Dateien vor dem Fix reproduziert und danach bestanden;
+Android-Gegenprobe für den vollständig beschädigten Katalog ergänzt.
 
 Die IndexedDB-Schreibhelfer meldeten bereits nach der einzelnen Anfrage Erfolg,
 auch wenn die Transaktion danach abbrach. Katalogimporte schluckten Schreibfehler
