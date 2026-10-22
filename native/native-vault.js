@@ -240,7 +240,7 @@
       record.tags = record.tags || []; record.dupes = record.dupes || [];
       if (!record.tf) record.tf = termFreq(tokens((record.name || '') + ' ' + (record.snippet || '')));
       if (!record.vector) record.vector = buildVector(tokens((record.name || '') + ' ' + (record.snippet || '')));
-      CATALOG.push(record); HASHSET.add(record.hash); await idbPut('catalog', record); added++;
+      await idbPut('catalog', record); CATALOG.push(record); HASHSET.add(record.hash); added++;
     }
     try { if (data.saved && !localStorage.getItem('cb_saved')) localStorage.setItem('cb_saved', data.saved); } catch { /* optional */ }
     rebuildIndex(); populateFilterSelects(); refreshAll();
