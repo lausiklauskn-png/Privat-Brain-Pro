@@ -13,12 +13,17 @@ final class DesktopService {
     private final OriginalFileStore originals;
     private final MailEngine mail;
     private final DesktopOAuth oauth;
+    private final Protection protection;
+    private final DesktopModel model;
     DesktopService(DesktopState state,Path resources,Host host)throws Exception {
         this.state=state;this.host=host;AppNetwork.initialize(state);
         storage=new EncryptedMailStore(state);vault=Vault.get(state);originals=new OriginalFileStore(state);
         String client=new JSONObject(Files.readString(resources.resolve("gmail-desktop.json"))).optString("clientId");
         oauth=new DesktopOAuth(client,storage,url->host.call("browser",new JSONObject().put("url",url)));
         mail=new MailEngine(storage,oauth,vault);
+        state.metered=()->{try{return host.call("metered",new JSONObject()).optBoolean("metered",true);}catch(Exception error){return true;}};
+        protection=Protection.create(state);
+        model=new DesktopModel(state,resources.resolve("semantic-model.json"));
     }
     private static JSONObject yes(){return new JSONObject().put("ok",true);}
     private static String required(JSONObject o,String key)throws MailFailure {
@@ -36,6 +41,25 @@ final class DesktopService {
             case "ProVault" -> vault(method,o);
             case "ProFiles" -> files(method,o);
             case "ProMail" -> mail(method,o);
+            case "ProProtect" -> protect(method,o);
+            case "ProSemantic" -> model.call(method);
+            default -> throw new MailFailure("INVALID_INPUT");
+        };
+    }
+    private JSONObject protect(String method,JSONObject o)throws Exception {
+        return switch(method){
+            case "state" -> protection.state();
+            case "update" -> protection.update(o.optBoolean("force"));
+            case "setAuto" -> {protection.setAuto(o.optBoolean("value",true));yield protection.state();}
+            case "checkHashes" -> protection.checkHashes(o.getJSONArray("items"));
+            case "checkUrls" -> protection.checkUrls(o.getJSONArray("items"));
+            case "virusTotal" -> protection.virusTotal(required(o,"sha256"));
+            case "setKey" -> {
+                String service=required(o,"service");if(!service.equals("abusech")&&!service.equals("virustotal"))throw new MailFailure("INVALID_INPUT");
+                JSONObject fields=host.call("key",new JSONObject().put("service",service));
+                if(fields.optBoolean("cancelled"))yield fields;
+                protection.setKey(service,fields.getString("password"));yield protection.state();
+            }
             default -> throw new MailFailure("INVALID_INPUT");
         };
     }

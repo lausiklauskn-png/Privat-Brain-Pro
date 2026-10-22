@@ -42,7 +42,7 @@
     $('account').hidden=value.kind!=='account';
     const create=value.kind==='password'&&value.mode==='create';
     $('repeat-label').hidden=$('notice-label').hidden=!create;$('remember-label').hidden=value.kind!=='password';
-    $('title').textContent=value.kind==='account'?words[5]:words[{create:2,open:3,unlock:4}[value.mode]||4];
+    $('title').textContent=value.kind==='key'?({de:'Schutzanbieter-Schlüssel',en:'Protection provider key',ru:'Ключ сервиса защиты',pl:'Klucz usługi ochrony'}[value.language]||'Protection provider key')+' · '+value.service:value.kind==='account'?words[5]:words[{create:2,open:3,unlock:4}[value.mode]||4];
     if(value.kind==='account'){provider();$('provider').focus();}else $('password').focus();
   });
 })();

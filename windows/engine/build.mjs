@@ -21,13 +21,19 @@ for(const dep of deps){
 }
 await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
 const receipt=[];
-const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault'];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault'];
 for(const name of names){
   const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
   text=text.replace(/^import android\.[^;]+;\r?\n/gm,'');
   text=text.replace(/\bContext\b/g,'DesktopState').replace(/\bSharedPreferences\b/g,'DesktopState.Preferences');
   if(name==='MailMime')text=text.replaceAll('Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(bodies.html)');
+  if(name==='Protection'){
+    const a=text.indexOf('    static Protection create('),b=text.indexOf('    // Package-private:',a);
+    if(a<0||b<0)throw Error('Review shared protection platform factory');
+    text=text.slice(0,a)+'    static Protection create(DesktopState context) { return new Protection(store(Vault.get(context)), url -> (HttpURLConnection) url.openConnection(), System::currentTimeMillis, () -> context.metered.getAsBoolean(), "https://mb-api.abuse.ch", "https://urlhaus-api.abuse.ch", "https://www.virustotal.com"); }\n\n'+text.slice(b);
+    text=text.replace('ProMailPlugin.code(error)','DesktopErrors.code(error)');
+  }
   if(name==='Vault'){
     function replaceSection(start,end,body){const a=text.indexOf(start),b=text.indexOf(end,a+start.length);if(a<0||b<0)throw Error('Review shared Vault platform section: '+start);text=text.slice(0,a)+body+text.slice(b);}
     text=text.replace('private final ContentResolver resolver;','').replace('resolver = context.getContentResolver();','');
@@ -46,11 +52,18 @@ for(const name of names){
   await writeFile(join(generated,name+'.java'),text);
   receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/'+name+'.java',sha256:hash(original),generatedSha256:hash(text),byteIdentical:text===original});
 }
+// The same pinned-model manifest parser and URL expansion as Android.
+const pinsOriginal=await readFile(join(source,'ProSemanticPlugin.java'),'utf8');
+const pinsStart=pinsOriginal.indexOf('        JSONObject pins ='),pinsEnd=pinsOriginal.indexOf('    private static SharedPreferences prefs(');
+if(pinsStart<0||pinsEnd<pinsStart)throw Error('Review shared semantic pin parser');
+const pinsSource='package de.familyprojekt.privatebrain.pro;\nimport java.util.*;\nimport org.json.*;\nfinal class SemanticPins {\n    static List<SemanticModel.Entry> entries(java.nio.file.Path path) throws Exception {\n        String text=java.nio.file.Files.readString(path);\n'+pinsOriginal.slice(pinsStart,pinsEnd)+'}\n';
+await writeFile(join(generated,'SemanticPins.java'),pinsSource);
+receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProSemanticPlugin.java#entries',sha256:hash(pinsOriginal),generatedSha256:hash(pinsSource),byteIdentical:false});
 const files=(await readdir(join(here,'src'))).filter(n=>n.endsWith('.java')).map(n=>join(here,'src',n));
 await rm(join(build,'classes'),{recursive:true,force:true});
 await mkdir(join(build,'classes'),{recursive:true});
 const libraries=deps.map(d=>join(build,'lib',`${d.name}-${d.version}.jar`)).join(delimiter);
-const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),...files];
+const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),join(generated,'SemanticPins.java'),...files];
 execFileSync('java',args,{stdio:'inherit'});
 await writeFile(join(build,'shared-source.json'),JSON.stringify({sources:receipt,dependencies:deps},null,2)+'\n');
 console.log(`${receipt.length} shared Android sources compiled for Windows (${receipt.filter(x=>x.byteIdentical).length} byte-identical).`);

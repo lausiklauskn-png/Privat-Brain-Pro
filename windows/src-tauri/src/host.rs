@@ -45,7 +45,8 @@ impl Host {
                 let selected=self.app.dialog().file().blocking_pick_folder();
                 match selected {None=>Ok(json!({"cancelled":true})),Some(file)=>{let path=file.into_path().map_err(|_|"VAULT_FOLDER_UNAVAILABLE")?;win::no_links(&path)?;Ok(json!({"path":path.to_str().ok_or("VAULT_FOLDER_UNAVAILABLE")?}))}}
             }
-            "password"|"account"=>self.show_dialog(method,o),
+            "password"|"account"|"key"=>self.show_dialog(method,o),
+            "metered"=>Ok(json!({"metered":win::metered()})),
             "volumes"=>Ok(json!({"items":[],"targeted":false})),
             "openVerified"=>{
                 let path=PathBuf::from(text("path"));if !path.starts_with(&self.data){return Err("NOT_ALLOWED".into());}win::no_links(&path)?;

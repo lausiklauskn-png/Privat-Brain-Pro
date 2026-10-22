@@ -39,3 +39,12 @@ pub fn open(target:&str)->Result<(),String>{
 }
 #[cfg(not(windows))]
 pub fn open(_:&str)->Result<(),String>{Err("FILE_UNAVAILABLE".into())}
+
+#[cfg(windows)]
+pub fn metered()->bool {
+    use windows::Networking::Connectivity::{NetworkInformation,NetworkCostType};
+    NetworkInformation::GetInternetConnectionProfile().and_then(|p|p.GetConnectionCost()).and_then(|c|c.NetworkCostType())
+        .map(|cost|cost!=NetworkCostType::Unrestricted).unwrap_or(true)
+}
+#[cfg(not(windows))]
+pub fn metered()->bool {true}

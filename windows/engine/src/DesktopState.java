@@ -17,6 +17,7 @@ final class DesktopState {
     static final int MODE_PRIVATE = 0;
     final Path directory;
     final Protection protection;
+    java.util.function.BooleanSupplier metered = () -> true;
     private final Map<String, Preferences> preferences = new HashMap<>();
     DesktopState(Path directory, Protection protection) throws Exception {
         this.directory = directory.toAbsolutePath().normalize(); this.protection = protection;
@@ -47,6 +48,7 @@ final class DesktopState {
         synchronized boolean contains(String key) { return data.has(key); }
         synchronized String getString(String key, String fallback) { return data.optString(key, fallback); }
         synchronized boolean getBoolean(String key, boolean fallback) { return data.optBoolean(key, fallback); }
+        synchronized int getInt(String key, int fallback) { return data.optInt(key, fallback); }
         synchronized Editor edit() { return new Editor(new JSONObject(data.toString())); }
         final class Editor {
             private final JSONObject next;
@@ -54,6 +56,7 @@ final class DesktopState {
             Editor clear() { for (String key : next.keySet().toArray(String[]::new)) next.remove(key); return this; }
             Editor putString(String key, String value) { next.put(key, value); return this; }
             Editor putBoolean(String key, boolean value) { next.put(key, value); return this; }
+            Editor putInt(String key, int value) { next.put(key, value); return this; }
             Editor remove(String key) { next.remove(key); return this; }
             boolean commit() {
                 synchronized (Preferences.this) {
