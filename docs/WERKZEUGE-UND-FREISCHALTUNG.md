@@ -21,12 +21,15 @@ Passwort abkauft oder den Schlüssel, der kann diese Tools benutzen“*. Gewähl
 
 ## Herausgeber-Studio (nur Klaus)
 
-**Versteckt (ab .28, Klaus 2026-10-22: „verborgen … 5 Klicks unten auf das Copyright-Zeichen“):** ganz unten in den
-Einstellungen steht „© 2026“. **5× schnell darauf tippen** blendet das Studio ein (Meldung „🛠 Herausgeber-Studio
-eingeblendet“), noch einmal 5× blendet es aus (`localStorage` `pb_studio_visible`). Ein Käufer sieht weder Studio noch
-den Satz „Herausgeber-Schlüssel“. Die Passwort-Probe kommt trotzdem, denn sie hängt am Schlüssel, nicht an der Ansicht.
+**Versteckt (ab .28, Klaus 2026-10-22):** ganz unten in den Einstellungen steht „© 2026“. **Lange darauf drücken
+(1,5 s)** blendet das Studio ein (Meldung „🛠 Herausgeber-Studio eingeblendet“), noch einmal lange drücken blendet es aus
+(`localStorage` `pb_studio_visible`). Wie bei den anderen Studios (PWA Toolpoint, family-projekt.de, Kimboard, Sage):
+Klaus wollte zuerst 5 Klicks, dann *„nicht fünfmal … einmal langer dauerhafter Druck“*. Kurz tippen öffnet nichts, wer
+mehr als 10 px wischt, bricht ab. Ein Käufer sieht weder Studio noch den Satz „Herausgeber-Schlüssel“. Die
+Passwort-Probe kommt trotzdem, denn sie hängt am Schlüssel, nicht an der Ansicht. Das Verstecken hält die Seite
+aufgeräumt; geschützt wird durch die Unterschrift, nicht durch das Verstecken.
 
-Einstellungen → 5× © → 🔑 Werkzeuge freischalten → 🛠 Herausgeber-Studio:
+Einstellungen → lange auf © drücken → 🔑 Werkzeuge freischalten → 🛠 Herausgeber-Studio:
 1. **Schlüssel anlegen** mit Studio-Passwort (mindestens 8 Zeichen). Der geheime Schlüssel liegt nur auf diesem Gerät,
    verschlüsselt (PBKDF2-SHA256 600 000 → AES-256-GCM, `localStorage` `pb_studio_v1`). Nie in Git, nie im Chat.
 2. Den **öffentlichen Schlüssel** an Claude schicken. Er kommt in `native/license-keys.json` (nicht geheim). Ab der
@@ -61,7 +64,7 @@ Einstellungen → 5× © → 🔑 Werkzeuge freischalten → 🛠 Herausgeber-St
   Herkunft und SHA-256 jeder Datei in `apps/SOURCES.json`. Nur beim Verpacken (`prepare-web.mjs`) in `www/`: eigene
   CSP (mit `blob:`), `native/tool-gate.js` zuerst (kein eigener Service-Worker, läuft nur im App-Fenster mit Freigabe),
   Manifest-Link weg, `ALLOWED_ORIGINS` um `https://localhost`, pdf.js-Pfad von Modul 24 auf `/vendor/pdfjs/`.
-- Probe `tools/native/test-tools.mjs` (43; ab .27 Passwort-Probe und Ersatzschlüssel; ab .28 eigene Symbole geladen, schlichter Kasten ohne Studio, keine abgeschnittenen Namen bei 360 px, 4× © nichts, 5× © Studio, Pseudonym-Feld, Käufer-App ohne Studio): Studio, falsches Passwort, Code, fremder Studio-Schlüssel, veränderter Code,
+- Probe `tools/native/test-tools.mjs` (45; ab .27 Passwort-Probe und Ersatzschlüssel; ab .28 eigene Symbole geladen, schlichter Kasten ohne Studio, keine abgeschnittenen Namen bei 360 px, Tippen, kurzer Druck und Wischen auf © öffnen nichts, langer Druck öffnet das Studio, Pseudonym-Feld, Käufer-App ohne Studio): Studio, falsches Passwort, Code, fremder Studio-Schlüssel, veränderter Code,
   Käufer-App, Neustart, echte Kimboard-/Kimseek-Seiten im Fenster, Datei-Übernahme, Seite außerhalb des Fensters.
 
 ## Grenzen (ehrlich)

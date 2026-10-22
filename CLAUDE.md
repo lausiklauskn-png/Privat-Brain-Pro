@@ -5,8 +5,8 @@ Mail › Anhänge, jede Datei einmal; Handy eine Ebene mit Pfad, breit Baum ▸/
 fehlt · nicht prüfbar“, Zeile über alle Dateien, „Originale suchen“), Prüfbericht in einfachen Worten. Mail: Löschen in
 den Papierkorb des Anbieters, ♻ Wiederherstellen, ✓ Kein Spam, Spam in den Spam-Ordner, Zahlen vom Server (STATUS),
 Anbieter-Ordner unter „▸ Weitere Ordner“ (`MailEngine.moveTo`, Java nur in CI gebaut). ☰-Menü mit eigenen App-Symbolen
-(`native/tool-icons/`). Freischalt-Kasten schlicht; **Herausgeber-Studio erst nach 5× auf „© 2026“ unten in den
-Einstellungen**; Käuferfeld „Pseudonym“. Version **v1.0.28** klein neben dem Namen (`versionName` 1.0.0-preview.28,
+(`native/tool-icons/`). Freischalt-Kasten schlicht; **Herausgeber-Studio erst nach langem Druck (1,5 s) auf „© 2026“
+unten in den Einstellungen**, wie bei den anderen Studios; Käuferfeld „Pseudonym“. Version **v1.0.28** klein neben dem Namen (`versionName` 1.0.0-preview.28,
 Code 28). [Ordnerbaum/Prüfstand/Papierkorb](docs/ORDNERBAUM-PRUEFSTAND-PAPIERKORB.md),
 [Werkzeuge](docs/WERKZEUGE-UND-FREISCHALTUNG.md). Release nur auf Klaus' Bitte.
 

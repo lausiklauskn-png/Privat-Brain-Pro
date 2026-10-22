@@ -8,8 +8,8 @@
      (modules/noble-secp256k1.js, the same as everywhere in the SBKIM network) over SHA-256("PBK1.<data>").
    - Until his public key is in the app, a device trusts only its own studio key (so Klaus can try it out).
      Built with care to the best of our knowledge; a clear lock for normal buyers.
-   Klaus 2026-10-22: the visible box stays plain (tools, code field, button). The studio opens only after five taps on
-   the © at the bottom of the settings page; the buyer is named by the pseudonym given at payment. */
+   Klaus 2026-10-22: the visible box stays plain (tools, code field, button). The studio opens only after a long press
+   (1.5 s) on the © at the bottom of the settings page; the buyer is named by the pseudonym given at payment. */
 (() => {
   'use strict';
   const TOOLS = [
@@ -66,7 +66,7 @@
     probeCheck: ['Prüfen', 'Check', 'Проверить', 'Sprawdź'],
     probeLater: ['Später', 'Later', 'Позже', 'Później'],
     probeOk: ['✓ Richtig. Die nächste Probe kommt in 4 Wochen.', '✓ Correct. The next check comes in 4 weeks.', '✓ Верно. Следующая проверка через 4 недели.', '✓ Dobrze. Następne sprawdzenie za 4 tygodnie.'],
-    probeBad: ['✗ Das war nicht richtig. Solange du die Schlüssel-Sicherung oder 3 Ersatzschlüssel hast, kannst du ein neues Passwort setzen: Einstellungen, unten 5× auf ©, dann Studio → „Passwort vergessen?“.', '✗ That was not right. As long as you have the key backup or 3 spare keys you can set a new password: Settings, tap © at the bottom 5 times, then studio → "Forgot the password?".', '✗ Неверно. С копией или 3 запасными ключами можно задать новый пароль.', '✗ Niepoprawne. Z kopią lub 3 kluczami zapasowymi ustawisz nowe hasło.'],
+    probeBad: ['✗ Das war nicht richtig. Solange du die Schlüssel-Sicherung oder 3 Ersatzschlüssel hast, kannst du ein neues Passwort setzen: Einstellungen, unten lange auf © drücken, dann Studio → „Passwort vergessen?“.', '✗ That was not right. As long as you have the key backup or 3 spare keys you can set a new password: Settings, long-press © at the bottom, then studio → "Forgot the password?".', '✗ Неверно. С копией или 3 запасными ключами можно задать новый пароль.', '✗ Niepoprawne. Z kopią lub 3 kluczami zapasowymi ustawisz nowe hasło.'],
     probeNext: ['Nächste Passwort-Probe: ', 'Next password check: ', 'Следующая проверка: ', 'Następne sprawdzenie: '],
     probeNow: ['Jetzt zur Probe eingeben', 'Check it now', 'Проверить сейчас', 'Sprawdź teraz'],
     sharesMake: ['🧩 Ersatzschlüssel erstellen (3 von 5)', '🧩 Create spare keys (3 of 5)', '🧩 Создать запасные ключи (3 из 5)', '🧩 Utwórz klucze zapasowe (3 z 5)'],
@@ -264,23 +264,28 @@
     img.onerror = () => img.replaceWith(make('span', tool.icon, 'pb-tool-icon'));
     return img;
   }
-  // 🛠 The studio is hidden; five taps on the © at the bottom of the settings page show it (and hide it again).
-  const SHOWN = 'pb_studio_visible';
+  // 🛠 The studio is hidden; a long press on the © at the bottom of the settings page shows it (and hides it again).
+  const SHOWN = 'pb_studio_visible', LONG_MS = 1500;
   const studioShown = () => { try { return localStorage.getItem(SHOWN) === '1'; } catch { return false; } };
   function copyrightMark() {
     const footer = document.querySelector('#panel-settings footer') || document.querySelector('footer');
     if (!footer || footer.querySelector('.pb-copyright')) return;
     const mark = make('span', '© 2026', 'pb-copyright'); mark.id = 'pbCopyright';
-    let taps = 0, timer = 0;
-    mark.addEventListener('click', () => {
-      taps++; clearTimeout(timer); timer = setTimeout(() => { taps = 0; }, 2500);
-      if (taps < 5) return;
-      taps = 0;
+    // Klaus 2026-10-22: like the other studios (PWA Toolpoint, family-projekt.de, Kimboard, Sage) a LONG PRESS of 1.5 s
+    // on the ©; moving the finger more than 10 px cancels, so scrolling over the footer never opens it.
+    let timer = null, sx = 0, sy = 0, fired = false;
+    const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
+    const toggle = () => {
       try { localStorage.setItem(SHOWN, studioShown() ? '0' : '1'); } catch { /* stays as it is */ }
       paint();
       if (typeof window.toast === 'function') window.toast(studioShown() ? t('studioShown') : t('studioHidden'));
       if (studioShown()) document.getElementById('pb-studio')?.scrollIntoView({ block: 'center' });
-    });
+    };
+    mark.addEventListener('pointerdown', ev => { sx = ev.clientX; sy = ev.clientY; stop(); fired = false; timer = setTimeout(() => { timer = null; fired = true; toggle(); }, LONG_MS); });
+    mark.addEventListener('pointermove', ev => { if (timer && (Math.abs(ev.clientX - sx) > 10 || Math.abs(ev.clientY - sy) > 10)) stop(); });
+    for (const n of ['pointerup', 'pointercancel', 'pointerleave']) mark.addEventListener(n, stop);
+    mark.addEventListener('click', ev => { if (fired) { ev.preventDefault(); fired = false; } }, true);
+    mark.addEventListener('contextmenu', ev => { if (timer || fired) ev.preventDefault(); });
     footer.append(' ', mark);
   }
   async function copy(text, status) { try { await navigator.clipboard.writeText(text); say(status, t('copied')); } catch { say(status, text); } }

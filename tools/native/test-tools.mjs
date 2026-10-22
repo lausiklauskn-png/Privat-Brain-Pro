@@ -43,12 +43,18 @@ try{
   await page.setViewportSize({width:360,height:740});
   ok('On a phone (360 px) no tool name is cut off',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b');return n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=li.getBoundingClientRect().right+1;})));
   await page.setViewportSize({width:1280,height:900});
-  const mark=page.locator('#pbCopyright');
-  for(let i=0;i<4;i++)await mark.click();
-  ok('Four taps on © do not show the studio',await page.locator('#pb-studio').count()===0);
-  await mark.click();
+  // Like the other studios: a long press (1.5 s) on the ©; a short press or a swipe opens nothing (Klaus 2026-10-22).
+  const mark=page.locator('#pbCopyright');await mark.scrollIntoViewIfNeeded();
+  const box=await mark.boundingBox(),cx=box.x+box.width/2,cy=box.y+box.height/2;
+  for(let i=0;i<6;i++)await mark.click();
+  ok('Taps on © (also six in a row) do not show the studio',await page.locator('#pb-studio').count()===0);
+  await page.mouse.move(cx,cy);await page.mouse.down();await page.waitForTimeout(700);await page.mouse.up();await page.waitForTimeout(1200);
+  ok('A short press (0.7 s) on © does not show the studio',await page.locator('#pb-studio').count()===0);
+  await page.mouse.move(cx,cy);await page.mouse.down();await page.waitForTimeout(300);await page.mouse.move(cx,cy+40,{steps:4});await page.waitForTimeout(1600);await page.mouse.up();
+  ok('Pressing and swiping away over © does not show the studio',await page.locator('#pb-studio').count()===0);
+  await page.mouse.move(cx,cy);await page.mouse.down();await page.waitForTimeout(1700);await page.mouse.up();
   await page.locator('#pb-studio').waitFor({timeout:5000});
-  ok('Five taps on the © at the bottom show the publisher studio',await page.evaluate(()=>localStorage.getItem('pb_studio_visible')==='1'));
+  ok('A long press (1.5 s) on the © at the bottom shows the publisher studio',await page.evaluate(()=>localStorage.getItem('pb_studio_visible')==='1'));
   const studio=page.locator('#pb-studio');await studio.locator(':scope > summary').click();
   await studio.locator('[data-studio-pw]').fill('kurz');await studio.locator('[data-studio-pw2]').fill('kurz');await studio.locator('.pb-studio-make-key').click();
   ok('A too short studio password is refused',(await studio.locator('[data-studio-status]').textContent()).includes('mindestens 8 Zeichen'));
