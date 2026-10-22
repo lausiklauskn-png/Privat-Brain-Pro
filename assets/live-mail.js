@@ -112,6 +112,11 @@
     ],
     trash: ["In Papierkorb", "Move to trash", "В корзину", "Do kosza"],
     spam: ["Als Spam", "Mark as spam", "В спам", "Oznacz jako spam"],
+    moreFolders: ["Weitere Ordner", "More folders", "Другие папки", "Więcej folderów"],
+    viewOnly: ["Ansicht", "view", "вид", "widok"],
+    viewHint: ["Sammelansicht des Anbieters: zeigt dieselben Mails wie andere Ordner noch einmal.", "Provider view: shows the same mails as other folders once more.", "Сборный вид провайдера: те же письма ещё раз.", "Widok dostawcy: te same wiadomości jeszcze raz."],
+    restore: ["♻ Wiederherstellen", "♻ Restore", "♻ Восстановить", "♻ Przywróć"],
+    notSpam: ["✓ Kein Spam", "✓ Not spam", "✓ Не спам", "✓ To nie spam"],
     archive: ["Archivieren", "Archive", "В архив", "Archiwizuj"],
     remove: [
       "Endgültig löschen",
@@ -609,20 +614,45 @@
     folders=await api(prefix()+'/folders');
     if(native) {
       foldersReady=true;
-      savedCache=await native.saved(account); updateEntries();
+      savedCache=await native.saved(account); updateEntries(); serverTotals();
       const entry=entries.find(e=>e.id===viewKey)||entries[0];viewKey=entry.id;folder=entry.path;
     } else if(!folders.some(f=>f.path===folder))folder=folders.find(f=>f.path==='INBOX')?.path||folders[0]?.path||'INBOX';
     drawFolders();await loadList();
+  }
+  // Klaus 2026-10-22: the numbers next to the folders come from the server (IMAP STATUS), for every folder,
+  // so a mail moved to the trash or to spam - here or elsewhere - shows up there at once.
+  function serverTotals() {
+    for (const entry of entries) {
+      const f = folders.find(x => x.path === entry.path);
+      if (f && Number.isSafeInteger(f.total) && f.total >= 0) totals.set(entry.id, f.total);
+    }
+  }
+  async function refreshCounts() {
+    if (!native) return;
+    try { folders = await api(prefix() + '/folders'); updateEntries(); serverTotals(); drawFolders(); } catch { /* the list itself is already fresh */ }
   }
   function drawFolders() {
     if (native) {
       nav.replaceChildren();
       const overview=window.PBMailIndex?.entry?.();if(overview)nav.append(overview);
+      // Klaus 2026-10-22: providers differ (Google has many more folders than Telekom). The standard folders stay the
+      // same for every account; the provider's own folders sit below under "Weitere Ordner", closed by default.
+      const own=entries.filter(entry=>entry.id.startsWith('provider:'));
+      let moreOpen=false;try{moreOpen=localStorage.getItem('pb_mail_more_open')==='1';}catch{}
+      if(own.some(entry=>entry.id===viewKey))moreOpen=true;
       for(const entry of entries) {
-        const button=shared.folderButton(entry.id,entry.name,folderCount(entry),viewKey===entry.id,()=>run(async()=>{
+        if(entry===own[0]){
+          const more=el('button','mail-button mail-more-folders',(moreOpen?'▾ ':'▸ ')+T('moreFolders')+' ('+own.length+')');more.type='button';
+          more.dataset.liveMore='1';more.setAttribute('aria-expanded',String(moreOpen));
+          more.onclick=()=>{try{localStorage.setItem('pb_mail_more_open',moreOpen?'0':'1');}catch{}drawFolders();};
+          nav.append(more);
+        }
+        if(own.includes(entry)&&!moreOpen)continue;
+        const view=folders.find(f=>f.path===entry.path)?.collection;
+        const button=shared.folderButton(entry.id,entry.name+(view?' · '+T('viewOnly'):''),folderCount(entry),viewKey===entry.id,()=>run(async()=>{
           if(!leave())return;dirty=false;draft=null;viewKey=entry.id;folder=entry.path;drawFolders();await loadList();
         }));
-        button.dataset.liveFolder=entry.path;nav.append(button);
+        button.dataset.liveFolder=entry.path;if(view){button.dataset.collection='1';button.title=T('viewHint');}nav.append(button);
       }
       const button=btn('folder',async()=>{const name=prompt(T('folder'));if(name){await api(prefix()+'/folders',{name});await loadFolders();}});
       nav.append(button);return;
@@ -685,7 +715,7 @@
       else for(const item of chosen)await api('/'+encodeURIComponent(context.account)+'/messages/'+item.uid+'/action',{folder:context.folder,validity:context.validity,action:type,...(target?{target}:{})});
     }
     catch(error){failed=error;}
-    finally{await loadList();}
+    finally{await loadList();await refreshCounts();}
     if(failed)throw failed;
   }
   function drawNativeList() {
@@ -697,8 +727,14 @@
     move.setAttribute('aria-label',S('move'));move.append(new Option(S('move'),''),...folders.filter(f=>f.path!==folder).map(f=>new Option(folderTitle(f.path),f.path)));
     const filtered=()=>items.filter(item=>(item.subject+' '+item.from).toLocaleLowerCase().includes(filterText.toLocaleLowerCase()));
     const isTrash=folderMap.get('trash')?.path===folder, trashFolder=folderMap.get('trash');
+    const isSpam=folderMap.get('spam')?.path===folder, spamFolder=folderMap.get('spam'), inbox=folderMap.get('inbox')?.path||'INBOX';
     if(isTrash)trash.textContent=T('remove');
-    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?!folders.some(f=>f.path===folder&&f.specialUse==='\\Trash'):!trashFolder);move.disabled=!selected.size;}
+    // In the trash: put back into the inbox; in spam: "not spam"; elsewhere: mark as spam (Klaus 2026-10-22).
+    const back=el('button','mail-button',T(isTrash?'restore':isSpam?'notSpam':'spam'));back.type='button';back.dataset.nativeSelection=isTrash?'restore':isSpam?'notspam':'spam';
+    const backTarget=isTrash||isSpam?inbox:spamFolder?.path;
+    back.hidden=!backTarget||backTarget===folder;
+    back.onclick=()=>run(()=>batchAction('move',backTarget));
+    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?false:!trashFolder);back.disabled=!selected.size;move.disabled=!selected.size;}
     all.onclick=()=>{const candidates=filtered().filter(item=>!item.local),on=candidates.some(item=>!selected.has(item.uid));for(const item of candidates)on?selected.add(item.uid):selected.delete(item.uid);drawNativeList();};
     trash.onclick=()=>run(()=>batchAction(isTrash?'delete':'move',isTrash?null:trashFolder.path));
     move.onchange=()=>{const target=move.value;move.value='';if(target)run(()=>batchAction('move',target));};
@@ -721,7 +757,7 @@
       if(!rows.childElementCount)rows.append(el('p','mail-muted',S('empty')));
     }
     search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
-    actions.append(all,trash,move);list.append(search,actions,count,rows);drawRows();selection();
+    actions.append(all,trash,back,move);list.append(search,actions,count,rows);drawRows();selection();
     if(next)list.append(btn('more',()=>loadList(true)));
   }
   async function showSavedRecord(record) {
@@ -802,6 +838,7 @@
       target,
     });
     await loadList();
+    await refreshCounts();
   }
   function attachmentBytes(a) {
     return Uint8Array.from(atob(a.data), (c) => c.charCodeAt(0));
@@ -956,7 +993,10 @@
           }),
         ),
       );
-    if (folders.find((f) => f.path === folder)?.specialUse === "\\Trash")
+    const inbox = (native ? folderMap.get("inbox")?.path : null) || "INBOX";
+    if ((roleFolder("\\Trash")?.path === folder || roleFolder("\\Junk")?.path === folder) && inbox !== folder)
+      actions.append(btn(roleFolder("\\Trash")?.path === folder ? "restore" : "notSpam", () => action("move", inbox)));
+    if (roleFolder("\\Trash")?.path === folder)
       actions.append(
         btn("remove", () =>
           confirm(T("remove") + "?") ? action("delete") : null,
