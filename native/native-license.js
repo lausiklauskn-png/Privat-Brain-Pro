@@ -59,6 +59,27 @@
     restoreBad: ['Diese Sicherung passt nicht oder das Passwort stimmt nicht.', 'This backup does not fit or the password is wrong.', 'Копия не подходит или пароль неверен.', 'Kopia nie pasuje lub hasło jest błędne.'],
     restored: ['✓ Schlüssel zurückgeholt.', '✓ Key restored.', '✓ Ключ восстановлен.', '✓ Klucz przywrócony.'],
     limit: ['Ehrlich: Eine App auf fremden Geräten lässt sich mit Fachwissen auseinandernehmen. Für normale Käufer ist das eine klare Sperre. Ein weitergegebener Code trägt den Namen dessen, für den er gemacht wurde.', 'Honestly: an app on someone else\'s device can be taken apart with expertise. For normal buyers this is a clear lock. A passed-on code carries the name of whom it was made for.', 'Честно: приложение можно разобрать. Для обычных покупателей это надёжный замок. Переданный код несёт имя владельца.', 'Szczerze: aplikację da się rozebrać. Dla zwykłych kupujących to wyraźna blokada. Przekazany kod nosi imię właściciela.'],
+    probeHead: ['🧠 Kennst du dein Studio-Passwort noch?', '🧠 Do you still know your studio password?', '🧠 Помните пароль студии?', '🧠 Pamiętasz hasło studia?'],
+    probeHelp: ['Einmal zur Probe eingeben. So bleibt es im Kopf. Es geht nichts ins Netz.', 'Enter it once as a check, so it stays in your head. Nothing goes online.', 'Введите для проверки. Ничего не уходит в сеть.', 'Wpisz dla sprawdzenia. Nic nie trafia do sieci.'],
+    probeCheck: ['Prüfen', 'Check', 'Проверить', 'Sprawdź'],
+    probeLater: ['Später', 'Later', 'Позже', 'Później'],
+    probeOk: ['✓ Richtig. Die nächste Probe kommt in 4 Wochen.', '✓ Correct. The next check comes in 4 weeks.', '✓ Верно. Следующая проверка через 4 недели.', '✓ Dobrze. Następne sprawdzenie za 4 tygodnie.'],
+    probeBad: ['✗ Das war nicht richtig. Solange du die Schlüssel-Sicherung oder 3 Ersatzschlüssel hast, kannst du ein neues Passwort setzen: Studio → „Passwort vergessen?“.', '✗ That was not right. As long as you have the key backup or 3 spare keys you can set a new password: studio → "Forgot the password?".', '✗ Неверно. С копией или 3 запасными ключами можно задать новый пароль.', '✗ Niepoprawne. Z kopią lub 3 kluczami zapasowymi ustawisz nowe hasło.'],
+    probeNext: ['Nächste Passwort-Probe: ', 'Next password check: ', 'Следующая проверка: ', 'Następne sprawdzenie: '],
+    probeNow: ['Jetzt zur Probe eingeben', 'Check it now', 'Проверить сейчас', 'Sprawdź teraz'],
+    sharesMake: ['🧩 Ersatzschlüssel erstellen (3 von 5)', '🧩 Create spare keys (3 of 5)', '🧩 Создать запасные ключи (3 из 5)', '🧩 Utwórz klucze zapasowe (3 z 5)'],
+    sharesHelp: ['Der Studio-Schlüssel wird in 5 Teile geteilt. 3 beliebige Teile holen ihn zurück, auch ohne Passwort. 1 oder 2 Teile allein sind wertlos. Verteile sie an getrennte Orte: z. B. eine E-Mail an dich selbst, dein privates Schlüssel-Tresor-Repo, Papier zu Hause, ein Familienmitglied, ein USB-Stick. Nie alle an einen Ort.', 'The studio key is split into 5 parts. Any 3 bring it back, even without the password. 1 or 2 parts alone are worthless. Keep them in separate places: e.g. an email to yourself, your private key-vault repo, paper at home, a family member, a USB stick. Never all in one place.', 'Ключ делится на 5 частей; любые 3 восстанавливают его. 1–2 части бесполезны. Храните раздельно.', 'Klucz dzieli się na 5 części; dowolne 3 go przywracają. 1–2 części są bezwartościowe. Przechowuj osobno.'],
+    sharePart: ['Teil {i} von 5', 'Part {i} of 5', 'Часть {i} из 5', 'Część {i} z 5'],
+    sharesDone: ['Ich habe die 5 Teile an getrennten Orten abgelegt', 'I have put the 5 parts in separate places', 'Я разложил 5 частей по разным местам', 'Umieściłem 5 części w różnych miejscach'],
+    sharesMade: ['🧩 Ersatzschlüssel erstellt am ', '🧩 Spare keys created on ', '🧩 Запасные ключи созданы ', '🧩 Klucze zapasowe utworzone '],
+    sharesNone: ['🧩 Noch keine Ersatzschlüssel. Empfohlen, damit ein vergessenes Passwort kein Verlust ist.', '🧩 No spare keys yet. Recommended, so a forgotten password is not a loss.', '🧩 Запасных ключей нет. Рекомендуется.', '🧩 Brak kluczy zapasowych. Zalecane.'],
+    forgot: ['Passwort vergessen? Mit 3 Ersatzschlüsseln ein neues setzen', 'Forgot the password? Set a new one with 3 spare keys', 'Забыли пароль? Новый с 3 запасными ключами', 'Zapomniałeś hasła? Ustaw nowe z 3 kluczami'],
+    fromShares: ['Mit 3 Ersatzschlüsseln zurückholen', 'Restore with 3 spare keys', 'Восстановить 3 запасными ключами', 'Przywróć 3 kluczami zapasowymi'],
+    shareField: ['Ersatzschlüssel {i} (JT3v5-…)', 'Spare key {i} (JT3v5-…)', 'Запасной ключ {i}', 'Klucz zapasowy {i}'],
+    newPw: ['Neues Studio-Passwort (mindestens 8 Zeichen)', 'New studio password (at least 8 characters)', 'Новый пароль студии', 'Nowe hasło studia'],
+    sharesBad: ['Diese Teile passen nicht zusammen oder nicht zu diesem Studio-Schlüssel: ', 'These parts do not fit together or not to this studio key: ', 'Части не подходят: ', 'Części nie pasują: '],
+    sharesRestored: ['✓ Studio-Schlüssel zurückgeholt, neues Passwort gesetzt. Am besten gleich neue Ersatzschlüssel erstellen.', '✓ Studio key restored, new password set. Best create new spare keys now.', '✓ Ключ восстановлен, пароль задан.', '✓ Klucz przywrócony, nowe hasło ustawione.'],
+    close: ['Schließen', 'Close', 'Закрыть', 'Zamknij'],
     removeCode: ['Code entfernen', 'Remove code', 'Удалить код', 'Usuń kod'],
     removeAsk: ['Diesen Code von diesem Gerät entfernen? Die Werkzeuge werden wieder gesperrt.', 'Remove this code from this device? The tools will be locked again.', 'Удалить код? Инструменты снова закроются.', 'Usunąć kod? Narzędzia zostaną zablokowane.']
   };
@@ -121,6 +142,7 @@
     if (isOwner()) for (const tool of TOOLS) next.add(tool.id);
     for (const code of get(CODES, [])) { const r = await check(code).catch(() => null); if (r?.ok) for (const id of r.data.t) next.add(id); }
     open_ = next; dispatchEvent(new CustomEvent('pb:license')); paint();
+    setTimeout(askProbe, 1500);   // the studio password is asked now and then (probe, Klaus 2026-10-22)
     return open_;
   }
   const unlocked = id => open_.has(id);
@@ -136,6 +158,7 @@
     const { schnorr, utils } = await noble();
     const secret = utils.randomPrivateKey(), pub = hex(await schnorr.getPublicKey(secret));
     put(STUDIO, { ...(await seal(secret, password)), pub, made: Date.now() });
+    put(PROBE, { next: Date.now() + PROBE_DAYS * 864e5 });
     secret.fill(0); await refresh(); return pub;
   }
   async function makeCode(password, buyer, tools) {
@@ -159,7 +182,73 @@
     const secret = await open(box, password);   // throws on a wrong password
     const { schnorr } = await noble();
     if (hex(await schnorr.getPublicKey(secret)) !== box.pub) throw new Error('bad');
-    secret.fill(0); put(STUDIO, box); await refresh();
+    secret.fill(0); put(STUDIO, box); put(PROBE, { next: Date.now() + PROBE_DAYS * 864e5 }); await refresh();
+  }
+
+  // ---------- 🧠 password check now and then, 🧩 spare keys 3 of 5 (Klaus 2026-10-22, for .27) ----------
+  const PROBE = 'pb_studio_probe', SHARES = 'pb_studio_shares', PROBE_DAYS = 28;
+  const probeDue = () => Boolean(studio()) && Date.now() >= (get(PROBE, {}).next || 0);
+  async function probe(password) {
+    const box = studio(); if (!box) return false;
+    let ok = false;
+    try { const secret = await open(box, password); secret.fill(0); ok = true; } catch { ok = false; }
+    put(PROBE, { ...get(PROBE, {}), last: Date.now(), ok, next: ok ? Date.now() + PROBE_DAYS * 864e5 : Date.now() });
+    return ok;
+  }
+  async function makeShares(password) {
+    const box = studio(); if (!box) throw new Error('no studio');
+    let secret; try { secret = await open(box, password); } catch { throw new Error('password'); }
+    if (!window.JasonLib?.splitSecret) throw new Error('JasonLib missing');
+    const result = await window.JasonLib.splitSecret(hex(secret)); secret.fill(0);
+    put(SHARES, { made: Date.now(), fp: result.fingerprint, pub: box.pub });
+    return result.shares;
+  }
+  // Three parts give the secret key back; it is sealed again with a new password. On a device that already holds a studio
+  // key, the parts must belong to that very key (same public key), so nobody replaces it with their own.
+  async function restoreFromShares(parts, password) {
+    const hexKey = await window.JasonLib.combineShares(parts.filter(Boolean));
+    if (!/^[0-9a-f]{64}$/.test(hexKey)) throw new Error('not a studio key');
+    const secret = unhex(hexKey), { schnorr } = await noble(), pub = hex(await schnorr.getPublicKey(secret));
+    const own = studio()?.pub;
+    if (own && own !== pub) { secret.fill(0); throw new Error('other key'); }
+    put(STUDIO, { ...(await seal(secret, password)), pub, made: studio()?.made || Date.now() });
+    secret.fill(0); put(PROBE, { next: Date.now() + PROBE_DAYS * 864e5, last: Date.now(), ok: true }); await refresh();
+    return pub;
+  }
+  let probeAsked = false;
+  function askProbe() {
+    if (probeAsked || !probeDue() || document.querySelector('dialog.pb-studio-probe')) return;
+    probeAsked = true;
+    const dialog = make('dialog', null, 'live-dialog pb-studio-probe');
+    const pw = make('input'); pw.type = 'password'; pw.autocomplete = 'current-password'; pw.placeholder = t('pw'); pw.setAttribute('aria-label', t('pw'));
+    const status = make('p', null, 'hint'); status.setAttribute('role', 'status');
+    const check = button(t('probeCheck'), async () => {
+      check.disabled = true;
+      const ok = await probe(pw.value); pw.value = '';
+      status.textContent = ok ? t('probeOk') : t('probeBad'); status.dataset.ok = String(ok);
+      check.disabled = false; if (ok) { check.hidden = true; later.textContent = t('close'); }
+      paint();
+    }, 'pb-studio-probe-check');
+    const later = button(t('probeLater'), () => dialog.close());
+    dialog.append(make('h2', t('probeHead')), make('p', t('probeHelp')), pw, check, later, status);
+    document.body.append(dialog); dialog.addEventListener('close', () => dialog.remove()); dialog.showModal();
+  }
+  function sharesBlock(withPassword) {
+    // Five fields for the parts; withPassword: the device has no studio key yet, or the password is forgotten.
+    const wrap = make('div', null, 'pb-studio-shares-in');
+    const fields = [1, 2, 3, 4, 5].map(i => { const f = make('textarea'); f.rows = 1; f.dataset.noDictate = '1'; f.placeholder = t('shareField', { i }); f.setAttribute('aria-label', t('shareField', { i })); f.dataset.sharePart = String(i); return f; });
+    const np = make('input'); np.type = 'password'; np.autocomplete = 'new-password'; np.placeholder = t('newPw'); np.setAttribute('aria-label', t('newPw'));
+    const np2 = make('input'); np2.type = 'password'; np2.autocomplete = 'new-password'; np2.placeholder = t('pw2'); np2.setAttribute('aria-label', t('pw2'));
+    const status = make('p', null, 'hint'); status.setAttribute('role', 'status');
+    const go = button(t('fromShares'), async () => {
+      if (np.value.length < 8 || np.value !== np2.value) { status.textContent = t('pwShort'); return; }
+      go.disabled = true;
+      try { await restoreFromShares(fields.map(f => f.value.trim()), np.value); document.getElementById('pb-studio').open = true; say(document.querySelector('[data-studio-status]'), t('sharesRestored')); }
+      catch (error) { status.textContent = t('sharesBad') + String(error?.message || error).slice(0, 140); }
+      finally { go.disabled = false; }
+    }, 'pb-studio-from-shares');
+    wrap.append(...fields, np, np2, go, status);
+    return wrap;
   }
 
   // ---------- settings box ----------
@@ -210,7 +299,8 @@
       const restore = make('details'); const text = make('textarea'); text.rows = 2; text.dataset.noDictate = '1'; text.placeholder = 'PBSTUDIO1.…'; text.dataset.studioBackup = '';
       const rp = make('input'); rp.type = 'password'; rp.placeholder = t('pw'); rp.setAttribute('aria-label', t('pw'));
       restore.append(make('summary', t('restore')), text, rp, button(t('restore'), async () => { try { await restoreBackup(text.value, rp.value); document.getElementById('pb-studio').open = true; say(document.querySelector('[data-studio-status]'), t('restored')); } catch { say(status, t('restoreBad')); } }));
-      d.append(pw, pw2, mk, status, restore);
+      const fromShares = make('details'); fromShares.append(make('summary', t('fromShares')), sharesBlock(true));
+      d.append(pw, pw2, mk, status, restore, fromShares);
       return d;
     }
     const pubLine = make('p', null, 'pb-studio-pub'); pubLine.append(make('span', t('pub') + ' '), make('code', s.pub));
@@ -238,10 +328,34 @@
     if (log.length) { const l = make('details'); l.append(make('summary', t('log') + ' (' + log.length + ')')); const ul = make('ul'); for (const e of log) ul.append(make('li', e.d + ' · ' + e.n + ' · ' + e.t.join(', '))); l.append(ul); d.append(l); }
     const bst = make('p', null, 'hint');
     d.append(button(t('backup'), () => copy(backupText(), bst)), make('p', t('backupHelp'), 'hint'), bst);
+    // 🧩 spare keys
+    const info = get(SHARES, null);
+    const sharesBox = make('div', null, 'pb-studio-shares');
+    sharesBox.append(make('p', info && info.pub === s.pub ? t('sharesMade') + new Date(info.made).toLocaleDateString(document.documentElement.lang) : t('sharesNone'), 'hint pb-studio-shares-state'));
+    const shareOut = make('div', null, 'pb-studio-shares-out');
+    const mkShares = button(t('sharesMake'), async () => {
+      mkShares.disabled = true; say(status, '');
+      try {
+        const parts = await makeShares(pw.value);
+        const rows = parts.map((part, i) => { const area = make('textarea'); area.readOnly = true; area.rows = 2; area.value = part; area.dataset.sharePart = String(i + 1); const st = make('p', null, 'hint');
+          const row = make('div', null, 'pb-studio-share'); row.append(make('b', t('sharePart', { i: i + 1 })), area, button(t('copy'), () => copy(part, st)), ...(navigator.share ? [button(t('share'), () => navigator.share({ text: part }).catch(() => {}))] : []), st); return row; });
+        const done = make('label'); const c = make('input'); c.type = 'checkbox'; c.onchange = () => { if (c.checked) { shareOut.replaceChildren(make('p', '✓ ' + t('sharesDone'), 'hint')); paint(); } };
+        done.append(c, document.createTextNode(' ' + t('sharesDone')));
+        shareOut.replaceChildren(...rows, done);
+      } catch (error) { say(status, error.message === 'password' ? t('pwWrong') : String(error.message || error)); }
+      finally { mkShares.disabled = false; }
+    }, 'pb-studio-make-shares');
+    sharesBox.append(make('p', t('sharesHelp'), 'hint'), mkShares, shareOut);
+    // 🧠 password check
+    const pr = get(PROBE, {});
+    const probeLine = make('p', pr.next ? t('probeNext') + new Date(pr.next).toLocaleDateString(document.documentElement.lang) : '', 'hint pb-studio-probe-next');
+    const probeNow = button(t('probeNow'), () => { probeAsked = false; put(PROBE, { ...get(PROBE, {}), next: 0 }); askProbe(); }, 'pb-studio-probe-now');
+    const forgot = make('details', null, 'pb-studio-forgot'); forgot.append(make('summary', t('forgot')), sharesBlock(true));
+    d.append(sharesBox, probeLine, probeNow, forgot);
     return d;
   }
   new MutationObserver(() => { box = null; document.getElementById('pb-license')?.remove(); paint(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  window.PBLicense = { TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
+  window.PBLicense = { probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
   void refresh();
 })();

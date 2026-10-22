@@ -26,6 +26,17 @@ Einstellungen → 🔑 Werkzeuge freischalten → 🛠 Herausgeber-Studio:
    Per Mail oder Nachricht schicken. Liste der erstellten Codes im Studio.
 4. **Schlüssel-Sicherung kopieren** (`PBSTUDIO1.…`, mit dem Studio-Passwort verschlüsselt) und gut aufheben, z. B. im
    Tresor. „Schlüssel aus Sicherung holen“ stellt ihn auf einem neuen Gerät wieder her.
+5. **🧠 Passwort-Probe (ab .27, Klaus 2026-10-22):** Etwa alle 28 Tage fragt die App beim Start „Kennst du dein
+   Studio-Passwort noch?“ (nur auf einem Gerät mit Studio-Schlüssel, also nie bei Käufern). Richtig → nächste Probe in
+   4 Wochen; falsch → Hinweis auf Sicherung/Ersatzschlüssel, beim nächsten Start wieder. Im Studio stehen das Datum der
+   nächsten Probe und „Jetzt zur Probe eingeben“. Geprüft wird nur auf dem Gerät (`localStorage` `pb_studio_probe`).
+6. **🧩 Ersatzschlüssel 3 von 5 (ab .27):** mit dem Studio-Passwort wird der geheime Schlüssel über JasonLib
+   (`splitSecret`, Shamir) in 5 Teile `JT3v5-…` geteilt; 3 beliebige holen ihn zurück, auch ohne Passwort, 1–2 sind
+   wertlos. Verteilen an getrennte Orte (Mail an sich selbst, privates Tresor-Repo, Papier, Familie, USB-Stick).
+   „Passwort vergessen?“ im Studio bzw. „Mit 3 Ersatzschlüsseln zurückholen“ auf einem neuen Gerät: 3 Teile + neues
+   Passwort. Liegt auf dem Gerät schon ein Studio-Schlüssel, müssen die Teile genau zu ihm gehören (gleicher
+   öffentlicher Schlüssel), sonst wird nichts ersetzt. Gespeichert wird nur Datum und Fingerabdruck (`pb_studio_shares`),
+   nie die Teile selbst.
 
 ## Technik
 
@@ -41,7 +52,7 @@ Einstellungen → 🔑 Werkzeuge freischalten → 🛠 Herausgeber-Studio:
   Herkunft und SHA-256 jeder Datei in `apps/SOURCES.json`. Nur beim Verpacken (`prepare-web.mjs`) in `www/`: eigene
   CSP (mit `blob:`), `native/tool-gate.js` zuerst (kein eigener Service-Worker, läuft nur im App-Fenster mit Freigabe),
   Manifest-Link weg, `ALLOWED_ORIGINS` um `https://localhost`, pdf.js-Pfad von Modul 24 auf `/vendor/pdfjs/`.
-- Probe `tools/native/test-tools.mjs` (24): Studio, falsches Passwort, Code, fremder Studio-Schlüssel, veränderter Code,
+- Probe `tools/native/test-tools.mjs` (35, ab .27 mit Passwort-Probe und Ersatzschlüsseln): Studio, falsches Passwort, Code, fremder Studio-Schlüssel, veränderter Code,
   Käufer-App, Neustart, echte Kimboard-/Kimseek-Seiten im Fenster, Datei-Übernahme, Seite außerhalb des Fensters.
 
 ## Grenzen (ehrlich)

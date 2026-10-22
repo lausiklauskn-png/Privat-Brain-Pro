@@ -1,5 +1,12 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**🧠 Passwort-Probe und 🧩 Ersatzschlüssel fürs Studio (Klaus 2026-10-22, für .27):** etwa alle 28 Tage fragt die App
+auf Klaus' Gerät nach dem Studio-Passwort (nur prüfen, nichts ins Netz); „Jetzt zur Probe eingeben“ im Studio. Der
+Studio-Schlüssel lässt sich in 5 Teile `JT3v5-…` teilen (JasonLib), 3 holen ihn mit neuem Passwort zurück, nur passend
+zum vorhandenen Schlüssel. Klaus' Termux-Tresore (`pbpro-`/`wfpdf-freigabe-neu.age`, age -p, neu verschlüsselt
+2026-10-22, offene Kopien entfernt) bewahren `PB_SIGNING_UNLOCK`/`WF_PDF_SIGNING_UNLOCK`; nie neu erzeugen.
+[Details](docs/WERKZEUGE-UND-FREISCHALTUNG.md#herausgeber-studio-nur-klaus).
+
 **Vorschau .25 veröffentlicht (2026-10-22).** [APK .25](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.25/Private-Brain-Pro-0.1.0-preview.25.apk) über die vorhandene App installieren; daneben `.aab`.
 PR #60–#62, VersionCode 25, Quelle main `edf76aa70d30a98ba5bbfdc327544dd7b2264378` (Main-CI grün inkl. native-smoke). Release-Lauf 39773902642: Signatur, Updateprobe .24 → .25, Veröffentlichung.
 APK SHA-256 `09e37ee1…b985b4a735` (6.220.958 Bytes), AAB `b26970bb…58754e7d` (6.034.985 Bytes), gleich SHA256SUMS.

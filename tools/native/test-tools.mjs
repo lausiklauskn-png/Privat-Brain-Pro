@@ -56,10 +56,41 @@ try{
   ok('The studio makes a code for the buyer',/^PBK1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(code)&&(await s.textContent()).includes('Code für Max Muster'));
   const backup=await page.evaluate(()=>PBLicense.backupText());
   ok('A key backup exists and is encrypted',backup.startsWith('PBSTUDIO1.')&&!backup.includes(pub.slice(0,0)+'"ct":""'));
+  // ---------- 🧠 password check now and then, 🧩 spare keys 3 of 5 (.27) ----------
+  const nextProbe=await page.evaluate(()=>JSON.parse(localStorage.getItem('pb_studio_probe')).next-Date.now());
+  ok('A new studio key plans the first password check in about 4 weeks',nextProbe>27*864e5&&nextProbe<29*864e5);
+  ok('A wrong password at the check says so and asks again next time',await page.evaluate(async()=>!(await PBLicense.probe('falsch-falsch'))&&PBLicense.probeDue()));
+  await page.evaluate(()=>PBLicense.refresh());
+  const probeDlg=page.locator('dialog.pb-studio-probe');await probeDlg.waitFor({timeout:10000});
+  ok('When due, the app asks for the studio password by itself',(await probeDlg.textContent()).includes('Kennst du dein Studio-Passwort noch?'));
+  await probeDlg.locator('input[type=password]').fill(PW);await probeDlg.locator('.pb-studio-probe-check').click();
+  await page.waitForFunction(()=>/Richtig/.test(document.querySelector('dialog.pb-studio-probe [role=status]')?.textContent||''),null,{timeout:60000});
+  ok('The right password: a tick, the field is emptied, the next check in 4 weeks',await probeDlg.locator('input[type=password]').inputValue()===''&&await page.evaluate(()=>!PBLicense.probeDue()));
+  await probeDlg.locator('button',{hasText:'Schließen'}).click();
+  if(!(await s.evaluate(d=>d.open)))await s.locator(':scope > summary').click();
+  ok('The studio shows the date of the next check and a button to check now',(await page.locator('.pb-studio-probe-next').textContent()).startsWith('Nächste Passwort-Probe: ')&&await page.locator('.pb-studio-probe-now').count()===1);
+  await page.locator('#pb-studio [data-studio-pw]').fill('falsch-falsch');await page.locator('.pb-studio-make-shares').click();
+  await page.waitForFunction(()=>/Falsches Studio-Passwort/.test(document.querySelector('#pb-studio [data-studio-status]').textContent),null,{timeout:60000});
+  ok('Spare keys need the right studio password',await page.locator('.pb-studio-share').count()===0);
+  await page.locator('#pb-studio [data-studio-pw]').fill(PW);await page.locator('.pb-studio-make-shares').click();
+  await page.waitForFunction(()=>document.querySelectorAll('#pb-studio .pb-studio-share').length===5,null,{timeout:60000});
+  const parts=await page.locator('#pb-studio .pb-studio-share textarea').evaluateAll(a=>a.map(x=>x.value));
+  ok('Five spare keys, each with copy, and the advice to keep them apart',parts.every(p=>/^JT3v5-/.test(p))&&new Set(parts).size===5&&(await page.locator('.pb-studio-shares').textContent()).includes('Nie alle an einen Ort')&&!parts.some(p=>p.includes(pub)));
+  ok('Two parts alone give nothing back',await page.evaluate(async p=>{try{await PBLicense.restoreFromShares(p,'neu-neu-neu-1');return false;}catch{return true;}},parts.slice(0,2)));
+  const PW2='Neues-Passwort-27';
+  // "Passwort vergessen": three parts and a new password, in the studio on the same device.
+  const forgot=page.locator('.pb-studio-forgot');await forgot.locator(':scope > summary').click();
+  for(const [i,part] of [parts[4],parts[1],parts[2]].entries())await forgot.locator(`[data-share-part="${i+1}"]`).fill(part);
+  const npw=forgot.locator('input[type=password]');await npw.nth(0).fill(PW2);await npw.nth(1).fill(PW2);
+  await forgot.locator('.pb-studio-from-shares').click();
+  await page.waitForFunction(()=>/zurückgeholt, neues Passwort/.test(document.querySelector('#pb-studio [data-studio-status]')?.textContent||''),null,{timeout:60000});
+  ok('Any three spare keys bring the same studio key back under a new password',await page.evaluate(()=>JSON.parse(localStorage.getItem('pb_studio_v1')).pub)===pub);
+  ok('Afterwards the new password makes codes and the old one does not',await page.evaluate(async([a,b])=>{try{await PBLicense.makeCode(a,'X',['suche']);return false;}catch{}return Boolean((await PBLicense.makeCode(b,'Y',['suche'])).code);},[PW,PW2]));
   // ---------- a stranger's studio key ----------
   const other=await app(browser,[pub]);
   const foreign=await other.page.evaluate(async()=>{await PBLicense.createKey('fremd-fremd-fremd');return (await PBLicense.makeCode('fremd-fremd-fremd','Ich',['kimsync'])).code;});
   ok('With the publisher key in the app, a self-made studio key does not open anything',await other.page.evaluate(()=>!PBLicense.unlocked('kimsync')&&!PBLicense.isOwner()));
+  ok('Spare keys of another studio key cannot replace this one',await other.page.evaluate(async p=>{try{await PBLicense.restoreFromShares(p,'neu-neu-neu-1');return false;}catch(e){return /other key/.test(e.message);}},parts.slice(1,4)));
   await other.context.close();
   // ---------- the buyer's app (publisher key in the app) ----------
   ({page,errors}=await app(browser,[pub]));
