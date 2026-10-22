@@ -591,8 +591,15 @@ header .tools .native-net-lamp::after { content:'';position:absolute;inset:-7px 
 .pb-tool-bar{display:flex;align-items:center;gap:10px;padding:4px 8px;border-bottom:1px solid var(--line,#ddd);min-height:34px}
 .pb-tool-frame iframe{flex:1;width:100%;border:0;background:#fff}
 html.pb-tool-open body{overflow:hidden}
-.pb-license-tools{list-style:none;padding:0;margin:6px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px}
-.pb-license-tools li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line,#ddd);padding:2px 0}
+.pb-license-tools{list-style:none;padding:0;margin:6px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:2px 16px}
+.pb-license-tools li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:8px;border-bottom:1px solid var(--line,#ddd);padding:3px 0;min-width:0}
+.pb-license-name{overflow-wrap:anywhere;min-width:0}
+.pb-license-tools li b{white-space:nowrap;font-size:.85rem}
+img.pb-tool-icon,span.pb-tool-icon{width:20px;height:20px;border-radius:5px;flex:0 0 20px;display:inline-block;vertical-align:middle;object-fit:cover;text-align:center;line-height:20px}
+.pb-tools-item{display:flex;align-items:center;gap:8px}
+.pb-tools-lock{font-size:.8rem;width:14px}
+.pb-studio-tools label{display:flex;align-items:center;gap:6px}
+.pb-copyright{cursor:default;user-select:none;-webkit-user-select:none;padding:4px 2px}
 .pb-license-tools li[data-open="true"] b{color:#1e6b34}
 .pb-license-tools li[data-open="false"] b{color:var(--mut,#666);font-weight:500}
 #pbLicenseCode,.pb-studio textarea{width:100%;font-family:ui-monospace,monospace;font-size:.8rem}
@@ -605,3 +612,5 @@ html.pb-tool-open body{overflow:hidden}
 .pb-studio-share{margin:6px 0}.pb-studio-share b{display:block;font-size:.85rem}
 .pb-studio-probe input{display:block;margin:8px 0;width:min(100%,360px)}
 .pb-studio-probe [data-ok="true"]{color:#1d7a3a}.pb-studio-probe [data-ok="false"]{color:#b3261e}
+/* Version always visible next to the name (Klaus 2026-10-22). */
+header .brand h1 .pb-version { display:inline-block; vertical-align:middle; min-height:20px; margin-left:4px; padding:0 7px; font:600 .7rem/1.6 system-ui,sans-serif; letter-spacing:0; border-radius:999px; box-shadow:none; opacity:.85; white-space:nowrap; }

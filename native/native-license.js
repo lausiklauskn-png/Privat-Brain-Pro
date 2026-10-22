@@ -7,24 +7,25 @@
    - A code is "PBK1.<data>.<signature>": data = {v, id, n (buyer), t (tools), d (date)}, signed with BIP-340 Schnorr
      (modules/noble-secp256k1.js, the same as everywhere in the SBKIM network) over SHA-256("PBK1.<data>").
    - Until his public key is in the app, a device trusts only its own studio key (so Klaus can try it out).
-     Honest limit: an app on someone else's device can be taken apart; this is a clear lock for normal buyers. */
+     Built with care to the best of our knowledge; a clear lock for normal buyers.
+   Klaus 2026-10-22: the visible box stays plain (tools, code field, button). The studio opens only after five taps on
+   the © at the bottom of the settings page; the buyer is named by the pseudonym given at payment. */
 (() => {
   'use strict';
   const TOOLS = [
-    { id: 'pinnwand', icon: '📌', name: ['Pinnwand', 'Pin board', 'Доска', 'Tablica'] },
-    { id: 'suche', icon: '🔎', name: ['Such-Tool', 'Search tool', 'Поиск', 'Wyszukiwarka'] },
-    { id: 'kimsync', icon: '💬', name: ['Kim-Sync', 'Kim-Sync', 'Kim-Sync', 'Kim-Sync'] },
-    { id: 'dateipost', icon: '📦', name: ['Datei-Post', 'File post', 'Почта файлов', 'Poczta plików'] },
-    { id: 'sendepruefer', icon: '✉️', name: ['Sende-Prüfer', 'Send checker', 'Проверка отправки', 'Kontrola wysyłki'] },
-    { id: 'auslieferung', icon: '🚚', name: ['Auslieferungsprüfer', 'Delivery checker', 'Проверка доставки', 'Kontrola dostawy'] },
-    { id: 'inandout', icon: '📒', name: ['In-and-Out-Book', 'In-and-Out-Book', 'In-and-Out-Book', 'In-and-Out-Book'] },
-    { id: 'fpvideo', icon: '🎬', name: ['FP-Videos', 'FP videos', 'FP-видео', 'Filmy FP'] }
+    { id: 'pinnwand', img: 'tool-icons/pinnwand.png', icon: '📌', name: ['Pinnwand', 'Pin board', 'Доска', 'Tablica'] },
+    { id: 'suche', img: 'tool-icons/suche.png', icon: '🔎', name: ['Such-Tool', 'Search tool', 'Поиск', 'Wyszukiwarka'] },
+    { id: 'kimsync', img: 'tool-icons/kimsync.png', icon: '💬', name: ['Kim-Sync', 'Kim-Sync', 'Kim-Sync', 'Kim-Sync'] },
+    { id: 'dateipost', img: 'tool-icons/dateipost.svg', icon: '📦', name: ['Datei-Post', 'File post', 'Почта файлов', 'Poczta plików'] },
+    { id: 'sendepruefer', img: 'tool-icons/sendepruefer.png', icon: '✉️', name: ['Sende-Prüfer', 'Send checker', 'Проверка отправки', 'Kontrola wysyłki'] },
+    { id: 'auslieferung', img: 'tool-icons/auslieferung.png', icon: '🚚', name: ['Auslieferungsprüfer', 'Delivery checker', 'Проверка доставки', 'Kontrola dostawy'] },
+    { id: 'inandout', img: 'tool-icons/inandout.png', icon: '📒', name: ['In-and-Out-Book', 'In-and-Out-Book', 'In-and-Out-Book', 'In-and-Out-Book'] },
+    { id: 'fpvideo', img: 'tool-icons/fpvideo.png', icon: '🎬', name: ['FP-Videos', 'FP videos', 'FP-видео', 'Filmy FP'] }
   ];
   const L = ['de', 'en', 'ru', 'pl'];
   const li = () => Math.max(0, L.indexOf(String(document.documentElement.lang || 'de').slice(0, 2)));
   const W = {
     box: ['🔑 Werkzeuge freischalten', '🔑 Unlock tools', '🔑 Открыть инструменты', '🔑 Odblokuj narzędzia'],
-    boxHelp: ['Mit einem Freischalt-Code öffnen sich die Werkzeuge im App-Menü (☰). Den Code bekommst du vom Herausgeber. Die Prüfung läuft ohne Internet.', 'An unlock code opens the tools in the app menu (☰). You get the code from the publisher. It is checked without internet.', 'Код открывает инструменты в меню (☰). Код выдаёт издатель. Проверка без интернета.', 'Kod odblokowuje narzędzia w menu (☰). Kod otrzymasz od wydawcy. Sprawdzanie bez internetu.'],
     code: ['Freischalt-Code', 'Unlock code', 'Код', 'Kod'],
     unlock: ['Freischalten', 'Unlock', 'Открыть', 'Odblokuj'],
     unlocked: ['✓ frei', '✓ open', '✓ открыт', '✓ odblokowane'],
@@ -47,10 +48,12 @@
     copy: ['Kopieren', 'Copy', 'Копировать', 'Kopiuj'],
     copied: ['Kopiert.', 'Copied.', 'Скопировано.', 'Skopiowano.'],
     share: ['Teilen', 'Share', 'Поделиться', 'Udostępnij'],
-    buyer: ['Für wen? (Name des Käufers)', 'For whom? (buyer name)', 'Для кого? (имя покупателя)', 'Dla kogo? (nazwa kupującego)'],
+    buyer: ['Pseudonym des Käufers (wie beim Kauf angegeben)', 'Buyer\'s pseudonym (as given at purchase)', 'Псевдоним покупателя (как при покупке)', 'Pseudonim kupującego (jak przy zakupie)'],
+    studioShown: ['🛠 Herausgeber-Studio eingeblendet', '🛠 Publisher studio shown', '🛠 Студия издателя показана', '🛠 Studio wydawcy widoczne'],
+    studioHidden: ['🛠 Herausgeber-Studio ausgeblendet', '🛠 Publisher studio hidden', '🛠 Студия издателя скрыта', '🛠 Studio wydawcy ukryte'],
     which: ['Welche Werkzeuge?', 'Which tools?', 'Какие инструменты?', 'Które narzędzia?'],
     makeCode: ['Code erstellen', 'Create code', 'Создать код', 'Utwórz kod'],
-    needTools: ['Bitte Namen eintragen und mindestens ein Werkzeug wählen.', 'Please enter a name and choose at least one tool.', 'Введите имя и выберите инструмент.', 'Wpisz nazwę i wybierz narzędzie.'],
+    needTools: ['Bitte Pseudonym eintragen und mindestens ein Werkzeug wählen.', 'Please enter a pseudonym and choose at least one tool.', 'Введите имя и выберите инструмент.', 'Wpisz nazwę i wybierz narzędzie.'],
     made: ['Code für {n} — per Mail oder Nachricht schicken:', 'Code for {n} — send it by mail or message:', 'Код для {n} — отправьте письмом:', 'Kod dla {n} — wyślij e-mailem:'],
     log: ['Erstellte Codes', 'Codes created', 'Созданные коды', 'Utworzone kody'],
     backup: ['Schlüssel-Sicherung kopieren', 'Copy key backup', 'Копировать резервную копию ключа', 'Kopiuj kopię klucza'],
@@ -58,13 +61,12 @@
     restore: ['Schlüssel aus Sicherung holen', 'Restore key from backup', 'Восстановить ключ из копии', 'Przywróć klucz z kopii'],
     restoreBad: ['Diese Sicherung passt nicht oder das Passwort stimmt nicht.', 'This backup does not fit or the password is wrong.', 'Копия не подходит или пароль неверен.', 'Kopia nie pasuje lub hasło jest błędne.'],
     restored: ['✓ Schlüssel zurückgeholt.', '✓ Key restored.', '✓ Ключ восстановлен.', '✓ Klucz przywrócony.'],
-    limit: ['Ehrlich: Eine App auf fremden Geräten lässt sich mit Fachwissen auseinandernehmen. Für normale Käufer ist das eine klare Sperre. Ein weitergegebener Code trägt den Namen dessen, für den er gemacht wurde.', 'Honestly: an app on someone else\'s device can be taken apart with expertise. For normal buyers this is a clear lock. A passed-on code carries the name of whom it was made for.', 'Честно: приложение можно разобрать. Для обычных покупателей это надёжный замок. Переданный код несёт имя владельца.', 'Szczerze: aplikację da się rozebrać. Dla zwykłych kupujących to wyraźna blokada. Przekazany kod nosi imię właściciela.'],
     probeHead: ['🧠 Kennst du dein Studio-Passwort noch?', '🧠 Do you still know your studio password?', '🧠 Помните пароль студии?', '🧠 Pamiętasz hasło studia?'],
     probeHelp: ['Einmal zur Probe eingeben. So bleibt es im Kopf. Es geht nichts ins Netz.', 'Enter it once as a check, so it stays in your head. Nothing goes online.', 'Введите для проверки. Ничего не уходит в сеть.', 'Wpisz dla sprawdzenia. Nic nie trafia do sieci.'],
     probeCheck: ['Prüfen', 'Check', 'Проверить', 'Sprawdź'],
     probeLater: ['Später', 'Later', 'Позже', 'Później'],
     probeOk: ['✓ Richtig. Die nächste Probe kommt in 4 Wochen.', '✓ Correct. The next check comes in 4 weeks.', '✓ Верно. Следующая проверка через 4 недели.', '✓ Dobrze. Następne sprawdzenie za 4 tygodnie.'],
-    probeBad: ['✗ Das war nicht richtig. Solange du die Schlüssel-Sicherung oder 3 Ersatzschlüssel hast, kannst du ein neues Passwort setzen: Studio → „Passwort vergessen?“.', '✗ That was not right. As long as you have the key backup or 3 spare keys you can set a new password: studio → "Forgot the password?".', '✗ Неверно. С копией или 3 запасными ключами можно задать новый пароль.', '✗ Niepoprawne. Z kopią lub 3 kluczami zapasowymi ustawisz nowe hasło.'],
+    probeBad: ['✗ Das war nicht richtig. Solange du die Schlüssel-Sicherung oder 3 Ersatzschlüssel hast, kannst du ein neues Passwort setzen: Einstellungen, unten 5× auf ©, dann Studio → „Passwort vergessen?“.', '✗ That was not right. As long as you have the key backup or 3 spare keys you can set a new password: Settings, tap © at the bottom 5 times, then studio → "Forgot the password?".', '✗ Неверно. С копией или 3 запасными ключами можно задать новый пароль.', '✗ Niepoprawne. Z kopią lub 3 kluczami zapasowymi ustawisz nowe hasło.'],
     probeNext: ['Nächste Passwort-Probe: ', 'Next password check: ', 'Следующая проверка: ', 'Następne sprawdzenie: '],
     probeNow: ['Jetzt zur Probe eingeben', 'Check it now', 'Проверить сейчас', 'Sprawdź teraz'],
     sharesMake: ['🧩 Ersatzschlüssel erstellen (3 von 5)', '🧩 Create spare keys (3 of 5)', '🧩 Создать запасные ключи (3 из 5)', '🧩 Utwórz klucze zapasowe (3 z 5)'],
@@ -255,14 +257,41 @@
   const make = (tag, text, cls) => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
   const button = (text, onclick, cls = 'ghost') => { const b = make('button', text, cls); b.type = 'button'; b.onclick = onclick; return b; };
   const say = (node, text) => { node.textContent = text; };
+  // The tool's own icon (copied from its app); the emoji stays as the fallback when the picture cannot load.
+  function toolIcon(tool) {
+    if (!tool.img) return make('span', tool.icon, 'pb-tool-icon');
+    const img = make('img', null, 'pb-tool-icon'); img.src = tool.img; img.alt = ''; img.width = img.height = 20; img.decoding = 'async';
+    img.onerror = () => img.replaceWith(make('span', tool.icon, 'pb-tool-icon'));
+    return img;
+  }
+  // 🛠 The studio is hidden; five taps on the © at the bottom of the settings page show it (and hide it again).
+  const SHOWN = 'pb_studio_visible';
+  const studioShown = () => { try { return localStorage.getItem(SHOWN) === '1'; } catch { return false; } };
+  function copyrightMark() {
+    const footer = document.querySelector('#panel-settings footer') || document.querySelector('footer');
+    if (!footer || footer.querySelector('.pb-copyright')) return;
+    const mark = make('span', '© 2026', 'pb-copyright'); mark.id = 'pbCopyright';
+    let taps = 0, timer = 0;
+    mark.addEventListener('click', () => {
+      taps++; clearTimeout(timer); timer = setTimeout(() => { taps = 0; }, 2500);
+      if (taps < 5) return;
+      taps = 0;
+      try { localStorage.setItem(SHOWN, studioShown() ? '0' : '1'); } catch { /* stays as it is */ }
+      paint();
+      if (typeof window.toast === 'function') window.toast(studioShown() ? t('studioShown') : t('studioHidden'));
+      if (studioShown()) document.getElementById('pb-studio')?.scrollIntoView({ block: 'center' });
+    });
+    footer.append(' ', mark);
+  }
   async function copy(text, status) { try { await navigator.clipboard.writeText(text); say(status, t('copied')); } catch { say(status, text); } }
   let box = null;
   function paint() {
     const settings = document.getElementById('panel-settings'); if (!settings) return;
+    copyrightMark();
     if (!box) { box = make('div', null, 'note pb-license'); box.id = 'pb-license'; (document.getElementById('install-box') || settings.lastElementChild)?.before(box); }
     const status = make('p', null, 'hint'); status.setAttribute('role', 'status'); status.dataset.licenseStatus = '';
     const list = make('ul', null, 'pb-license-tools');
-    for (const tool of TOOLS) { const li = make('li'); li.dataset.tool = tool.id; li.dataset.open = String(unlocked(tool.id)); li.append(make('span', tool.icon + ' ' + toolName(tool)), make('b', unlocked(tool.id) ? t('unlocked') : t('locked'))); list.append(li); }
+    for (const tool of TOOLS) { const li = make('li'); li.dataset.tool = tool.id; li.dataset.open = String(unlocked(tool.id)); li.append(toolIcon(tool), make('span', toolName(tool), 'pb-license-name'), make('b', unlocked(tool.id) ? t('unlocked') : t('locked'))); list.append(li); }
     const field = make('textarea'); field.id = 'pbLicenseCode'; field.rows = 2; field.dataset.noDictate = '1'; field.placeholder = 'PBK1.…'; field.setAttribute('aria-label', t('code'));
     const go = button(t('unlock'), async () => {
       go.disabled = true;
@@ -272,8 +301,8 @@
         else say(status, t(r.why));
       } finally { go.disabled = false; }
     }, 'pb-license-go');
-    box.replaceChildren(make('h3', t('box')), make('p', t('boxHelp')), list);
-    if (isOwner()) box.append(make('p', t('owner'), 'hint pb-license-owner'));
+    box.replaceChildren(make('h3', t('box')), list);
+    if (isOwner() && studioShown()) box.append(make('p', t('owner'), 'hint pb-license-owner'));
     const lab = make('label', null, 'field'); lab.append(make('span', t('code')), field);
     box.append(lab, go, status);
     const codes = get(CODES, []);
@@ -282,7 +311,7 @@
       for (const c of codes) d.append(make('p', c.slice(0, 18) + '…', 'hint'), button(t('removeCode'), () => { if (!confirm(t('removeAsk'))) return; put(CODES, get(CODES, []).filter(x => x !== c)); void refresh(); }));
       box.append(d);
     }
-    box.append(studioPart(), make('p', t('limit'), 'hint pb-license-limit'));
+    if (studioShown()) box.append(studioPart());
   }
   function studioPart() {
     const d = make('details', null, 'pb-studio'); d.id = 'pb-studio';
@@ -308,7 +337,7 @@
     d.append(pubLine, button(t('copy'), () => copy(s.pub, pubStatus)), make('p', publishers.includes(s.pub) ? t('pubKnown') : t('pubTodo'), 'hint pb-studio-pub-note'), pubStatus);
     const name = make('input'); name.placeholder = t('buyer'); name.setAttribute('aria-label', t('buyer')); name.dataset.studioBuyer = '';
     const picks = make('fieldset', null, 'pb-studio-tools'); picks.append(make('legend', t('which')));
-    for (const tool of TOOLS) { const l = make('label'); const c = make('input'); c.type = 'checkbox'; c.value = tool.id; l.append(c, document.createTextNode(' ' + tool.icon + ' ' + toolName(tool))); picks.append(l); }
+    for (const tool of TOOLS) { const l = make('label'); const c = make('input'); c.type = 'checkbox'; c.value = tool.id; l.append(c, toolIcon(tool), document.createTextNode(' ' + toolName(tool))); picks.append(l); }
     const out = make('div', null, 'pb-studio-out');
     const mk = button(t('makeCode'), async () => {
       const tools = [...picks.querySelectorAll('input:checked')].map(c => c.value);
@@ -356,6 +385,6 @@
   }
   new MutationObserver(() => { box = null; document.getElementById('pb-license')?.remove(); paint(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  window.PBLicense = { probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
+  window.PBLicense = { toolIcon, studioShown, probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
   void refresh();
 })();
