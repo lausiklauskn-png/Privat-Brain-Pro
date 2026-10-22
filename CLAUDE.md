@@ -1,5 +1,9 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Vorschau .24 veröffentlicht (2026-10-22).** [APK .24](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.24/Private-Brain-Pro-0.1.0-preview.24.apk) über die vorhandene App installieren, nicht deinstallieren; daneben `.aab` für Google Play.
+PR #58, VersionCode 24, Quelle main `18a2edc38c42b4562c169603437cc4e5e8dcec22` (Main-CI 39711900162 grün inkl. native-smoke). Release-Lauf 39714226568: Signatur, Updateprobe .23 → .24, Veröffentlichung.
+APK SHA-256 `ac255ddd…caf8d21f` (5.791.582 Bytes), AAB `f10fe265…293548fe` (5.605.275 Bytes), beide gleich SHA256SUMS. Neu: Links „Mistral-/Google-Schlüssel holen“ neben dem KI-Schlüssel (`native/native-keys.js`). Tablet nicht gemessen.
+
 **Klaus' Test .23 am Tablet (2026-10-22), Reparaturen für .24:** Modell laden klappt am Tablet. 🎤: die WebView meldet
 `webkitSpeechRecognition`, verweigert es aber („Mikrofon nicht verfügbar oder abgelehnt“) → in der App immer Androids
 Sprachfenster (`native-speech.js`). Mehrere Mails löschen/verschieben dauerte Minuten (je Mail eine Anmeldung) → ein
