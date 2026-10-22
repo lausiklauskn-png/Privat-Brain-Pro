@@ -1,5 +1,12 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Aktueller Auftrag 23.10.2026:** Klaus beauftragt die erneute Prüfung der
+veröffentlichten V28, Fehlerkorrekturen und eine zusätzliche Windows-Version.
+`AGENTS.md` und `docs/BAUSTAND-WINDOWS.md` sind der aktuelle Anker. V28 ist
+veröffentlicht; die darunter folgende alte Notiz „noch nicht veröffentlicht“
+ist historisch. Der Windows-Bau ist freigegeben, nicht nur ein Nachfolgebrief.
+
+
 **Gebaut für .28 (Klaus 2026-10-22), noch nicht veröffentlicht.** Explorer als echter Ordnerbaum (E-Mails › Absender ›
 Mail › Anhänge, jede Datei einmal; Handy eine Ebene mit Pfad, breit Baum ▸/▾ mit ⊟), ehrlicher Prüfstand („⊘ Original
 fehlt · nicht prüfbar“, Zeile über alle Dateien, „Originale suchen“), Prüfbericht in einfachen Worten. Mail: Löschen in
