@@ -28,14 +28,16 @@ try{
   await page.waitForFunction(()=>CATALOG.length===2);
   await page.evaluate(()=>{window.imageHash=CATALOG.find(r=>r.name==='navigation-image.png').hash;window.noteHash=CATALOG.find(r=>r.name==='navigation-note.txt').hash;CATALOG.find(r=>r.hash===imageHash).path='Root/Photos/Deep/navigation-image.png';PBWorkspace.refresh();});
   await page.click('[data-tab=explorer]');
-  await page.locator('#explorerTree button[data-path="Root/Photos/Deep"]').click();
+  await page.locator('#explorerTree [data-toggle="dir:photo:Root"]').click();
+  await page.locator('#explorerTree [data-toggle="dir:photo:Root/Photos"]').click();
+  await page.locator('#explorerTree button[data-path="dir:photo:Root/Photos/Deep"]').click();
   await page.fill('#explorerFilter','navigation-image');
   await page.evaluate(()=>openFile(imageHash));
   await page.locator('.native-file-image').waitFor();
   ok('Imported original opens inside app without popup or blob navigation',page.url().startsWith(url)&&!page.url().startsWith('blob:')&&popups===0);
   ok('Original image bytes available in viewer',await page.locator('.native-file-image').evaluate(img=>img.complete&&img.naturalWidth===1));
   await page.click('.native-file-head button:first-child');await page.locator('.native-file-viewer').waitFor({state:'hidden'});
-  ok('Visible Back restores folder, filter and catalog',await page.evaluate(()=>PBWorkspace.explorerState().path==='Root/Photos/Deep'&&PBWorkspace.explorerState().filter==='navigation-image'&&CATALOG.length===2));
+  ok('Visible Back restores folder, filter and catalog',await page.evaluate(()=>PBWorkspace.explorerState().path==='dir:photo:Root/Photos/Deep'&&PBWorkspace.explorerState().filter==='navigation-image'&&CATALOG.length===2));
   await page.keyboard.press('Alt+ArrowRight');await page.locator('.native-file-image').waitFor();
   ok('Forward reopens the original image',await page.locator('.native-file-image').isVisible());
   await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});

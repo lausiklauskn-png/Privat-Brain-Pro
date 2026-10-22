@@ -106,9 +106,15 @@ final class MailEngine {
             JSONArray result = new JSONArray();
             Folder[] folders = connection.getDefaultFolder().list("*");
             if (folders.length > 1000) throw new MailFailure("MESSAGE_TOO_LARGE");
+            int counted = 0;
             for (Folder folder : folders) {
                 if ((folder.getType() & Folder.HOLDS_MESSAGES) == 0) continue;
-                result.put(new JSONObject().put("path", folder.getFullName()).put("name", folder.getName()).put("specialUse", special(folder)).put("collection", collection(folder)));
+                JSONObject item = new JSONObject().put("path", folder.getFullName()).put("name", folder.getName()).put("specialUse", special(folder)).put("collection", collection(folder));
+                // Klaus 2026-10-22: "die Zahl dort muss steigen" - every folder shows how many mails it holds (IMAP STATUS).
+                if (counted++ < 80) {
+                    try { item.put("total", folder.getMessageCount()).put("unread", folder.getUnreadMessageCount()); } catch (Exception ignored) { /* shown as unknown */ }
+                }
+                result.put(item);
             }
             return result;
         }
@@ -119,6 +125,24 @@ final class MailEngine {
                 if (attribute.equalsIgnoreCase(use)) return use;
         }
         return "";
+    }
+    // Many providers (for example Telekom) name their trash without the IMAP flag; these names count as trash too.
+    private static final java.util.Set<String> TRASH_NAMES = new java.util.HashSet<>(java.util.Arrays.asList(
+        "trash", "papierkorb", "deleted messages", "deleted items", "deleted", "gelöscht", "gelöschte elemente", "gelöschte objekte", "bin"));
+    private boolean isTrash(Folder folder) throws Exception {
+        return special(folder).equals("\\Trash") || TRASH_NAMES.contains(java.text.Normalizer.normalize(folder.getName(), java.text.Normalizer.Form.NFKC).trim().toLowerCase(java.util.Locale.ROOT));
+    }
+    /** MOVE where the server has it; otherwise copy, mark and remove exactly these mails (UIDPLUS), never others. */
+    private void moveTo(IMAPStore connection, IMAPFolder folder, Message[] messages, String name, String target) throws Exception {
+        MailAccount.header(target, 1000);
+        if (name.equals(target)) throw new MailFailure("MOVE_UNSUPPORTED");
+        Folder destination = connection.getFolder(target);
+        if (!destination.exists()) throw new MailFailure("FOLDER_FAILED");
+        if (connection.hasCapability("MOVE")) { folder.moveMessages(messages, destination); return; }
+        if (!connection.hasCapability("UIDPLUS")) throw new MailFailure("MOVE_UNSUPPORTED");
+        folder.copyMessages(messages, destination);
+        folder.setFlags(messages, new Flags(Flags.Flag.DELETED), true);
+        folder.expunge(messages);
     }
     /** Virtual views such as Gmail's "All Mail" or "Starred" repeat mails of other folders. */
     private boolean collection(Folder folder) throws Exception {
@@ -331,15 +355,9 @@ final class MailEngine {
                 switch (action) {
                     case "read": case "unread": message.setFlag(Flags.Flag.SEEN, action.equals("read")); break;
                     case "star": case "unstar": message.setFlag(Flags.Flag.FLAGGED, action.equals("star")); break;
-                    case "move":
-                        MailAccount.header(target, 1000);
-                        if (name.equals(target) || !connection.hasCapability("MOVE")) throw new MailFailure("MOVE_UNSUPPORTED");
-                        Folder destination = connection.getFolder(target);
-                        if (!destination.exists()) throw new MailFailure("FOLDER_FAILED");
-                        folder.moveMessages(new Message[] {message}, destination);
-                        break;
+                    case "move": moveTo(connection, folder, new Message[] {message}, name, target); break;
                     case "delete":
-                        if (!special(folder).equals("\\Trash") || !connection.hasCapability("UIDPLUS")) throw new MailFailure("DELETE_UNSUPPORTED");
+                        if (!isTrash(folder) || !connection.hasCapability("UIDPLUS")) throw new MailFailure("DELETE_UNSUPPORTED");
                         message.setFlag(Flags.Flag.DELETED, true);
                         folder.expunge(new Message[] {message});
                         break;
@@ -365,15 +383,9 @@ final class MailEngine {
                 if (messages.length > 0) switch (action) {
                     case "read": case "unread": folder.setFlags(messages, new Flags(Flags.Flag.SEEN), action.equals("read")); break;
                     case "star": case "unstar": folder.setFlags(messages, new Flags(Flags.Flag.FLAGGED), action.equals("star")); break;
-                    case "move":
-                        MailAccount.header(target, 1000);
-                        if (name.equals(target) || !connection.hasCapability("MOVE")) throw new MailFailure("MOVE_UNSUPPORTED");
-                        Folder destination = connection.getFolder(target);
-                        if (!destination.exists()) throw new MailFailure("FOLDER_FAILED");
-                        folder.moveMessages(messages, destination);
-                        break;
+                    case "move": moveTo(connection, folder, messages, name, target); break;
                     case "delete":
-                        if (!special(folder).equals("\\Trash") || !connection.hasCapability("UIDPLUS")) throw new MailFailure("DELETE_UNSUPPORTED");
+                        if (!isTrash(folder) || !connection.hasCapability("UIDPLUS")) throw new MailFailure("DELETE_UNSUPPORTED");
                         folder.setFlags(messages, new Flags(Flags.Flag.DELETED), true);
                         folder.expunge(messages);
                         break;

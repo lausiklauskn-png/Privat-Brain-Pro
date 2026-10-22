@@ -44,7 +44,8 @@
     frameBox = make('div', null, 'pb-tool-frame'); frameBox.dataset.tool = id;
     const bar = make('div', null, 'pb-tool-bar');
     const back = make('button', t('back'), 'ghost'); back.type = 'button'; back.onclick = close;
-    bar.append(back, make('strong', tool.icon + ' ' + license.toolName(tool)));
+    const title = make('strong'); title.append(license.toolIcon(tool), ' ' + license.toolName(tool));
+    bar.append(back, title);
     const frame = make('iframe'); frame.title = license.toolName(tool); frame.src = PAGES[id];
     frame.setAttribute('allow', 'clipboard-write');
     frame.addEventListener('load', () => watch(frame, tool));
@@ -102,10 +103,12 @@
     let box = panel.querySelector(':scope > .pb-tools-menu');
     if (!box) { box = make('div', null, 'pb-tools-menu'); panel.append(box); }
     const rows = [make('p', t('head'), 'pb-tools-head')];
-    const entries = [...license.TOOLS.map(tool => ({ id: tool.id, icon: tool.icon, name: license.toolName(tool) })), { id: 'workflowpdf', icon: '📄', name: t('workflowpdf'), free: true }];
+    // Klaus 2026-10-22: each program shows its own icon (copied from its app), not an emoji.
+    const entries = [...license.TOOLS.map(tool => ({ ...tool, name: license.toolName(tool) })), { id: 'workflowpdf', img: 'tool-icons/workflowpdf.png', icon: '📄', name: t('workflowpdf'), free: true }];
     for (const e of entries) {
       const ready = Boolean(PAGES[e.id] || LINKS[e.id]), open = e.free || license.unlocked(e.id);
-      const b = make('button', (open ? '' : '🔒 ') + e.icon + ' ' + e.name + (ready ? (LINKS[e.id] ? ' ↗' : '') : ' · ' + t('soon')), 'ghost pb-tools-item');
+      const b = make('button', null, 'ghost pb-tools-item');
+      b.append(make('span', open ? '' : '🔒', 'pb-tools-lock'), license.toolIcon(e), make('span', e.name + (ready ? (LINKS[e.id] ? ' ↗' : '') : ' · ' + t('soon')), 'pb-tools-name'));
       b.type = 'button'; b.dataset.tool = e.id; b.dataset.open = String(open); b.disabled = !ready && open;
       if (LINKS[e.id]) b.title = t('link');
       b.onclick = () => e.free ? window.Capacitor?.Plugins?.ProLinks?.open({ url: LINKS[e.id] }) : openTool(e.id);

@@ -130,10 +130,11 @@ try{
   ok('Genuine DPD mail is not taken for a look-alike of DHL',await page.locator('.pb-schutz-mail').evaluate(e=>e.dataset.state==='unauffaellig'));
   // ---------- explorer and check everything ----------
   await page.click('[data-tab=explorer]');
-  await page.locator('.native-vault-folder').click();
+  // Since .28 the attachments sit in the folder tree under E-Mails; "Alle Dateien" lists every file.
+  await page.locator('#explorerTree .explorer-folder[data-path=""]').click();
   await page.locator('.native-vault-row .pb-schutz-file').first().waitFor();
   await page.waitForFunction(()=>document.querySelector('.native-vault-row .pb-schutz-file span').dataset.state!=='checking');
-  ok('Explorer "Mail-Anhänge" shows the list result per file',await page.locator('.native-vault-row .pb-schutz-file span').first().textContent().then(t=>t.includes('Liste bekannter Schaddateien')));
+  ok('Explorer shows the list result per mail attachment',await page.locator('.native-vault-row .pb-schutz-file span').first().textContent().then(t=>t.includes('Liste bekannter Schaddateien')));
   await page.click('[data-tab=settings]');
   await page.click('#schutz-check-all');
   await page.waitForFunction(()=>document.querySelector('#schutzStatus').textContent.includes('Geprüft'));

@@ -89,7 +89,7 @@ const imp = await page.evaluate(async (eml)=>{
   const txt=CATALOG.find(r=>/einkaufsliste\.txt/.test(r.name));
   const sig=CATALOG.find(r=>/smime\.p7s/.test(r.name));
   return { added, mail:!!mail, img:img&&img.category, txt:txt&&txt.category,
-           imgPath: img&&img.path, sig:!!sig };
+           imgPath: img&&img.path, sig:!!sig, linked: !!mail && img?.fromMail===mail.hash && txt?.fromMail===mail.hash };
 }, EML);
 ok('Import zählt Mail + 2 nützliche Anhänge (3)', imp.added===3, 'added='+imp.added);
 ok('Mail selbst ist ein eigener Eintrag', imp.mail===true);
@@ -97,6 +97,7 @@ ok('Bild-Anhang = eigener Eintrag (Kategorie Foto/Bild)', imp.img==='Foto/Bild',
 ok('Text-Anhang = eigener Eintrag (Text/Notiz)', imp.txt==='Text/Notiz', imp.txt);
 ok('Anhang-Pfad zeigt Herkunft (Mail-Anhang/…)', /^Mail-Anhang\//.test(imp.imgPath||''), imp.imgPath);
 ok('Signatur (.p7s) wird übersprungen (kein Eintrag)', imp.sig===false);
+ok('Jeder Anhang kennt seine Mail (Explorer-Ordnerbaum)', imp.linked===true);
 
 // 3) Anhang-Inhalt ist durchsuchbar (Text im Anhang)
 const found = await page.evaluate(()=> search("Mallorca Reisebuero", null).map(h=>h.r.name).some(n=>/einkaufsliste/.test(n)) );

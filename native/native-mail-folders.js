@@ -5,7 +5,7 @@
   const aliases = {
     inbox:['inbox','posteingang','eingang'], draft:['drafts','draft','entwürfe','entwuerfe'],
     sent:['sent','sent messages','sent items','gesendet','gesendete elemente'],
-    archive:['archive','archives','archiv'],spam:['spam','junk','junk e-mail'],trash:['trash','deleted messages','deleted items','papierkorb']
+    archive:['archive','archives','archiv'],spam:['spam','junk','junk e-mail','junk-e-mail','spamverdacht','spam-verdacht','unerwünscht','bulk mail'],trash:['trash','deleted messages','deleted items','deleted','papierkorb','gelöscht','gelöschte elemente','gelöschte objekte','bin']
   };
   const normalized = value => String(value).normalize('NFKC').trim().toLowerCase();
   function resolve(folders) {

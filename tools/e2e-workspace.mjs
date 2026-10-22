@@ -78,7 +78,7 @@ try{
   await page.click('[data-tab="explorer"]');
   ok('Explorer stellt die lokalen Verweise nach Neustart wieder her',await page.locator('.explorer-row').count()===3);
   await page.evaluate(()=>{window.showBlob=async(file)=>{window.openedLocalFile=await file.text();};});
-  await page.locator('.explorer-row').filter({hasText:'/bericht.txt'}).getByRole('button',{name:'Öffnen',exact:true}).click();
+  await page.locator('.explorer-row').filter({has:page.locator('strong',{hasText:/^\S+ bericht\.txt$/})}).getByRole('button',{name:'Öffnen',exact:true}).click();
   await page.waitForFunction(()=>window.openedLocalFile);
   ok('Explorer liest nach Neustart aus dem Ordner statt aus Sitzungsspeicher',await page.evaluate(()=>SESSION_FILES.size===0 && openedLocalFile==='Schwarzes Fahrzeug: Radstand 2820 mm.'));
   await page.fill('#explorerFilter','angebot');
@@ -86,6 +86,8 @@ try{
   await page.click('#explorerHome');
   await page.locator('#explorerTree button').filter({hasText:'Lokale-Ablage'}).first().click();
   ok('Ordnernavigation und übergeordneter Ordner funktionieren',await page.locator('#explorerUp').isEnabled());
+  await page.click('#explorerUp');
+  ok('Eine Ebene höher steht die Art des Ordners (Ordnerbaum wie im Explorer)',(await page.locator('#explorerPath').textContent()).endsWith('📝 Notizen'));
   await page.click('#explorerUp');
   ok('Zurück zur Wurzel',await page.locator('#explorerUp').isDisabled());
   for(const lang of ['en','ru','pl','de']){
@@ -107,11 +109,11 @@ try{
   await page.click('#chooseLibrary');await page.waitForFunction(()=>document.querySelector('#libraryStatus').textContent.includes('Zweite-Ablage'));
   await page.click('[data-tab="explorer"]');
   await page.evaluate(()=>{window.openedLocalFile=null;});
-  await page.locator('.explorer-row').filter({hasText:'/bericht.txt'}).getByRole('button',{name:'Öffnen',exact:true}).click();
+  await page.locator('.explorer-row').filter({has:page.locator('strong',{hasText:/^\S+ bericht\.txt$/})}).getByRole('button',{name:'Öffnen',exact:true}).click();
   await page.waitForFunction(()=>window.openedLocalFile);
   ok('Wechsel der Ablage erhält Zugriff auf frühere Kopien',await page.evaluate(()=>openedLocalFile==='Schwarzes Fahrzeug: Radstand 2820 mm.'));
   await page.evaluate(async()=>{const root=await navigator.storage.getDirectory();const old=await root.getDirectoryHandle('Lokale-Ablage');await old.removeEntry('bericht.txt');window.openedLocalFile=null;});
-  await page.locator('.explorer-row').filter({hasText:'/bericht.txt'}).getByRole('button',{name:'Öffnen',exact:true}).click();
+  await page.locator('.explorer-row').filter({has:page.locator('strong',{hasText:/^\S+ bericht\.txt$/})}).getByRole('button',{name:'Öffnen',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('#toast').textContent.includes('nicht erreichbar'));
   ok('Fehlende Datei wird gemeldet; kein Ersatz aus Katalog oder Sitzung',await page.evaluate(()=>!openedLocalFile && document.querySelector('#toast').textContent.includes('nicht erreichbar')));
   ok('Schreibfehler erzeugt keinen Katalogeintrag und keine leere Kopie',await page.evaluate(async()=>{

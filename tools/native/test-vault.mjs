@@ -123,9 +123,13 @@ try{
   await page.goBack();
   // Explorer folder and clearing.
   await page.click('[data-tab=explorer]');
-  await page.locator('.native-vault-folder').click();
+  await page.locator('#explorerTree [data-kind="mail"]').click();
+  await page.locator('.native-vault-head').waitFor();
+  ok('One place for attachments: the folder ones sit under "E-Mails", sorted by sender and mail (Klaus 2026-10-22)',await page.locator('#explorerTree .native-vault-folder').count()===0&&await page.locator('#explorerFiles .explorer-dir').filter({hasText:'kanzlei@example.invalid'}).count()===1);
+  await page.locator('#explorerFiles .explorer-dir').filter({hasText:'kanzlei@example.invalid'}).click();
+  await page.locator('#explorerFiles .explorer-dir').filter({hasText:'Schreiben vom Anwalt'}).click();
   await page.locator('.native-vault-row').first().waitFor();
-  ok('Explorer lists "Mail-Anhänge" with mail, sender and date',await page.locator('.native-vault-row').first().textContent().then(t=>t.includes('Schreiben vom Anwalt')&&t.includes('kanzlei@example.invalid')&&t.includes('2026')));
+  ok('Explorer lists the attachment under its mail with sender and date',(await page.locator('#explorerPath').textContent()).includes('Schreiben vom Anwalt')&&await page.locator('.native-vault-row').first().textContent().then(t=>t.includes('Schreiben vom Anwalt')&&t.includes('kanzlei@example.invalid')&&t.includes('2026')));
   A.dialogs.length=0;
   const answers=[false,true,true];
   page.removeAllListeners('dialog');page.on('dialog',d=>{A.dialogs.push(d.message());answers.shift()?d.accept():d.dismiss();});
@@ -135,8 +139,9 @@ try{
   await page.locator('.native-vault-row button',{hasText:'Öffnen mit'}).click();
   for(let i=0;i<20&&!folder.calls.some(c=>c.method==='openAttachment');i++)await page.waitForTimeout(100);
   ok('After agreeing, Android hands out the decrypted copy',folder.calls.some(c=>c.method==='openAttachment'&&c.args.id==='att-1'));
+  await page.locator('#explorerTree [data-kind="mail"]').click();
   await page.locator('.native-vault-clear').click();
-  await page.locator('.explorer-empty').waitFor();
+  await page.waitForFunction(()=>!document.querySelector('.native-vault-head'));
   ok('"Ganzen Ordner leeren" asks with count and size, then empties the folder',A.dialogs.at(-1).includes('Alle 1 Mail-Anhänge')&&folder.attachments.length===0);
   await page.click('[data-tab=mail]');
   await page.locator('#mailWorkspace [data-live-uid="9"]').click();

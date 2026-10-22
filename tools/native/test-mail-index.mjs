@@ -112,7 +112,7 @@ try{
   ok('Same mail in two accounts is one entry that knows both places',stats.aldi===1&&stats.places===2);
   ok('Older catalog entry is adopted instead of copied',stats.legacy===1&&stats.adopted===1);
   ok('HTML-only mail becomes readable text without running its script',stats.html.includes('Treffen Samstag')&&!stats.html.includes('<')&&!stats.html.includes('pwned')&&stats.pwned===0);
-  ok('No remote images or other network requests',remote.length===0);
+  if(remote.length)console.log('REMOTE',remote);ok('No remote images or other network requests',remote.length===0);
   const total=stats.total;
   ok('Catalog grew by the indexed mails only',await page.evaluate(()=>CATALOG.length)===before+total-1);
   // Sender bundles

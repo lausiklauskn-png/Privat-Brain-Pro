@@ -28,10 +28,23 @@
       ru: 'Прямая почта на устройстве. Выбор папок через Android; фоновая синхронизация ещё разрабатывается.',
       pl: 'Bezpośrednia poczta na urządzeniu. Wybór folderów przez Android; synchronizacja w tle jest w przygotowaniu.'
     };
-    status.textContent = `${t[0]}${version}. ${nativeMail ? (mailNotice[document.documentElement.lang] || mailNotice.de) : t[1]}`;
+    status.textContent = `${t[0]}${window.PBVersionShown ? ' · ' + window.PBVersionShown : version}. ${nativeMail ? (mailNotice[document.documentElement.lang] || mailNotice.de) : t[1]}`;
   }
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   render();
+  // Klaus 2026-10-22: "die App-Version muss immer sichtbar irgendwo stehen … gleich auf den ersten Seiten".
+  // Small, next to the name in the header on every page; a tap leads to "Auf Updates prüfen".
+  if (version) {
+    const name = version.slice(3), tag = document.createElement('button');
+    // Klaus 2026-10-22: "eine echte App-Nummer … nicht Vorschau": 1.0.0-preview.28 reads as v1.0.28.
+    const m = /^(\d+)\.(\d+)\.\d+-preview\.(\d+)(?:-[a-z]+)?$/.exec(name);   // "-debug" builds read the same
+    const shown = 'v' + (m ? m[1] + '.' + m[2] + '.' + m[3] : name);
+    tag.type = 'button'; tag.className = 'pb-version'; tag.id = 'pbVersion'; tag.textContent = shown;
+    tag.title = tag.ariaLabel = 'Private Brain Pro ' + shown;
+    tag.onclick = () => { window.PBWorkspace?.navigate?.('settings'); const b = document.getElementById('native-update-check'); b?.scrollIntoView({ block: 'center' }); b?.focus(); };
+    document.querySelector('header .brand h1')?.append(' ', tag);
+    window.PBVersionShown = shown; render();
+  }
   // Klaus 2026-10-22: the diagnosis log stays in the app but is hidden; seven taps on the version line bring it back
   // (and hide it again) when we need it to improve the app. It keeps recording either way.
   const diagBox = document.getElementById('diagLog')?.closest('.note');
@@ -97,7 +110,7 @@
     try {
       const result = await updates.check();
       state = ['current', 'available', 'unsupported'].includes(result?.status) ? result.status : 'error';
-      latest = typeof result?.version === 'string' ? result.version : '';
+      latest = typeof result?.version === 'string' ? (/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/.test(result.version) && !result.version.startsWith('0.') ? 'v' + result.version.replace(/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/, '$1.$2.$3') : result.version) : '';
     } catch (error) { state = error?.code==='APP_OFFLINE'?'offline':'error'; }
     finally { busy = false; renderUpdates(); }
   });

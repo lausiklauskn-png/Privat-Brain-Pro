@@ -89,5 +89,6 @@ await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITO
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
 await bundleSemanticModel(out);
 // The same fixed hashes and sources for loading the model with the switch in the app.
+await cp(join(root, 'native/tool-icons'), join(out, 'tool-icons'), { recursive: true });   // own icons of the tools (☰)
 await cp(join(root, 'tools/native/semantic-model.json'), join(out, 'semantic-model.json'));
 console.log('Native web bundle prepared from explicit public inputs.');
