@@ -2,6 +2,7 @@
   'use strict';
   if(window!==window.top||location.protocol!=='https:'||location.hostname!=='tauri.localhost'||!['/','/index.html'].includes(location.pathname))return;
   const invoke=window.__TAURI_INTERNALS__?.invoke;if(typeof invoke!=='function')return;
+  const TOKEN=__PB_SESSION_TOKEN__;
   const listeners=new Map();
   window.addEventListener('pb-native',event=>{
     for(const listener of listeners.get(event.detail?.name)||[])listener(event.detail.data);
@@ -15,7 +16,7 @@
         return{remove:async()=>callbacks.delete(listener)};
       };
       return async(options={})=>{
-        try{return await invoke('pb_call',{plugin:name,method:String(method),options:{...options,_language:document.documentElement?.lang||'de'}});}
+        try{return await invoke('pb_call',{plugin:name,method:String(method),options:{...options,_language:document.documentElement?.lang||'de'}},{headers:{'x-pb-session':TOKEN}});}
         catch(error){const code=typeof error==='string'?error:error?.code||'APP_RUNTIME_UNAVAILABLE';throw Object.assign(new Error(code),{code});}
       };
     }});

@@ -5,21 +5,34 @@ use std::{path::PathBuf,sync::{Arc,Mutex,mpsc,atomic::{AtomicBool,Ordering}},tim
 use tauri::{Manager,WebviewUrl,WebviewWindowBuilder};
 use tauri_plugin_dialog::DialogExt;
 
+#[cfg(feature="messprobe")]
+pub const BROWSER_ARGS:&str="--disable-features=msWebOOUI,msPdfOOUI --remote-debugging-port=9223 --remote-debugging-address=127.0.0.1";
+#[cfg(not(feature="messprobe"))]
+pub const BROWSER_ARGS:&str="--disable-features=msWebOOUI,msPdfOOUI";
+
 pub struct Host {
     pub app:tauri::AppHandle,pub data:PathBuf,pub engine:Mutex<Option<Arc<Engine>>>,
     pub dialog:Mutex<Option<mpsc::Sender<Value>>>,pub dialog_config:Mutex<Value>,
     pub language:Mutex<String>,
     pub offline:AtomicBool,
+    pub session:String,
 }
 impl Host {
     pub fn new(app:tauri::AppHandle)->Result<Arc<Self>,String>{
         let data=app.path().app_local_data_dir().map_err(|_|"STORAGE_UNAVAILABLE")?;
         win::no_links(&data)?;std::fs::create_dir_all(&data).map_err(|_|"STORAGE_UNAVAILABLE")?;
-        Ok(Arc::new(Self{app,data,engine:Mutex::new(None),dialog:Mutex::new(None),dialog_config:Mutex::new(Value::Null),language:Mutex::new("de".into()),offline:AtomicBool::new(true)}))
+        let mut token=[0u8;32];getrandom::fill(&mut token).map_err(|_|"APP_RUNTIME_UNAVAILABLE")?;
+        Ok(Arc::new(Self{app,data,engine:Mutex::new(None),dialog:Mutex::new(None),dialog_config:Mutex::new(Value::Null),language:Mutex::new("de".into()),offline:AtomicBool::new(true),session:B64.encode(token)}))
     }
     pub fn start(self:&Arc<Self>)->Result<(),String>{
         let runtime=self.app.path().resource_dir().map_err(|_|"APP_RUNTIME_UNAVAILABLE")?.join("runtime");
         let engine=Engine::start(&runtime,&self.data,self)?;*self.engine.lock().unwrap()=Some(engine);Ok(())
+    }
+    pub fn authorized(&self,request:&tauri::ipc::Request<'_>)->bool {
+        let value=request.headers().get("x-pb-session").and_then(|v|v.to_str().ok()).unwrap_or("");
+        if value.len()!=self.session.len(){return false;}
+        let difference=value.bytes().zip(self.session.bytes()).fold(0u8,|difference,(a,b)|difference|(a^b));
+        difference==0&&request.headers().get("origin").is_none_or(|origin|origin.as_bytes()==b"https://tauri.localhost")
     }
     pub fn call(&self,plugin:&str,method:&str,mut options:Value)->Result<Value,String>{
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
@@ -52,6 +65,12 @@ impl Host {
                 win::open(url.as_str())?;Ok(json!({"ok":true}))
             }
             "folder"=>{
+                #[cfg(feature="messprobe")]
+                if let Ok(folder)=std::env::var("PB_WINDOWS_TEST_FOLDER"){
+                    let path=PathBuf::from(folder);win::no_links(&path)?;
+                    if !path.is_dir(){return Err("VAULT_FOLDER_UNAVAILABLE".into());}
+                    return Ok(json!({"path":path.to_str().ok_or("VAULT_FOLDER_UNAVAILABLE")?}));
+                }
                 let selected=self.app.dialog().file().blocking_pick_folder();
                 match selected {None=>Ok(json!({"cancelled":true})),Some(file)=>{let path=file.into_path().map_err(|_|"VAULT_FOLDER_UNAVAILABLE")?;win::no_links(&path)?;Ok(json!({"path":path.to_str().ok_or("VAULT_FOLDER_UNAVAILABLE")?}))}}
             }
@@ -71,10 +90,13 @@ impl Host {
         {let mut current=self.dialog.lock().unwrap();if current.is_some(){return Err("VAULT_BUSY".into());}*current=Some(send.clone());}
         config["kind"]=json!(kind);config["language"]=json!(*self.language.lock().unwrap());*self.dialog_config.lock().unwrap()=config;
         let app=self.app.clone();
+        let initialization=format!("Object.defineProperty(window,'__PB_DIALOG_SESSION',{{value:{},configurable:true}});",serde_json::to_string(&self.session).unwrap());
         self.app.run_on_main_thread(move||{
             let result=WebviewWindowBuilder::new(&app,"native-dialog",WebviewUrl::App("windows/dialog/index.html".into()))
                 .title("Private Brain Pro").inner_size(480.,620.).min_inner_size(360.,420.)
                 .use_https_scheme(true).devtools(cfg!(feature="messprobe"))
+                .additional_browser_args(BROWSER_ARGS)
+                .initialization_script(initialization)
                 .on_navigation(|url|url.scheme()=="https"&&url.host_str()==Some("tauri.localhost")&&url.path()=="/windows/dialog/index.html")
                 .on_new_window(|_,_|tauri::webview::NewWindowResponse::Deny).build();
             if result.is_err(){let _=send.send(json!({"cancelled":true}));}
@@ -89,4 +111,12 @@ impl Host {
         }
     }
     pub fn shutdown(&self){if let Some(engine)=self.engine.lock().unwrap().as_ref(){engine.stop();}}
+    pub fn receive(&self,arguments:Vec<String>,cwd:Option<String>){
+        let paths:Vec<Value>=arguments.into_iter().skip(1).filter(|arg|!arg.starts_with('-')).filter_map(|arg|{
+            let path=PathBuf::from(arg);let path=if path.is_absolute(){path}else{PathBuf::from(cwd.as_deref().unwrap_or(".")).join(path)};
+            if path.is_file()&&win::no_links(&path).is_ok(){path.to_str().map(|s|json!(s))}else{None}
+        }).collect();
+        if paths.is_empty(){return;}
+        let engine=self.engine.lock().unwrap().clone();if let Some(engine)=engine{let _=engine.call("DesktopInternal","receive",json!({"paths":paths}));}
+    }
 }

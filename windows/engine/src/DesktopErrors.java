@@ -15,7 +15,7 @@ final class DesktopErrors {
         }
         if(error instanceof org.json.JSONException||error instanceof IllegalArgumentException)return "INVALID_INPUT";
         String message=error.getMessage();
-        if(message!=null&&message.matches("(VAULT|ORIGINAL|FILE|STORAGE|GMAIL|PDF|APP)_[A-Z_]+"))return message;
+        if(message!=null&&message.matches("(VAULT|ORIGINAL|FILE|FOLDER|STORAGE|GMAIL|PDF|APP|SHARE|LINK)_[A-Z_]+"))return message;
         return "CONNECTION_FAILED";
     }
 }

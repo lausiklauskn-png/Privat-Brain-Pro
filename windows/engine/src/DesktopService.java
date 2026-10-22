@@ -16,6 +16,9 @@ final class DesktopService {
     private final Protection protection;
     private final DesktopModel model;
     private final DesktopPdf pdf=new DesktopPdf();
+    private final DesktopFolders folders;
+    private final ShareInbox inbox;
+    private int refused;
     DesktopService(DesktopState state,Path resources,Host host)throws Exception {
         this.state=state;this.host=host;AppNetwork.initialize(state);
         storage=new EncryptedMailStore(state);vault=Vault.get(state);originals=new OriginalFileStore(state);
@@ -25,6 +28,9 @@ final class DesktopService {
         state.metered=()->{try{return host.call("metered",new JSONObject()).optBoolean("metered",true);}catch(Exception error){return true;}};
         protection=Protection.create(state);
         model=new DesktopModel(state,resources.resolve("semantic-model.json"));
+        folders=new DesktopFolders(state);
+        Path incoming=state.directory.resolve("cache/incoming");DesktopFiles.noLinks(incoming);Files.createDirectories(incoming);
+        inbox=new ShareInbox(incoming.toFile());inbox.clear();
     }
     private static JSONObject yes(){return new JSONObject().put("ok",true);}
     private static String required(JSONObject o,String key)throws MailFailure {
@@ -41,6 +47,8 @@ final class DesktopService {
             case "ProNetwork" -> network(method,o);
             case "ProVault" -> vault(method,o);
             case "ProFiles" -> files(method,o);
+            case "ProFolders" -> folders(method,o);
+            case "ProShare" -> share(method,o);
             case "ProMail" -> mail(method,o);
             case "ProProtect" -> protect(method,o);
             case "ProSemantic" -> model.call(method);
@@ -53,8 +61,53 @@ final class DesktopService {
             case "DesktopInternal" -> {
                 if(method.equals("modelAsset"))yield model.asset(required(o,"url"));
                 if(method.equals("mailLink"))yield new JSONObject().put("url",BrowserLinks.resolve(required(o,"url")));
+                if(method.equals("receive"))yield receive(o.getJSONArray("paths"));
                 throw new MailFailure("INVALID_INPUT");
             }
+            default -> throw new MailFailure("INVALID_INPUT");
+        };
+    }
+    private JSONObject share(String method,JSONObject o)throws Exception {
+        synchronized(inbox){
+            return switch(method){
+                case "pending" -> {
+                    JSONArray items=new JSONArray();for(ShareInbox.Item item:inbox.list())items.put(new JSONObject().put("id",item.id).put("name",item.name).put("mime",item.mime).put("size",item.size));
+                    int count=refused;refused=0;yield new JSONObject().put("items",items).put("refused",count);
+                }
+                case "read" -> {try{yield bytes(inbox.read(required(o,"id"),o.optLong("offset",-1)));}catch(Exception error){throw new java.io.IOException("SHARE_UNAVAILABLE");}}
+                case "done" -> {inbox.remove(required(o,"id"));yield yes();}
+                default -> throw new MailFailure("INVALID_INPUT");
+            };
+        }
+    }
+    private JSONObject receive(JSONArray paths)throws Exception {
+        synchronized(inbox){
+            long used=0;for(ShareInbox.Item item:inbox.list())used+=item.size;
+            for(int i=0;i<paths.length();i++){
+                ShareInbox.Item copied=null;
+                try{
+                    Path file=Path.of(paths.getString(i)).toAbsolutePath().normalize();DesktopFiles.noLinks(file);
+                    var before=Files.readAttributes(file,java.nio.file.attribute.BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
+                    if(!before.isRegularFile()||before.size()>ShareInbox.MAX_FILE||used+before.size()>512L*1024*1024||Files.getFileStore(state.directory).getUsableSpace()<before.size()+32L*1024*1024)throw new java.io.IOException();
+                    try(java.io.InputStream input=Files.newInputStream(file)){copied=inbox.add(input,file.getFileName().toString(),Files.probeContentType(file));}
+                    var after=Files.readAttributes(file,java.nio.file.attribute.BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
+                    if(copied.size!=before.size()||!before.lastModifiedTime().equals(after.lastModifiedTime())||!java.util.Objects.equals(before.fileKey(),after.fileKey()))throw new java.io.IOException();
+                    used+=copied.size;
+                }catch(Exception error){if(copied!=null)inbox.remove(copied.id);refused++;}
+            }
+        }
+        EngineMain.event("ProShare:received",yes());return yes();
+    }
+    private JSONObject folders(String method,JSONObject o)throws Exception {
+        return switch(method){
+            case "state" -> folders.state();case "pause" -> folders.pause();
+            case "chooseLibrary","chooseSource" -> {
+                JSONObject chosen=host.call("folder",new JSONObject());if(chosen.optBoolean("cancelled"))yield chosen;
+                yield method.equals("chooseLibrary")?folders.library(chosen.getString("path")):folders.source(chosen.getString("path"));
+            }
+            case "readSource" -> bytes(folders.read(required(o,"id"),o.optLong("offset",-1)));
+            case "finishSource" -> {folders.finish();yield yes();}
+            case "copyOriginal" -> folders.copy(required(o,"hash"),o.optString("name","file"));
             default -> throw new MailFailure("INVALID_INPUT");
         };
     }
@@ -110,7 +163,7 @@ final class DesktopService {
         if(o.has("hash")){
             String hash=required(o,"hash");JSONObject meta=originals.info(hash);java.io.File file=originals.file(hash);
             if(meta==null||!hash.equals(OriginalFileStore.digest(file)))throw new java.io.IOException("ORIGINAL_UNAVAILABLE");
-            DesktopFiles.noLinks(file.toPath());return new Selected(file,MailMime.filename(meta.getString("name")));
+            DesktopFiles.noLinks(file.toPath());return new Selected(file,DesktopNames.safe(MailMime.filename(meta.getString("name"))));
         }
         String encoded=o.getString("data"),name=o.optString("name","file");
         if(encoded.length()>22369624||name.length()>1024)throw new MailFailure("INVALID_INPUT");
@@ -121,7 +174,7 @@ final class DesktopService {
                 if(System.currentTimeMillis()-Files.getLastModifiedTime(file).toMillis()>24L*60*60*1000)Files.delete(file);else used+=Files.size(file);}
         }
         if(used+bytes.length>64L*1024*1024)throw new java.io.IOException("STORAGE_FULL");
-        String safe=MailMime.filename(name);Path target=folder.resolve(java.util.UUID.randomUUID()+"-"+safe);
+        String safe=DesktopNames.safe(MailMime.filename(name));Path target=folder.resolve(java.util.UUID.randomUUID()+"-"+safe);
         DesktopFiles.atomic(target,bytes);return new Selected(target.toFile(),safe);
     }
     private JSONObject vault(String method,JSONObject o)throws Exception {
@@ -135,11 +188,12 @@ final class DesktopService {
                 if(fields.optBoolean("cancelled"))yield fields;
                 String pw=fields.getString("password");
                 if(!exists&&(!pw.equals(fields.optString("repeat"))||!fields.optBoolean("notice")))throw new VaultCrypto.Failure("VAULT_PASSWORD_CONFIRM");
-                yield exists?vault.open(path,pw,fields.optBoolean("remember")):vault.create(path,pw,fields.optBoolean("remember"));
+                if(exists)yield new JSONObject().put("state",vault.open(path,pw,fields.optBoolean("remember"))).put("opened",true).put("restored",vault.restoreMailStore(storage));
+                yield new JSONObject().put("state",vault.create(path,pw,fields.optBoolean("remember"))).put("created",true);
             }
             case "unlock" -> {
                 JSONObject fields=host.call("password",new JSONObject().put("mode","unlock"));if(fields.optBoolean("cancelled"))yield fields;
-                yield vault.unlock(fields.getString("password"),fields.optBoolean("remember"));
+                yield new JSONObject().put("state",vault.unlock(fields.getString("password"),fields.optBoolean("remember"))).put("unlocked",true);
             }
             case "lock" -> vault.lock();
             case "migrate" -> vault.migrate(originals,storage);

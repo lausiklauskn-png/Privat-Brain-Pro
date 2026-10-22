@@ -48,6 +48,17 @@ jobs:
         run: node windows/tools/prepare-runtime.mjs
       - name: Tauri-Prüfbau mit WebView2
         run: npm run tauri --prefix windows -- build --bundles nsis --features messprobe
+      - name: Installierte Grundfunktionen, Neustart und Neuinstallation
+        timeout-minutes: 20
+        run: ./windows/pruefung/installed.ps1
+        env:
+          PB_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-installationspruefung
+          path: windows/pruef-out/
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-aufbau-nur-pruefbau

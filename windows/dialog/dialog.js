@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const $=id=>document.getElementById(id),invoke=window.__TAURI_INTERNALS__.invoke;
+  const token=window.__PB_DIALOG_SESSION;delete window.__PB_DIALOG_SESSION;
   const W={
     de:['Abbrechen','Weiter','Speicherort verschlüsseln','Ordner öffnen','Ordner entsperren','Mailkonto verbinden','Passwort','Passwort wiederholen','Ohne dieses Passwort sind die Daten im Ordner verloren. Niemand kann es wiederherstellen.','Auf diesem Windows-Benutzerkonto entsperrt halten','Passwörter stimmen nicht überein oder sind kürzer als 10 Zeichen.','Anbieter','Benutzername'],
     en:['Cancel','Continue','Encrypt storage folder','Open folder','Unlock folder','Connect mail account','Password','Repeat password','Without this password, the data in this folder is lost. Nobody can recover it.','Keep unlocked for this Windows user','Passwords do not match or have fewer than 10 characters.','Provider','Username'],
@@ -9,7 +10,7 @@
   };
   const providers={telekom:['secureimap.t-online.de','securesmtp.t-online.de'],hetzner:['mail.your-server.de','mail.your-server.de'],gmail:['imap.gmail.com','smtp.gmail.com'],webde:['imap.web.de','smtp.web.de'],gmx:['imap.gmx.net','mail.gmx.net'],yahoo:['imap.mail.yahoo.com','smtp.mail.yahoo.com'],ionos:['imap.ionos.de','smtp.ionos.de']};
   let config={},words=W.de;
-  const call=(action,fields)=>invoke('pb_dialog',{action,fields:fields||null});
+  const call=(action,fields)=>invoke('pb_dialog',{action,fields:fields||null},{headers:{'x-pb-session':token}});
   function provider(){
     const id=$('provider').value,gmail=id==='gmail';
     $('account-fields').hidden=gmail;$('password-label').hidden=gmail;

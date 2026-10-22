@@ -21,7 +21,7 @@ for(const dep of deps){
 }
 await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
 const receipt=[];
-const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks'];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks','ShareInbox'];
 for(const name of names){
   const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
@@ -51,6 +51,7 @@ for(const name of names){
     text=text.replace(/\bUri\b/g,'String').replace('String.parse(prefs().getString("tree", ""))','prefs().getString("tree", "")');
     text=text.replaceAll('DocumentsContract.getTreeDocumentId(chosen)','chosen');
     text=text.replace('resolver.openOutputStream(doc(p.id), "w")','openSink(p.id)');
+    text=text.replace('MailMime.filename(entry.getString("name"))','DesktopNames.safe(MailMime.filename(entry.getString("name")))');
   }
   if(/\bandroid\.|\bDocumentsContract\b|\bresolver\b/.test(text.replaceAll('vnd.android.document/directory','directory')))throw Error('Unadapted platform reference: '+name);
   await writeFile(join(generated,name+'.java'),text);

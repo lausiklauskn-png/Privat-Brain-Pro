@@ -7,4 +7,4 @@ const here=fileURLToPath(new URL('.',import.meta.url));
 const deps=JSON.parse(await readFile(join(here,'dependencies.json'),'utf8')).dependencies;
 const compileClasspath=[join(here,'build/classes'),...deps.map(d=>join(here,'build/lib',`${d.name}-${d.version}.jar`))].join(delimiter);
 execFileSync('java',['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',compileClasspath,'-d',join(here,'build/classes'),join(here,'tests/EngineTests.java')],{stdio:'inherit'});
-execFileSync('java',['-cp',classpath,'de.familyprojekt.privatebrain.pro.EngineTests'],{stdio:'inherit'});
+execFileSync('java',['-cp',classpath,'de.familyprojekt.privatebrain.pro.EngineTests',join(here,'../..')],{stdio:'inherit'});

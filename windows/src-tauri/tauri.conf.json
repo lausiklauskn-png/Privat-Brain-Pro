@@ -11,6 +11,6 @@
     "category":"Productivity","shortDescription":"Eigene Dokumente und E-Mails privat sammeln, ordnen und finden",
     "resources":{"../runtime/":"runtime/"},
     "icon":["icons/icon.ico"],
-    "windows":{"webviewInstallMode":{"type":"downloadBootstrapper","silent":true},"nsis":{"installMode":"currentUser","languages":["German","English","Russian","Polish"]}}
+    "windows":{"webviewInstallMode":{"type":"downloadBootstrapper","silent":true},"nsis":{"installMode":"currentUser","languages":["German","English","Russian","Polish"],"installerHooks":"../installer/hooks.nsh"}}
   }
 }

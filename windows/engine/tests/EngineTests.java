@@ -103,6 +103,51 @@ public final class EngineTests {
             ok(preview.open(file.toFile()).getInt("pages")==1,"a malformed PDF does not break later rendering or the vault engine");
         }
     }
+    static void folders(Path root,DesktopState state)throws Exception {
+        Path source=Files.createDirectories(root.resolve("source-folder/nested"));
+        Files.writeString(source.resolve("note.txt"),"source text");
+        DesktopFolders folders=new DesktopFolders(state);
+        JSONObject picked=folders.source(source.getParent().toString());JSONObject item=picked.getJSONArray("items").getJSONObject(0);
+        ok(item.getString("path").equals("source-folder/nested/note.txt")&&new String(folders.read(item.getString("id"),0),StandardCharsets.UTF_8).equals("source text"),"chosen folder reads bounded bytes with the original relative path");
+        Files.writeString(source.resolve("note.txt"),"a changed source must be selected again");
+        fails("FILE_CHANGED",()->folders.read(item.getString("id"),0));folders.finish();
+        fails("INVALID_INPUT",()->folders.read(item.getString("id"),0));
+        Path library=Files.createDirectory(root.resolve("library"));folders.library(library.toString());
+        byte[] data="verified library copy".getBytes(StandardCharsets.UTF_8);String hash=VaultCrypto.hex(MessageDigest.getInstance("SHA-256").digest(data));
+        OriginalFileStore originals=new OriginalFileStore(state);JSONObject started=originals.begin(hash,data.length,"source.txt","text/plain");
+        originals.append(started.getString("ticket"),0,data);originals.finish(started.getString("ticket"));
+        for(String name:new String[]{"CON.pdf","😀".repeat(150)+".PDF","Ж".repeat(220)+".txt","e\u0301".repeat(250)+".pdf"}){
+            JSONObject copied=folders.copy(hash,name);String safe=copied.getString("name");
+            ok(safe.length()<=160&&safe.getBytes(StandardCharsets.UTF_8).length<=200&&java.text.Normalizer.isNormalized(safe,java.text.Normalizer.Form.NFC)&&Arrays.equals(Files.readAllBytes(library.resolve(safe)),data),"real library copy handles reserved and long Unicode names");
+            String next=folders.copy(hash,name).getString("name");ok(!next.equals(safe)&&Files.exists(library.resolve(safe)),"existing library file remains intact on a duplicate name");
+        }
+        folders.pause();ok(!folders.copy(hash,"paused.txt").getBoolean("copied"),"pausing keeps originals and previously made copies");
+    }
+    static void service(Path root,Path repository)throws Exception {
+        Path resources=Files.createDirectory(root.resolve("resources")),chosen=Files.createDirectory(root.resolve("api-vault"));
+        Files.copy(repository.resolve("windows/gmail-desktop.json"),resources.resolve("gmail-desktop.json"));
+        Files.copy(repository.resolve("tools/native/semantic-model.json"),resources.resolve("semantic-model.json"));
+        DesktopService service=new DesktopService(new DesktopState(root.resolve("api-device"),new TestProtection()),resources,(method,options)->switch(method){
+            case "folder" -> new JSONObject().put("path",chosen.toString());
+            case "password" -> new JSONObject().put("password",PASSWORD).put("repeat",PASSWORD).put("notice",true).put("remember",true);
+            case "metered" -> new JSONObject().put("metered",true);
+            default -> throw new IOException("unexpected native operation");
+        });
+        JSONObject created=service.call("ProVault","choose",new JSONObject());
+        ok(created.getBoolean("created")&&created.getJSONObject("state").getBoolean("unlocked"),"vault choice uses the same created/state response contract as Android");
+        service.call("ProVault","lock",new JSONObject());JSONObject unlocked=service.call("ProVault","unlock",new JSONObject());
+        ok(unlocked.getBoolean("unlocked")&&unlocked.getJSONObject("state").getBoolean("unlocked"),"vault unlock uses the same unlocked/state response contract as Android");
+        JSONObject opened=service.call("ProVault","choose",new JSONObject());
+        ok(opened.getBoolean("opened")&&opened.getJSONObject("restored").getInt("accounts")==0,"opening another device folder reports restored account/draft state");
+        byte[] large=new byte[180000];new Random(12).nextBytes(large);String hash=VaultCrypto.hex(MessageDigest.getInstance("SHA-256").digest(large));
+        JSONObject begun=service.call("ProFiles","beginImport",new JSONObject().put("hash",hash).put("size",large.length).put("name","api-import.bin"));
+        service.call("ProFiles","appendImport",new JSONObject().put("ticket",begun.getString("ticket")).put("offset",0).put("data",Base64.encodeToString(large,Base64.NO_WRAP)));
+        service.call("ProFiles","finishImport",new JSONObject().put("ticket",begun.getString("ticket")));
+        JSONObject read=service.call("ProFiles","readOriginal",new JSONObject().put("hash",hash).put("offset",0));
+        ok(Arrays.equals(large,Base64.decode(read.getString("data"),Base64.NO_WRAP)),"real plugin transfer accepts a full native block instead of truncating to a text-field limit");
+        JSONObject protection=service.call("ProProtect","checkHashes",new JSONObject().put("items",new JSONArray().put(hash)));
+        ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
+    }
     public static void main(String[] args) throws Exception {
         Path root = Files.createTempDirectory("pb-engine-");
         TestProtection protection = new TestProtection();
@@ -172,6 +217,8 @@ public final class EngineTests {
         AppNetwork.setOffline(state,false);
         oauth(new DesktopState(root.resolve("oauth-device"), new TestProtection()));
         pdf(root);
+        folders(root,new DesktopState(root.resolve("folders-device"),new TestProtection()));
+        service(root,Path.of(args[0]));
         if(!System.getProperty("os.name").startsWith("Windows")){
             Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
             fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));

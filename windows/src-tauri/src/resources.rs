@@ -20,7 +20,7 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                     let request=arguments.Request()?;let mut raw=PWSTR::null();request.Uri(&mut raw)?;let value=take_pwstr(raw);
                     let Ok(url)=tauri::Url::parse(&value)else{return Ok(())};
                     let model=(url.scheme()=="https"&&url.host_str()==Some("cdn.jsdelivr.net")&&url.path().starts_with("/npm/@xenova/transformers@2.17.2"))
-                        ||(url.host_str()==Some("tauri.localhost")&&url.path().starts_with("/models/Xenova/multilingual-e5-small/"));
+                        ||([Some("tauri.localhost"),Some("pbtool.localhost")].contains(&url.host_str())&&url.path().starts_with("/models/Xenova/multilingual-e5-small/"));
                     if model {
                         let engine=host.engine.lock().unwrap().clone();
                         let response=engine.and_then(|e|e.call("DesktopInternal","modelAsset",json!({"url":value})).ok());
@@ -36,7 +36,7 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                         }
                         let response=environment.CreateWebResourceResponse(None::<&IStream>,404,&HSTRING::from("Local model unavailable"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;return Ok(());
                     }
-                    let local=url.scheme()=="https"&&[Some("tauri.localhost"),Some("ipc.localhost")].contains(&url.host_str());
+                    let local=url.scheme()=="https"&&[Some("tauri.localhost"),Some("pbtool.localhost"),Some("ipc.localhost")].contains(&url.host_str());
                     if !local&&["http","https","ws","wss"].contains(&url.scheme())&&host.offline.load(Ordering::SeqCst){
                         let response=environment.CreateWebResourceResponse(None::<&IStream>,403,&HSTRING::from("APP_OFFLINE"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;
                     }

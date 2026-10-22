@@ -26,7 +26,7 @@ final class DesktopModel {
         if("https".equals(uri.getScheme())&&"cdn.jsdelivr.net".equals(uri.getHost())){
             if(path.equals(base)||path.equals(base+"/"))relative="lib/transformers.min.js";
             else if(path.startsWith(base+"/"))relative="lib/"+path.substring(base.length()+1);
-        }else if("https".equals(uri.getScheme())&&"tauri.localhost".equals(uri.getHost())&&path.startsWith("/models/Xenova/multilingual-e5-small/")){
+        }else if("https".equals(uri.getScheme())&&java.util.Set.of("tauri.localhost","pbtool.localhost").contains(uri.getHost())&&path.startsWith("/models/Xenova/multilingual-e5-small/")){
             relative="model/"+path.substring("/models/Xenova/multilingual-e5-small/".length());
         }
         if(relative==null)return new JSONObject().put("missing",true);

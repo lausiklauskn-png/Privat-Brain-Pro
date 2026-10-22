@@ -142,6 +142,7 @@
 
   // ---------- choosing tablet or SD card ----------
   async function chooseVolume() {
+    if (window.Capacitor?.getPlatform?.() === 'windows') return { volume: '' };
     let volumes = [];
     try { volumes = (await api.volumes()).items || []; } catch { /* Generic picker remains. */ }
     return new Promise(resolve => {
