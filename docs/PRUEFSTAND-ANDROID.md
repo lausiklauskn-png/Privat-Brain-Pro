@@ -954,6 +954,16 @@ Quell-CI: [39570196725](https://github.com/lausiklauskn-png/Privat-Brain-Pro/act
 Die Versions-Tags .17 und .18 wurden nicht verändert. Keine App-, Test-, Signier- oder Workflowänderung für diesen Release; anschließend nur die Veröffentlichungsbelege ergänzt.
 
 
+## Veröffentlichte Version .24 — 2026-10-22
+
+- **Inhalt:** PR #58 (Reparaturen nach Klaus' Test von .23 am Tablet: 🎤 immer über Androids Sprachfenster, mehrere Mails löschen/verschieben mit einer Verbindung je 200 Mails, „Bedeutungssuche“ führt ohne Modell zum Schalter in den Einstellungen, Links „Mistral-/Google-Schlüssel holen“ neben dem KI-Schlüssel), Quelle main `18a2edc38c42b4562c169603437cc4e5e8dcec22`, VersionCode 24.
+- **Main-CI:** 39711900162 grün, einschließlich native-smoke.
+- **Release-Lauf:** [39714226568](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39714226568): Signatur, signiertes Update .23 → .24 ohne Deinstallation, Veröffentlichung.
+- **Download:** unabhängig geladen und gegen `SHA256SUMS` geprüft:
+  - APK SHA-256 `ac255dddd5755bf87c8e2be4798e6840e16f626c86477b36754d5728caf8d21f`, 5.791.582 Bytes.
+  - App Bundle (.aab) SHA-256 `f10fe265bce8310e3b41519a7d639345efa4726810a8d41ca7513fc6293548fe`, 5.605.275 Bytes.
+- **Nicht geprüft:** Messung an Klaus' Tablet, Sammel-Verschieben an einem echten IMAP-Server (der Probe-Server kann kein MOVE), ob Gmail die gelöschten Mails im Papierkorb zeigt.
+
 ## Veröffentlichte Version .23 — 2026-10-21
 
 - **Inhalt:** PR #56 (Bedeutungs-Modell per Schalter laden, Absturzschutz, App Bundle, Ablageordner nach Neustart, ProProtect bei geschlossener Ansicht), Quelle main `8ee68c64ada630f63d7ca450be16faf265e87e2b`, VersionCode 23.
