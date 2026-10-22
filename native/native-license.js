@@ -296,7 +296,14 @@
     if (!box) { box = make('div', null, 'note pb-license'); box.id = 'pb-license'; (document.getElementById('install-box') || settings.lastElementChild)?.before(box); }
     const status = make('p', null, 'hint'); status.setAttribute('role', 'status'); status.dataset.licenseStatus = '';
     const list = make('ul', null, 'pb-license-tools');
-    for (const tool of TOOLS) { const li = make('li'); li.dataset.tool = tool.id; li.dataset.open = String(unlocked(tool.id)); li.append(toolIcon(tool), make('span', toolName(tool), 'pb-license-name'), make('b', unlocked(tool.id) ? t('unlocked') : t('locked'))); list.append(li); }
+    for (const tool of TOOLS) {
+      const li = make('li'), open = unlocked(tool.id);
+      li.dataset.tool = tool.id; li.dataset.open = String(open);
+      const status = make('b', open ? '🔓' : '🔒');
+      status.title = open ? t('unlocked') : t('locked');
+      status.setAttribute('aria-label', status.title);
+      li.append(toolIcon(tool), make('span', toolName(tool), 'pb-license-name'), status); list.append(li);
+    }
     const field = make('textarea'); field.id = 'pbLicenseCode'; field.rows = 2; field.dataset.noDictate = '1'; field.placeholder = 'PBK1.…'; field.setAttribute('aria-label', t('code'));
     const go = button(t('unlock'), async () => {
       go.disabled = true;

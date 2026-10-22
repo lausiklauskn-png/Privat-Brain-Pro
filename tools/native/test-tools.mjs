@@ -2,7 +2,7 @@
 // tools open inside the app, a file a tool hands out goes into Private Brain Pro. Real tool pages (Kimboard, Kimseek).
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
 const root=resolve('www'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json','.svg':'image/svg+xml'};
@@ -43,6 +43,26 @@ try{
   ok('Each tool in the box stands on its own line with icon, full name and state',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b'),i=li.querySelector('.pb-tool-icon');const r=li.getBoundingClientRect();return n&&s&&i&&n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=r.right+1&&s.getBoundingClientRect().top<r.bottom;})));
   await page.setViewportSize({width:360,height:740});
   ok('On a phone (360 px) no tool name is cut off',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b');return n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=li.getBoundingClientRect().right+1;})));
+  for(const width of [320,360,1280,2560]){
+    await page.setViewportSize({width,height:1000});
+    for(const language of ['de','en','ru','pl']){
+      await page.evaluate(lang=>document.documentElement.lang=lang,language);
+      await page.waitForTimeout(40);
+      ok(`${language} at ${width}px: one tool per row, complete names and an accessible lock without repeated status text`,await page.evaluate(()=>{
+        const items=[...document.querySelectorAll('.pb-license-tools li')];
+        return items.length===8&&items.every((li,i)=>{
+          const r=li.getBoundingClientRect(),name=li.querySelector('.pb-license-name'),status=li.querySelector('b');
+          const range=document.createRange();range.selectNodeContents(name);
+          return (!i||r.top>=items[i-1].getBoundingClientRect().bottom-1)&&name.scrollWidth<=name.clientWidth+1&&range.getClientRects().length===1&&status.textContent==='🔒'&&Boolean(status.getAttribute('aria-label'));
+        });
+      }));
+      if(language==='de'&&process.env.PB_CAPTURE_LICENSE&&[360,2560].includes(width)){
+        await mkdir(process.env.PB_CAPTURE_LICENSE,{recursive:true});
+        await page.locator('#pb-license').screenshot({path:resolve(process.env.PB_CAPTURE_LICENSE,`werkzeuge-${width}.png`)});
+      }
+    }
+  }
+  await page.evaluate(()=>document.documentElement.lang='de');
   await page.setViewportSize({width:1280,height:900});
   // Like the other studios: a long press (1.5 s) on the ©; a short press or a swipe opens nothing (Klaus 2026-10-22).
   const mark=page.locator('#pbCopyright');await mark.scrollIntoViewIfNeeded();
