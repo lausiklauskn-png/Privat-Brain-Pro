@@ -1,7 +1,8 @@
 /* Links to get the AI keys (Klaus 2026-10-22: "Nutzer wissen oft nicht, wie schnell sie zu den entsprechenden Stellen
    kommen" · "direkt einen Link zu Google Vision … direkt auf die Seite, wo ich die Keys erstellen kann").
    Next to the key field in the settings: one tap opens the provider's page in the browser. Google has no single key page:
-   step 1 turns on the Cloud Vision API in a project, step 2 is the page where the API key is created.
+   step 1 turns on the Cloud Vision API in a project, step 2 is the page where the API key is created, and if Google
+   refuses that key for Vision ("Vision 403"), the general credentials page makes a key for the whole project.
    Nothing is filled in automatically; the key is still typed or pasted by the person. */
 (() => {
   'use strict';
@@ -9,24 +10,26 @@
   if (typeof links?.open !== 'function') return;
   const PAGES = {
     googleVision: 'https://console.cloud.google.com/flows/enableapi?apiid=vision.googleapis.com',
-    googleKey: 'https://console.cloud.google.com/apis/credentials',
+    // Klaus 2026-10-22: the page where he created his key (without his project; Google opens the person's own one).
+    googleKey: 'https://console.cloud.google.com/agent-platform/studio/settings/api-keys',
+    googleCredentials: 'https://console.cloud.google.com/apis/credentials',
     mistral: 'https://console.mistral.ai/api-keys'
   };
   const W = {
-    de: { googleVision: '① Google Vision einschalten', googleKey: '② Google-Schlüssel erstellen', mistral: 'Mistral-Schlüssel holen',
-      hintGoogle: 'Google Vision: ① tippen, Projekt wählen, „Aktivieren“. Dann ② tippen, „Anmeldedaten erstellen“ → „API-Schlüssel“, kopieren und oben einfügen. Google verlangt dafür ein Konto mit Zahlungsangabe; die ersten 1.000 Seiten im Monat sind laut Google kostenlos.',
+    de: { googleVision: '① Google Vision einschalten', googleKey: '② Google-Schlüssel erstellen', googleCredentials: 'Bei „Vision 403“: andere Schlüsselseite', mistral: 'Mistral-Schlüssel holen',
+      hintGoogle: 'Google Vision: ① tippen, Projekt wählen, „Aktivieren“. Dann ② tippen, Schlüssel erstellen, kopieren und oben einfügen. Meldet die App „Vision 403“, den Schlüssel auf der anderen Schlüsselseite erstellen („Anmeldedaten erstellen“ → „API-Schlüssel“). Google verlangt dafür ein Konto mit Zahlungsangabe; die ersten 1.000 Seiten im Monat sind laut Google kostenlos.',
       hintMistral: 'Mistral: anmelden, „Create new key“, kopieren und oben einfügen.',
       wrongKey: '⚠ Das sieht nicht wie ein Google-Schlüssel aus (sie beginnen mit „AIza“). Bitte den Google-Schlüssel einfügen, sonst geht der falsche Schlüssel an Google.' },
-    en: { googleVision: '① Turn on Google Vision', googleKey: '② Create Google key', mistral: 'Get Mistral key',
-      hintGoogle: 'Google Vision: tap ①, choose a project, "Enable". Then tap ②, "Create credentials" → "API key", copy and paste it above. Google asks for an account with billing details; according to Google the first 1,000 pages a month are free.',
+    en: { googleVision: '① Turn on Google Vision', googleKey: '② Create Google key', googleCredentials: 'If "Vision 403": other key page', mistral: 'Get Mistral key',
+      hintGoogle: 'Google Vision: tap ①, choose a project, "Enable". Then tap ②, create a key, copy and paste it above. If the app says "Vision 403", create the key on the other key page ("Create credentials" → "API key"). Google asks for an account with billing details; according to Google the first 1,000 pages a month are free.',
       hintMistral: 'Mistral: sign in, "Create new key", copy and paste it above.',
       wrongKey: '⚠ This does not look like a Google key (they start with "AIza"). Please paste the Google key, otherwise the wrong key goes to Google.' },
-    ru: { googleVision: '① Включить Google Vision', googleKey: '② Создать ключ Google', mistral: 'Получить ключ Mistral',
-      hintGoogle: 'Google Vision: нажмите ①, выберите проект, «Включить». Затем ②, «Создать учётные данные» → «Ключ API», скопируйте и вставьте выше. Google требует аккаунт с платёжными данными; по данным Google первые 1000 страниц в месяц бесплатны.',
+    ru: { googleVision: '① Включить Google Vision', googleKey: '② Создать ключ Google', googleCredentials: 'При «Vision 403»: другая страница ключей', mistral: 'Получить ключ Mistral',
+      hintGoogle: 'Google Vision: нажмите ①, выберите проект, «Включить». Затем ②, создайте ключ, скопируйте и вставьте выше. Если приложение пишет «Vision 403», создайте ключ на другой странице («Создать учётные данные» → «Ключ API»). Google требует аккаунт с платёжными данными; по данным Google первые 1000 страниц в месяц бесплатны.',
       hintMistral: 'Mistral: войдите, «Create new key», скопируйте и вставьте выше.',
       wrongKey: '⚠ Это не похоже на ключ Google (он начинается с «AIza»). Вставьте ключ Google, иначе в Google уйдёт чужой ключ.' },
-    pl: { googleVision: '① Włącz Google Vision', googleKey: '② Utwórz klucz Google', mistral: 'Pobierz klucz Mistral',
-      hintGoogle: 'Google Vision: dotknij ①, wybierz projekt, „Włącz”. Potem ②, „Utwórz dane logowania” → „Klucz API”, skopiuj i wklej powyżej. Google wymaga konta z danymi płatności; według Google pierwsze 1000 stron miesięcznie jest bezpłatne.',
+    pl: { googleVision: '① Włącz Google Vision', googleKey: '② Utwórz klucz Google', googleCredentials: 'Przy „Vision 403”: inna strona kluczy', mistral: 'Pobierz klucz Mistral',
+      hintGoogle: 'Google Vision: dotknij ①, wybierz projekt, „Włącz”. Potem ②, utwórz klucz, skopiuj i wklej powyżej. Jeśli aplikacja pokaże „Vision 403”, utwórz klucz na innej stronie („Utwórz dane logowania” → „Klucz API”). Google wymaga konta z danymi płatności; według Google pierwsze 1000 stron miesięcznie jest bezpłatne.',
       hintMistral: 'Mistral: zaloguj się, „Create new key”, skopiuj i wklej powyżej.',
       wrongKey: '⚠ To nie wygląda na klucz Google (zaczyna się od „AIza”). Wklej klucz Google, inaczej do Google trafi zły klucz.' }
   };
