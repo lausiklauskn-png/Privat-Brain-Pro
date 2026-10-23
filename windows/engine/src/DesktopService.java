@@ -105,7 +105,7 @@ final class DesktopService {
                 }catch(Exception error){if(copied!=null)inbox.remove(copied.id);refused++;}
             }
         }
-        EngineMain.event("ProShare:received",yes());return yes();
+        EngineMain.event("ProShare:shared",yes());return yes();
     }
     private JSONObject folders(String method,JSONObject o)throws Exception {
         return switch(method){

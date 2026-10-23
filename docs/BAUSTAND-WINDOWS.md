@@ -45,6 +45,14 @@ nachgebaut. Explizite Plattformadapter ersetzen Android-Dateizugriff,
 HTML-Textextraktion, Geräteablage und Browserlinks. SHA-256 von Quelle und
 Bauergebnis steht in `windows/engine/build/shared-source.json`.
 
+Die Modell-Dateien werden über `https://pbmodel.localhost/models/` direkt aus
+lokalen, geprüften Dateien gestreamt. Es gibt dafür keinen Server oder neuen
+Netzwerkdienst. Der eigene Ursprung verhindert, dass Tauri/Wrys asynchroner
+App-Datei-Responder die Modellantwort mit `index.html` überschreibt. Dieses
+Verhalten ist mit HTTP-Status, Inhaltstyp und SHA-256 im installierten Programm
+belegt: Bibliothek und WASM stimmten, die frühere Modelladresse lieferte HTML.
+Die reinen Routingregeln werden weiterhin aus Androids `BundledLibrary` übernommen.
+
 Eine private Java-21-Laufzeit wird mitgeliefert; beim Empfänger ist keine
 Java-Installation nötig. Windows-DPAPI schützt Gerätegeheimnisse. Der portable
 Ordner verwendet weiterhin das gemeinsame PBV1-Format und das Benutzerpasswort.
@@ -103,7 +111,12 @@ Dieser Lauf ist insgesamt rot: die Spracheingabe-Gegenprobe traf auf ein sofort
 schließendes „nicht verfügbar“-Fenster. Der Test wurde korrigiert; die vollständige
 Kette wird erneut ausgeführt. **Keinen fertigen Installer aus diesem Lauf anbieten.**
 
-Noch abzuschließen: installierte Werkzeugübergabe/Freigabeentzug, reales Modell
+Werkzeugübergabe, Freigabeentzug, Kontovorlagen, Dateiexport, Ersatzschlüsseldatei
+und native Schutzschlüssel haben inzwischen im installierten Programm bestanden.
+Die Ereignisbezeichnung für Zweitstart-Dateien wurde an den gemeinsamen
+`shared`-Vertrag angeglichen; der echte Kindprozesstest scheiterte zuvor daran.
+
+Noch abzuschließen: korrigierte Modellauslieferung und reales Modell
 mit Offline-Bedeutungssuche, vollständige Neustart-/DPAPI-/Neuinstallationskette,
 abschließender Produktionsbau ohne Prüfzugang, Prüfsummen und Freigabe.
 Eine gesprochene Aufnahme und Klaus' eigener Windows-PC sind nicht gemessen.

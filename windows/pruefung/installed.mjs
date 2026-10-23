@@ -5,6 +5,7 @@ import {chromium} from 'playwright-core';
 import {writeFile,mkdir,readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
+import {spawn} from 'node:child_process';
 const phase=process.argv[2]||'first',out=resolve(process.argv[3]||'windows-report.json');
 const report={phase,source:process.env.PB_SOURCE_COMMIT||'',checks:[],errors:[]};
 const expectedVersion=JSON.parse(await readFile(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8')).version;
@@ -40,7 +41,7 @@ try{
   report.modelRequests=[];
   report.modelConsole=[];
   page.on('console',message=>{const value=message.text();if(/embedding|MODUL 03|wasm|onnx|model.*load/i.test(value)&&report.modelConsole.length<30)report.modelConsole.push(value.slice(0,1500));});
-  page.on('response',response=>{const url=response.url();if(url.startsWith('https://tauri.localhost/models/')||url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))report.modelRequests.push({url:url.split('?')[0],status:response.status()});});
+  page.on('response',response=>{const url=response.url();if(url.startsWith('https://pbmodel.localhost/models/')||url.startsWith('https://tauri.localhost/models/')||url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))report.modelRequests.push({url:url.split('?')[0],status:response.status()});});
   await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
   const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
   ok('raw calls without the private app capability are denied',await page.evaluate(async()=>{try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProFiles',method:'listOriginals',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}}));
@@ -56,6 +57,13 @@ try{
     const hash=createHash('sha256').update(bytes).digest('hex');
     const original=await call('ProFiles','originalInfo',{hash});ok('real imported original is persisted and fingerprinted',original.hash===hash&&original.size===bytes.length);
     const read=await call('ProFiles','readOriginal',{hash,offset:0});ok('original reads back through the native bridge',Buffer.from(read.data,'base64').equals(bytes));
+    const sharedName='Übergabe-Ж-😀.txt',sharedPath=resolve(process.env.RUNNER_TEMP,sharedName),sharedBytes=Buffer.from('Actual Windows second instance file');
+    await writeFile(sharedPath,sharedBytes);
+    const second=spawn(process.env.PB_WINDOWS_TEST_EXE,[sharedPath],{windowsHide:true,stdio:'ignore'});
+    const secondCode=await new Promise((resolve,reject)=>{second.once('error',reject);second.once('exit',resolve);});assert.equal(secondCode,0);
+    await page.waitForFunction(name=>!signing&&CATALOG.some(r=>r.name===name),sharedName,{timeout:90000});
+    const sharedHash=createHash('sha256').update(sharedBytes).digest('hex');
+    ok('Windows second instance imports a Unicode-named file into the existing app',(await call('ProFiles','originalInfo',{hash:sharedHash})).hash===sharedHash&&Buffer.from(await readFile(sharedPath)).equals(sharedBytes));
     const exported=await call('ProFiles','share',{hash});ok('native save selection commits a verified export without changing the original',exported.saved&&Buffer.from(await readFile(resolve(process.env.PB_WINDOWS_TEST_SAVE_FOLDER,'windows-proof.txt'))).equals(bytes));
     const shares=Array.from({length:5},(_,i)=>`JT3v5-${i+1}-CI_fixture_only_not_a_real_share`);
     const saved=await call('ProFiles','saveRecoveryKeys',{shares,name:'CI-RECOVERY-KEYS.txt',heading:'Test fixture only'});
@@ -67,7 +75,8 @@ try{
     ok('own password dialog creates a real password-encrypted folder',await page.evaluate(()=>vaultResult.created&&vaultResult.state.unlocked));
     await call('ProVault','migrate');await call('ProVault','backupMail');
     const ticket=(await call('ProVault','catalogBegin')).ticket;
-    await call('ProVault','catalogAppend',{ticket,offset:0,data:Buffer.from('Windows native catalog proof').toString('base64')});await call('ProVault','catalogFinish',{ticket});
+    const catalogData=await page.evaluate(()=>JSON.stringify({app:'private-brain-pro',catalog:CATALOG}));
+    await call('ProVault','catalogAppend',{ticket,offset:0,data:Buffer.from(catalogData).toString('base64')});await call('ProVault','catalogFinish',{ticket});
     const backup=await call('ProVault','catalogInfo');ok('catalog is committed and read back before success',backup.exists&&backup.size>0);
     await page.evaluate(()=>{window.keyProbe=null;Capacitor.Plugins.ProProtect.setKey({service:'virustotal'}).then(v=>window.keyProbe=v,e=>window.keyProbe={error:e.code});});
     const key=await dialog();await key.locator('#password').fill('CI-fixture-only-never-a-real-key');await key.locator('#submit').click();
@@ -125,7 +134,7 @@ try{
     ok('native local files remain readable through normal IPC after the app internet switch turns off',Buffer.from((await call('ProFiles','readOriginal',{hash,offset:0})).data,'base64').equals(bytes));
     report.modelEndpoints=await page.evaluate(async()=>{
       const base='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
-      const urls=[base,base+'/dist/ort-wasm-simd.wasm','https://tauri.localhost/models/Xenova/multilingual-e5-small/config.json'];const results=[];
+      const urls=[base,base+'/dist/ort-wasm-simd.wasm',window.SBKIM_MODEL_ROOT+'Xenova/multilingual-e5-small/config.json'];const results=[];
       for(const url of urls){const response=await fetch(url),bytes=await response.arrayBuffer();const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');results.push({url,status:response.status,type:response.headers.get('content-type'),size:bytes.byteLength,sha256:sha});}return results;
     });
     console.log('MODEL endpoints '+JSON.stringify(report.modelEndpoints));
@@ -134,7 +143,7 @@ try{
       await SbkimEmbedding.init();const q=await SbkimEmbedding.embedQuery('Rechnung vom Zahnarzt'),near=await SbkimEmbedding.embedPassage('Zahnarztrechnung über 120 Euro für eine Füllung'),far=await SbkimEmbedding.embedPassage('Wetterbericht: morgen Regen in Hamburg');
       const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);return{dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline,fallback:SbkimEmbedding.getModelFallback()};
     });
-    ok('installed WebView2 understands meaning from the local e5 model while offline',meaning.dim===384&&meaning.near>meaning.far+0.02&&meaning.source==='local'&&meaning.root==='https://tauri.localhost/models/'&&meaning.offline&&!meaning.fallback);
+    ok('installed WebView2 understands meaning from the local e5 model while offline',meaning.dim===384&&meaning.near>meaning.far+0.02&&meaning.source==='local'&&meaning.root==='https://pbmodel.localhost/models/'&&meaning.offline&&!meaning.fallback);
     report.model=meaning;await page.evaluate(()=>PBNetwork.setOffline(false));
     await call('ProSemantic','markLoading');
     const renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});

@@ -14,13 +14,13 @@ final class DesktopExports {
     synchronized Path stage(File source,String name)throws Exception {
         Path from=source.toPath();DesktopFiles.noLinks(from);DesktopFiles.noLinks(folder);Files.createDirectories(folder);
         BasicFileAttributes before=Files.readAttributes(from,BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
-        if(!before.isRegularFile()||before.size()>200L*1024*1024)throw new IOException("FILE_UNAVAILABLE");
+        if(!before.isRegularFile()||before.size()>1024L*1024*1024)throw new IOException("FILE_UNAVAILABLE");
         long used=0;
         try(var paths=Files.newDirectoryStream(folder)){
             for(Path path:paths){DesktopFiles.noLinks(path);if(!Files.isRegularFile(path))continue;
                 if(System.currentTimeMillis()-Files.getLastModifiedTime(path).toMillis()>86400000)Files.delete(path);else used+=Files.size(path);}
         }
-        if(used+before.size()>256L*1024*1024||Files.getFileStore(folder).getUsableSpace()<before.size()+32L*1024*1024)throw new IOException("STORAGE_FULL");
+        if(used+before.size()>2L*1024*1024*1024||Files.getFileStore(folder).getUsableSpace()<before.size()+32L*1024*1024)throw new IOException("STORAGE_FULL");
         Path target=folder.resolve(UUID.randomUUID()+"-"+DesktopNames.safe(name));
         try{
             copy(from,target);

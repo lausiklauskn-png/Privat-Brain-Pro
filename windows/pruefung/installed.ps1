@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true') { throw 'This installation probe is intended for an isolated GitHub Windows runner.' }
 $appDir = Join-Path $env:LOCALAPPDATA 'Private Brain Pro'
 $exe = Join-Path $appDir 'private-brain-pro.exe'
+$env:PB_WINDOWS_TEST_EXE = $exe
 $setup = (Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '*-setup.exe' | Select-Object -First 1).FullName
 $env:PB_WINDOWS_TEST_FOLDER = Join-Path $env:RUNNER_TEMP 'private-brain-vault-probe'
 $env:PB_WINDOWS_TEST_SAVE_FOLDER = Join-Path $env:RUNNER_TEMP 'private-brain-export-probe'

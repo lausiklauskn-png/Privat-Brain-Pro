@@ -4,7 +4,7 @@
   'use strict';
   let offline=true;const active=new Set(),children=new Map();
   const framesList=()=>Array.from({length:frames.length},(_,i)=>frames[i]);
-  const local=value=>{try{const url=new URL(value,location.href);return !/^(https?|wss?):$/.test(url.protocol)||url.origin===location.origin||['tauri.localhost','pbtool.localhost','ipc.localhost'].includes(url.hostname)||(url.hostname==='cdn.jsdelivr.net'&&url.pathname.startsWith('/npm/@xenova/transformers@2.17.2'));}catch{return false;}};
+  const local=value=>{try{const url=new URL(value,location.href);return !/^(https?|wss?):$/.test(url.protocol)||url.origin===location.origin||['tauri.localhost','pbtool.localhost','ipc.localhost'].includes(url.hostname)||(url.protocol==='https:'&&url.hostname==='pbmodel.localhost'&&!url.port&&url.pathname.startsWith('/models/Xenova/multilingual-e5-small/'))||(url.hostname==='cdn.jsdelivr.net'&&url.pathname.startsWith('/npm/@xenova/transformers@2.17.2'));}catch{return false;}};
   const blocked=()=>new DOMException('APP_OFFLINE','NetworkError');
   const check=value=>{if(offline&&!local(value))throw blocked();};
   const send=Function.prototype.call.bind(MessagePort.prototype.postMessage);
