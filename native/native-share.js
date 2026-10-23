@@ -33,12 +33,18 @@
   }
 
   let running = false, again = false;
+  async function waitForImport() {
+    // signBatch deliberately ignores a second concurrent call. Keep the
+    // native inbox until that call can actually accept the selected files.
+    while (typeof signing !== 'undefined' && signing) await new Promise(resolve => setTimeout(resolve, 120));
+  }
   async function collect() {
     if (running) { again = true; return; }
     running = true;
     try {
       do {
         again = false;
+        await waitForImport();
         const { items = [], refused = 0 } = await plugin.pending();
         let missing = refused;
         if (!items.length) { if (missing) note(say(3, missing)); continue; }
@@ -50,6 +56,7 @@
           catch { missing++; }
         }
         if (entries.length) {
+          await waitForImport();
           window.PBWorkspace.navigate?.('intake');
           await window.signBatch(entries);
         }

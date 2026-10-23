@@ -16,9 +16,10 @@
   if (settings) settings.after(status);
   let version = '';
   let nativeMail = false;
+  let platform = 'android';
   try {
     const device = await window.Capacitor?.Plugins?.ProDevice?.getInfo();
-    if (device) { version = ` · ${device.versionName}`; nativeMail = device.nativeMail === true; }
+    if (device) { version = ` · ${device.versionName}`; nativeMail = device.nativeMail === true; platform = device.platform || platform; }
   } catch { /* Browser smoke tests have no Android bridge. */ }
   function render() {
     const t = text[document.documentElement.lang] || text.de;
@@ -28,6 +29,12 @@
       ru: 'Прямая почта на устройстве. Выбор папок через Android; фоновая синхронизация ещё разрабатывается.',
       pl: 'Bezpośrednia poczta na urządzeniu. Wybór folderów przez Android; synchronizacja w tle jest w przygotowaniu.'
     };
+    if (platform === 'windows') Object.assign(mailNotice, {
+      de: 'Direkte Mailverbindung auf diesem Windows-Rechner. Hintergrundabruf folgt noch.',
+      en: 'Direct mail on this Windows computer. Background sync is still being added.',
+      ru: 'Прямая почта на этом компьютере Windows. Фоновая синхронизация ещё разрабатывается.',
+      pl: 'Bezpośrednia poczta na tym komputerze Windows. Synchronizacja w tle jest w przygotowaniu.'
+    });
     status.textContent = `${t[0]}${window.PBVersionShown ? ' · ' + window.PBVersionShown : version}. ${nativeMail ? (mailNotice[document.documentElement.lang] || mailNotice.de) : t[1]}`;
   }
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
@@ -68,6 +75,11 @@
     const licenses = document.createElement('a');
     licenses.href = 'assets/licenses/mail.html';
     licenses.textContent = 'JavaMail / Activation / Google · Lizenzen / Licenses';
+    if(platform==='windows'){
+      licenses.href='windows/licenses.html';
+      const renderLicenses=()=>{licenses.textContent=({de:'Lizenzen der Windows-Version',en:'Windows version licenses',ru:'Лицензии версии Windows',pl:'Licencje wersji Windows'}[document.documentElement.lang]||'Windows version licenses');};
+      renderLicenses();new MutationObserver(renderLicenses).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    }
     status.after(licenses);
   }
 
@@ -96,7 +108,7 @@
     const t = words[document.documentElement.lang] || words.de;
     check.textContent = t[0];
     check.disabled = busy;
-    download.textContent = t[5];
+    download.textContent = window.Capacitor?.getPlatform?.()==='windows' ? ({de:'Windows-Installer herunterladen',en:'Download Windows installer',ru:'Скачать установщик Windows',pl:'Pobierz instalator Windows'}[document.documentElement.lang]||'Download Windows installer') : t[5];
     download.hidden = state !== 'available' && state !== 'openError';
     download.disabled = busy;
     message.textContent = state === 'available' ? t[4] + latest :

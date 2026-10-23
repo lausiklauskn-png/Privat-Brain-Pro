@@ -37,6 +37,12 @@ if (!html.includes(worker)) throw new Error('Review native service-worker adapta
 html = html.replace(worker, '// Native assets are updated by Android; no service worker.');
 html = html.replace(/<script src="assets\/installieren\.js[^>]*><\/script>/, '');
 html = html.replace(/<link[^>]*rel="manifest"[^>]*>/g, '');
+// Pro has one licensed pin board (Kimboard). Do not start the PWA's second,
+// floating board: it has its own pointer handlers and bypasses the tool gate.
+// Its module and previously stored data stay unchanged in the source.
+const legacyPin = '<script type="module" src="modules/pinnwand-widget.js"></script>';
+if (!html.includes(legacyPin)) throw new Error('Review legacy pin board adaptation after source changes');
+html = html.replace(legacyPin, '');
 const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
 html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>\n<script src="native-semantic.js"></script>\n<script src="native-seal-place.js"></script>`);
 const start = 'initEmbedding();  // echtes Bedeutungs-Modell laden';

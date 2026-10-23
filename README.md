@@ -1,7 +1,10 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**Aktuell: .19 — [Android-APK herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.19/Private-Brain-Pro-0.1.0-preview.19.apk).** Über die vorhandene App
+**Android: .28. Windows: .29 für die Veröffentlichung freigegeben.**
+Windows-Download, Installation und Übergabe an Claude Code:
+[Geschenkpaket für Windows](docs/GESCHENKPAKET-WINDOWS.md).
+Android über die vorhandene App
 installieren; Paket und Signatur bleiben erhalten. Die Navigation zeigt kleine
 Namen rechts neben Symbolen und passt sich zusammen mit Suche und Filtern an
 schmale und breite Fenster an. Die fünf Ersatzschlüssel des unteren Tresors lassen sich jetzt im Android-Dateidialog sichern; drei davon ermöglichen die Wiederherstellung. Das getrennte Tablet-/SD-Speicherort-Passwort gehört nicht dazu. [Bedienung und Grenzen](docs/TRESOR-ERSATZSCHLUESSEL.md).
@@ -9,15 +12,16 @@ schmale und breite Fenster an. Die fünf Ersatzschlüssel des unteren Tresors la
 Vorschau .19 ergänzt die [Schutz-Prüfstelle für Viren, Spam und Betrug](docs/SCHUTZ-VIREN-SPAM-BETRUG.md). Regeln und bekannte Listen liefern Hinweise; die dort beschriebenen Grenzen gelten.
 
 Die Oberfläche ist in Chromium, Firefox und WebKit für 280 bis 1920 Pixel und
-vier Sprachen geprüft. Installierbar ist derzeit Android; es gibt noch keine
-native iOS-/Windows-/macOS-/Linux-Ausgabe. Browser-Engine-Prüfungen ersetzen
+vier Sprachen geprüft. Android und der neue native Windows-Host sind vorhanden;
+es gibt keine native iOS-/macOS-/Linux-Ausgabe. Browser-Engine-Prüfungen ersetzen
 keine Tests auf echten Geräten. Die ursprüngliche PWA im Repository `Privat-Brain`
 bleibt unabhängig und unverändert.
 
 Mailverbindungen laufen direkt vom Gerät. Anbieter und OAuth-Grenzen:
 [Native Mail](docs/NATIVE-MAIL-ARCHITEKTUR.md). Die Regelprüfer sind kein
-vollständiger Virenscanner. Modellgewichte fehlen noch; echte e5-Modellqualität
-ist nicht nachgewiesen. [Bedienung und Plattformgrenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
+vollständiger Virenscanner. Das e5-Modell kann ausdrücklich heruntergeladen werden;
+die lokale Offline-Suche ist im installierten Windows-Programm geprüft.
+[Bedienung und Plattformgrenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
 [Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-16--2026-10-20),
 [synthetische Ansichten](docs/design/compact16/README.md).
 

@@ -160,6 +160,17 @@ try{
   await page.locator('.mail-reader .mail-text').waitFor();
   ok('Opening a mail while locked asks Android for the password once and continues',folder.calls.filter(c=>c.device==='A'&&c.method==='unlock').length===1);
   ok('No page errors on device A',A.errors.length===0);
+  // ---------- device C: the catalog transaction cannot be saved ----------
+  const C=await device('C');
+  await C.page.evaluate(()=>{window.originalIdbPut=window.idbPut;window.idbPut=async()=>{throw new DOMException('Test: Speicher voll','QuotaExceededError');};});
+  await C.page.click('[data-tab=settings]');await C.page.click('#vault-openExisting');
+  await C.page.waitForFunction(()=>!document.querySelector('#vault-openExisting').disabled);
+  ok('A failed catalog restore adds no transient entry or dedupe hash',await C.page.evaluate(()=>CATALOG.length===0&&HASHSET.size===0&&(document.querySelector('#vaultStatus').textContent.includes('keine Daten zurückgesetzt'))));
+  await C.page.evaluate(()=>{window.idbPut=window.originalIdbPut;});
+  await C.page.click('#vault-openExisting');
+  await C.page.waitForFunction(()=>document.querySelector('#vaultStatus').textContent.includes('Katalogeinträge 1'));
+  await C.page.reload();await C.page.waitForFunction(()=>typeof CATALOG!=='undefined'&&CATALOG.length===1);
+  ok('Retry after storage failure is not suppressed by an unsaved hash and survives restart',await C.page.evaluate(()=>HASHSET.size===1));
   // ---------- device B: new tablet, same SD card ----------
   const B=await device('B');
   await B.page.click('[data-tab=settings]');

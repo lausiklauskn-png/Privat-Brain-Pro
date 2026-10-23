@@ -66,8 +66,7 @@ final class MailMime {
         String name = value == null || value.isEmpty() ? "attachment" : value;
         try { name = MimeUtility.decodeText(name); }
         catch (java.io.UnsupportedEncodingException ignored) { /* Keep an inert sanitized filename. */ }
-        name = name.replaceAll("[\\\\/\\p{Cntrl}\\p{Cf}]", "_");
-        return name.substring(0, Math.min(200, name.length()));
+        return PortableNames.safe(name);
     }
     /** Receives attachment parts as streams; used for the password-encrypted folder. */
     interface Sink { JSONObject store(Part part, int index, String name, String type, JSONObject head) throws Exception; }

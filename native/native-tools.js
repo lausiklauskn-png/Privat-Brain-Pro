@@ -7,6 +7,7 @@
   'use strict';
   const license = window.PBLicense;
   if (!license) return;
+  const windows = window.Capacitor?.getPlatform?.() === 'windows';
   // Bundled tool pages (tools/native/apps.json → www/<dir>/); the others follow in later steps.
   const PAGES = { pinnwand: 'kimboard/index.html', suche: 'kimseek/index.html' };
   const LINKS = {
@@ -46,7 +47,11 @@
     const back = make('button', t('back'), 'ghost'); back.type = 'button'; back.onclick = close;
     const title = make('strong'); title.append(license.toolIcon(tool), ' ' + license.toolName(tool));
     bar.append(back, title);
-    const frame = make('iframe'); frame.title = license.toolName(tool); frame.src = PAGES[id];
+    const frame = make('iframe'); frame.title = license.toolName(tool);
+    if (windows) {
+      frame.dataset.nonce = crypto.randomUUID();
+      frame.src = 'https://pbtool.localhost/' + PAGES[id] + '#pb-tool=' + frame.dataset.nonce;
+    } else frame.src = PAGES[id];
     frame.setAttribute('allow', 'clipboard-write');
     frame.addEventListener('load', () => watch(frame, tool));
     frameBox.append(bar, frame); document.body.append(frameBox);
@@ -116,16 +121,27 @@
     }
     box.replaceChildren(...rows);
   }
-  addEventListener('pb:license', paint);
+  addEventListener('pb:license', () => { if (frameBox && !license.unlocked(frameBox.dataset.tool)) close(); paint(); });
+  // Windows tools have their own origin and cannot access app storage or native
+  // adapters. Only the currently open, licensed frame may offer a file.
+  addEventListener('message', event => {
+    if (!windows || event.origin !== 'https://pbtool.localhost') return;
+    const frame = frameBox?.querySelector('iframe'), data = event.data;
+    if (!frame || event.source !== frame.contentWindow || !data || data.nonce !== frame.dataset.nonce) return;
+    const id = frameBox.dataset.tool, open = license.unlocked(id);
+    if (data.kind === 'pb-tool-authorize') {
+      frame.contentWindow.postMessage({ kind: 'pb-tool-authorized', nonce: frame.dataset.nonce, allowed: open }, event.origin);
+      return;
+    }
+    if (!open) { close(); return; }
+    if (data.kind === 'pb-tool-file' && data.bytes instanceof ArrayBuffer && data.bytes.byteLength <= 80 * 1024 * 1024 && typeof data.name === 'string' && data.name.length <= 1024) {
+      const name = data.name.replace(/[\/\\\p{Cc}\p{Cf}]/gu, '_') || 'file';
+      offer(new File([data.bytes], name, { type: typeof data.type === 'string' && data.type.length <= 256 ? data.type : '' }), license.TOOLS.find(tool => tool.id === id));
+    }
+  });
   new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   const wait = setInterval(() => { if (document.querySelector('.native-options-panel')) { clearInterval(wait); paint(); } }, 200);
 
-  // The built-in pin board (📌 in the menu) is a tool too (Klaus: "für das Öffnen von der Pinnwand … nur mit Passwort").
-  document.addEventListener('click', event => {
-    const pin = event.target.closest?.('#pbPinBtn');
-    if (!pin || license.unlocked('pinnwand')) return;
-    event.preventDefault(); event.stopImmediatePropagation(); alert(t('lockedAsk')); goUnlock();
-  }, true);
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && frameBox) close(); });
 
   window.PBTools = { open: openTool, close, offer, PAGES, LINKS };

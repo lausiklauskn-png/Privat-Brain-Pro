@@ -10,7 +10,9 @@
   // Modul 03 reads the model from the app's own address; the files there come from the switch.
   // Full address, not "/models/": Modul 03 loads the model in a worker started from a blob: address,
   // and there a path without host cannot be resolved (it fell back to Hugging Face).
-  window.SBKIM_MODEL_ROOT = location.origin + '/models/';
+  // WebView2 streams the Windows model on its own local origin, so Tauri's
+  // asynchronous app-asset responder cannot replace it with index.html.
+  window.SBKIM_MODEL_ROOT = window.Capacitor?.getPlatform?.()==='windows'?'https://pbmodel.localhost/models/':location.origin + '/models/';
   const W = {
     de: { title: '🧠 Modell für die Bedeutungssuche', load: 'Modell laden', cancel: 'Abbrechen', remove: 'Modell entfernen', retry: 'Erneut starten',
       none: 'Noch nicht geladen. Einmal etwa {mb} MB, am besten im WLAN. Danach ohne Internet.',

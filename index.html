@@ -748,11 +748,22 @@ function openDB(){
   });
 }
 function tx(store,mode="readonly"){ return db.transaction(store,mode).objectStore(store); }
-function idbPut(store,val){ return new Promise((res,rej)=>{ const r=tx(store,"readwrite").put(val); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+// Eine erfolgreiche Einzelanfrage kann noch zurückgerollt werden. Erst der
+// Abschluss der gesamten IndexedDB-Transaktion bestätigt dauerhaftes Schreiben.
+function idbWrite(store, action){
+  return new Promise((res,rej)=>{
+    const t=db.transaction(store,"readwrite");
+    t.oncomplete=()=>res();
+    t.onerror=()=>rej(t.error||new Error("Speichern fehlgeschlagen"));
+    t.onabort=()=>rej(t.error||new DOMException("Speichern abgebrochen","AbortError"));
+    action(t.objectStore(store));
+  });
+}
+function idbPut(store,val){ return idbWrite(store, st => st.put(val)); }
 function idbGetAll(store){ return new Promise((res,rej)=>{ const r=tx(store).getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); }); }
 function idbGet(store,key){ return new Promise((res,rej)=>{ const r=tx(store).get(key); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
-function idbClear(store){ return new Promise((res,rej)=>{ const r=tx(store,"readwrite").clear(); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
-function idbDelete(store,key){ return new Promise((res,rej)=>{ const r=tx(store,"readwrite").delete(key); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+function idbClear(store){ return idbWrite(store, st => st.clear()); }
+function idbDelete(store,key){ return idbWrite(store, st => st.delete(key)); }
 
 /* ---------- In-Memory Katalog + invertierter Index ---------- */
 let CATALOG = [];            // [{hash,name,path,type,date,size,snippet,vector,summary,category,tokens,tf,dirId}]
@@ -2425,20 +2436,30 @@ async function importMerge(file){
   const arr=data.catalog||data; if(!Array.isArray(arr)){ toast("Keine Katalog-Liste gefunden."); return; }
   const node=data.node||"anderer Rechner";
   let added=0, merged=0;
+  try {
   for(const e of arr){
     if(!e||!e.hash) continue;
     e.tags=e.tags||[]; e.dupes=e.dupes||[];
     if(!e.tf) e.tf=termFreq(tokens((e.name||"")+" "+(e.snippet||"")));
     if(!e.vector) e.vector=buildVector(tokens((e.name||"")+" "+(e.snippet||"")));
-    const ex=CATALOG.find(r=>r.hash===e.hash);
+    const previous=CATALOG.find(r=>r.hash===e.hash);
+    const ex=previous ? {...previous, tags:[...(previous.tags||[])], dupes:[...(previous.dupes||[])]} : null;
     if(ex){
       for(const t of e.tags) if(!ex.tags.includes(t)) ex.tags.push(t);
       const p=e.path; if(p&&p!==ex.path&&!(ex.dupes||[]).some(d=>d.path===p)){ (ex.dupes=ex.dupes||[]).push({path:p,size:e.size,date:e.date,dirId:null,origin:node}); }
-      try{ await idbPut("catalog",ex); }catch{} merged++;
+      await idbPut("catalog",ex);
+      Object.assign(previous,ex); merged++;
     } else {
       const rec={...e, dirId:null, origin:node, nameTokens:tokens(e.name||"")};
-      CATALOG.push(rec); HASHSET.add(rec.hash); try{ await idbPut("catalog",rec); }catch{} added++;
+      await idbPut("catalog",rec);
+      CATALOG.push(rec); HASHSET.add(rec.hash); added++;
     }
+  }
+  } catch(error) {
+    rebuildIndex(); populateFilterSelects(); refreshAll();
+    const messages={de:"Katalog nicht vollständig gespeichert. Speicher prüfen und die Datei erneut einlesen.",en:"Catalog not fully saved. Check storage and import the file again.",ru:"Каталог сохранён не полностью. Проверьте хранилище и импортируйте файл снова.",pl:"Katalog nie został w pełni zapisany. Sprawdź pamięć i ponownie zaimportuj plik."};
+    toast(messages[document.documentElement.lang]||messages.de);
+    return;
   }
   rebuildIndex(); populateFilterSelects(); refreshAll();
   toast(`Zusammengeführt: ${added} neu, ${merged} ergänzt (von „${node}“).`);

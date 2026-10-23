@@ -10,8 +10,9 @@ import {mkdir, readFile, writeFile, copyFile, stat, rm} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {dirname, join, resolve} from 'node:path';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 
-const root = resolve(dirname(new URL(import.meta.url).pathname), '../..');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const pins = JSON.parse(await readFile(join(root, 'tools/native/semantic-model.json'), 'utf8'));
 const cache = join(root, '.cache/semantic');
 const pinned = Object.values(pins.model.files).every(Boolean);
@@ -93,7 +94,7 @@ export async function bundleSemanticModel(out) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const out = process.argv[2] ? resolve(process.argv[2]) : join(root, 'www');
   process.exitCode = (await bundleSemanticModel(out)) ? 0 : 1;
 }
