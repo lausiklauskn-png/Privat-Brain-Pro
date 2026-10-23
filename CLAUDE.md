@@ -1,5 +1,14 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Windows .29 veröffentlicht (23.10.2026):** PR #69 und die enthaltenen Korrekturen
+aus #67 sind übernommen. [Windows-Release](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29),
+Quelle `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, Release 39920396303 grün;
+Windows-main 39918739441 und Android-main 39918739332 vollständig grün.
+Installer SHA-256 `55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97`,
+48.562.317 Bytes, öffentlicher Download geprüft. Anleitung, feste Downloadpfade
+und manuelles Ergänzen des Geschenk-ZIPs: [Übergabe an Claude Code](docs/GESCHENKPAKET-WINDOWS.md).
+Keine App-Daten von Klaus ins Geschenk kopieren. Android bleibt veröffentlicht bei .28.
+
 **Windows-Freigabe 23.10.2026:** Klaus beauftragt die Übernahme von PR #69 mit
 allen nötigen Voraussetzungen und die Veröffentlichung zum Herunterladen für
 ein Geschenkpaket durch Claude Code. #69 enthält die gemeinsamen Korrekturen
