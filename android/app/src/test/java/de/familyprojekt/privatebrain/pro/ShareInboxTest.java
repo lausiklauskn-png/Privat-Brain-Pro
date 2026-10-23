@@ -25,6 +25,10 @@ public class ShareInboxTest {
         String longName = ShareInbox.safeName("x".repeat(300) + ".pdf", "y");
         assertEquals(120, longName.length());
         assertTrue(longName.endsWith(".pdf"));
+        String unicode = ShareInbox.safeName("a" + "😀".repeat(100) + ".pdf", "x");
+        assertTrue(unicode.endsWith(".pdf"));
+        assertTrue(unicode.length() <= 120);
+        assertFalse(unicode.codePoints().anyMatch(cp -> cp >= 0xd800 && cp <= 0xdfff));
     }
 
     @Test public void mimeTypesAreCheckedNotTrusted() {
