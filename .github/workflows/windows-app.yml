@@ -1,4 +1,4 @@
-name: Windows-App (im Aufbau)
+name: Private Brain Pro für Windows – Bau und Abnahme
 on:
   pull_request:
     paths: ['windows/**','native/**','android/app/src/main/java/**','tools/native/**','.github/workflows/windows-app.yml']

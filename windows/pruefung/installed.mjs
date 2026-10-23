@@ -37,7 +37,7 @@ try{
   for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/'||p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}
   if(!page)console.error('Observed app pages',browser.contexts().flatMap(c=>c.pages()).map(p=>p.url()));
   assert.ok(page,'Installed main page exists');
-  page.on('pageerror',error=>report.errors.push(error.message));
+  page.on('pageerror',error=>report.errors.push(error.stack||error.message));
   report.modelRequests=[];
   report.modelConsole=[];
   page.on('console',message=>{const value=message.text();if(/embedding|MODUL 03|wasm|onnx|model.*load/i.test(value)&&report.modelConsole.length<30)report.modelConsole.push(value.slice(0,1500));});
@@ -149,7 +149,7 @@ try{
     const renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});
     await pause(2000);await browser.close();browser=null;page=null;await connect();
     for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}assert.ok(page,'App recovers its main page after a renderer crash');
-    page.on('pageerror',error=>report.errors.push(error.message));
+    page.on('pageerror',error=>report.errors.push(error.stack||error.message));
     await page.waitForFunction(()=>window.Capacitor&&window.PBSemantic&&window.PBWorkspace&&typeof db!=='undefined'&&db&&CATALOG.some(r=>r.name==='windows-proof.txt'),null,{timeout:90000});
     const guarded=await call('ProSemantic','getState');ok('real renderer crash recovers the app and prevents automatic model restart',guarded.installed&&guarded.crashes>0);
     await call('ProSemantic','clearCrash');
@@ -165,5 +165,5 @@ try{
     await page.waitForFunction(()=>window.vaultResult,{},{timeout:90000});ok('separate native dialog unlocks the same folder',await page.evaluate(()=>vaultResult.unlocked&&vaultResult.state.unlocked));
   }
   ok('no uncaught app runtime error during native acceptance',report.errors.length===0);
-}catch(error){report.failure=error.message;console.error(error.message);if(report.modelRequests)console.error('MODEL diagnostics '+JSON.stringify({requests:report.modelRequests,console:report.modelConsole}));process.exitCode=1;try{await page?.screenshot({path:out+'.png'});}catch{}}
+}catch(error){report.failure=error.message;console.error(error.message);console.error('APP runtime errors '+JSON.stringify(report.errors));if(report.modelRequests)console.error('MODEL diagnostics '+JSON.stringify({requests:report.modelRequests,console:report.modelConsole}));process.exitCode=1;try{await page?.screenshot({path:out+'.png'});}catch{}}
 finally{await mkdir(resolve(out,'..'),{recursive:true});await writeFile(out,JSON.stringify(report,null,2));await browser?.close().catch(()=>{});}

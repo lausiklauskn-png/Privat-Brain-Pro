@@ -9,6 +9,7 @@
   const links = window.Capacitor?.Plugins?.ProLinks;
   if(window.Capacitor?.getPlatform?.()==='windows'){
     W.helper=['Microsoft Defender unter Windows','Microsoft Defender on Windows','Microsoft Defender в Windows','Microsoft Defender w Windows'];
+    W.noFolder=['Erst einen Speicherort wählen (oben). Die Listen werden verschlüsselt nur im gewählten Ordner abgelegt.','Choose a storage location first (above). Lists are stored encrypted only in the selected folder.','Сначала выберите место хранения (выше). Списки хранятся зашифрованно только в выбранной папке.','Najpierw wybierz miejsce zapisu (wyżej). Listy są szyfrowane i zapisywane tylko w wybranym folderze.'];
     W.helperInfo=['Eine entschlüsselte Kopie wird nach Bestätigung an Defender übergeben. Es gelten die Windows-Einstellungen, einschließlich möglicher Cloud-Prüfung.','After confirmation, a decrypted copy is passed to Defender. Windows settings apply, including possible cloud checking.','После подтверждения расшифрованная копия передаётся Defender. Действуют настройки Windows, включая возможную проверку в облаке.','Po potwierdzeniu odszyfrowana kopia trafia do Defendera. Obowiązują ustawienia Windows, w tym możliwa kontrola w chmurze.'];
   }
   const lang = () => Math.max(0, ['de', 'en', 'ru', 'pl'].indexOf(document.documentElement.lang));

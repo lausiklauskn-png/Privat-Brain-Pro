@@ -116,7 +116,20 @@ und native Schutzschlüssel haben inzwischen im installierten Programm bestanden
 Die Ereignisbezeichnung für Zweitstart-Dateien wurde an den gemeinsamen
 `shared`-Vertrag angeglichen; der echte Kindprozesstest scheiterte zuvor daran.
 
-Noch abzuschließen: korrigierte Modellauslieferung und reales Modell
+Die korrigierte Modellauslieferung ist im installierten WebView2 nachgewiesen
+([39882927441](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39882927441)):
+Bibliothek, WASM und Modellkonfiguration tragen die erwarteten SHA-256-Werte;
+e5 läuft offline mit 384 Dimensionen und ordnet die Zahnarztrechnung näher als
+den Wetterbericht ein. Ein absichtlich beendeter Renderer wird wieder geöffnet;
+der gespeicherte Schutz verhindert den automatischen Modell-Neustart. Zweitstart
+mit echtem Unicode-Dateipfad ist ebenfalls bestanden. 91 Kernfälle liefen unter
+Windows einschließlich echter NTFS-Verknüpfung; 90 unter Linux.
+Der Lauf ist insgesamt noch rot, weil die Abnahme einen unbehandelten
+Seitenfehler festhält. Dessen Ursache wird vor Neustart-/Auslieferungsfreigabe
+beseitigt, nicht aus dem Ergebnis ausgeblendet.
+
+Noch abzuschließen: der gemeldete Seitenfehler,
+
 mit Offline-Bedeutungssuche, vollständige Neustart-/DPAPI-/Neuinstallationskette,
 abschließender Produktionsbau ohne Prüfzugang, Prüfsummen und Freigabe.
 Eine gesprochene Aufnahme und Klaus' eigener Windows-PC sind nicht gemessen.

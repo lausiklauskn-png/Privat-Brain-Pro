@@ -48,6 +48,8 @@
       $('cancel').textContent=words[0];return;
     }
     for(const [id,index] of [['cancel',0],['submit',1],['password-caption',6],['repeat-caption',7],['notice-caption',8],['remember-caption',9],['provider-label',11]])$(id).textContent=words[index];
+    $('user-caption').textContent=words[12];
+    $('email-caption').textContent=({de:'E-Mail-Adresse',en:'Email address',ru:'Адрес эл. почты',pl:'Adres e-mail'}[value.language]||'Email address');
     $('account').hidden=value.kind!=='account';
     $('remove').hidden=value.kind!=='key';
     if(value.kind==='key'){
