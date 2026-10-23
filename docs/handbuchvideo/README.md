@@ -18,6 +18,9 @@ Klaus: *„ein Erklärvideo … genauso wie Workflow PDF … mit dem Finger“*,
   `python3 musik.py <Videolänge>` baut beide Tonspuren.
 - **Musik** sucht Klaus selbst aus (Pixabay, <https://pixabay.com/de/music/>). Die Datei kommt **nie** ins Repo.
 - ⚠ Ausgabe immer **yuv420p, H.264 High**: die erste Fassung war yuv444p und zeigte auf Handys nur Ton (`zusammen.mjs`).
+- **Stand 2026-10-23 (Siegel korrigiert, neu aufgenommen):** quer 3:15 in zwei Musikfassungen, hochkant 2:51 **nur** mit
+  Corporate Uplifting (läuft dort am Stück, ohne Schnitt). Auf FP Video nur Full HD: `private-brain-pro-handbuch`,
+  `private-brain-pro-handbuch-uplifting`, `private-brain-pro-handbuch-hoch-uplifting` (720p und Hochkant-Mix entfernt).
 - **Hochkant** (`node aufnahme.mjs --hoch`, `HOCH=1 node zusammen.mjs`): Handy-Ansicht, Beispiele aus `beispiel-hoch/`,
   Puzzle-Anfang mittig mit weichem Rand; „Alle Konten“ und das Umschalten von Sprache/Hell-Dunkel fehlen dort
   (am Handy liegt das hinter der Ordnerliste bzw. das Menü schließt beim Umschalten). FP-Video: `private-brain-pro-handbuch-hoch`,

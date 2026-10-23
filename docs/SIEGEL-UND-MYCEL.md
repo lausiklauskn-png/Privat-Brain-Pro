@@ -25,6 +25,11 @@ Briefkasten, „Antworten an/aus“ und KI-Richter. Das Gerätename-Feld setzt w
 
 ## Abweichungen vom Kanon, auf Klaus' Wunsch
 
+**Nachtrag 2026-10-23 (Klaus, Bild aus dem Handbuchvideo):** Ab etwa 600 px Breite stand das Wort „SIEGEL“ hell hinter
+dem Knopf, die Goldkugel rutschte nach links und der ★ stand daneben. Der Kanon blendet das Wort erst in schmalen
+Fenstern aus. `native/native.css` blendet es jetzt immer aus und setzt den ★ in die Mitte der Kugel. Die Probe
+`test-mycel.mjs` misst es bei 360 · 412 · 600 · 768 · 1280 px. Ohne die Regel wird genau diese Zeile rot. Am Tablet nicht gemessen.
+
 Die Module 17 und 23-UI sind unverändert. Geändert ist nur die Anzeige der App,
 in `native/native.css` und `native/native-mycel.js`.
 

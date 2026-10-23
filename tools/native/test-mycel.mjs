@@ -92,7 +92,12 @@ try{
     const range=document.createRange();range.selectNodeContents(document.querySelector('.brand h1'));const txt=range.getBoundingClientRect();
     return {oben:document.querySelector('#sbkim-widget').getAttribute('data-sbkim-oben'),inBar:s.top>=h.top-1&&s.bottom<=h.bottom+8,afterTitle:s.left>=txt.right+2,beforeTools:s.right<=t.left-2};});
   const first=[];
-  for(const width of [360,412,768,1280]){await page.setViewportSize({width,height:780});await pause(250);first.push([width,await clear()]);}
+  // Klaus 2026-10-23 (Bild aus dem Video): ab 600 px stand „SIEGEL“ hinter dem Knopf und der ★ neben der Kugel.
+  const star=()=>page.evaluate(()=>{const s=document.querySelector('#sbkim-widget .sbkim-widget-slot.siegel'),r=s.getBoundingClientRect(),g=s.querySelector('.sbkim-widget-siegel-glyph').getBoundingClientRect(),l=s.querySelector('.sbkim-widget-label');
+    return {label:getComputedStyle(l).display==='none'||l.getBoundingClientRect().width===0,dx:Math.abs(g.x+g.width/2-(r.x+r.width/2)),dy:Math.abs(g.y+g.height/2-(r.y+r.height/2))};});
+  const stars=[];
+  for(const width of [360,412,600,768,1280]){await page.setViewportSize({width,height:780});await pause(250);first.push([width,await clear()]);stars.push([width,await star()]);}
+  ok('The ★ sits in the middle of the round Siegel and the word "SIEGEL" is not shown (360–1280 px)',stars.every(([,c])=>c.label&&c.dx<=1&&c.dy<=1)||console.log(JSON.stringify(stars)));
   await page.setViewportSize({width:360,height:780});await pause(250);
   // .20 seeded 128 px before the internet lamp existed: that untouched seed moves, a chosen place stays.
   const key='sbkim_widget_position__root',seeded=abstand=>JSON.stringify({corner:null,offsetX:16,offsetY:16,x:null,y:null,oben:{seite:'rechts',abstand}});
