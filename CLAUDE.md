@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Windows-Freigabe 23.10.2026:** Klaus beauftragt die Übernahme von PR #69 mit
+allen nötigen Voraussetzungen und die Veröffentlichung zum Herunterladen für
+ein Geschenkpaket durch Claude Code. #69 enthält die gemeinsamen Korrekturen
+aus #67. Windows- und Android-Abnahme auf `079433d` vollständig grün
+(39885843960 / 39885843963). Anleitung und feste Downloadpfade:
+[Geschenkpaket für Windows](docs/GESCHENKPAKET-WINDOWS.md). Die Veröffentlichung
+verlangt erneut beide grünen main-Ketten; kein Android-Release zusätzlich auslösen.
+
 **Aktueller Auftrag 23.10.2026:** Klaus beauftragt die erneute Prüfung der
 veröffentlichten V28, Fehlerkorrekturen und eine zusätzliche Windows-Version.
 `AGENTS.md` und `docs/BAUSTAND-WINDOWS.md` sind der aktuelle Anker. V28 ist

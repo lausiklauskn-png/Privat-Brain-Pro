@@ -2,8 +2,11 @@
 
 Stand: 2026-10-23. Klaus hat die erneute Prüfung der veröffentlichten V28,
 Fehlerkorrekturen und eine zusätzliche native Windows-Version beauftragt.
-iOS bleibt für später zurückgestellt. Dieser Baustand ist keine Freigabe eines
-fertigen Windows-Produkts.
+iOS bleibt für später zurückgestellt. Klaus hat jetzt ausdrücklich die Übernahme
+von #69 und die Windows-Veröffentlichung für ein Geschenkpaket beauftragt.
+Die vollständige Windows-Abnahme 39885843960 und Android-Abnahme 39885843963
+sind auf `079433d` grün; vor Veröffentlichung werden sie auf main erneut verlangt.
+Feste Downloadpfade und Übergabe: [Geschenkpaket](GESCHENKPAKET-WINDOWS.md).
 
 ## V28 und gemeinsame Korrekturen
 
@@ -21,7 +24,7 @@ behebt verfrühte IndexedDB-Erfolgsmeldungen, verschluckte Importfehler,
 vorzeitig markierte Katalogwiederherstellung und beschädigte Sicherungen.
 Die vollständige Android-/Web-CI auf `f009aab` ist grün
 ([39867480481](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39867480481)).
-Der anschließende Dateinamen-Fix `36e043c` wird gesondert erneut geprüft:
+Der anschließende Dateinamen-Fix `36e043c` ist ebenfalls vollständig geprüft:
 NFC, vollständige Unicode-Zeichen, erhaltene Dateiendungen, portable Längen.
 Die ursprünglichen MIME-/Übergabe-Regeln scheiterten an den neuen Gegenproben.
 
@@ -71,7 +74,7 @@ Werkzeuge besitzen einen eigenen Origin ohne diese Berechtigung.
 | ProLinks | registrierte Mail-Links und ausdrückliche Übergabe an den Systembrowser |
 | ProNetwork | eigene native Verbindungen abbrechen; WebView2-Filter einschließlich Worker; offene Browsertransporte in Hauptseite und Frames schließen |
 | ProProtect | gemeinsamer Schutzkern, verschlüsselte Schlüssel/Listen; ausdrücklicher Defender-Scan einer geprüften Exportkopie |
-| ProSemantic | gemeinsame Pins, Laden/Abbruch/Fortsetzen, Hashprüfung, lokale Modell-/Bibliotheksantworten; reale Offline-Abnahme läuft |
+| ProSemantic | gemeinsame Pins, Laden/Abbruch/Fortsetzen, Hashprüfung, lokale Modell-/Bibliotheksantworten; reale Offline-Abnahme bestanden |
 | ProSpeech | lokale Windows-SAPI-Schnittstelle, eigenes Aufnahmefenster und Abbruch; fehlende Sprache/Mikrofon wird ausdrücklich gemeldet |
 | ProShare | Öffnen mit, Zweitstart und geprüfte Importwarteschlange; kein registriertes Windows-Teilen-Ziel behauptet |
 | ProUpdates | eigener `windows-v…`-Kanal, fester Repository-/Installerpfad, manueller Browserdownload; kein APK und kein stiller Installer |
@@ -139,8 +142,16 @@ bleiben in der nativen Warteschlange. Die Gegenprobe scheiterte am alten Stand;
 jetzt bestehen zwölf Fälle, darunter ein während des Lesens gestarteter Import.
 Diese Korrektur liegt ebenfalls im Android-Audit-PR #67.
 
-Noch abzuschließen: aktuelle CI nach diesen letzten Korrekturen, Abschluss der
-Produktions-Deinstallationskette, Auslieferungsprüfsummen und Freigabe.
+Die endgültige Abnahme auf `079433d` ist vollständig bestanden:
+[Windows 39885843960](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39885843960)
+und [Android 39885843963](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39885843963).
+48 installierte Windows-Prüfungen ohne unbehandelte Seitenfehler; der gesonderte
+Produktionsbau ohne Prüfzugang wurde installiert, gestartet und deinstalliert.
+Programmdateien/Registrierung entfernt, Nutzerdaten erhalten. Android: 51 native
+Fälle ohne Fehler oder Überspringen. #67 separat auf `fbc7f2d` vollständig grün
+([39885734482](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39885734482)).
+Für die Veröffentlichung werden beide main-Ketten erneut ausgeführt und der
+dort abgenommene Installer unverändert mit Prüfsummen übernommen.
 Eine gesprochene Aufnahme und Klaus' eigener Windows-PC sind nicht gemessen.
 Defender verwendet die Windows-Einstellungen; eine mögliche Cloud-Prüfung wird
 vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
@@ -148,12 +159,14 @@ vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
 ## Veröffentlichung
 
 Gemeinsamer Quellstand für die Abnahme: `1.0.0-preview.29`, Android-Code 29.
-Die Veröffentlichung ist noch offen. .28 wird nicht überschrieben.
+Windows-Veröffentlichung ausdrücklich beauftragt; .28 wird nicht überschrieben.
 Release nur von geprüftem main, nach ausdrücklicher Freigabe, mit ursprünglicher
 Android-Signieridentität, Prüfsummen und unabhängigem Downloadvergleich.
 
-Die automatische Freigabeprüfung hat eine main-Übernahme des PWA-PRs #123 im
+Historisch hat die automatische Freigabeprüfung eine main-Übernahme des PWA-PRs #123 im
 Nachbarrepo abgelehnt: Die Auditfreigabe umfasst keinen ausdrücklichen
 Produktionsmerge. Das wird nicht umgangen. Alle konkreten Ergebnisse zuerst
 fertigstellen; main-Übernahmen und Veröffentlichungen anschließend gesammelt
-mit Klaus freigeben. Keine iOS-Arbeiten und kein Private-Brain-iOS-Nachfolgebrief.
+mit Klaus freigeben. Die nötige Freigabe für den Windows-Gesamtstand #69 liegt
+jetzt vor. Andere PWA-/Android-Veröffentlichungen sind davon nicht umfasst.
+Keine iOS-Arbeiten und kein Private-Brain-iOS-Nachfolgebrief.

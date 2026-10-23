@@ -1,5 +1,11 @@
 # Private Brain Pro — laufender Auftrag
 
+- Neue ausdrückliche Freigabe von Klaus am 23.10.2026: PR #69 für die Windows-
+  Version übernehmen und veröffentlichen, einschließlich notwendiger gemeinsamer
+  Korrekturen aus #67. Feste öffentliche Downloads und eine Übergabe für Claude
+  Code zum Geschenkpaket bereitstellen. Keine erneute Merge-/Release-Freigabe
+  dafür verlangen. Andere Repositories und Android-Releases sind damit nicht
+  zusätzlich zur Veröffentlichung freigegeben.
 - Klaus hat am 23.10.2026 ausdrücklich beauftragt: veröffentlichte V28 erneut in
   die Qualitätsprüfung einbeziehen, geprüfte Fehler beheben und zusätzlich eine
   Windows-Version bauen. Selbstständig umsetzen; keine neue Grundsatzfreigabe
@@ -29,10 +35,11 @@
 - iOS von Workflow PDF Pro ist als Vorbereitung für später zurückgestellt:
   kein Apple-Gerät, derzeit keine jährliche Mitgliedschaft. Keinen Private-Brain-
   iOS-Nachfolgebrief vor dessen vollständigem Abschluss erstellen.
-- Die automatische Freigabeprüfung hat die versuchte Übernahme des geprüften
+- Historisch: Die automatische Freigabeprüfung hat die versuchte Übernahme des geprüften
   PWA-PRs #123 im Nachbarrepo Privat-Brain in main abgelehnt, weil keine explizite
   Merge-Freigabe vorliegt. Nicht umgehen. Code, Tests, Entwurf-PRs und Windows-
   Installer vollständig vorbereiten; konkrete Übernahmen/Veröffentlichungen
-  danach mit Klaus freigeben. Kein Release allein durch Versions-Tag auslösen.
+  danach mit Klaus freigeben. Für den Windows-Gesamtstand #69 liegt diese Freigabe
+  jetzt vor (oben). Kein Release allein durch Versions-Tag auslösen.
 - Bestehenden Checkout und Branch `codex/windows-native-host` verwenden.
   Keine Änderungen verwerfen; keine Worktrees ohne ausdrücklichen Auftrag.
