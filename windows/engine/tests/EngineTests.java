@@ -131,6 +131,7 @@ public final class EngineTests {
             case "folder" -> new JSONObject().put("path",chosen.toString());
             case "password" -> new JSONObject().put("password",PASSWORD).put("repeat",PASSWORD).put("notice",true).put("remember",true);
             case "metered" -> new JSONObject().put("metered",true);
+            case "key" -> new JSONObject().put("password","fixture-only-protection-key-not-real");
             default -> throw new IOException("unexpected native operation");
         });
         JSONObject created=service.call("ProVault","choose",new JSONObject());
@@ -147,6 +148,8 @@ public final class EngineTests {
         ok(Arrays.equals(large,Base64.decode(read.getString("data"),Base64.NO_WRAP)),"real plugin transfer accepts a full native block instead of truncating to a text-field limit");
         JSONObject protection=service.call("ProProtect","checkHashes",new JSONObject().put("items",new JSONArray().put(hash)));
         ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
+        JSONObject key=service.call("ProProtect","setKey",new JSONObject().put("service","virustotal"));
+        ok(key.getBoolean("saved")&&!key.getBoolean("removed")&&key.has("state")&&!key.toString().contains("fixture-only-protection-key-not-real"),"native protection key commit returns the same saved/state contract without exposing the key");
     }
     static void tls(DesktopState state)throws Exception {
         AppNetwork.setOffline(state,false);

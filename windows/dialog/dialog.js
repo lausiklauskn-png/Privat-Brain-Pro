@@ -8,21 +8,21 @@
     ru:['Отмена','Продолжить','Зашифровать хранилище','Открыть папку','Разблокировать папку','Подключить почту','Пароль','Повторите пароль','Без этого пароля данные в папке будут потеряны. Никто не сможет их восстановить.','Оставить открытым для этого пользователя Windows','Пароли не совпадают или короче 10 символов.','Провайдер','Имя пользователя'],
     pl:['Anuluj','Dalej','Zaszyfruj miejsce zapisu','Otwórz folder','Odblokuj folder','Połącz konto pocztowe','Hasło','Powtórz hasło','Bez tego hasła dane w folderze zostaną utracone. Nikt nie może ich odzyskać.','Zachowaj odblokowanie dla tego użytkownika Windows','Hasła są różne lub mają mniej niż 10 znaków.','Dostawca','Nazwa użytkownika']
   };
-  const providers={telekom:['secureimap.t-online.de','securesmtp.t-online.de'],hetzner:['mail.your-server.de','mail.your-server.de'],gmail:['imap.gmail.com','smtp.gmail.com'],webde:['imap.web.de','smtp.web.de'],gmx:['imap.gmx.net','mail.gmx.net'],yahoo:['imap.mail.yahoo.com','smtp.mail.yahoo.com'],ionos:['imap.ionos.de','smtp.ionos.de']};
   let config={},words=W.de;
   const call=(action,fields)=>invoke('pb_dialog',{action,fields:fields||null},{headers:{'x-pb-session':token}});
   function provider(){
-    const id=$('provider').value,gmail=id==='gmail';
-    $('account-fields').hidden=gmail;$('password-label').hidden=gmail;
-    $('user-label').hidden=!['telekom','hetzner'].includes(id);
-    $('imap').value=providers[id][0];$('smtp').value=providers[id][1];
-    $('imap').readOnly=$('smtp').readOnly=id!=='hetzner';
-    $('help').textContent=gmail?({de:'Google öffnet sich im Standardbrowser. Hier kein Google-Passwort eingeben.',en:'Google opens in your default browser. Do not enter your Google password here.',ru:'Google откроется в обычном браузере. Не вводите пароль Google здесь.',pl:'Google otworzy się w domyślnej przeglądarce. Nie wpisuj tu hasła Google.'}[config.language]||'Google sign-in uses your browser.'):
-      id==='telekom'?({de:'Das separate Passwort für E-Mail-Programme verwenden.',en:'Use the separate password for email apps.',ru:'Используйте отдельный пароль для почтовых программ.',pl:'Użyj osobnego hasła dla programów pocztowych.'}[config.language]||'Use your email-app password.') : '';
+    const id=$('provider').value,gmail=id==='gmail',template=config.providers?.find(p=>p.id===id);
+    const ready=template?.ready===true,language=Math.max(0,['de','en','ru','pl'].indexOf(config.language));
+    $('account-fields').hidden=$('password-label').hidden=gmail||!ready;$('submit').disabled=!ready;
+    $('user-label').hidden=!template?.customUser;
+    $('imap').value=template?.imap||'';$('smtp').value=template?.smtp||'';
+    $('imap').readOnly=$('smtp').readOnly=!template?.editable;
+    $('help').textContent=ready?template.help[language]:template?.plan?.[language]||'';
   }
   $('cancel').onclick=()=>call('cancel');
   addEventListener('keydown',e=>{if(e.key==='Escape')void call('cancel');});
   $('provider').onchange=provider;
+  $('remove').onclick=()=>{if(config.kind==='key')void call('submit',{password:''});};
   $('form').onsubmit=async e=>{
     e.preventDefault();$('status').textContent='';let fields;
     if(config.kind==='speech')return;
@@ -49,9 +49,17 @@
     }
     for(const [id,index] of [['cancel',0],['submit',1],['password-caption',6],['repeat-caption',7],['notice-caption',8],['remember-caption',9],['provider-label',11]])$(id).textContent=words[index];
     $('account').hidden=value.kind!=='account';
+    $('remove').hidden=value.kind!=='key';
+    if(value.kind==='key'){
+      $('password-caption').textContent=({de:'Schlüssel',en:'Key',ru:'Ключ',pl:'Klucz'}[value.language]||'Key');
+      $('remove').textContent=({de:'Entfernen',en:'Remove',ru:'Удалить',pl:'Usuń'}[value.language]||'Remove');
+    }
     const create=value.kind==='password'&&value.mode==='create';
     $('repeat-label').hidden=$('notice-label').hidden=!create;$('remember-label').hidden=value.kind!=='password';
     $('title').textContent=value.kind==='key'?({de:'Schutzanbieter-Schlüssel',en:'Protection provider key',ru:'Ключ сервиса защиты',pl:'Klucz usługi ochrony'}[value.language]||'Protection provider key')+' · '+value.service:value.kind==='account'?words[5]:words[{create:2,open:3,unlock:4}[value.mode]||4];
-    if(value.kind==='account'){provider();$('provider').focus();}else $('password').focus();
+    if(value.kind==='account'){
+      $('provider').replaceChildren(...(value.providers||[]).map(p=>{const option=document.createElement('option');option.value=p.id;option.textContent=p.label;return option;}));
+      provider();$('provider').focus();
+    }else $('password').focus();
   });
 })();

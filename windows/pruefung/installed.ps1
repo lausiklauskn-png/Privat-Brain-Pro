@@ -18,6 +18,8 @@ function Phase($name) {
   if (Test-Path $probe) { Copy-Item $probe "windows/pruef-out/$name-startup.txt"; Get-Content $probe }
   $engineProbe = Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro\engine-probe.txt'
   if (Test-Path $engineProbe) { Copy-Item $engineProbe "windows/pruef-out/$name-engine.txt"; Get-Content $engineProbe }
+  $types = Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro\engine-types.txt'
+  if (Test-Path $types) { Copy-Item $types "windows/pruef-out/$name-engine-types.txt"; Get-Content $types }
   $java = Get-CimInstance Win32_Process -Filter "name='javaw.exe' OR name='java.exe'" | Select-Object ProcessId, ParentProcessId
   $children = @($java | Where-Object ParentProcessId -eq $app.Id | ForEach-Object ProcessId)
   $children += @($java | Where-Object { $_.ParentProcessId -in $children } | ForEach-Object ProcessId)

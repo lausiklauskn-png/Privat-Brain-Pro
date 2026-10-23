@@ -9,6 +9,7 @@ await rm(runtime,{recursive:true,force:true});await mkdir(join(runtime,'engine')
 for(const name of ['classes','lib','shared-source.json'])await cp(join(windows,'engine/build',name),join(runtime,'engine',name),{recursive:true});
 for(const [from,to] of [['windows/gmail-desktop.json','gmail-desktop.json'],['tools/native/semantic-model.json','semantic-model.json']])await cp(join(root,from),join(runtime,to));
 execFileSync(join(process.env.JAVA_HOME,'bin/jlink.exe'),['--add-modules','java.base,java.logging,java.desktop,java.naming,java.security.sasl,jdk.crypto.ec,jdk.charsets','--strip-debug','--no-header-files','--no-man-pages','--compress=2','--output',join(runtime,'jre')],{stdio:'inherit'});
+execFileSync('python',[join(windows,'tools/licenses.py')],{cwd:root,stdio:'inherit'});
 // ICO permits an unchanged PNG image. No redraw or image service is needed.
 const png=await readFile(join(root,'icon-192.png'));
 if(png.readUInt32BE(16)!==192||png.readUInt32BE(20)!==192)throw Error('Review Windows icon dimensions.');

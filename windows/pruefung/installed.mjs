@@ -63,11 +63,33 @@ try{
     let tool;for(let i=0;i<40;i++){tool=page.frames().find(f=>f.url().startsWith('https://pbtool.localhost/kimboard/'));if(tool)break;await pause(250);}assert.ok(tool,'Tool origin loads');
     ok('tool origin cannot access app storage or native account/vault functions',await tool.evaluate(()=>{try{void parent.Capacitor.Plugins.ProVault;return false;}catch{return true;}}));
     await page.locator('#tool-origin-probe').evaluate(f=>f.remove());
+    // Test-only studio identity is generated inside the disposable CI profile.
+    // It is never bundled into the installer or used as Klaus' publisher key.
+    await page.evaluate(async()=>{await PBLicense.createKey('CI-studio-fixture-only-2026');PBTools.open('pinnwand');});
+    let licensed;for(let i=0;i<60;i++){licensed=page.frames().find(f=>f.url().startsWith('https://pbtool.localhost/kimboard/'));if(licensed)break;await pause(100);}assert.ok(licensed);
+    ok('licensed tool is authorized on its own origin',await licensed.evaluate(()=>PBToolAuthorized));
+    ok('isolated tool cannot invoke native functions without the private capability',await licensed.evaluate(async()=>{
+      if(!window.__TAURI_INTERNALS__?.invoke)return true;
+      try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProVault',method:'state',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}
+    }));
+    await licensed.evaluate(()=>{parent.postMessage({kind:'pb-tool-file',nonce:'wrong',name:'forged-tool.txt',type:'text/plain',bytes:new ArrayBuffer(4)},'https://tauri.localhost');});
+    await pause(100);ok('tool file with the wrong handoff nonce is ignored',await page.locator('.pb-tool-file').count()===0);
+    await licensed.evaluate(()=>{const a=document.createElement('a');a.download='windows-tool-proof.txt';a.href=URL.createObjectURL(new Blob(['Actual isolated tool handoff'],{type:'text/plain'}));a.click();});
+    await page.locator('.pb-tool-file button').first().click();
+    await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='windows-tool-proof.txt'),null,{timeout:90000});
+    ok('actual tool download enters the same checked native import',!(await call('ProFiles','originalInfo',{hash:createHash('sha256').update('Actual isolated tool handoff').digest('hex')})).missing);
+    await page.evaluate(()=>PBTools.open('pinnwand'));await page.locator('.pb-tool-frame iframe').waitFor();
+    await page.evaluate(async()=>{for(const key of ['pb_studio_v1','pb_studio_probe','pb_studio_visible'])localStorage.removeItem(key);await PBLicense.refresh();});
+    ok('revoking the tool permission closes its active isolated frame',await page.locator('.pb-tool-frame').count()===0);
     await page.evaluate(()=>{window.speechProbe=null;Capacitor.Plugins.ProSpeech.listen({language:'de-DE'}).then(v=>window.speechProbe=v,e=>window.speechProbe={error:e.code});});
     for(let i=0;i<60;i++){
       if(await page.evaluate(()=>Boolean(window.speechProbe)))break;
       const speech=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().includes('/windows/dialog/index.html'));
-      if(speech){await speech.locator('#cancel').waitFor();await speech.locator('#cancel').click();break;}await pause(100);
+      if(speech){
+        try{await speech.locator('#cancel').click({timeout:1500});}
+        catch(error){await page.waitForFunction(()=>window.speechProbe,null,{timeout:3000}).catch(()=>{throw error;});}
+        break;
+      }await pause(100);
     }
     await page.waitForFunction(()=>window.speechProbe,null,{timeout:10000});
     ok('Windows speech adapter returns cancellation or explicit missing system recognition',await page.evaluate(()=>speechProbe.cancelled===true||speechProbe.error==='SPEECH_UNAVAILABLE'));

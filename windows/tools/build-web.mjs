@@ -14,6 +14,7 @@ for(const path of ['assets/schutz-init.js','kimboard/assets/schutz-init.js','kim
 await mkdir(join(dist,'windows'),{recursive:true});
 await writeFile(join(dist,'windows/start.html'),'<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'"><title>Private Brain Pro</title>');
 await cp(join(windows,'dialog'),join(dist,'windows/dialog'),{recursive:true});
+await cp(join(windows,'runtime/windows-licenses.html'),join(dist,'windows/licenses.html'));
 await cp(join(windows,'bridge/tool-client.js'),join(dist,'windows/tool-client.js'));
 for(const name of ['kimboard','kimseek']){
   const path=join(dist,name,'index.html');let text=await readFile(path,'utf8');

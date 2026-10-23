@@ -24,8 +24,27 @@ impl Engine {
         command.args(["-Xmx512m", "-Dfile.encoding=UTF-8", "-cp"]).arg(classpath)
             .arg("de.familyprojekt.privatebrain.pro.EngineMain").arg(data).arg(runtime)
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
+        #[cfg(feature="messprobe")] command.stderr(Stdio::piped());
         #[cfg(windows)] { use std::os::windows::process::CommandExt; command.creation_flags(0x08000000); }
         let mut child = command.spawn().map_err(|_| "APP_RUNTIME_UNAVAILABLE")?;
+        #[cfg(feature="messprobe")]
+        if let Some(stderr)=child.stderr.take(){
+            let probe=host.data.join("engine-types.txt");
+            std::thread::spawn(move||{
+                // Record only Java type/frame identifiers, never exception
+                // messages, account fields, URLs, tokens or protocol contents.
+                let mut types=Vec::new();
+                for line in BufReader::new(stderr).lines().take(40).flatten(){
+                    for token in line.split_whitespace(){
+                        let token=token.trim_end_matches(':');
+                        if token.len()<200&&(token.starts_with("java.")||token.starts_with("javax.")||token.starts_with("de.familyprojekt.")||token.starts_with("org.json.")||token.starts_with("com.sun.")||token.starts_with("java/")||token.starts_with("javax/"))&&token.chars().all(|c|c.is_ascii_alphanumeric()||"._$/".contains(c)){
+                            types.push(token.to_owned());
+                        }
+                    }
+                    if !types.is_empty(){let _=std::fs::write(&probe,types.join("\n"));}
+                }
+            });
+        }
         let job=match crate::win::Job::attach(&child){Ok(job)=>job,Err(error)=>{let _=child.kill();return Err(error);}};
         let input = child.stdin.take().ok_or("APP_RUNTIME_UNAVAILABLE")?;
         let output = child.stdout.take().ok_or("APP_RUNTIME_UNAVAILABLE")?;

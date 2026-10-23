@@ -44,7 +44,7 @@ fn main(){
                 .additional_browser_args(host::BROWSER_ARGS)
                 .initialization_script_for_all_frames(include_str!("../../bridge/network-frames.js"))
                 .initialization_script(include_str!("../../bridge/capacitor-tauri.js").replace("__PB_SESSION_TOKEN__",&serde_json::to_string(&host.session).unwrap()))
-                .on_navigation(|url|url.scheme()=="https"&&((url.host_str()==Some("tauri.localhost")&&["/","/index.html","/windows/start.html"].contains(&url.path()))||url.host_str()==Some("pbtool.localhost")))
+                .on_navigation(|url|url.scheme()=="https"&&((url.host_str()==Some("tauri.localhost")&&["/","/index.html","/windows/start.html","/windows/licenses.html"].contains(&url.path()))||url.host_str()==Some("pbtool.localhost")))
                 .on_new_window(|_,_|tauri::webview::NewWindowResponse::Deny);
             let window=window.build()?;resources::install(&window,host.clone()).map_err(std::io::Error::other)?;
             let arguments=std::env::args().collect();std::thread::spawn(move||host.receive(arguments,None));Ok(())

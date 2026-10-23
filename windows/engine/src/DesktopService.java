@@ -131,7 +131,8 @@ final class DesktopService {
                 String service=required(o,"service");if(!service.equals("abusech")&&!service.equals("virustotal"))throw new MailFailure("INVALID_INPUT");
                 JSONObject fields=host.call("key",new JSONObject().put("service",service));
                 if(fields.optBoolean("cancelled"))yield fields;
-                protection.setKey(service,fields.getString("password"));yield protection.state();
+                String value=fields.getString("password").trim();protection.setKey(service,value);
+                yield new JSONObject().put("saved",!value.isEmpty()).put("removed",value.isEmpty()).put("state",protection.state());
             }
             default -> throw new MailFailure("INVALID_INPUT");
         };
@@ -253,7 +254,12 @@ final class DesktopService {
     private JSONObject mail(String method,JSONObject o)throws Exception {
         if(method.equals("accounts"))return new JSONObject().put("items",mail.accounts());
         if(method.equals("addAccount")){
-            JSONObject fields=host.call("account",new JSONObject());if(fields.optBoolean("cancelled"))throw new MailFailure("CANCELLED");
+            JSONArray templates=new JSONArray();
+            for(MailProvider provider:MailProvider.values()){
+                JSONArray help=new JSONArray(),plan=new JSONArray();for(int language=0;language<4;language++){help.put(provider.help(language));plan.put(provider==MailProvider.MICROSOFT?MailProvider.microsoftPlan(language):"");}
+                templates.put(new JSONObject().put("id",provider.id).put("label",provider.label).put("imap",provider.imap).put("smtp",provider.smtp).put("editable",provider.editable).put("customUser",provider.customUser()).put("ready",provider.ready()).put("help",help).put("plan",plan));
+            }
+            JSONObject fields=host.call("account",new JSONObject().put("providers",templates));if(fields.optBoolean("cancelled"))throw new MailFailure("CANCELLED");
             MailProvider provider=MailProvider.find(fields.getString("provider"));JSONObject account;
             if(provider==MailProvider.GOOGLE){
                 String email=oauth.authorize(null);account=new JSONObject().put("provider","gmail").put("authType","oauth2").put("email",email).put("user",email).put("imap",provider.imap).put("smtp",provider.smtp);
@@ -280,7 +286,9 @@ final class DesktopService {
             case "openAttachment" -> {
                 JSONObject message=mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
                 JSONArray attachments=message.getJSONArray("attachments");int index=o.optInt("index",-1);if(index<0||index>=attachments.length())throw new MailFailure("INVALID_INPUT");
-                yield export(selected(attachments.getJSONObject(index)),false);
+                JSONObject attachment=attachments.getJSONObject(index);
+                if(attachment.has("ref")){java.io.File file=vault.stageAttachment(attachment.getString("ref"));yield export(new Selected(file,attachment.optString("name",file.getName())),false);}
+                yield export(selected(attachment),false);
             }
             case "action" -> {mail.action(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1),required(o,"action"),o.optString("target"));yield yes();}
             case "actions" -> mail.actions(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"),required(o,"action"),o.optString("target"));

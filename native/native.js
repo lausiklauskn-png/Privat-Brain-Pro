@@ -75,6 +75,11 @@
     const licenses = document.createElement('a');
     licenses.href = 'assets/licenses/mail.html';
     licenses.textContent = 'JavaMail / Activation / Google · Lizenzen / Licenses';
+    if(platform==='windows'){
+      licenses.href='windows/licenses.html';
+      const renderLicenses=()=>{licenses.textContent=({de:'Lizenzen der Windows-Version',en:'Windows version licenses',ru:'Лицензии версии Windows',pl:'Licencje wersji Windows'}[document.documentElement.lang]||'Windows version licenses');};
+      renderLicenses();new MutationObserver(renderLicenses).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    }
     status.after(licenses);
   }
 
