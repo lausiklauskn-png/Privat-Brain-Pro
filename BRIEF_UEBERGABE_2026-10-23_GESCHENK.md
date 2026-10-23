@@ -48,7 +48,10 @@ haben, außer iOS … übersichtlich … auch für das Handyformat“*.
 
 Abschnitt „Filme über die Apps“ mit drei Kacheln, jede öffnet die Family-Projekt-Videoseite
 (`https://lausiklauskn-png.github.io/Family-Projekt.de-Video/abspielen.html?id=<kennung>`):
-`private-brain-pro-film` (neu, siehe unten), `workfloh-pdf-erklaervideo-quer`, `workfloh-pdf-versteckte-befehle`.
+je mit „▶ Direkt abspielen“ (`abspielen.html?id=…`) und „⬇ Laden“ (`index.html?laden=…`): Private Brain Pro
+(`private-brain-pro-film-720p` zum Abspielen, `private-brain-pro-film` Full HD zum Laden, neu, Bauanleitung in
+[docs/film/README.md](docs/film/README.md)), `workfloh-pdf-erklaervideo-quer`, `workfloh-pdf-versteckte-befehle`.
+Verschenkt wird die Box per Link (WhatsApp), nicht als Datei.
 
 ### Pflege
 
