@@ -39,7 +39,7 @@ Branch `codex/windows-native-host`, auf dem Android-Korrekturzweig aufgebaut.
 Tauri 2, WebView2, NSIS pro Benutzer, unsigniert. Dieselbe lokale Pro-Oberfläche
 und dieselben 22 geschützten Module, weiterhin bytegleich.
 
-Der Bau übernimmt 23 Android-Quellabschnitte, davon 14 bytegleich. Mail-, MIME-,
+Der Bau übernimmt 24 Android-Quellabschnitte, davon 14 bytegleich. Mail-, MIME-,
 Outbox-, Schutzlisten-, Modell- und PBV1-Algorithmen werden nicht unabhängig
 nachgebaut. Explizite Plattformadapter ersetzen Android-Dateizugriff,
 HTML-Textextraktion, Geräteablage und Browserlinks. SHA-256 von Quelle und
@@ -78,7 +78,7 @@ Anbindung. Es werden keine Konten oder kostenpflichtigen Zertifikate angelegt.
 
 ## Tatsächliche Prüfbelege
 
-85 lokale Kernfälle auf echten Dateien bestanden, mit ausdrücklich benanntem
+90 lokale Kernfälle auf echten Dateien bestanden, mit ausdrücklich benanntem
 Testprovider für OS-Verschlüsselung. Darunter PBV1 zwischen getrennten Geräten,
 Schreib-/Schutzfehler, falsches Passwort, beschädigte Sicherungen, ein zeitweise
 verschwundener Speicherort ohne Reset, Unicode-Dateien, Exportkollisionen,
@@ -112,8 +112,8 @@ vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
 
 ## Veröffentlichung
 
-Vorgesehene gemeinsame Folgelinie: `1.0.0-preview.29`; Android ist noch unverändert
-auf Code 28, bis die Abnahme abgeschlossen ist. .28 wird nicht überschrieben.
+Gemeinsamer Quellstand für die Abnahme: `1.0.0-preview.29`, Android-Code 29.
+Die Veröffentlichung ist noch offen. .28 wird nicht überschrieben.
 Release nur von geprüftem main, nach ausdrücklicher Freigabe, mit ursprünglicher
 Android-Signieridentität, Prüfsummen und unabhängigem Downloadvergleich.
 

@@ -14,6 +14,9 @@
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
+- Aktueller Quellstand für Android und Windows: `1.0.0-preview.29`, Android-Code
+  29; noch unveröffentlicht. Originale Android-Identität unverändert. Der finale
+  Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
   grün bleiben. `native/*.js` sind gemeinsam: Android bei Änderungen mitprüfen.
 - Kein eigener Windows-Bau-PC bei Klaus voraussetzen. GitHub-Windows-Runner ist

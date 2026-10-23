@@ -83,15 +83,15 @@ try{
     // Test-only studio identity is generated inside the disposable CI profile.
     // It is never bundled into the installer or used as Klaus' publisher key.
     await page.evaluate(async()=>{await PBLicense.createKey('CI-studio-fixture-only-2026');PBTools.open('pinnwand');});
-    let licensed;for(let i=0;i<60;i++){licensed=page.frames().find(f=>f.url().startsWith('https://pbtool.localhost/kimboard/'));if(licensed)break;await pause(100);}assert.ok(licensed);
-    ok('licensed tool is authorized on its own origin',await licensed.evaluate(()=>PBToolAuthorized));
-    ok('isolated tool cannot invoke native functions without the private capability',await licensed.evaluate(async()=>{
+    const licensed=page.frameLocator('.pb-tool-frame iframe');await licensed.locator('body').waitFor({state:'visible',timeout:15000});
+    ok('licensed tool is authorized on its own origin',await licensed.locator('html').evaluate(()=>PBToolAuthorized));
+    ok('isolated tool cannot invoke native functions without the private capability',await licensed.locator('html').evaluate(async()=>{
       if(!window.__TAURI_INTERNALS__?.invoke)return true;
       try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProVault',method:'state',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}
     }));
-    await licensed.evaluate(()=>{parent.postMessage({kind:'pb-tool-file',nonce:'wrong',name:'forged-tool.txt',type:'text/plain',bytes:new ArrayBuffer(4)},'https://tauri.localhost');});
+    await licensed.locator('html').evaluate(()=>{parent.postMessage({kind:'pb-tool-file',nonce:'wrong',name:'forged-tool.txt',type:'text/plain',bytes:new ArrayBuffer(4)},'https://tauri.localhost');});
     await pause(100);ok('tool file with the wrong handoff nonce is ignored',await page.locator('.pb-tool-file').count()===0);
-    await licensed.evaluate(()=>{const a=document.createElement('a');a.download='windows-tool-proof.txt';a.href=URL.createObjectURL(new Blob(['Actual isolated tool handoff'],{type:'text/plain'}));a.click();});
+    await licensed.locator('html').evaluate(()=>{const a=document.createElement('a');a.download='windows-tool-proof.txt';a.href=URL.createObjectURL(new Blob(['Actual isolated tool handoff'],{type:'text/plain'}));a.click();});
     await page.locator('.pb-tool-file button').first().click();
     await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='windows-tool-proof.txt'),null,{timeout:90000});
     ok('actual tool download enters the same checked native import',!(await call('ProFiles','originalInfo',{hash:createHash('sha256').update('Actual isolated tool handoff').digest('hex')})).missing);
