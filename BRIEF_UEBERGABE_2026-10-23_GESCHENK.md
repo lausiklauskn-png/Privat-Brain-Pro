@@ -19,8 +19,12 @@ Deutsch, kurze einfache Sätze, Einzelschritte. Keine Passwörter, Tokens oder C
   `windows-v1.0.0-preview.29`, [Setup.exe](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.0-preview.29/Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe)
   48.562.317 Bytes, SHA-256 `55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97`. Unabhängig geladen:
   `SHA256SUMS` alle OK; `windows-build.json` Version, Installer, x64, unsigned, `testEndpoint` false und sha256 passen.
+  Codex' **Geschenk-ZIP** (PR #71, `windows-gift-package.yml`) liegt im selben Release:
+  `Private-Brain-Pro-Windows-1.0.0-preview.29-Geschenkpaket.zip` (48.568.022 Bytes, SHA-256 `6866e994…f395d88055d`),
+  unabhängig geladen, gleich `GESCHENK-SHA256SUMS`; die Setup.exe darin ist bytegleich (`55d5728a…`). In der Box als
+  Link „Ganzes Paket als ZIP“ neben dem Windows-Laden. Für Workflow PDF Pro gibt es noch kein ZIP.
   Kein neuer Android-Release. Am Windows-PC nicht gemessen.
-- **PR #67** (`codex/quality-audit-2026-10-22`, Codex) ist offen: „V28 prüfen: Speicherfehler, beschädigte Sicherungen
+- **PR #67** (`codex/quality-audit-2026-10-22`, Codex) war offen; seine Korrekturen kamen mit #69 auf main: „V28 prüfen: Speicherfehler, beschädigte Sicherungen
   und Werkzeugansicht korrigieren“. Vor dem nächsten Android-Release mit Codex abstimmen, wer was zusammenführt.
 - **Workflow PDF Pro:** Android **1.0.3** (`v1.0.3`) und Windows **1.0.3** (`windows-v1.0.3`) veröffentlicht. iOS wird
   in einer anderen Sitzung gebaut.
