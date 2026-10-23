@@ -1,9 +1,13 @@
 # Werbefilm „Private Brain Pro: die App baut sich zusammen“ (Klaus 2026-10-23)
 
-1:45, 1920×1080, 30 Bilder/s. Auf der Family-Projekt-Videoseite:
-[direkt abspielen (720p)](https://lausiklauskn-png.github.io/Family-Projekt.de-Video/abspielen.html?id=private-brain-pro-film-720p) ·
-[laden (Full HD)](https://lausiklauskn-png.github.io/Family-Projekt.de-Video/index.html?laden=private-brain-pro-film)
-(Family-Projekt.de-Video PR #16). Full HD 78,9 MB, SHA-256 `c2cf0be7…7cea50`; 720p 27,2 MB, `ef4dd85e…81f5f6`.
+1:45, 1920×1080, 30 Bilder/s. Auf der Family-Projekt-Videoseite (Stand 2026-10-23, Family-Projekt.de-Video #23):
+[quer abspielen](https://lausiklauskn-png.github.io/Family-Projekt.de-Video/abspielen.html?id=private-brain-pro-film) ·
+[quer laden](https://lausiklauskn-png.github.io/Family-Projekt.de-Video/index.html?laden=private-brain-pro-film) ·
+[hochkant](https://lausiklauskn-png.github.io/Family-Projekt.de-Video/abspielen.html?id=private-brain-pro-film-hoch).
+Nur noch Full HD (Klaus: „nur die besten Varianten“); die 720p-Fassung ist von der Seite genommen.
+**Hochkant:** derselbe Film mittig (Ränder links/rechts je 140 px abgeschnitten) auf dunklem Grund aus dem ersten
+Filmbild, darüber Logo, „Private Brain Pro“, „Dein privates zweites Gehirn“, darunter „Suchen · Ordnen · Prüfen“ und
+family-projekt.de (ffmpeg, kein eigener Aufbau). **Siegel** (Klaus 2026-10-23): Bilder neu aufgenommen, ★ in der Kugel.
 
 ## Inhalt (Klaus' Wünsche)
 
@@ -13,7 +17,7 @@
   **Beschriftungen** mit geschwungener Linie erklären, was entsteht. „Zack“: Aufblitzen, welliger Ring, fertige Seite.
 - Reihenfolge: Suche (mit Workflow-PDF-Finger), Explorer, Postfach, Schutz-Prüfung mit Stempel; Ring der fertigen Seiten;
   Wasser und Tresor („Keine Cloud“); echte Bilder aus dem Family-Projekt-Film (Zahl „25 Apps“ verdeckt durch „Eine
-  wachsende Familie von Apps“); Werkzeuge im Orbit; Geräte Android/Windows; „In Heimarbeit gebaut“; „Einlesen. Prüfen.
+  wachsende Familie von Apps“); Werkzeuge im Orbit; Geräte Android/Windows; „Deine Daten. Dein Gerät. Deine Kontrolle.“; „Einlesen. Prüfen.
   Finden.“; Schluss mit Logo und family-projekt.de.
 - **Musik als DJ-Mix:** Family Projekt (F-Dur, 128 BPM) 0:00–0:37, „Risk“ aus dem Sicherheitsfilm (E-Dur, 117,5 BPM →
   +1 Halbton, auf 128 BPM) 0:37–1:00, Family Projekt 1:00–1:15 (die Family-Projekt-Bilder laufen auf ihrer Musik),
