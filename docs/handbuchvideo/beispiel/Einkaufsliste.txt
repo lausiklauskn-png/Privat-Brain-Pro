@@ -1,0 +1,6 @@
+Einkaufsliste
+- Milch
+- Vollkornbrot
+- Äpfel für den Kuchen
+- Kaffee
+- Zimt
