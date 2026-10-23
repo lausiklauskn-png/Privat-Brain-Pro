@@ -14,8 +14,12 @@ impl Engine {
         // java.exe retains redirected standard handles when our parent is a GUI
         // application. CREATE_NO_WINDOW below prevents any console window.
         let java = runtime.join(if cfg!(windows) { "jre/bin/java.exe" } else { "jre/bin/java" });
-        let classpath = std::env::join_paths([runtime.join("engine/classes"), runtime.join("engine/lib/*")]).map_err(|_| "APP_RUNTIME_UNAVAILABLE")?;
         let mut command = Command::new(java);
+        // env::join_paths quotes Windows PATH components containing spaces.
+        // Those literal quotes are not Java classpath syntax. Relative entries
+        // also support an installation directory containing a semicolon.
+        command.current_dir(runtime);
+        let classpath=if cfg!(windows){"engine/classes;engine/lib/*"}else{"engine/classes:engine/lib/*"};
         command.env_remove("JAVA_TOOL_OPTIONS").env_remove("_JAVA_OPTIONS").env_remove("JDK_JAVA_OPTIONS");
         command.args(["-Xmx512m", "-Dfile.encoding=UTF-8", "-cp"]).arg(classpath)
             .arg("de.familyprojekt.privatebrain.pro.EngineMain").arg(data).arg(runtime)
@@ -29,14 +33,16 @@ impl Engine {
         let reader_engine = engine.clone(); let weak_host = Arc::downgrade(host);
         std::thread::spawn(move || {
             let mut reader = BufReader::new(output);
+            let mut reason="end of stream".to_string();
             loop {
                 let mut bytes = Vec::new();
                 match Read::by_ref(&mut reader).take(64*1024*1024+1).read_until(b'\n', &mut bytes) {
-                    Ok(0) | Err(_) => break,
-                    Ok(_) if bytes.len()>64*1024*1024 || bytes.last()!=Some(&b'\n') => break,
+                    Ok(0) => break,
+                    Err(error) => {reason=format!("read error: {:?}",error.kind());break;},
+                    Ok(_) if bytes.len()>64*1024*1024 || bytes.last()!=Some(&b'\n') => {reason=format!("incomplete frame: {} bytes",bytes.len());break;},
                     _ => {}
                 }
-                let Ok(message) = serde_json::from_slice::<Value>(&bytes) else { break };
+                let message=match serde_json::from_slice::<Value>(&bytes){Ok(value)=>value,Err(error)=>{reason=format!("invalid JSON frame: {:?} at {}:{}",error.classify(),error.line(),error.column());break;}};
                 if let Some(id) = message.get("id").and_then(Value::as_str) {
                     if let Some(reply) = reader_engine.pending.lock().unwrap().remove(id) {
                         let result = match message.get("error").and_then(Value::as_str) {
@@ -59,7 +65,7 @@ impl Engine {
             #[cfg(feature="messprobe")]
             if let Some(host)=weak_host.upgrade(){
                 let status=reader_engine.child.lock().ok().and_then(|mut child|child.try_wait().ok()).flatten().and_then(|status|status.code());
-                let _=std::fs::write(host.data.join("engine-probe.txt"),format!("Protocol stream closed; child exit code: {:?}\n",status));
+                let _=std::fs::write(host.data.join("engine-probe.txt"),format!("Protocol stream closed: {}; child exit code: {:?}\n",reason,status));
             }
         });
         Ok(engine)
