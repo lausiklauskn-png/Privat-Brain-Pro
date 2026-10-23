@@ -148,6 +148,16 @@ public final class EngineTests {
         JSONObject protection=service.call("ProProtect","checkHashes",new JSONObject().put("items",new JSONArray().put(hash)));
         ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
     }
+    static void mailNames(Path root)throws Exception {
+        for(String value:new String[]{"a"+"😀".repeat(120)+".pdf","Ж".repeat(200)+".PDF","e\u0301".repeat(200)+".pdf"}){
+            String name=MailMime.filename(value);
+            ok(name.toLowerCase(Locale.ROOT).endsWith(".pdf")&&name.length()<=160&&name.getBytes(StandardCharsets.UTF_8).length<=200&&java.text.Normalizer.isNormalized(name,java.text.Normalizer.Form.NFC)&&name.codePoints().noneMatch(cp->cp>=0xd800&&cp<=0xdfff),"shared MIME filename preserves type and complete Unicode characters");
+            Path file=root.resolve(UUID.randomUUID()+"-"+name);Files.writeString(file,"filename proof");
+            ok(Files.readString(file).equals("filename proof"),"shared MIME filename works with the vault export prefix on the real filesystem");
+        }
+        String shared=ShareInbox.safeName("a"+"😀".repeat(100)+".pdf","file");
+        ok(shared.endsWith(".pdf")&&shared.length()<=120&&shared.codePoints().noneMatch(cp->cp>=0xd800&&cp<=0xdfff),"shared incoming name also preserves complete Unicode characters");
+    }
     public static void main(String[] args) throws Exception {
         Path root = Files.createTempDirectory("pb-engine-");
         TestProtection protection = new TestProtection();
@@ -219,6 +229,7 @@ public final class EngineTests {
         pdf(root);
         folders(root,new DesktopState(root.resolve("folders-device"),new TestProtection()));
         service(root,Path.of(args[0]));
+        mailNames(root);
         if(!System.getProperty("os.name").startsWith("Windows")){
             Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
             fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));

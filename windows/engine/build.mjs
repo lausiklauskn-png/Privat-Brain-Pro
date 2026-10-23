@@ -21,7 +21,7 @@ for(const dep of deps){
 }
 await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
 const receipt=[];
-const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks','ShareInbox'];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks','ShareInbox','PortableNames'];
 for(const name of names){
   const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
