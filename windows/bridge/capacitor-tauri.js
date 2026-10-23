@@ -16,7 +16,11 @@
         return{remove:async()=>callbacks.delete(listener)};
       };
       return async(options={})=>{
-        try{return await invoke('pb_call',{plugin:name,method:String(method),options:{...options,_language:document.documentElement?.lang||'de'}},{headers:{'x-pb-session':TOKEN}});}
+        try{
+          const result=await invoke('pb_call',{plugin:name,method:String(method),options:{...options,_language:document.documentElement?.lang||'de'}},{headers:{'x-pb-session':TOKEN}});
+          if(name==='ProNetwork'&&typeof result?.offline==='boolean')window.dispatchEvent(new CustomEvent('pb-host-network',{detail:{offline:result.offline}}));
+          return result;
+        }
         catch(error){const code=typeof error==='string'?error:error?.code||'APP_RUNTIME_UNAVAILABLE';throw Object.assign(new Error(code),{code});}
       };
     }});

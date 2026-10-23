@@ -40,6 +40,7 @@ fn main(){
                 .title("Private Brain Pro").inner_size(1280.,900.).min_inner_size(360.,480.).use_https_scheme(true)
                 .devtools(cfg!(feature="messprobe")).disable_drag_drop_handler()
                 .additional_browser_args(host::BROWSER_ARGS)
+                .initialization_script_for_all_frames(include_str!("../../bridge/network-frames.js"))
                 .initialization_script(include_str!("../../bridge/capacitor-tauri.js").replace("__PB_SESSION_TOKEN__",&serde_json::to_string(&host.session).unwrap()))
                 .on_navigation(|url|url.scheme()=="https"&&((url.host_str()==Some("tauri.localhost")&&["/","/index.html","/windows/start.html"].contains(&url.path()))||url.host_str()==Some("pbtool.localhost")))
                 .on_new_window(|_,_|tauri::webview::NewWindowResponse::Deny);

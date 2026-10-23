@@ -37,6 +37,8 @@ jobs:
           java-version: '21'
       - run: npm ci --ignore-scripts
       - run: npm ci --ignore-scripts --prefix windows
+      - name: Echte Browserverbindungen in Hauptfenster und isolierten Frames
+        run: node windows/pruefung/network.mjs
       - name: Rust-Abhängigkeiten und Zwischenergebnisse
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
         with:
