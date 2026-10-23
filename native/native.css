@@ -512,6 +512,10 @@ header.top .mycel-platz { display:none!important; }
 #sbkim-widget .sbkim-widget-slot:not(.siegel),#sbkim-widget .sbkim-widget-minimize { display:none!important; }
 #sbkim-widget .sbkim-widget-slot.siegel { width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:50%!important;justify-content:center!important;align-items:center!important; }
 #sbkim-widget .sbkim-widget-slot.siegel::after,#sbkim-widget .sbkim-widget-close::after { content:none!important; }
+/* Klaus 2026-10-23 (Bild aus dem Video): ab etwa 600 px stand das Wort „SIEGEL“ hinter dem Knopf, schob die Goldkugel
+   nach links und den ★ daneben. Der Kanon blendet das Wort erst bei schmalen Fenstern aus; hier immer. */
+#sbkim-widget .sbkim-widget-slot.siegel .sbkim-widget-label { display:none!important; }
+#sbkim-widget .sbkim-widget-slot.siegel .sbkim-widget-siegel-glyph { left:50%!important;transform:translate(-50%,-50%)!important; }
 #sbkim-widget .sbkim-widget-close { position:absolute!important;top:-5px;right:-7px;width:16px!important;min-width:16px!important;height:16px!important;min-height:16px!important;padding:0!important;border-radius:50%!important;font-size:9px!important;line-height:16px!important;justify-content:center!important;background:var(--card,#222)!important;border:1px solid var(--line,#888)!important;color:var(--mut,#999)!important;opacity:.85; }
 #sbkim-widget { cursor:grab; }
 /* Above the toolbar (31), below every app window: dialogs 60, ☰ menu 65, image view 80, file viewer 100.
