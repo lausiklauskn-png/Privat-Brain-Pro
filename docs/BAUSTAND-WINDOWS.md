@@ -1,106 +1,124 @@
 # Windows-Bau von Private Brain Pro
 
-Auftrag von Klaus am 23.10.2026: V28 prüfen, Fehler beheben, eine zusätzliche
-Windows-Version bauen. Tauri 2/WebView2 und unsigniertes NSIS-Setup pro Benutzer
-wie bei Workflow PDF Pro. Dieser Eintrag ist Bauplanung, noch kein fertiger Installer.
+Stand: 2026-10-23. Klaus hat die erneute Prüfung der veröffentlichten V28,
+Fehlerkorrekturen und eine zusätzliche native Windows-Version beauftragt.
+iOS bleibt für später zurückgestellt. Dieser Baustand ist keine Freigabe eines
+fertigen Windows-Produkts.
 
-## Ausgangspunkt und erneute Prüfung von V28
+## V28 und gemeinsame Korrekturen
 
-Veröffentlicht: `v1.0.0-preview.28`, Quelle
-`8dae28113f7fa19a4446406f492e0c307c4ef0cb`. Öffentliche APK unabhängig geladen:
+Ausgangspunkt: `v1.0.0-preview.28`, Quelle
+`8dae28113f7fa19a4446406f492e0c307c4ef0cb`. APK unabhängig geladen:
 7.446.584 Bytes, SHA-256
 `a8a4de0e884c2849257b8c10895d9c2dd9199d6b453bc24a588c6b92d424a647`.
-SHA256SUMS, ZIP-Integrität und APK-v2-Signatur bestätigt; Zertifikat entspricht
-unverändert `362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
-Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 28, versionName
-`1.0.0-preview.28`, compile/target SDK 36. Explorer-Prüfung, Mailordner, Werkzeuge
-und Freischaltung der APK bytegleich mit dem veröffentlichten Quellstand verglichen.
+ZIP, veröffentlichte Prüfsumme, Metadaten und APK-v2-Signatur bestätigt.
+Unveränderter Signierer:
+`362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80`.
+Paket `de.familyprojekt.privatebrain.pro.preview`, VersionCode 28.
 
-PR #67 behebt falsche IndexedDB-Erfolgsmeldungen, verschluckte Importfehler und
-vorzeitig als wiederhergestellt markierte Katalogeinträge. Ganze vorhandene
-Browserkette, 28 native Browser-Skripte und 14 Maildienst-Tests lokal bestanden.
-[CI 39860548123](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39860548123)
-ist vollständig grün: Firefox, WebKit, vollständige Web-/JVM-/Build-/Lintprüfung,
-Android-Neustartprobe und native App-Prüfungen. Keine Abnahme auf Klaus' Tablet.
+[Entwurf #67](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/67)
+behebt verfrühte IndexedDB-Erfolgsmeldungen, verschluckte Importfehler,
+vorzeitig markierte Katalogwiederherstellung und beschädigte Sicherungen.
+Die vollständige Android-/Web-CI auf `f009aab` ist grün
+([39867480481](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39867480481)).
+Der anschließende Dateinamen-Fix `36e043c` wird gesondert erneut geprüft:
+NFC, vollständige Unicode-Zeichen, erhaltene Dateiendungen, portable Längen.
+Die ursprünglichen MIME-/Übergabe-Regeln scheiterten an den neuen Gegenproben.
 
-## Bauplan
+Klaus' Menübefund ist korrigiert: nur ein lizenzierter Pinnwand-Zugang.
+„Werkzeuge freischalten“ zeigt einzelne Zeilen mit ganzen Namen und Schloss,
+ohne zusätzliches sichtbares „gesperrt“. 62 reale Browserfälle bestanden,
+einschließlich vier Sprachen und 320/360/1280/2560 Pixeln.
+Screenshots: `docs/design/werkzeuge/`. Im reinen PWA-Repo Privat-Brain existiert
+dieser Freischaltkasten nicht; er gehört zur gemeinsamen Pro-Oberfläche.
 
-1. Dieselbe lokal gebündelte Oberfläche und alle geschützten Module übernehmen;
-   Tauri-Brücke für die vorhandenen zwölf Geräteplugins. Windows-spezifische
-   Dialoge bleiben außerhalb der Hauptseite; Passwörter und Kontodaten werden nur
-   im eigenen, getrennten Dialogfenster eingegeben.
-2. Bewährten Mail-/Kryptografiekern wiederverwenden. Postfach-/MIME-Verhalten,
-   Versandzustände und PBV1 sollen nicht durch unabhängige Neuimplementierungen
-   auseinanderlaufen. Die Desktop-Laufzeit wird mitgeliefert, keine zusätzliche
-   Installation beim Nutzer vorausgesetzt. Windows-Dateizugriff und DPAPI sind
-   eigene Plattformadapter; keine Android-Keystore-Dateien übernehmen.
-3. Echte Dateisystem-/Kryptografie-/Protokolltests und Android-Gegenproben; danach
-   installierte Windows-App mit WebView2 prüfen: Import, Originale, Ordnerbaum,
-   Postfach, Tresor, Offline-Schalter, Werkzeuge, Neustart und Neuinstallation.
-4. Erst nach vollständiger Abnahme einen fertigen Installer behaupten. Eine
-   veröffentlichte Android-Korrektur erhält eine neue Buildnummer; .28 niemals
-   überschreiben. Vorgesehen ist die gemeinsame Folgelinie .29.
+## Architektur und vorhandener Code
 
-## Geräteverträge (alle zunächst offen)
+[Entwurf #69](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/69),
+Branch `codex/windows-native-host`, auf dem Android-Korrekturzweig aufgebaut.
+Tauri 2, WebView2, NSIS pro Benutzer, unsigniert. Dieselbe lokale Pro-Oberfläche
+und dieselben 22 geschützten Module, weiterhin bytegleich.
 
-| Plugin | Windows-Umsetzung/Nachweis |
+Der Bau übernimmt 23 Android-Quellabschnitte, davon 14 bytegleich. Mail-, MIME-,
+Outbox-, Schutzlisten-, Modell- und PBV1-Algorithmen werden nicht unabhängig
+nachgebaut. Explizite Plattformadapter ersetzen Android-Dateizugriff,
+HTML-Textextraktion, Geräteablage und Browserlinks. SHA-256 von Quelle und
+Bauergebnis steht in `windows/engine/build/shared-source.json`.
+
+Eine private Java-21-Laufzeit wird mitgeliefert; beim Empfänger ist keine
+Java-Installation nötig. Windows-DPAPI schützt Gerätegeheimnisse. Der portable
+Ordner verwendet weiterhin das gemeinsame PBV1-Format und das Benutzerpasswort.
+Kein stiller Reset, kein Ersatz verlorener Schlüssel. Originale werden geprüft
+kopiert; Quelldateien bleiben erhalten. Native Zugangsdaten werden in einem
+getrennten Fenster eingegeben. IPC verlangt eine private Sitzungsberechtigung;
+Werkzeuge besitzen einen eigenen Origin ohne diese Berechtigung.
+
+| Vertrag | Implementierung und verbleibender Nachweis |
 |---|---|
-| ProDevice | Windows und tatsächliche Version melden |
-| ProFiles | geprüfte Originalkopien, Blockübergaben, Speichern/Öffnen, PDF-Seiten |
-| ProFolders | ausdrückliche Ordnerwahl, kontrolliertes rekursives Lesen |
-| ProVault | PBV1-kompatibler Ordner, Passwort, Merken über DPAPI, Migration/Sicherung |
-| ProMail | alle Anbieterrollen und .28-Aktionen, direkte TLS-Verbindungen, keine unklaren Neuversände |
-| ProLinks | registrierte externe Links nur ausdrücklich im Standardbrowser |
-| ProNetwork | app-eigene Verbindungen sperren/abbrechen, lokale Arbeit erhalten |
-| ProProtect | gleiche Listen-/Fingerprint-Verträge, sichere native Schlüssel, Windows-Scannerübergabe |
-| ProSemantic | gepinnte Dateien laden/abbrechen/fortsetzen, Modell lokal/offline bereitstellen |
-| ProSpeech | Windows-Spracherkennung prüfen, echte Verfügbarkeit und Grenzen benennen |
-| ProShare | Öffnen mit/Zweitstart; keine nicht vorhandene Windows-Teilen-Zielregistrierung behaupten |
-| ProUpdates | Windows-Kanal, geprüfter Release-Link, manuelle Installation |
+| ProDevice | Windows und beim Bau abgeleitete tatsächliche Version |
+| ProFiles | Originale, Blöcke, Prüfsummen, Export, Öffnen mit, Ersatzschlüssel; PDF je Dokument in eigenem begrenztem Prozess |
+| ProFolders | ausdrückliche Ordnerwahl, persistente Ablage, begrenztes rekursives Lesen, geprüfte zusätzliche Kopien |
+| ProVault | gemeinsames PBV1, eigener Passwortdialog, DPAPI-Merken, Migration, Mail-/Katalog-/Originalsicherung |
+| ProMail | gemeinsamer direkter TLS-Kern, Ordner/Aktionen/Entwürfe/Index, Originale/Anhänge, native Kontoeingabe; Vorlagen aus Android |
+| ProLinks | registrierte Mail-Links und ausdrückliche Übergabe an den Systembrowser |
+| ProNetwork | eigene native Verbindungen abbrechen; WebView2-Filter einschließlich Worker; offene Browsertransporte in Hauptseite und Frames schließen |
+| ProProtect | gemeinsamer Schutzkern, verschlüsselte Schlüssel/Listen; ausdrücklicher Defender-Scan einer geprüften Exportkopie |
+| ProSemantic | gemeinsame Pins, Laden/Abbruch/Fortsetzen, Hashprüfung, lokale Modell-/Bibliotheksantworten; reale Offline-Abnahme läuft |
+| ProSpeech | lokale Windows-SAPI-Schnittstelle, eigenes Aufnahmefenster und Abbruch; fehlende Sprache/Mikrofon wird ausdrücklich gemeldet |
+| ProShare | Öffnen mit, Zweitstart und geprüfte Importwarteschlange; kein registriertes Windows-Teilen-Ziel behauptet |
+| ProUpdates | eigener `windows-v…`-Kanal, fester Repository-/Installerpfad, manueller Browserdownload; kein APK und kein stiller Installer |
 
-Gmail verwendet den von Klaus bestätigten Desktop-OAuth-Client im bestehenden
-Google-Projekt (`windows/gmail-desktop.json`, ausschließlich öffentliche ID).
-Ein Empfänger benötigt keinen eigenen OAuth-Client, meldet sich aber mit seinem
-eigenen Google-Konto an. Testnutzer-/Verifizierungsstand des Google-Projekts und
-eine tatsächliche Google-Anmeldung sind noch zu prüfen. Keine Client-Secrets
-oder Tokens im Repository. Microsoft bleibt wie in Androids V28 eine
-benannte, noch nicht eingerichtete Anbieteranbindung.
+Gmail nutzt den bestätigten Desktop-OAuth-Client (`windows/gmail-desktop.json`,
+ausschließlich öffentliche ID), PKCE S256 und einen zufälligen Loopback-Rückruf
+im Standardbrowser. Empfänger melden sich mit ihrem eigenen Google-Konto an;
+sie brauchen normalerweise keinen eigenen OAuth-Client. Live-Google-Anmeldung,
+Testnutzer-/Verifizierungsstand und reale Anbieterzugänge sind nicht geprüft.
+Microsoft bleibt wie in V28 eine ausdrücklich benannte, noch nicht eingerichtete
+Anbindung. Es werden keine Konten oder kostenpflichtigen Zertifikate angelegt.
 
-## Grenzen und Freigaben
+## Tatsächliche Prüfbelege
 
-Noch kein Windows-Bau-/Installationsnachweis. Kein eigener PC beim Nutzer
-vorausgesetzt. Keine Apple-Arbeiten oder kostenpflichtige Signierung.
-Die Übernahme in main ist seit der automatischen Freigabeablehnung offen;
-Entwürfe und Installer zuerst konkret fertigstellen, dann explizit freigeben.
+85 lokale Kernfälle auf echten Dateien bestanden, mit ausdrücklich benanntem
+Testprovider für OS-Verschlüsselung. Darunter PBV1 zwischen getrennten Geräten,
+Schreib-/Schutzfehler, falsches Passwort, beschädigte Sicherungen, ein zeitweise
+verschwundener Speicherort ohne Reset, Unicode-Dateien, Exportkollisionen,
+Loopback-PKCE, Token-Erneuerung, Sockets und echte TLS-IMAP-/SMTP-Protokolle.
+Die TLS-Testserver stammen aus Androids Instrumentierung; nur die temporäre
+Testzertifikat-Ablage wird angepasst. Kein Produktionsschlüssel wird erzeugt.
+Ein SMTP-Verbindungsabbruch nach DATA bleibt auch nach erneutem Öffnen unklar
+und wird nicht automatisch erneut gesendet. Bcc erscheint nicht im Versandtext.
 
-## Tatsächlich implementierter Zwischenstand
+Acht reale Browserverbindungsfälle auf Hauptseite und fremdem Frame bestanden.
+Die Windows-API-Signaturen für SAPI und Defender wurden für das Windows-Ziel
+kompiliert. Androids gemeinsame UI-Gegenproben bleiben grün: Werkzeuge 62,
+Tresor 34, Schutz 34, Spracheingabe 11; diese simulieren die Android-Plugins und
+beweisen keine echte Mikrofonaufnahme.
 
-`windows/engine/build.mjs` erzeugt den Desktop-Kern aus 17 vorhandenen
-Android-Quelldateien, davon 11 bytegleich. Protokoll- und Kryptografiekern werden
-nicht separat nachgebaut. Explizite Adapter ersetzen Android-Dateizugriff,
-HTML-Textextraktion und Gerätespeicherung. Jede Quelldatei und das erzeugte
-Ergebnis stehen mit SHA-256 im Baubeleg. Abhängigkeiten sind mit SHA-256 gepinnt.
-Die Java-Laufzeit wird beim Windows-Bau mitgeliefert.
+Windows-Runner: NSIS-Bau und Installation vorhanden. Der Fehler beim Start des
+Kerns im installierten Verzeichnis wurde behoben. Im installierten Programm
+bestanden Geräteangaben, private IPC-Sperre, realer Import/Readback, Passwortdialog,
+verschlüsselter Ordner, Katalog, PDF-Prozess, Offline-Zustand und Werkzeug-Origin
+([Lauf 39877532392](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39877532392)).
+Dieser Lauf ist insgesamt rot: die Spracheingabe-Gegenprobe traf auf ein sofort
+schließendes „nicht verfügbar“-Fenster. Der Test wurde korrigiert; die vollständige
+Kette wird erneut ausgeführt. **Keinen fertigen Installer aus diesem Lauf anbieten.**
 
-34 Prüfungen auf realen Dateien bestanden: verschlüsselte Gerätespeicherung mit
-ausdrücklichem Testprovider, Erhalt bei Schreib-/Schutzfehlern, portable Ordner
-zwischen zwei getrennten Geräten, falsches Passwort ohne Dateiänderung,
-Originalwiederherstellung, beschädigte Sicherungen, PBV1-Blockgrenzen und AAD,
-unklarer SMTP-Versand ohne Wiederholung nach Neustart, Abbruch echter Sockets,
-PKCE/Loopback einschließlich falschem State, Gmail-Alias, Token-Erneuerung und
-Abbruch. Dies ist noch kein Test von Windows-DPAPI oder echtem Google-Zugriff.
+Noch abzuschließen: installierte Werkzeugübergabe/Freigabeentzug, reales Modell
+mit Offline-Bedeutungssuche, vollständige Neustart-/DPAPI-/Neuinstallationskette,
+abschließender Produktionsbau ohne Prüfzugang, Prüfsummen und Freigabe.
+Eine gesprochene Aufnahme und Klaus' eigener Windows-PC sind nicht gemessen.
+Defender verwendet die Windows-Einstellungen; eine mögliche Cloud-Prüfung wird
+vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
 
-Tauri-Host mit privatem Kindprozessprotokoll, DPAPI-Adapter, getrenntem
-Passwort-/Kontodialog und den vorhandenen Geräteverträgen ist angelegt.
-Windows-CI baut zunächst einen klar benannten Prüfbau. Noch offen: native
-Baufehler/Abnahme, fehlende Adapter (Ordner, PDF, Schutz, Modell, Sprache,
-Teilen und Updates), vollständige Postfach-Gegenprobe, Herkunft/Framegrenzen,
-Installer/Neustart/Neuinstallation und Auslieferungsbau ohne Prüfzugang.
+## Veröffentlichung
 
-Klaus' Menübefund ist für beide Pro-Plattformen korrigiert: kein zweiter
-Pinnwand-Zugang; Werkzeuge freischalten zeigt eine senkrechte Liste mit ganzen
-Namen und nur Schloss-Symbolen. 62 Werkzeugfälle bestanden, einschließlich
-aller vier Sprachen und Breiten 320/360/1280/2560. Screenshots unter
-`docs/design/werkzeuge/`. Im aktuellen Quellstand von Privat-Brain (reine PWA)
-existiert der Freischaltkasten nicht. Die Darstellung stammt aus der gemeinsam
-für Android und Windows gebündelten Pro-Oberfläche.
+Vorgesehene gemeinsame Folgelinie: `1.0.0-preview.29`; Android ist noch unverändert
+auf Code 28, bis die Abnahme abgeschlossen ist. .28 wird nicht überschrieben.
+Release nur von geprüftem main, nach ausdrücklicher Freigabe, mit ursprünglicher
+Android-Signieridentität, Prüfsummen und unabhängigem Downloadvergleich.
+
+Die automatische Freigabeprüfung hat eine main-Übernahme des PWA-PRs #123 im
+Nachbarrepo abgelehnt: Die Auditfreigabe umfasst keinen ausdrücklichen
+Produktionsmerge. Das wird nicht umgangen. Alle konkreten Ergebnisse zuerst
+fertigstellen; main-Übernahmen und Veröffentlichungen anschließend gesammelt
+mit Klaus freigeben. Keine iOS-Arbeiten und kein Private-Brain-iOS-Nachfolgebrief.

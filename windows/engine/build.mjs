@@ -28,6 +28,19 @@ for(const name of names){
   text=text.replace(/^import android\.[^;]+;\r?\n/gm,'');
   text=text.replace(/\bContext\b/g,'DesktopState').replace(/\bSharedPreferences\b/g,'DesktopState.Preferences');
   if(name==='MailMime')text=text.replaceAll('Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(bodies.html)');
+  if(name==='OriginalFileStore'){
+    const guards=[
+      ['hash(hash); return new File(root, hash);','hash(hash); File directory=new File(root, hash); DesktopFiles.noLinks(directory.toPath()); return directory;'],
+      ['File directory = directory(hash), data = new File(directory, "data");','File directory = directory(hash), data = new File(directory, "data"); DesktopFiles.noLinks(data.toPath()); DesktopFiles.noLinks(new File(directory,"metadata.json").toPath());'],
+      ['JSONArray items = new JSONArray(); File[] directories = root.listFiles();','DesktopFiles.noLinks(root.toPath()); JSONArray items = new JSONArray(); File[] directories = root.listFiles();'],
+      ['private static long used(File directory) {','private static long used(File directory) throws IOException { DesktopFiles.noLinks(directory.toPath());'],
+      ['for (File child : children) total += child.isDirectory() ? used(child) : child.length();','for (File child : children) { DesktopFiles.noLinks(child.toPath()); total += child.isDirectory() ? used(child) : child.length(); }'],
+      ['if (item == null) throw new IOException("INVALID_IMPORT"); return item;','if (item == null) throw new IOException("INVALID_IMPORT"); DesktopFiles.noLinks(item.directory.toPath()); DesktopFiles.noLinks(new File(item.directory,"data").toPath()); DesktopFiles.noLinks(new File(item.directory,"metadata.json").toPath()); return item;'],
+      ['Pending item = pending.remove(ticket); if (item == null) return;','Pending item = pending.remove(ticket); if (item == null) return; try { DesktopFiles.noLinks(item.directory.toPath()); DesktopFiles.noLinks(new File(item.directory,"data").toPath()); DesktopFiles.noLinks(new File(item.directory,"metadata.json").toPath()); } catch(IOException unavailable) { return; }'],
+      ['static String digest(File file) throws Exception {','static String digest(File file) throws Exception { DesktopFiles.noLinks(file.toPath());']
+    ];
+    for(const [before,after]of guards){if(!text.includes(before))throw Error('Review shared original filesystem boundary');text=text.replace(before,after);}
+  }
   if(name==='BrowserLinks'){
     const start=text.indexOf('    static synchronized String resolve(');if(start<0)throw Error('Review mail link boundary');
     text=text.slice(0,start)+'    static synchronized String resolve(String value) {\n        try { URI uri=new URI(value); if(!"https".equals(uri.getScheme())||!"tauri.localhost".equals(uri.getAuthority())||uri.getQuery()!=null||uri.getFragment()!=null||!uri.getPath().startsWith(PREFIX))return null; return links.get(uri.getPath().substring(PREFIX.length())); } catch(Exception error) { return null; }\n    }\n}\n';

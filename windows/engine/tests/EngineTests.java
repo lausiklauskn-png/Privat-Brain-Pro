@@ -252,6 +252,11 @@ public final class EngineTests {
         ok(new String(reopened.readDocument(Vault.LISTS,"test-list",1024),StandardCharsets.UTF_8).equals("protected list"), "protection lists use shared portable format");
         OriginalFileStore originals = new OriginalFileStore(other);
         ok(reopened.restoreOriginal(hash, originals) && Arrays.equals(Files.readAllBytes(originals.file(hash).toPath()),original), "original restored and verified on another device");
+        Path unplugged=root.resolve("temporarily-unavailable-drive");Files.move(chosen,unplugged);
+        fails("VAULT_FOLDER_UNAVAILABLE",()->reopened.catalogInfo());
+        ok(!reopened.state().optBoolean("reachable",true),"a missing drive reports unavailable without replacing the selected folder");
+        Files.move(unplugged,chosen);
+        ok(new String(reopened.catalogRead(2,0),StandardCharsets.UTF_8).equals("second catalog")&&before.equals(snapshot(folder)),"returning drive restores access to the unchanged portable folder");
         Path newest = folder.resolve("Katalog/katalog-2.pbv"); byte[] damaged = Files.readAllBytes(newest); damaged[damaged.length-1] ^= 1; Files.write(newest,damaged);
         ok(reopened.catalogInfo().getLong("version")==1, "damaged newest catalog falls back to prior backup");
         Path first = folder.resolve("Katalog/katalog-1.pbv"); Files.write(first,new byte[]{1,2,3});
@@ -293,10 +298,19 @@ public final class EngineTests {
         mailNames(root);
         updatesAndExports(root,state);
         tls(state);
-        if(!System.getProperty("os.name").startsWith("Windows")){
-            Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
-            fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));
+        DesktopState linkedState=new DesktopState(root.resolve("linked-device"),new TestProtection());
+        Path link=linkedState.directory.resolve("originals-v1");
+        if(!System.getProperty("os.name").startsWith("Windows"))Files.createSymbolicLink(link,folder);
+        else{
+            Process junction=new ProcessBuilder("cmd.exe","/d","/c","mklink","/J",link.toString(),folder.toString()).redirectErrorStream(true).start();
+            junction.getInputStream().transferTo(OutputStream.nullOutputStream());
+            ok(junction.waitFor()==0,"real NTFS junction fixture created without altering the target");
         }
+        fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));
+        OriginalFileStore linkedOriginals=new OriginalFileStore(linkedState);
+        fails("VAULT_FOLDER_UNAVAILABLE",()->linkedOriginals.read("0".repeat(64),0));
+        fails("VAULT_FOLDER_UNAVAILABLE",()->linkedOriginals.begin("0".repeat(64),10,"test.txt","text/plain"));
+        Files.delete(link);
         System.out.println(count+" desktop engine checks passed; OS protection was an explicit test provider.");
     }
 }
