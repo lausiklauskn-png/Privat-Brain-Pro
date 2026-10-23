@@ -36,6 +36,7 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
 #bandText b{color:var(--rot)}
 #kapitel{position:absolute;color:var(--ink);font-weight:800;letter-spacing:.02em;opacity:0;transition:opacity .5s}
 #kapitel.an{opacity:.92}
+#kapitel.an.verdeckt{opacity:0}   /* beim Heranzoomen läuft das Bild über die Kapitelzeile (Klaus 2026-10-23) */
 #kapitel .nr{display:inline-block;background:var(--rot);border-radius:12px;padding:10px 4px;margin-inline-end:14px}
 
 /* Hand und Klick-Ring */
@@ -359,8 +360,10 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
     kameraSofort(transform) { kamera.style.transition = 'none'; const alt = kamera.style.transform; kamera.style.transform = transform; void kamera.offsetWidth; return alt; },
     kameraWeich() { void kamera.offsetWidth; kamera.style.transition = ''; },
     zoom(r, faktor) {
+      kap.classList.toggle('verdeckt', !!r);
       if (!r) { kamera.style.transform = ''; return; }
-      const f = faktor || 1.8; const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      let f = faktor || 1.8; if (hoch) f = 1 + (f - 1) * .5;   // hochkant ist die App schon vergrößert
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
       let tx = W / 2 - cx * f, ty = (H - bandH) / 2 - cy * f;
       kamera.style.transform = `translate(${tx}px,${ty}px) scale(${f})`;
     },

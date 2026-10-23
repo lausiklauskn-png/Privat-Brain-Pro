@@ -15,11 +15,12 @@ import { starteServer } from './server.mjs';
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const APP = path.resolve(process.env.APP || '/home/user/Privat-Brain-Pro/www');
 const probe = process.argv.includes('--probe'), dev = process.argv.includes('--dev');
-const NAME = probe ? 'probe' : 'quer';
-const W = 1920, H = 1080;
+const hoch = process.argv.includes('--hoch');   // Hochkant fürs Handy (Klaus 2026-10-23)
+const NAME = probe ? 'probe' : (hoch ? 'hoch' : 'quer');
+const W = hoch ? 1080 : 1920, H = hoch ? 1920 : 1080;
 const ZIEL = path.join(HIER, '_roh', NAME);
 fs.rmSync(ZIEL, { recursive: true, force: true }); fs.mkdirSync(path.join(ZIEL, 'bilder'), { recursive: true });
-const BSP = path.join(HIER, 'beispiel');
+const BSP = path.join(HIER, hoch ? 'beispiel-hoch' : 'beispiel');
 const DATEIEN = ['Rechnung-Zahnarzt-2026-09.pdf', 'Mietvertrag-Wohnung.pdf', 'Strand-Binz.jpg', 'Sonnenuntergang.jpg', 'Einkaufsliste.txt', 'Rezept-Apfelkuchen.txt'].map(f => path.join(BSP, f));
 
 const { srv, url } = await starteServer(HIER, APP);
@@ -248,9 +249,16 @@ async function szeneExplorer() {
   await zoom('#explorerTree', 1.6);
   await warte(2200);
   await zoom(null);
-  await tippe('.explorer-folder[data-path="kind:photo"]', { nachher: 1000 });
+  if (hoch) {   // am Handy zeigt der Explorer eine Ebene mit Pfad: der Ordner ist eine Karte mit ›
+    await app.evaluate(() => { const karte = b => { let k = b; while (k.parentElement && k.parentElement.querySelectorAll('.explorer-dir-open').length === 1) k = k.parentElement; return k; };
+      const b = [...document.querySelectorAll('#explorerFiles .explorer-dir-open')].find(x => karte(x).textContent.includes('Fotos und Bilder')); if (b) b.dataset.film = 'fotos'; });
+    await tippe('[data-film="fotos"]', { nachher: 1000 });
+  } else await tippe('.explorer-folder[data-path="kind:photo"]', { nachher: 1000 });
   await text('Ein Tipp öffnet den Ordner, noch einer die Datei');
-  const auf = await markiere('#explorerFiles button', 'Öffnen', 'oeffnen');
+  // „Öffnen“ genau beim Sonnenuntergang (Klaus' Bild), nicht beim ersten Eintrag der Liste
+  await app.evaluate(() => { const karte = b => { let k = b; while (k.parentElement && [...k.parentElement.querySelectorAll('button')].filter(x => x.textContent.trim() === 'Öffnen').length === 1) k = k.parentElement; return k; };
+    const b = [...document.querySelectorAll('#explorerFiles button')].find(x => x.textContent.trim() === 'Öffnen' && karte(x).textContent.includes('Sonnenuntergang')); if (b) b.dataset.film = 'oeffnen'; });
+  const auf = '[data-film="oeffnen"]';
   await tippe(auf, { nachher: 1800 });
   await standbild('explorer');
   await text('Das <b>Original</b> bleibt dabei unverändert');
@@ -282,10 +290,14 @@ async function szeneMail() {
   await text('Lesen, antworten, aufräumen: <b>Löschen geht in den Papierkorb</b> deines Anbieters');
   await standbild('mail');
   await warte(2600);
+  if (hoch) return;   // am Handy liegt „Alle Konten“ hinter der Ordnerliste; das Querformat zeigt es
+  if (gezoomt) { await zoom(null); await warte(1150); }   // sonst liegt „Abrufen“ außerhalb des Bildes
   const alle = await markiere('#mailWorkspace button, #mailWorkspace a, #mailWorkspace li', 'Alle Konten', 'alle');
   await tippe(alle, { nachher: 1000 });
   const abruf = await markiere('#mailWorkspace button', 'abrufen', 'abruf');
-  await tippe(abruf, { nachher: 3000 });
+  await tippe(abruf, { nachher: 1500 });
+  await app.waitForFunction(() => !/Noch nicht abgerufen/.test(document.querySelector('#mailWorkspace')?.innerText || ''), null, { timeout: 15000 }).catch(() => console.log('  ⚠ Alle Konten: Liste blieb leer'));
+  await warte(1500);
   await text('„Alle Konten“: <b>jede Mail aus jedem Konto</b> an einem Ort, nach Absender gebündelt');
   await standbild('allekonten');
   await warte(3000);
@@ -323,6 +335,12 @@ async function szeneWerkzeuge() {
   await seitenwechsel(menue, { faktor: 2.2 });
   await standbild('werkzeuge');
   await warte(2600);
+  if (hoch) {   // am Handy schließt das Menü beim Sprachwechsel; die Knöpfe stehen im selben Menü
+    await text('Im selben Menü: <b>vier Sprachen</b> und <b>hell oder dunkel</b>');
+    await warte(2600);
+    await tippe(menue, { nachher: 600 });
+    return;
+  }
   const auf = async () => { if (!await app.evaluate(() => [...document.querySelectorAll('details')].some(d => d.open && d.textContent.includes('Mycel')))) await tippe(menue, { nachher: 900 }); };
   await text('Vier Sprachen: <b>Deutsch, English, Русский, Polski</b>');
   await tippe('button[data-lang="en"]', { nachher: 2200, lesen: 2.2 });
@@ -342,7 +360,7 @@ async function szeneSchluss() {
   await szene('Schluss');
   await handWeg();
   await karte(`<div class="floh hopst"></div><h1 class="auf">Private Brain <span>Pro</span></h1>
-    <p class="auf">Deine Daten bleiben bei dir · in Heimarbeit gebaut</p>`, 'iris', null, 3800);
+    <p class="auf">Deine Daten bleiben bei dir</p>`, 'iris', null, 3800);
 }
 
 await start();

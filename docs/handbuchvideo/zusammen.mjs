@@ -2,13 +2,16 @@
 // Musik optional über das Ganze: MUSIK=/pfad.mp3 node zusammen.mjs
 import { execFileSync } from 'node:child_process'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const HIER = path.dirname(fileURLToPath(import.meta.url)), FILM = path.join(HIER, '..', 'film');
-const INTRO = 22.4, UEB = 0.8, APP = path.join(HIER, '_roh', 'quer', 'pb-erklaer-quer.mp4');
+const HOCH = !!process.env.HOCH, LAGE = HOCH ? 'hoch' : 'quer';
+const INTRO = 22.4, UEB = 0.8, APP = path.join(HIER, '_roh', LAGE, `pb-erklaer-${LAGE}.mp4`);
 const appDauer = +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', APP]).toString();
 const dauer = INTRO + appDauer - UEB, MUSIK = process.env.MUSIK && fs.existsSync(process.env.MUSIK) ? process.env.MUSIK : null;
 const aus = path.join(HIER, process.env.AUS || (MUSIK ? 'private-brain-pro-handbuch.mp4' : 'private-brain-pro-handbuch-ohne-musik.mp4'));
 const inp = ['-i', path.join(FILM, 'pb-film-1080p.mp4'), '-i', path.join(FILM, 'effekte.wav'), '-i', APP];
 if (MUSIK) inp.push('-stream_loop', '-1', '-i', MUSIK);
-let f = `[0:v]trim=0:${INTRO},setpts=PTS-STARTPTS,fps=30,format=yuv420p,settb=1/30[iv];[2:v]fps=30,format=yuv420p,settb=1/30[av];`
+let f = (HOCH   // hochkant: der quer gebaute Anfang mittig, darüber und darunter dasselbe Bild weich und dunkler
+  ? `[0:v]trim=0:${INTRO},setpts=PTS-STARTPTS,fps=30,split[a][b];[a]scale=-2:1920,crop=1080:1920,boxblur=28:4,eq=brightness=-0.12[bg];[b]scale=1080:-2[fg];[bg][fg]overlay=0:(H-h)/2,format=yuv420p,settb=1/30[iv];`
+  : `[0:v]trim=0:${INTRO},setpts=PTS-STARTPTS,fps=30,format=yuv420p,settb=1/30[iv];`) + `[2:v]fps=30,format=yuv420p,settb=1/30[av];`
   + `[iv][av]xfade=transition=fade:duration=${UEB}:offset=${INTRO - UEB},format=yuv420p[v];`
   + `[1:a]atrim=0:${INTRO},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=0.8[ia];`
   + `[2:a]aformat=sample_rates=48000:channel_layouts=stereo[aa];[ia][aa]acrossfade=d=${UEB}[fx]`;

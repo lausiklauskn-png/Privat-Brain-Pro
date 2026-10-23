@@ -18,7 +18,13 @@ Klaus: *„ein Erklärvideo … genauso wie Workflow PDF … mit dem Finger“*,
   `python3 musik.py <Videolänge>` baut beide Tonspuren.
 - **Musik** sucht Klaus selbst aus (Pixabay, <https://pixabay.com/de/music/>). Die Datei kommt **nie** ins Repo.
 - ⚠ Ausgabe immer **yuv420p, H.264 High**: die erste Fassung war yuv444p und zeigte auf Handys nur Ton (`zusammen.mjs`).
-- Bekannt: „Alle Konten“ steht im Video noch leer da (das Einordnen braucht länger als die gekürzte Pause).
+- **Hochkant** (`node aufnahme.mjs --hoch`, `HOCH=1 node zusammen.mjs`): Handy-Ansicht, Beispiele aus `beispiel-hoch/`,
+  Puzzle-Anfang mittig mit weichem Rand; „Alle Konten“ und das Umschalten von Sprache/Hell-Dunkel fehlen dort
+  (am Handy liegt das hinter der Ordnerliste bzw. das Menü schließt beim Umschalten). FP-Video: `private-brain-pro-handbuch-hoch`,
+  `private-brain-pro-handbuch-hoch-uplifting`.
+- Sonnenuntergänge in `beispiel/` und `beispiel-hoch/` hat Klaus mit ChatGPT erzeugen lassen (2026-10-23).
+- Beim Heranzoomen blendet die Bühne die Kapitelzeile aus (sie lag sonst unter dem Bild).
+- Keine Worte wie „in Heimarbeit gebaut“ (Klaus 2026-10-23: klingt beim Verkauf unprofessionell).
 
 ```bash
 # Repo: npm install (playwright-core), www gebaut; Werbefilm-Video und effekte.wav unter ../film/ (siehe docs/film/README.md)
