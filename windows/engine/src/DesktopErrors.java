@@ -6,6 +6,7 @@ final class DesktopErrors {
         for(int i=0;i<15&&current!=null;i++){
             if(current instanceof AppNetwork.Blocked)return "APP_OFFLINE";
             if(current instanceof MailFailure)return ((MailFailure)current).code;
+            if(current instanceof SemanticModel.Failure)return ((SemanticModel.Failure)current).code;
             if(current instanceof VaultCrypto.Failure)return current.getMessage();
             if(current instanceof javax.net.ssl.SSLException)return "TLS_FAILED";
             if(current instanceof javax.mail.AuthenticationFailedException)return "AUTH_FAILED";

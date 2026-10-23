@@ -2,11 +2,12 @@
 // subset; mail protocol/model/OS adapters receive additional cases as completed.
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright-core';
-import {writeFile,mkdir} from 'node:fs/promises';
+import {writeFile,mkdir,readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
 const phase=process.argv[2]||'first',out=resolve(process.argv[3]||'windows-report.json');
 const report={phase,source:process.env.PB_SOURCE_COMMIT||'',checks:[],errors:[]};
+const expectedVersion=JSON.parse(await readFile(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8')).version;
 const ok=(name,value)=>{assert.ok(value,name);report.checks.push(name);console.log('PASS '+name);};
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const PASSWORD='CI-Tresor-ä-Probe-2026';
@@ -36,7 +37,7 @@ try{
   assert.ok(page,'Installed main page exists');
   page.on('pageerror',error=>report.errors.push(error.message));
   await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
-  const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName==='1.0.0-preview.29');
+  const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
   ok('raw calls without the private app capability are denied',await page.evaluate(async()=>{try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProFiles',method:'listOriginals',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}}));
   if(phase==='first'){
     const bytes=Buffer.from('Windows-Probe: Fahrzeug Radstand 2820 Millimeter');
@@ -62,6 +63,29 @@ try{
     let tool;for(let i=0;i<40;i++){tool=page.frames().find(f=>f.url().startsWith('https://pbtool.localhost/kimboard/'));if(tool)break;await pause(250);}assert.ok(tool,'Tool origin loads');
     ok('tool origin cannot access app storage or native account/vault functions',await tool.evaluate(()=>{try{void parent.Capacitor.Plugins.ProVault;return false;}catch{return true;}}));
     await page.locator('#tool-origin-probe').evaluate(f=>f.remove());
+    await page.evaluate(()=>{window.speechProbe=null;Capacitor.Plugins.ProSpeech.listen({language:'de-DE'}).then(v=>window.speechProbe=v,e=>window.speechProbe={error:e.code});});
+    for(let i=0;i<60;i++){
+      if(await page.evaluate(()=>Boolean(window.speechProbe)))break;
+      const speech=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().includes('/windows/dialog/index.html'));
+      if(speech){await speech.locator('#cancel').waitFor();await speech.locator('#cancel').click();break;}await pause(100);
+    }
+    await page.waitForFunction(()=>window.speechProbe,null,{timeout:10000});
+    ok('Windows speech adapter returns cancellation or explicit missing system recognition',await page.evaluate(()=>speechProbe.cancelled===true||speechProbe.error==='SPEECH_UNAVAILABLE'));
+    report.speech='API/cancellation only; no spoken-audio or microphone acceptance on the CI runner';
+    const scan=await call('ProFiles','scan',{hash});
+    ok('Defender adapter reports a bounded named result without claiming a clean file',scan.provider==='Microsoft Defender'&&['completed','attention','unavailable'].includes(scan.status));
+    await page.evaluate(()=>{window.modelDownload=null;window.modelProgress=0;Capacitor.Plugins.ProSemantic.addListener('progress',p=>window.modelProgress=p.done);Capacitor.Plugins.ProSemantic.install().then(v=>window.modelDownload=v,e=>window.modelDownload={error:e.code});});
+    await page.waitForFunction(()=>window.modelProgress>0||window.modelDownload,null,{timeout:180000});
+    if(!await page.evaluate(()=>Boolean(window.modelDownload))){await call('ProSemantic','cancel');await page.waitForFunction(()=>window.modelDownload,null,{timeout:30000});}
+    const partial=await call('ProSemantic','getState');ok('cancelled model download leaves a truthful resumable state',!partial.running&&(partial.installed||partial.present>0));
+    const model=await call('ProSemantic','install');ok('complete real model download matches the pinned fingerprints',model.installed===true);
+    await page.evaluate(()=>PBNetwork.setOffline(true));
+    const meaning=await page.evaluate(async()=>{
+      await SbkimEmbedding.init();const q=await SbkimEmbedding.embedQuery('Rechnung vom Zahnarzt'),near=await SbkimEmbedding.embedPassage('Zahnarztrechnung über 120 Euro für eine Füllung'),far=await SbkimEmbedding.embedPassage('Wetterbericht: morgen Regen in Hamburg');
+      const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);return{dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline,fallback:SbkimEmbedding.getModelFallback()};
+    });
+    ok('installed WebView2 understands meaning from the local e5 model while offline',meaning.dim===384&&meaning.near>meaning.far+0.02&&meaning.source==='local'&&meaning.root==='https://tauri.localhost/models/'&&meaning.offline&&!meaning.fallback);
+    report.model=meaning;await page.evaluate(()=>PBNetwork.setOffline(false));
   }else{
     const hash=createHash('sha256').update('Windows-Probe: Fahrzeug Radstand 2820 Millimeter').digest('hex');
     ok('catalog persists across process restart and reinstallation',await page.evaluate(()=>CATALOG.some(r=>r.name==='windows-proof.txt')));

@@ -27,6 +27,8 @@ function Phase($name) {
   if ($code -ne 0) { throw "Installed acceptance failed: $name" }
 }
 Run-Setup $setup
+node windows/engine/protocol-test.mjs (Join-Path $appDir 'runtime/jre/bin/java.exe') (Join-Path $appDir 'runtime')
+if ($LASTEXITCODE -ne 0) { throw 'The NSIS-installed runtime failed its private protocol probe.' }
 $registration = Get-ItemProperty 'HKCU:\Software\Classes\Applications\private-brain-pro.exe\shell\open\command'
 if (!$registration.'(default)'.Contains('private-brain-pro.exe')) { throw 'Open-with registration missing.' }
 Phase 'first'

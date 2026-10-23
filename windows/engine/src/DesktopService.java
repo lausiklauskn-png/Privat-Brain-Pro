@@ -161,6 +161,12 @@ final class DesktopService {
             case "readOriginal" -> bytes(originals.read(hash,o.optLong("offset",-1)));
             case "open","share" -> {Selected selected=selected(o);yield export(selected,method.equals("share"));}
             case "saveRecoveryKeys" -> recovery(o);
+            case "scan" -> {
+                Selected selected;
+                if(o.has("vaultRef")){java.io.File file=vault.stageAttachment(required(o,"vaultRef"));selected=new Selected(file,file.getName());}
+                else selected=selected(o);
+                Path copy=exports.stage(selected.file,selected.name);yield host.call("scanVerified",new JSONObject().put("path",copy.toString()));
+            }
             case "openPdf" -> pdf.open(selected(o).file);
             case "pdfPage" -> pdf.page(required(o,"id"),o.optInt("page",-1),o.optInt("width",1200));
             case "closePdf" -> {pdf.close(required(o,"id"));yield yes();}

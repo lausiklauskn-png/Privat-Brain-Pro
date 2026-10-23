@@ -5,6 +5,7 @@ mod win;
 mod resources;
 mod tools;
 mod speech;
+mod defender;
 use host::Host;
 use serde_json::{Value,json};
 use std::sync::Arc;

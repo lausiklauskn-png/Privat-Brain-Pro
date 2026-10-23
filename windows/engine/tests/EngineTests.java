@@ -148,6 +148,45 @@ public final class EngineTests {
         JSONObject protection=service.call("ProProtect","checkHashes",new JSONObject().put("items",new JSONArray().put(hash)));
         ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
     }
+    static void tls(DesktopState state)throws Exception {
+        AppNetwork.setOffline(state,false);
+        try(TestMailTlsServer server=new TestMailTlsServer("test",false,false)){
+            var client=javax.mail.Session.getInstance(MailAccount.properties()).getStore("imaps");boolean rejected=false;
+            try{client.connect("localhost",server.port,"test","not-a-real-password");}catch(Exception expected){rejected=true;}finally{client.close();}
+            server.await();ok(rejected&&server.authentications.get()==0,"untrusted TLS is rejected before any IMAP authentication");
+        }
+        try(TestMailTlsServer server=new TestMailTlsServer("test",false,false)){
+            var properties=MailAccount.properties();properties.put("mail.imaps.ssl.socketFactory",server.trustedClient);
+            var client=javax.mail.Session.getInstance(properties).getStore("imaps");boolean rejected=false;
+            try{client.connect(server.numericHost(),server.port,"test","not-a-real-password");}catch(Exception expected){rejected=true;}finally{client.close();}
+            server.await();ok(rejected&&server.authentications.get()==0,"a trusted test issuer still cannot bypass hostname validation");
+        }
+        for(boolean smtp:new boolean[]{false,true})try(TestMailTlsServer server=new TestMailTlsServer("test",smtp,false,true)){
+            String protocol=smtp?"smtps":"imaps";var properties=MailAccount.properties("oauth2");properties.put("mail."+protocol+".ssl.socketFactory",server.trustedClient);
+            var session=javax.mail.Session.getInstance(properties);
+            try(var client=smtp?session.getTransport(protocol):session.getStore(protocol)){
+                client.connect("localhost",server.port,TestMailTlsServer.OAUTH_USER,TestMailTlsServer.OAUTH_TOKEN);
+                ok(client.isConnected(),"real "+protocol+" verified TLS connection accepts XOAUTH2 without password fallback");
+            }
+            server.await();ok(server.authentications.get()==1,"shared Android TLS fixture verifies exactly one "+protocol+" OAuth authentication");
+        }
+        for(boolean loss:new boolean[]{false,true})try(TestMailTlsServer server=new TestMailTlsServer("test",true,loss)){
+            var properties=MailAccount.properties();properties.put("mail.smtps.ssl.socketFactory",server.trustedClient);var session=javax.mail.Session.getInstance(properties);
+            MailAccount account=new MailAccount(new JSONObject().put("provider","hetzner").put("email","sender@example.invalid").put("password","fixture-only").put("imap","mail.example.invalid").put("smtp","mail.example.invalid"));
+            JSONObject draft=new JSONObject().put("submission",UUID.randomUUID().toString()).put("to","receiver@example.invalid").put("bcc","hidden@example.invalid").put("subject","TLS proof").put("text","local fixture only").put("attachments",new JSONArray());
+            byte[] raw=MailMime.bytes(MailMime.compose(account,draft,session));int[] connects={0};
+            MailOutbox.Delivery delivery=new MailOutbox.Delivery(){
+                com.sun.mail.smtp.SMTPTransport client;
+                public void connect()throws Exception{connects[0]++;client=(com.sun.mail.smtp.SMTPTransport)session.getTransport("smtps");client.connect("localhost",server.port,"test","fixture-only");}
+                public void send(byte[] data)throws Exception{var message=new javax.mail.internet.MimeMessage(session,new ByteArrayInputStream(data));client.sendMessage(message,message.getAllRecipients());}
+                public void close(){try{if(client!=null)client.close();}catch(Exception ignored){}}
+            };
+            var store=new EncryptedMailStore(state);JSONObject result=new MailOutbox(store).send(account.id,draft,raw,delivery);
+            ok(result.getString("status").equals(loss?"uncertain":"sent"),"real TLS SMTP delivery keeps its "+(loss?"uncertain":"confirmed")+" result");
+            JSONObject repeated=new MailOutbox(new EncryptedMailStore(state)).send(account.id,draft,raw,delivery);server.await();
+            ok(repeated.getString("status").equals(result.getString("status"))&&connects[0]==1&&server.deliveries.get()==1&&!server.leakedBcc.get(),"reopening the store cannot resend SMTP DATA or expose Bcc headers");
+        }
+    }
     static void updatesAndExports(Path root,DesktopState state)throws Exception {
         String version="1.0.0-preview.30",tag="windows-v"+version,name="Private-Brain-Pro-Windows-"+version+"-x64-setup.exe";
         String url="https://github.com/"+UpdatePolicy.REPOSITORY+"/releases/download/"+tag+"/"+name;
@@ -250,6 +289,7 @@ public final class EngineTests {
         service(root,Path.of(args[0]));
         mailNames(root);
         updatesAndExports(root,state);
+        tls(state);
         if(!System.getProperty("os.name").startsWith("Windows")){
             Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
             fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));

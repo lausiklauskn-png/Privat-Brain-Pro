@@ -43,6 +43,9 @@ pub fn open(_:&str)->Result<(),String>{Err("FILE_UNAVAILABLE".into())}
 #[cfg(windows)]
 pub fn open_document(path:&Path)->Result<(),String>{
     use windows::{core::{HSTRING,PCWSTR},Win32::UI::Shell::{SHOpenWithDialog,OPENASINFO,OAIF_EXEC,OAIF_HIDE_REGISTRATION}};
+    use windows::Win32::System::Com::{CoInitializeEx,CoUninitialize,COINIT_APARTMENTTHREADED};
+    unsafe{CoInitializeEx(None,COINIT_APARTMENTTHREADED)}.ok().map_err(|_|"FILE_UNAVAILABLE")?;
+    struct Apartment;impl Drop for Apartment{fn drop(&mut self){unsafe{CoUninitialize();}}}let _apartment=Apartment;
     let target=HSTRING::from(path.to_str().ok_or("FILE_UNAVAILABLE")?);
     let info=OPENASINFO{pcszFile:PCWSTR(target.as_ptr()),pcszClass:PCWSTR::null(),oaifInFlags:OAIF_EXEC|OAIF_HIDE_REGISTRATION};
     // Always ask which installed application should receive this copy.

@@ -98,6 +98,11 @@ impl Host {
                 if !path.is_file(){return Err("FILE_UNAVAILABLE".into());}
                 win::open_document(&path)?;Ok(json!({"ok":true}))
             }
+            "scanVerified"=>{
+                let path=PathBuf::from(text("path"));if !path.starts_with(self.data.join("cache/exports")){return Err("NOT_ALLOWED".into());}
+                win::no_links(&path)?;if !path.is_file(){return Err("FILE_UNAVAILABLE".into());}
+                match crate::defender::scan(&path){Ok(value)=>Ok(value),Err(code)if code.starts_with("SCANNER_")=>Ok(json!({"provider":"Microsoft Defender","status":"unavailable","reason":code})),Err(code)=>Err(code)}
+            }
             _=>Err("NOT_ALLOWED".into()),
         }
     }
