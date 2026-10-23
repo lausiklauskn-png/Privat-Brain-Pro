@@ -6,6 +6,7 @@ $setup = (Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '*-
 if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -ne 'NotSigned') { throw 'Expected the explicitly chosen unsigned installer.' }
 $appDir = Join-Path $env:LOCALAPPDATA 'Private Brain Pro'
 $exe = Join-Path $appDir 'private-brain-pro.exe'
+. (Join-Path $PSScriptRoot 'uninstall.ps1')
 function Install($path) {
   $process = Start-Process -FilePath $path -ArgumentList '/S' -PassThru
   if (!$process.WaitForExit(180000)) { $process | Stop-Process -Force; throw 'Installer timed out.' }
@@ -38,7 +39,6 @@ try {
   Start-Sleep -Seconds 3
 }
 Install (Join-Path $appDir 'uninstall.exe')
-if (Test-Path $exe) { throw 'Production uninstall left the application binary.' }
-if (Test-Path 'HKCU:\Software\Classes\Applications\private-brain-pro.exe') { throw 'Open-with registration survived uninstall.' }
+Wait-ApplicationRemoval
 if (!(Test-Path (Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro'))) { throw 'Uninstall removed app data.' }
 Write-Output 'PASS production uninstall removes binaries and registration, preserving app data'

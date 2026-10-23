@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true') { throw 'This installation probe is intended for an isolated GitHub Windows runner.' }
 $appDir = Join-Path $env:LOCALAPPDATA 'Private Brain Pro'
 $exe = Join-Path $appDir 'private-brain-pro.exe'
+. (Join-Path $PSScriptRoot 'uninstall.ps1')
 $env:PB_WINDOWS_TEST_EXE = $exe
 $setup = (Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '*-setup.exe' | Select-Object -First 1).FullName
 $env:PB_WINDOWS_TEST_FOLDER = Join-Path $env:RUNNER_TEMP 'private-brain-vault-probe'
@@ -41,8 +42,8 @@ if (!$registration.'(default)'.Contains('private-brain-pro.exe')) { throw 'Open-
 Phase 'first'
 Phase 'restart'
 Run-Setup (Join-Path $appDir 'uninstall.exe')
-Start-Sleep -Seconds 3
-if (Test-Path $exe) { throw 'Uninstaller left the application binary.' }
+Wait-ApplicationRemoval
 Run-Setup $setup
 Phase 'reinstalled'
 Run-Setup (Join-Path $appDir 'uninstall.exe')
+Wait-ApplicationRemoval

@@ -9,8 +9,8 @@
   der aktuelle Nutzerauftrag gibt dessen Umsetzung frei.
 - Ausgangspunkt V28: `8dae28113f7fa19a4446406f492e0c307c4ef0cb`, veröffentlichte
   Version `1.0.0-preview.28`, VersionCode 28. Qualitätskorrekturen aus PR #67:
-  `fe0fdd401196b5c004c3258abfcac25f3dc14cd8`; dessen gesamte Android-/Engine-CI
-  39860548123 ist grün. Windows baut auf diesem korrigierten Stand auf.
+  zuletzt `fbc7f2d` (zusätzlich wartender Dateiimport); vorheriger Stand `36e043c`
+  mit gesamter Android-/Engine-CI 39875720508 grün. Windows enthält diese Korrekturen.
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.

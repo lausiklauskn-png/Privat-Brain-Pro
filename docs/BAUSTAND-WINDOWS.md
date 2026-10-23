@@ -124,14 +124,23 @@ den Wetterbericht ein. Ein absichtlich beendeter Renderer wird wieder geöffnet;
 der gespeicherte Schutz verhindert den automatischen Modell-Neustart. Zweitstart
 mit echtem Unicode-Dateipfad ist ebenfalls bestanden. 91 Kernfälle liefen unter
 Windows einschließlich echter NTFS-Verknüpfung; 90 unter Linux.
-Der Lauf ist insgesamt noch rot, weil die Abnahme einen unbehandelten
-Seitenfehler festhält. Dessen Ursache wird vor Neustart-/Auslieferungsfreigabe
-beseitigt, nicht aus dem Ergebnis ausgeblendet.
+Der dort gemeldete Seitenfehler war eine zu früh angewandte Windows-Übersetzung;
+die Reihenfolge ist korrigiert und in allen vier Sprachen geprüft.
+[39884701359](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/39884701359)
+besteht die gesamte installierte Funktions-, Offline-Modell-, Rendererabbruch-,
+Neustart-/DPAPI-/Neuinstallationskette ohne unbehandelte Seitenfehler. Der separate
+Produktionsbau startet mit bereitem Kern ohne Debugzugang. Dessen abschließende
+Deinstallationsprobe sah bislang nur auf das Ende des NSIS-Startprozesses;
+sie wartet jetzt begrenzt auf die tatsächlich entfernten Dateien und Registrierung.
+Der vollständige Lauf einschließlich dieses Abschlusses muss grün sein.
 
-Noch abzuschließen: der gemeldete Seitenfehler,
+Gemeinsamer Dateiimport: Während eines laufenden Imports eintreffende Dateien
+bleiben in der nativen Warteschlange. Die Gegenprobe scheiterte am alten Stand;
+jetzt bestehen zwölf Fälle, darunter ein während des Lesens gestarteter Import.
+Diese Korrektur liegt ebenfalls im Android-Audit-PR #67.
 
-mit Offline-Bedeutungssuche, vollständige Neustart-/DPAPI-/Neuinstallationskette,
-abschließender Produktionsbau ohne Prüfzugang, Prüfsummen und Freigabe.
+Noch abzuschließen: aktuelle CI nach diesen letzten Korrekturen, Abschluss der
+Produktions-Deinstallationskette, Auslieferungsprüfsummen und Freigabe.
 Eine gesprochene Aufnahme und Klaus' eigener Windows-PC sind nicht gemessen.
 Defender verwendet die Windows-Einstellungen; eine mögliche Cloud-Prüfung wird
 vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
