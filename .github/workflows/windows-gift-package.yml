@@ -1,0 +1,86 @@
+name: Veröffentlichten Windows-Installer als Geschenkpaket bereitstellen
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Bereits veröffentlichter Windows-Tag
+        required: true
+        default: windows-v1.0.0-preview.29
+        type: string
+      source:
+        description: Vollständiger Quellcommit dieses veröffentlichten Installers
+        required: true
+        default: 7e6fbfd821c6c105661ff638045f6b41e1ffb75b
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: windows-gift-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  geschenk:
+    if: github.ref == 'refs/heads/main' && github.repository == 'lausiklauskn-png/Privat-Brain-Pro'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Veröffentlichten Stand prüfen und unverändert herunterladen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_SOURCE: ${{ inputs.source }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^windows-v[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]]
+          [[ "$RELEASE_SOURCE" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$RELEASE_SOURCE"
+          git merge-base --is-ancestor "$RELEASE_SOURCE" "$GITHUB_SHA"
+          test "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = false
+          mkdir downloads
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir downloads --pattern '*-x64-setup.exe' --pattern SHA256SUMS --pattern windows-build.json --pattern shared-source.json
+          (cd downloads && sha256sum -c SHA256SUMS)
+          run=$(jq -r .acceptanceRun downloads/windows-build.json)
+          [[ "$run" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" > acceptance.json
+          test "$(jq -r .conclusion acceptance.json)" = success
+          test "$(jq -r .head_sha acceptance.json)" = "$RELEASE_SOURCE"
+          test "$(jq -r .head_branch acceptance.json)" = main
+          test "$(jq -r .event acceptance.json)" = push
+          python3 tools/release/package-windows-gift.py --tag "$RELEASE_TAG" --source "$RELEASE_SOURCE" --downloads downloads --output gift
+      - name: Nur fehlende Geschenkdateien ergänzen, vorhandene nie überschreiben
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > published.json
+          for path in gift/*-Geschenkpaket.zip gift/GESCHENK-WINDOWS-CLAUDE-CODE.md gift/GESCHENK-SHA256SUMS; do
+            name=$(basename "$path")
+            url=$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .browser_download_url' published.json)
+            if test -n "$url"; then
+              curl --disable -fsSL --retry 3 "$url" -o existing-file
+              cmp existing-file "$path"
+            else
+              gh release upload "$RELEASE_TAG" "$path" --repo "$GITHUB_REPOSITORY"
+            fi
+          done
+      - name: Öffentliche Geschenkdateien unabhängig herunterladen und vergleichen
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir independent
+          for path in gift/*-Geschenkpaket.zip gift/GESCHENK-WINDOWS-CLAUDE-CODE.md gift/GESCHENK-SHA256SUMS; do
+            name=$(basename "$path")
+            curl --disable -fsSL --retry 5 --retry-all-errors "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$name" -o "independent/$name"
+            cmp "$path" "independent/$name"
+          done
+          (cd independent && sha256sum -c GESCHENK-SHA256SUMS)
+          echo "Geschenkpaket ergänzt und öffentlicher Download bytegleich geprüft: $RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"

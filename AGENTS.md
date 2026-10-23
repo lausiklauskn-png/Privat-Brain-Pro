@@ -1,5 +1,15 @@
 # Private Brain Pro — laufender Auftrag
 
+- Windows ist veröffentlicht: `windows-v1.0.0-preview.29`, Quelle
+  `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, erfolgreicher Release 39920396303.
+  Windows-main-Abnahme 39918739441 und Android-main-Abnahme 39918739332 grün.
+  Öffentlicher Installer unabhängig geladen und SHA-256 bestätigt:
+  `55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97`.
+  `docs/GESCHENKPAKET-WINDOWS.md` ist die Übergabe an Claude Code. Das zusätzliche
+  ZIP wird über `windows-gift-package.yml` an denselben Release angehängt; der
+  direkte Upload aus der Codex-Umgebung erhält bei uploads.github.com HTTP 401.
+  Keine Zugangsdaten auslesen oder anfordern; die vorhandene Actions-Berechtigung
+  benutzen. Der veröffentlichte Installer wird dabei nicht verändert/überschrieben.
 - Neue ausdrückliche Freigabe von Klaus am 23.10.2026: PR #69 für die Windows-
   Version übernehmen und veröffentlichen, einschließlich notwendiger gemeinsamer
   Korrekturen aus #67. Feste öffentliche Downloads und eine Übergabe für Claude
@@ -21,7 +31,7 @@
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
 - Aktueller Quellstand für Android und Windows: `1.0.0-preview.29`, Android-Code
-  29; noch unveröffentlicht. Originale Android-Identität unverändert. Der finale
+  29. Windows ist veröffentlicht, Android .29 noch nicht. Originale Android-Identität unverändert. Der finale
   Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
   grün bleiben. `native/*.js` sind gemeinsam: Android bei Änderungen mitprüfen.
