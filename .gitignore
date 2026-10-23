@@ -36,3 +36,5 @@ windows/engine/build/
 windows/runtime/
 windows/dist/
 windows/src-tauri/target/
+windows/distribution/
+windows/pruef-out/

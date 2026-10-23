@@ -29,7 +29,7 @@ fn pb_dialog(window:WebviewWindow,host:tauri::State<'_,Arc<Host>>,request:tauri:
     host.dialog.lock().unwrap().as_ref().ok_or("VAULT_CANCELLED")?.send(value).map_err(|_|"VAULT_CANCELLED")?;Ok(json!({"ok":true}))
 }
 fn main(){
-    tauri::Builder::default().plugin(tauri_plugin_dialog::init())
+    let result=tauri::Builder::default().plugin(tauri_plugin_dialog::init())
         .register_uri_scheme_protocol("pbtool",tools::response)
         .plugin(tauri_plugin_single_instance::init(|app,arguments,cwd|{
             if let Some(window)=app.get_webview_window("main"){let _=window.set_focus();}
@@ -56,5 +56,6 @@ fn main(){
                     if window.label()=="main"{host.shutdown();window.app_handle().exit(0);}
                 }
             }
-        }).run(tauri::generate_context!()).expect("Private Brain Pro konnte nicht starten");
+        }).run(tauri::generate_context!());
+    if result.is_err(){win::startup_error();std::process::exit(1);}
 }

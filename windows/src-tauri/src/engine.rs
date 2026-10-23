@@ -15,9 +15,9 @@ impl Engine {
         // application. CREATE_NO_WINDOW below prevents any console window.
         let java = runtime.join(if cfg!(windows) { "jre/bin/java.exe" } else { "jre/bin/java" });
         let mut command = Command::new(java);
-        // env::join_paths quotes Windows PATH components containing spaces.
-        // Those literal quotes are not Java classpath syntax. Relative entries
-        // also support an installation directory containing a semicolon.
+        // PATH quoting from env::join_paths is unsuitable for Java classpath
+        // entries. Relative entries avoid quoting/separator ambiguities and
+        // support an installation directory containing a semicolon.
         command.current_dir(runtime);
         let classpath=if cfg!(windows){"engine/classes;engine/lib/*"}else{"engine/classes:engine/lib/*"};
         command.env_remove("JAVA_TOOL_OPTIONS").env_remove("_JAVA_OPTIONS").env_remove("JDK_JAVA_OPTIONS");

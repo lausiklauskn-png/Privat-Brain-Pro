@@ -1,5 +1,13 @@
 use std::path::Path;
 
+#[cfg(windows)]
+pub fn startup_error(){
+    use windows::{core::HSTRING,Win32::UI::WindowsAndMessaging::{MessageBoxW,MB_OK,MB_ICONERROR}};
+    unsafe{MessageBoxW(None,&HSTRING::from("Private Brain Pro konnte nicht starten. Ihre Daten wurden nicht zurückgesetzt. Bitte die Installation und den verfügbaren Speicher prüfen.\n\nPrivate Brain Pro could not start. Your data was not reset. Please check the installation and available storage.\n\nAPP_START_FAILED"),&HSTRING::from("Private Brain Pro"),MB_OK|MB_ICONERROR);}
+}
+#[cfg(not(windows))]
+pub fn startup_error(){}
+
 pub fn no_links(path:&Path)->Result<(),String> {
     let mut current=std::path::PathBuf::new();
     for part in path.components() {

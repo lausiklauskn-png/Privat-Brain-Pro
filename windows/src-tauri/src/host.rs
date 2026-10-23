@@ -26,7 +26,8 @@ impl Host {
     }
     pub fn start(self:&Arc<Self>)->Result<(),String>{
         let runtime=self.app.path().resource_dir().map_err(|_|"APP_RUNTIME_UNAVAILABLE")?.join("runtime");
-        let engine=Engine::start(&runtime,&self.data,self)?;*self.engine.lock().unwrap()=Some(engine);Ok(())
+        let engine=Engine::start(&runtime,&self.data,self)?;*self.engine.lock().unwrap()=Some(engine.clone());
+        if let Err(error)=engine.call("ProDevice","getInfo",json!({})){engine.stop();return Err(error);}Ok(())
     }
     pub fn authorized(&self,request:&tauri::ipc::Request<'_>)->bool {
         let value=request.headers().get("x-pb-session").and_then(|v|v.to_str().ok()).unwrap_or("");
@@ -87,6 +88,11 @@ impl Host {
             }
             "saveLocation"=>{
                 let name=text("name");if name.is_empty()||name.len()>512||name.contains(['/', '\\', ':']){return Err("INVALID_INPUT".into());}
+                #[cfg(feature="messprobe")]
+                if let Ok(folder)=std::env::var("PB_WINDOWS_TEST_SAVE_FOLDER"){
+                    let path=PathBuf::from(folder).join(name);win::no_links(&path)?;
+                    return Ok(json!({"path":path.to_str().ok_or("FILE_UNAVAILABLE")?}));
+                }
                 let selected=self.app.dialog().file().set_file_name(name).blocking_save_file();
                 match selected {None=>Ok(json!({"cancelled":true})),Some(file)=>{let path=file.into_path().map_err(|_|"FILE_UNAVAILABLE")?;win::no_links(&path)?;Ok(json!({"path":path.to_str().ok_or("FILE_UNAVAILABLE")?}))}}
             }

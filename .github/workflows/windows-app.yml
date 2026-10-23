@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['windows/**','native/**','android/app/src/main/java/**','tools/native/**','.github/workflows/windows-app.yml']
   push:
-    branches: ['codex/windows-native-host']
+    branches: ['main','codex/windows-native-host']
 permissions:
   contents: read
 concurrency:
@@ -72,3 +72,17 @@ jobs:
             windows/engine/build/shared-source.json
           if-no-files-found: error
           retention-days: 14
+      - name: Auslieferungsbau ohne Prüfzugang
+        run: npm run tauri --prefix windows -- build --bundles nsis
+      - name: Tatsächlichen Auslieferungsbau installieren, starten und entfernen
+        run: ./windows/pruefung/production.ps1
+      - name: Unverwechselbaren Installer und Prüfsummen vorbereiten
+        run: node windows/tools/distribution.mjs
+        env:
+          PB_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-installer
+          path: windows/distribution/
+          if-no-files-found: error
+          retention-days: 30

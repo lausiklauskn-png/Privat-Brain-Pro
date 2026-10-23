@@ -4,7 +4,8 @@ $appDir = Join-Path $env:LOCALAPPDATA 'Private Brain Pro'
 $exe = Join-Path $appDir 'private-brain-pro.exe'
 $setup = (Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '*-setup.exe' | Select-Object -First 1).FullName
 $env:PB_WINDOWS_TEST_FOLDER = Join-Path $env:RUNNER_TEMP 'private-brain-vault-probe'
-New-Item -ItemType Directory -Force $env:PB_WINDOWS_TEST_FOLDER, 'windows/pruef-out' | Out-Null
+$env:PB_WINDOWS_TEST_SAVE_FOLDER = Join-Path $env:RUNNER_TEMP 'private-brain-export-probe'
+New-Item -ItemType Directory -Force $env:PB_WINDOWS_TEST_FOLDER, $env:PB_WINDOWS_TEST_SAVE_FOLDER, 'windows/pruef-out' | Out-Null
 function Run-Setup($file) {
   $process = Start-Process -FilePath $file -ArgumentList '/S' -PassThru
   if (!$process.WaitForExit(180000)) { $process | Stop-Process -Force; throw 'Installer timed out.' }

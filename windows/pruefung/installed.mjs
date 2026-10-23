@@ -42,12 +42,22 @@ try{
   const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
   ok('raw calls without the private app capability are denied',await page.evaluate(async()=>{try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProFiles',method:'listOriginals',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}}));
   if(phase==='first'){
+    await page.evaluate(()=>{window.accountProbe=null;Capacitor.Plugins.ProMail.addAccount().then(v=>window.accountProbe=v,e=>window.accountProbe={error:e.code});});
+    const account=await dialog();ok('native account dialog uses all eight shared provider templates',await account.locator('#provider option').count()===8);
+    await account.locator('#provider').selectOption('gmail');ok('Gmail uses browser authorization without a password field',!await account.locator('#password-label').isVisible());
+    await account.locator('#provider').selectOption('microsoft');ok('unconfigured Microsoft integration shows a plan and accepts no password',await account.locator('#submit').isDisabled()&&!await account.locator('#password-label').isVisible()&&(await account.locator('#help').textContent()).includes('Microsoft Entra'));
+    await account.locator('#cancel').click();await page.waitForFunction(()=>window.accountProbe,null,{timeout:10000});ok('account dialog cancellation connects no account',await page.evaluate(()=>accountProbe.error==='CANCELLED')&&(await call('ProMail','accounts')).items.length===0);
     const bytes=Buffer.from('Windows-Probe: Fahrzeug Radstand 2820 Millimeter');
     await page.setInputFiles('#fileInput',{name:'windows-proof.txt',mimeType:'text/plain',buffer:bytes});
     await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='windows-proof.txt'),{},{timeout:90000});
     const hash=createHash('sha256').update(bytes).digest('hex');
     const original=await call('ProFiles','originalInfo',{hash});ok('real imported original is persisted and fingerprinted',original.hash===hash&&original.size===bytes.length);
     const read=await call('ProFiles','readOriginal',{hash,offset:0});ok('original reads back through the native bridge',Buffer.from(read.data,'base64').equals(bytes));
+    const exported=await call('ProFiles','share',{hash});ok('native save selection commits a verified export without changing the original',exported.saved&&Buffer.from(await readFile(resolve(process.env.PB_WINDOWS_TEST_SAVE_FOLDER,'windows-proof.txt'))).equals(bytes));
+    const shares=Array.from({length:5},(_,i)=>`JT3v5-${i+1}-CI_fixture_only_not_a_real_share`);
+    const saved=await call('ProFiles','saveRecoveryKeys',{shares,name:'CI-RECOVERY-KEYS.txt',heading:'Test fixture only'});
+    const recovery=await readFile(resolve(process.env.PB_WINDOWS_TEST_SAVE_FOLDER,'CI-RECOVERY-KEYS.txt'),'utf8');
+    ok('recovery export commits exactly the requested five parts before confirming success',saved.saved&&recovery===['Test fixture only','',...shares,''].join('\n'));
     await page.evaluate(()=>{window.vaultResult=null;Capacitor.Plugins.ProVault.choose().then(v=>window.vaultResult=v,e=>window.vaultResult={error:e.code});});
     const password=await dialog();await password.locator('#password').fill(PASSWORD);await password.locator('#repeat').fill(PASSWORD);await password.locator('#notice').check();await password.locator('#remember').check();await password.locator('#submit').click();
     await page.waitForFunction(()=>window.vaultResult,{},{timeout:90000});
@@ -56,6 +66,11 @@ try{
     const ticket=(await call('ProVault','catalogBegin')).ticket;
     await call('ProVault','catalogAppend',{ticket,offset:0,data:Buffer.from('Windows native catalog proof').toString('base64')});await call('ProVault','catalogFinish',{ticket});
     const backup=await call('ProVault','catalogInfo');ok('catalog is committed and read back before success',backup.exists&&backup.size>0);
+    await page.evaluate(()=>{window.keyProbe=null;Capacitor.Plugins.ProProtect.setKey({service:'virustotal'}).then(v=>window.keyProbe=v,e=>window.keyProbe={error:e.code});});
+    const key=await dialog();await key.locator('#password').fill('CI-fixture-only-never-a-real-key');await key.locator('#submit').click();
+    await page.waitForFunction(()=>window.keyProbe,null,{timeout:10000});ok('native provider key dialog confirms the committed encrypted key',await page.evaluate(()=>keyProbe.saved&&keyProbe.state.keys.virustotal));
+    await page.evaluate(()=>{window.keyProbe=null;Capacitor.Plugins.ProProtect.setKey({service:'virustotal'}).then(v=>window.keyProbe=v,e=>window.keyProbe={error:e.code});});
+    const remove=await dialog();await remove.locator('#remove').click();await page.waitForFunction(()=>window.keyProbe,null,{timeout:10000});ok('native provider key can be explicitly removed',await page.evaluate(()=>keyProbe.removed&&!keyProbe.state.keys.virustotal));
     const preview=await call('ProFiles','openPdf',{name:'preview.pdf',data:pdf().toString('base64')});
     const png=await call('ProFiles','pdfPage',{id:preview.id,page:0,width:600});ok('installed app renders a real PDF in its isolated worker',preview.pages===1&&png.width>0&&Buffer.from(png.data,'base64').subarray(1,4).toString()==='PNG');
     // Leave the worker open: the process-lifetime test must also terminate it.
