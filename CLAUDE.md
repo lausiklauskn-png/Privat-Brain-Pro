@@ -2,7 +2,8 @@
 
 **Übergabe 2026-10-23:** Geschenkbox für Jens nur noch mit Private Brain Pro und Workflow PDF Pro (Android + Windows,
 ohne iOS/PWA), `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`, Quelle `docs/geschenk/geschenk-jens.html`. Private Brain
-Pro Windows: PR #69 zusammengeführt, Veröffentlichung `windows-v1.0.0-preview.29` nach Anleitung unten. Desktop-OAuth-Client
+Pro Windows **1.0.29 veröffentlicht** (`windows-v1.0.0-preview.29`, Lauf 39920396303, Setup.exe SHA-256 `55d5728a…eab52e97`,
+unabhängig geprüft). Desktop-OAuth-Client
 „Private Brain Pro Windows“ im Projekt `privat-brain-pro` angelegt. [Brief](BRIEF_UEBERGABE_2026-10-23_GESCHENK.md).
 
 **Windows-Freigabe 23.10.2026:** Klaus beauftragt die Übernahme von PR #69 mit
