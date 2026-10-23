@@ -6,6 +6,13 @@ iOS bleibt für später zurückgestellt. Klaus hat jetzt ausdrücklich die Über
 von #69 und die Windows-Veröffentlichung für ein Geschenkpaket beauftragt.
 Die vollständige Windows-Abnahme 39885843960 und Android-Abnahme 39885843963
 sind auf `079433d` grün; vor Veröffentlichung werden sie auf main erneut verlangt.
+Die Veröffentlichung ist inzwischen abgeschlossen:
+[`windows-v1.0.0-preview.29`](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29),
+Quelle `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, Release 39920396303 grün.
+Windows-main 39918739441 und Android-main 39918739332 vollständig grün.
+Installer: 48.562.317 Bytes, SHA-256
+`55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97`.
+Der öffentliche Download wurde unabhängig erneut geladen und geprüft.
 Feste Downloadpfade und Übergabe: [Geschenkpaket](GESCHENKPAKET-WINDOWS.md).
 
 ## V28 und gemeinsame Korrekturen
@@ -159,7 +166,7 @@ vor der Übergabe benannt. „Virenfrei“ wird nicht behauptet.
 ## Veröffentlichung
 
 Gemeinsamer Quellstand für die Abnahme: `1.0.0-preview.29`, Android-Code 29.
-Windows-Veröffentlichung ausdrücklich beauftragt; .28 wird nicht überschrieben.
+Windows .29 ist veröffentlicht; Android .28 wurde nicht überschrieben.
 Release nur von geprüftem main, nach ausdrücklicher Freigabe, mit ursprünglicher
 Android-Signieridentität, Prüfsummen und unabhängigem Downloadvergleich.
 

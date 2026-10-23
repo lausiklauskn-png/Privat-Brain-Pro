@@ -1,7 +1,7 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**Android: .28. Windows: .29 für die Veröffentlichung freigegeben.**
+**Android: .28. [Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
 Windows-Download, Installation und Übergabe an Claude Code:
 [Geschenkpaket für Windows](docs/GESCHENKPAKET-WINDOWS.md).
 Android über die vorhandene App

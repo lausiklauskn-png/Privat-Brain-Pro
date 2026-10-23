@@ -1,10 +1,17 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Übergabe 2026-10-23:** Geschenkbox für Jens nur noch mit Private Brain Pro und Workflow PDF Pro (Android + Windows,
-ohne iOS/PWA), `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`, Quelle `docs/geschenk/geschenk-jens.html`. Private Brain
-Pro Windows **1.0.29 veröffentlicht** (`windows-v1.0.0-preview.29`, Lauf 39920396303, Setup.exe SHA-256 `55d5728a…eab52e97`,
-unabhängig geprüft). Desktop-OAuth-Client
-„Private Brain Pro Windows“ im Projekt `privat-brain-pro` angelegt. [Brief](BRIEF_UEBERGABE_2026-10-23_GESCHENK.md).
+**Übergabe 2026-10-23:** Geschenkbox für Jens nur mit Private Brain Pro und Workflow PDF Pro (Android + Windows,
+ohne iOS/PWA) und drei Filmen, `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`, Quelle `docs/geschenk/geschenk-jens.html`.
+Desktop-OAuth-Client „Private Brain Pro Windows“ im Projekt `privat-brain-pro` angelegt. [Brief](BRIEF_UEBERGABE_2026-10-23_GESCHENK.md).
+
+**Windows .29 veröffentlicht (23.10.2026):** PR #69 und die enthaltenen Korrekturen
+aus #67 sind übernommen. [Windows-Release](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29),
+Quelle `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, Release 39920396303 grün;
+Windows-main 39918739441 und Android-main 39918739332 vollständig grün.
+Installer SHA-256 `55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97`,
+48.562.317 Bytes, öffentlicher Download geprüft. Anleitung, feste Downloadpfade
+und manuelles Ergänzen des Geschenk-ZIPs: [Übergabe an Claude Code](docs/GESCHENKPAKET-WINDOWS.md).
+Keine App-Daten von Klaus ins Geschenk kopieren. Android bleibt veröffentlicht bei .28.
 
 **Windows-Freigabe 23.10.2026:** Klaus beauftragt die Übernahme von PR #69 mit
 allen nötigen Voraussetzungen und die Veröffentlichung zum Herunterladen für
