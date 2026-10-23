@@ -149,7 +149,8 @@ try{
     const renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});
     await pause(2000);await browser.close();browser=null;page=null;await connect();
     for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}assert.ok(page,'App recovers its main page after a renderer crash');
-    await page.waitForFunction(()=>window.Capacitor&&window.PBSemantic,null,{timeout:90000});
+    page.on('pageerror',error=>report.errors.push(error.message));
+    await page.waitForFunction(()=>window.Capacitor&&window.PBSemantic&&window.PBWorkspace&&typeof db!=='undefined'&&db&&CATALOG.some(r=>r.name==='windows-proof.txt'),null,{timeout:90000});
     const guarded=await call('ProSemantic','getState');ok('real renderer crash recovers the app and prevents automatic model restart',guarded.installed&&guarded.crashes>0);
     await call('ProSemantic','clearCrash');
   }else{

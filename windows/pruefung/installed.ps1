@@ -25,9 +25,12 @@ function Phase($name) {
   $java = Get-CimInstance Win32_Process -Filter "name='javaw.exe' OR name='java.exe'" | Select-Object ProcessId, ParentProcessId
   $children = @($java | Where-Object ParentProcessId -eq $app.Id | ForEach-Object ProcessId)
   $children += @($java | Where-Object { $_.ParentProcessId -in $children } | ForEach-Object ProcessId)
+  $requiredChildren = if ($name -eq 'first') { 2 } else { 1 }
+  $missingLifetimeProof = $code -eq 0 -and $children.Count -lt $requiredChildren
   Get-Process private-brain-pro -ErrorAction SilentlyContinue | Stop-Process -Force
   Start-Sleep -Seconds 3
   if ($children.Count -and (Get-Process -Id $children -ErrorAction SilentlyContinue)) { throw 'Native/PDF child survived app shutdown.' }
+  if ($missingLifetimeProof) { throw 'Expected live native/PDF processes were not observed before shutdown.' }
   if ($code -ne 0) { throw "Installed acceptance failed: $name" }
 }
 Run-Setup $setup
