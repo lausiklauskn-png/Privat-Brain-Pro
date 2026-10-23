@@ -10,7 +10,15 @@ Klaus: *„ein Erklärvideo … genauso wie Workflow PDF … mit dem Finger“*,
   Privat (Speicherort, Internet-Lampe) · Werkzeuge (☰, vier Sprachen, Hell/Dunkel, Siegel) · Schluss. Länge 2:59.
 - **Daten:** alles erfunden (`beispiel/`, Konten `jens@` und `familie@example.invalid`). Android-Teile sind im Browser
   nachgestellt (ProMail, ProVault, ProNetwork, ProDevice in `aufnahme.mjs`); geprüft am Gerät ist damit nichts.
+- **Seitenwechsel** (Klaus 2026-10-23): erst Zoom auf den Knopf, damit man liest, was angetippt wird; dann setzt sich die neue
+  Seite ruhig aus durchscheinenden Puzzleteilen in gedeckten App-Farben zusammen, jedes Mal anders (`ARTEN` in `buehne.html`).
+  Wichtige Tipps zoomen vorher heran (`tippe(…, { lesen })`). Bühne grau-schiefer wie das Logo.
+- **Länge 3:15**, zwei Fassungen auf der FP-Videoseite: `private-brain-pro-handbuch` (Inspiring → City Travel, Tempo 123,5 BPM
+  und A-Dur angeglichen, Schläge übereinander) und `private-brain-pro-handbuch-uplifting` (Corporate Uplifting).
+  `python3 musik.py <Videolänge>` baut beide Tonspuren.
 - **Musik** sucht Klaus selbst aus (Pixabay, <https://pixabay.com/de/music/>). Die Datei kommt **nie** ins Repo.
+- ⚠ Ausgabe immer **yuv420p, H.264 High**: die erste Fassung war yuv444p und zeigte auf Handys nur Ton (`zusammen.mjs`).
+- Bekannt: „Alle Konten“ steht im Video noch leer da (das Einordnen braucht länger als die gekürzte Pause).
 
 ```bash
 # Repo: npm install (playwright-core), www gebaut; Werbefilm-Video und effekte.wav unter ../film/ (siehe docs/film/README.md)
