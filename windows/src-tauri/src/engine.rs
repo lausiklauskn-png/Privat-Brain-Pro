@@ -75,7 +75,8 @@ impl Engine {
         if let Err(error)=self.write(&json!({"id":id,"plugin":plugin,"method":method,"options":options})) {
             self.pending.lock().unwrap().remove(&id);return Err(error);
         }
-        let result=receive.recv_timeout(Duration::from_secs(900)).unwrap_or_else(|_|Err("APP_OPERATION_TIMEOUT".into()));
+        let timeout=if plugin=="ProDevice"{45}else{900};
+        let result=receive.recv_timeout(Duration::from_secs(timeout)).unwrap_or_else(|_|Err("APP_OPERATION_TIMEOUT".into()));
         self.pending.lock().unwrap().remove(&id);result
     }
     pub fn stop(&self) { if let Ok(mut child)=self.child.lock() { let _=child.kill();let _=child.wait(); }self.job.lock().unwrap().take(); }

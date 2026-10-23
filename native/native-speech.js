@@ -35,6 +35,7 @@
   // Klaus 2026-10-22: "Wenn der Text eingegeben werden kann, dann bitte auch mit Mikrofon". Every larger text
   // field (question to the AI about a file, writing a mail, notes …) gets 🎤; the spoken text goes in at the cursor.
   const DICTATE = { de: 'Diktieren (Android-Spracheingabe)', en: 'Dictate (Android voice input)', ru: 'Диктовать (голосовой ввод Android)', pl: 'Dyktuj (wprowadzanie głosowe Android)' };
+  if(window.Capacitor?.getPlatform?.()==='windows')Object.assign(DICTATE,{de:'Diktieren (lokale Windows-Spracherkennung)',en:'Dictate (local Windows speech recognition)',ru:'Диктовать (локальное распознавание Windows)',pl:'Dyktuj (lokalne rozpoznawanie Windows)'});
   async function dictate(mic, field) {
     if (busy) return;
     busy = true; mic.textContent = '🔴'; mic.setAttribute('aria-busy', 'true');

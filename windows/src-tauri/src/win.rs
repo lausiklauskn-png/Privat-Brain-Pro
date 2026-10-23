@@ -41,6 +41,17 @@ pub fn open(target:&str)->Result<(),String>{
 pub fn open(_:&str)->Result<(),String>{Err("FILE_UNAVAILABLE".into())}
 
 #[cfg(windows)]
+pub fn open_document(path:&Path)->Result<(),String>{
+    use windows::{core::{HSTRING,PCWSTR},Win32::UI::Shell::{SHOpenWithDialog,OPENASINFO,OAIF_EXEC,OAIF_HIDE_REGISTRATION}};
+    let target=HSTRING::from(path.to_str().ok_or("FILE_UNAVAILABLE")?);
+    let info=OPENASINFO{pcszFile:PCWSTR(target.as_ptr()),pcszClass:PCWSTR::null(),oaifInFlags:OAIF_EXEC|OAIF_HIDE_REGISTRATION};
+    // Always ask which installed application should receive this copy.
+    unsafe{SHOpenWithDialog(None,&info)}.map_err(|_|"FILE_UNAVAILABLE".into())
+}
+#[cfg(not(windows))]
+pub fn open_document(_:&Path)->Result<(),String>{Err("FILE_UNAVAILABLE".into())}
+
+#[cfg(windows)]
 pub fn metered()->bool {
     use windows::Networking::Connectivity::{NetworkInformation,NetworkCostType};
     NetworkInformation::GetInternetConnectionProfile().and_then(|p|p.GetConnectionCost()).and_then(|c|c.NetworkCostType())

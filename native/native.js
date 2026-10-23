@@ -103,7 +103,7 @@
     const t = words[document.documentElement.lang] || words.de;
     check.textContent = t[0];
     check.disabled = busy;
-    download.textContent = t[5];
+    download.textContent = window.Capacitor?.getPlatform?.()==='windows' ? ({de:'Windows-Installer herunterladen',en:'Download Windows installer',ru:'Скачать установщик Windows',pl:'Pobierz instalator Windows'}[document.documentElement.lang]||'Download Windows installer') : t[5];
     download.hidden = state !== 'available' && state !== 'openError';
     download.disabled = busy;
     message.textContent = state === 'available' ? t[4] + latest :

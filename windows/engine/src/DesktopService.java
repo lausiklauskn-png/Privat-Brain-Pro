@@ -18,9 +18,12 @@ final class DesktopService {
     private final DesktopPdf pdf=new DesktopPdf();
     private final DesktopFolders folders;
     private final ShareInbox inbox;
+    private final DesktopUpdates updates=new DesktopUpdates();
+    private final DesktopExports exports;
     private int refused;
     DesktopService(DesktopState state,Path resources,Host host)throws Exception {
         this.state=state;this.host=host;AppNetwork.initialize(state);
+        exports=new DesktopExports(state);
         storage=new EncryptedMailStore(state);vault=Vault.get(state);originals=new OriginalFileStore(state);
         String client=new JSONObject(Files.readString(resources.resolve("gmail-desktop.json"))).optString("clientId");
         oauth=new DesktopOAuth(client,storage,url->host.call("browser",new JSONObject().put("url",url)));
@@ -43,7 +46,12 @@ final class DesktopService {
     JSONObject call(String plugin,String method,JSONObject options)throws Exception {
         JSONObject o=options==null?new JSONObject():options;
         return switch(plugin){
-            case "ProDevice" -> new JSONObject().put("platform","windows").put("versionName","1.0.0-preview.29").put("versionCode",29).put("nativeMail",true).put("persistentFolders",true).put("persistentFiles",true);
+            case "ProDevice" -> new JSONObject().put("platform","windows").put("versionName",DesktopBuild.VERSION).put("versionCode",DesktopBuild.CODE).put("nativeMail",true).put("persistentFolders",true).put("persistentFiles",true);
+            case "ProUpdates" -> {
+                if(method.equals("check"))yield updates.check();
+                if(method.equals("openDownload"))yield host.call("external",new JSONObject().put("url",updates.download()));
+                throw new MailFailure("INVALID_INPUT");
+            }
             case "ProNetwork" -> network(method,o);
             case "ProVault" -> vault(method,o);
             case "ProFiles" -> files(method,o);
@@ -151,7 +159,8 @@ final class DesktopService {
             }
             case "abortImport" -> {originals.abort(required(o,"ticket"));yield yes();}
             case "readOriginal" -> bytes(originals.read(hash,o.optLong("offset",-1)));
-            case "open","share" -> {Selected selected=selected(o);yield host.call("openVerified",new JSONObject().put("path",selected.file.toString()).put("name",selected.name).put("share",method.equals("share")));}
+            case "open","share" -> {Selected selected=selected(o);yield export(selected,method.equals("share"));}
+            case "saveRecoveryKeys" -> recovery(o);
             case "openPdf" -> pdf.open(selected(o).file);
             case "pdfPage" -> pdf.page(required(o,"id"),o.optInt("page",-1),o.optInt("width",1200));
             case "closePdf" -> {pdf.close(required(o,"id"));yield yes();}
@@ -159,6 +168,29 @@ final class DesktopService {
         };
     }
     private record Selected(java.io.File file,String name){}
+    private JSONObject export(Selected selected,boolean save)throws Exception {
+        if(save){
+            JSONObject chosen=host.call("saveLocation",new JSONObject().put("name",selected.name));if(chosen.optBoolean("cancelled"))return chosen.put("saved",false);
+            // The chooser confirms replacement. Commit atomically in the chosen directory.
+            Path target=Path.of(chosen.getString("path"));DesktopFiles.noLinks(target);
+            Path pending=target.resolveSibling(".pb-export-"+java.util.UUID.randomUUID());
+            try{DesktopExports.copy(selected.file.toPath(),pending);Files.move(pending,target,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
+            finally{Files.deleteIfExists(pending);}
+            return yes().put("saved",true);
+        }
+        Path staged=exports.stage(selected.file,selected.name);
+        return host.call("openVerified",new JSONObject().put("path",staged.toString()));
+    }
+    private JSONObject recovery(JSONObject o)throws Exception {
+        JSONArray shares=o.getJSONArray("shares");String name=o.optString("name","PRIVATE-BRAIN-RECOVERY-KEYS.txt"),heading=o.optString("heading","Private Brain: recovery keys (3 of 5 required).");
+        if(shares.length()!=5||!name.matches("[A-Za-z0-9_-]{1,80}\\.txt")||heading.length()>1024)throw new java.io.IOException("RECOVERY_EXPORT_FAILED");
+        StringBuilder content=new StringBuilder(heading).append("\n\n");
+        for(int i=0;i<5;i++){String share=shares.getString(i);if(share.length()>8192||!share.matches("JT3v5-"+(i+1)+"-[A-Za-z0-9_-]+"))throw new java.io.IOException("RECOVERY_EXPORT_FAILED");content.append(share).append('\n');}
+        JSONObject chosen=host.call("saveLocation",new JSONObject().put("name",name));if(chosen.optBoolean("cancelled"))return chosen.put("saved",false);
+        byte[] data=content.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        try{DesktopFiles.atomic(Path.of(chosen.getString("path")),data);return yes().put("saved",true);}
+        finally{java.util.Arrays.fill(data,(byte)0);}
+    }
     private Selected selected(JSONObject o)throws Exception {
         if(o.has("hash")){
             String hash=required(o,"hash");JSONObject meta=originals.info(hash);java.io.File file=originals.file(hash);
@@ -201,7 +233,7 @@ final class DesktopService {
             case "attachments" -> new JSONObject().put("items",vault.attachments());
             case "clearAttachments" -> vault.clearAttachments();
             case "readAttachment" -> bytes(vault.readAttachment(required(o,"id"),o.optLong("offset",-1)));
-            case "openAttachment" -> host.call("openVerified",new JSONObject().put("path",vault.stageAttachment(required(o,"id")).toString()));
+            case "openAttachment" -> {java.io.File file=vault.stageAttachment(required(o,"id"));yield export(new Selected(file,file.getName()),false);}
             case "catalogBegin" -> new JSONObject().put("ticket",vault.catalogBegin());
             case "catalogAppend" -> {vault.catalogAppend(required(o,"ticket"),o.optLong("offset",-1),block(o));yield yes();}
             case "catalogFinish" -> {vault.catalogFinish(required(o,"ticket"));yield yes();}
@@ -235,6 +267,15 @@ final class DesktopService {
             case "locate" -> mail.locate(account,required(o,"folder"),required(o,"messageId"));
             case "indexText" -> mail.indexText(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"));
             case "message" -> mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+            case "openOriginal" -> {
+                byte[] data=mail.raw(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+                yield export(selected(new JSONObject().put("name","mail.eml").put("data",Base64.encodeToString(data,Base64.NO_WRAP))),true);
+            }
+            case "openAttachment" -> {
+                JSONObject message=mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+                JSONArray attachments=message.getJSONArray("attachments");int index=o.optInt("index",-1);if(index<0||index>=attachments.length())throw new MailFailure("INVALID_INPUT");
+                yield export(selected(attachments.getJSONObject(index)),false);
+            }
             case "action" -> {mail.action(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1),required(o,"action"),o.optString("target"));yield yes();}
             case "actions" -> mail.actions(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"),required(o,"action"),o.optString("target"));
             case "send" -> {JSONObject result=mail.send(account,o.getJSONObject("draft"));backup();yield result;}

@@ -148,6 +148,25 @@ public final class EngineTests {
         JSONObject protection=service.call("ProProtect","checkHashes",new JSONObject().put("items",new JSONArray().put(hash)));
         ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
     }
+    static void updatesAndExports(Path root,DesktopState state)throws Exception {
+        String version="1.0.0-preview.30",tag="windows-v"+version,name="Private-Brain-Pro-Windows-"+version+"-x64-setup.exe";
+        String url="https://github.com/"+UpdatePolicy.REPOSITORY+"/releases/download/"+tag+"/"+name;
+        JSONObject asset=new JSONObject().put("name",name).put("browser_download_url",url).put("state","uploaded").put("size",100);
+        JSONObject release=new JSONObject().put("tag_name",tag).put("draft",false).put("prerelease",true).put("assets",new JSONArray().put(asset));
+        JSONObject available=DesktopUpdates.select(new JSONArray().put(release),"1.0.0-preview.29");
+        ok(available.getString("status").equals("available")&&available.getString("url").equals(url),"Windows update selects only a canonical newer installer in its own channel");
+        JSONObject android=new JSONObject(release.toString()).put("tag_name","v"+version);
+        JSONObject foreign=new JSONObject(release.toString());foreign.getJSONArray("assets").getJSONObject(0).put("browser_download_url","https://example.org/setup.exe");
+        JSONObject draft=new JSONObject(release.toString()).put("draft",true);
+        ok(DesktopUpdates.select(new JSONArray().put(android).put(foreign).put(draft),"1.0.0-preview.29").getString("status").equals("current"),"Android releases, drafts and foreign download URLs never enter the Windows channel");
+        fails("UPDATE_NOT_CHECKED",()->new DesktopUpdates().download());
+        Path source=root.resolve("export-original.txt");Files.writeString(source,"read-only source bytes");
+        Path staged=new DesktopExports(state).stage(source.toFile(),"Ж".repeat(140)+".pdf");
+        ok(staged.getFileName().toString().endsWith(".pdf")&&Files.readString(staged).equals(Files.readString(source)),"verified export keeps its filename type and original bytes");
+        Path existing=root.resolve("existing.txt");Files.writeString(existing,"previous data");
+        try{DesktopExports.copy(source,existing);throw new AssertionError("existing export overwritten");}catch(FileAlreadyExistsException expected){}
+        ok(Files.readString(existing).equals("previous data")&&Files.readString(source).equals("read-only source bytes"),"an existing export and the source survive a failed CREATE_NEW copy");
+    }
     static void mailNames(Path root)throws Exception {
         for(String value:new String[]{"a"+"😀".repeat(120)+".pdf","Ж".repeat(200)+".PDF","e\u0301".repeat(200)+".pdf"}){
             String name=MailMime.filename(value);
@@ -230,6 +249,7 @@ public final class EngineTests {
         folders(root,new DesktopState(root.resolve("folders-device"),new TestProtection()));
         service(root,Path.of(args[0]));
         mailNames(root);
+        updatesAndExports(root,state);
         if(!System.getProperty("os.name").startsWith("Windows")){
             Path link=root.resolve("link");Files.createSymbolicLink(link,folder);
             fails("VAULT_FOLDER_UNAVAILABLE",()->DesktopFiles.noLinks(link));

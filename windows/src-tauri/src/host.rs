@@ -37,6 +37,17 @@ impl Host {
     pub fn call(&self,plugin:&str,method:&str,mut options:Value)->Result<Value,String>{
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
         if let Some(map)=options.as_object_mut(){map.remove("_language");}
+        if plugin=="ProSpeech"&&method=="listen"{
+            let language=options.get("language").and_then(Value::as_str).unwrap_or("de-DE").to_owned();
+            if !["de-DE","en-US","ru-RU","pl-PL"].contains(&language.as_str()){return Err("INVALID_INPUT".into());}
+            let cancelled=Arc::new(AtomicBool::new(false));let stop=cancelled.clone();
+            let worker=Box::new(move|sender:mpsc::Sender<Value>|{
+                let result=match crate::speech::recognize(&language,stop){Ok(Some(text))=>json!({"text":text}),Ok(None)=>json!({"cancelled":true}),Err(code)=>json!({"speechError":code})};
+                let _=sender.send(result);
+            });
+            let result=self.show_dialog_work("speech",json!({}),Some(worker));cancelled.store(true,Ordering::SeqCst);
+            let value=result?;if let Some(code)=value.get("speechError").and_then(Value::as_str){return Err(code.into());}return Ok(value);
+        }
         let limit=if (plugin=="ProMail"&&["send","saveDraft"].contains(&method))||(plugin=="ProFiles"&&["open","share","openPdf"].contains(&method)){26*1024*1024}else{2*1024*1024};
         if serde_json::to_vec(&options).map_err(|_|"INVALID_INPUT")?.len()>limit{return Err("INVALID_INPUT".into());}
         if plugin=="ProNetwork"&&method=="setOffline"&&options.get("offline").and_then(Value::as_bool)==Some(true){self.offline.store(true,Ordering::SeqCst);}
@@ -74,21 +85,30 @@ impl Host {
                 let selected=self.app.dialog().file().blocking_pick_folder();
                 match selected {None=>Ok(json!({"cancelled":true})),Some(file)=>{let path=file.into_path().map_err(|_|"VAULT_FOLDER_UNAVAILABLE")?;win::no_links(&path)?;Ok(json!({"path":path.to_str().ok_or("VAULT_FOLDER_UNAVAILABLE")?}))}}
             }
+            "saveLocation"=>{
+                let name=text("name");if name.is_empty()||name.len()>512||name.contains(['/', '\\', ':']){return Err("INVALID_INPUT".into());}
+                let selected=self.app.dialog().file().set_file_name(name).blocking_save_file();
+                match selected {None=>Ok(json!({"cancelled":true})),Some(file)=>{let path=file.into_path().map_err(|_|"FILE_UNAVAILABLE")?;win::no_links(&path)?;Ok(json!({"path":path.to_str().ok_or("FILE_UNAVAILABLE")?}))}}
+            }
             "password"|"account"|"key"=>self.show_dialog(method,o),
             "metered"=>Ok(json!({"metered":win::metered()})),
             "volumes"=>Ok(json!({"items":[],"targeted":false})),
             "openVerified"=>{
-                let path=PathBuf::from(text("path"));if !path.starts_with(&self.data){return Err("NOT_ALLOWED".into());}win::no_links(&path)?;
+                let path=PathBuf::from(text("path"));if !path.starts_with(self.data.join("cache/exports")){return Err("NOT_ALLOWED".into());}win::no_links(&path)?;
                 if !path.is_file(){return Err("FILE_UNAVAILABLE".into());}
-                win::open(path.to_str().ok_or("FILE_UNAVAILABLE")?)?;Ok(json!({"ok":true}))
+                win::open_document(&path)?;Ok(json!({"ok":true}))
             }
             _=>Err("NOT_ALLOWED".into()),
         }
     }
-    fn show_dialog(&self,kind:&str,mut config:Value)->Result<Value,String>{
+    fn show_dialog(&self,kind:&str,config:Value)->Result<Value,String>{
+        self.show_dialog_work(kind,config,None)
+    }
+    fn show_dialog_work(&self,kind:&str,mut config:Value,work:Option<Box<dyn FnOnce(mpsc::Sender<Value>)+Send>>)->Result<Value,String>{
         let (send,receive)=mpsc::channel();
         {let mut current=self.dialog.lock().unwrap();if current.is_some(){return Err("VAULT_BUSY".into());}*current=Some(send.clone());}
         config["kind"]=json!(kind);config["language"]=json!(*self.language.lock().unwrap());*self.dialog_config.lock().unwrap()=config;
+        let worker_send=send.clone();
         let app=self.app.clone();
         let initialization=format!("Object.defineProperty(window,'__PB_DIALOG_SESSION',{{value:{},configurable:true}});",serde_json::to_string(&self.session).unwrap());
         self.app.run_on_main_thread(move||{
@@ -100,6 +120,7 @@ impl Host {
                 .on_navigation(|url|url.scheme()=="https"&&url.host_str()==Some("tauri.localhost")&&url.path()=="/windows/dialog/index.html")
                 .on_new_window(|_,_|tauri::webview::NewWindowResponse::Deny).build();
             if result.is_err(){let _=send.send(json!({"cancelled":true}));}
+            else if let Some(work)=work{std::thread::spawn(move||work(worker_send));}
         }).map_err(|_|"VAULT_UNAVAILABLE")?;
         let result=receive.recv_timeout(Duration::from_secs(600)).map_err(|_|"VAULT_CANCELLED".to_owned());
         if let Some(window)=self.app.get_webview_window("native-dialog"){let _=window.close();}
@@ -110,9 +131,11 @@ impl Host {
         if name=="Desktop:startupFailure"{
             let _=std::fs::write(self.data.join("engine-probe.txt"),data.to_string());
         }
-        if let Some(window)=self.app.get_webview_window("main"){
-            let detail=json!({"name":name,"data":data});let _=window.eval(format!("window.dispatchEvent(new CustomEvent('pb-native',{{detail:{}}}));",detail));
-        }
+        let app=self.app.clone();let detail=json!({"name":name,"data":data});
+        // Never hold up the protocol reader waiting for the WebView thread.
+        let _=self.app.run_on_main_thread(move||{if let Some(window)=app.get_webview_window("main"){
+            let _=window.eval(format!("window.dispatchEvent(new CustomEvent('pb-native',{{detail:{}}}));",detail));
+        }});
     }
     pub fn shutdown(&self){if let Some(engine)=self.engine.lock().unwrap().as_ref(){engine.stop();}}
     pub fn receive(&self,arguments:Vec<String>,cwd:Option<String>){

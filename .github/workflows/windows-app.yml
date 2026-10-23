@@ -22,6 +22,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: node windows/engine/test.mjs
+      - run: node windows/engine/protocol-test.mjs
   windows:
     runs-on: windows-latest
     steps:
@@ -48,6 +49,8 @@ jobs:
         run: node windows/engine/test.mjs
       - name: Eigene Windows-Laufzeit ohne zusätzliche Nutzerinstallation
         run: node windows/tools/prepare-runtime.mjs
+      - name: Privates Kindprozessprotokoll mit der tatsächlich gebündelten Laufzeit
+        run: node windows/engine/protocol-test.mjs windows/runtime/jre/bin/java.exe windows/runtime
       - name: Tauri-Prüfbau mit WebView2
         run: npm run tauri --prefix windows -- build --bundles nsis --features messprobe
       - name: Installierte Grundfunktionen, Neustart und Neuinstallation

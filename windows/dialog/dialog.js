@@ -25,6 +25,7 @@
   $('provider').onchange=provider;
   $('form').onsubmit=async e=>{
     e.preventDefault();$('status').textContent='';let fields;
+    if(config.kind==='speech')return;
     if(config.kind==='account'){
       const gmail=$('provider').value==='gmail';
       if(!gmail&&(!$('email').value||!$('password').value)){$('email').reportValidity();$('password').focus();return;}
@@ -39,6 +40,13 @@
   };
   void call('config').then(value=>{
     config=value;words=W[value.language]||W.de;document.documentElement.lang=value.language||'de';
+    if(value.kind==='speech'){
+      $('title').textContent=({de:'Sprechen Sie jetzt',en:'Speak now',ru:'Говорите',pl:'Mów teraz'}[value.language]||'Speak now');
+      $('help').textContent=({de:'Lokale Windows-Spracherkennung. Ende nach einem Satz oder spätestens einer Minute.',en:'Local Windows speech recognition. Ends after one phrase or at most one minute.',ru:'Локальное распознавание Windows: одна фраза, не дольше минуты.',pl:'Lokalne rozpoznawanie Windows: jedna fraza, maksymalnie minuta.'}[value.language]||'Local Windows speech recognition.');
+      $('account').hidden=false;$('provider').closest('label').hidden=true;$('account-fields').hidden=true;
+      for(const id of ['password-label','repeat-label','notice-label','remember-label','submit'])$(id).hidden=true;
+      $('cancel').textContent=words[0];return;
+    }
     for(const [id,index] of [['cancel',0],['submit',1],['password-caption',6],['repeat-caption',7],['notice-caption',8],['remember-caption',9],['provider-label',11]])$(id).textContent=words[index];
     $('account').hidden=value.kind!=='account';
     const create=value.kind==='password'&&value.mode==='create';
