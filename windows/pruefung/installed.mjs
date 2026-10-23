@@ -126,7 +126,7 @@ try{
     report.modelEndpoints=await page.evaluate(async()=>{
       const base='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
       const urls=[base,base+'/dist/ort-wasm-simd.wasm','https://tauri.localhost/models/Xenova/multilingual-e5-small/config.json'];const results=[];
-      for(const url of urls){const response=await fetch(url),bytes=await response.arrayBuffer();const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');results.push({url,status:response.status(),type:response.headers.get('content-type'),size:bytes.byteLength,sha256:sha});}return results;
+      for(const url of urls){const response=await fetch(url),bytes=await response.arrayBuffer();const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');results.push({url,status:response.status,type:response.headers.get('content-type'),size:bytes.byteLength,sha256:sha});}return results;
     });
     console.log('MODEL endpoints '+JSON.stringify(report.modelEndpoints));
     ok('offline native endpoints stream the exact pinned library, WASM and model configuration',report.modelEndpoints.every(r=>r.status===200)&&report.modelEndpoints[0].sha256===modelPins.library.files['transformers.min.js']&&report.modelEndpoints[1].sha256===modelPins.library.files['ort-wasm-simd.wasm']&&report.modelEndpoints[2].sha256===modelPins.model.files['config.json']);
