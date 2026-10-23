@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<title>Private Brain Pro · Film</title>
+<style>
+/* Film page: everything is drawn by render(t) — a pure function of time, photographed frame by frame. */
+:root{--ink:#f4f7fb;--mint:#5eead4;--violet:#a78bfa;--sky:#7dd3fc;--gold:#fcd34d;--deep:#05070f;
+  --disp:"Inter Display","Inter",sans-serif;--mono:"JetBrains Mono",monospace}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--deep);font-family:var(--disp);color:var(--ink)}
+canvas,#fp,#stage,#ui,#fx{position:absolute;inset:0;width:1920px;height:1080px}
+#fp{object-fit:cover;opacity:0}
+#stage{perspective:2200px;perspective-origin:62% 48%;overflow:hidden}
+.screen{position:absolute;left:0;top:0;width:1440px;height:810px;transform-style:preserve-3d;transform-origin:50% 50%}
+.screen .tile,.screen .piece,.screen .full{position:absolute;background-repeat:no-repeat;background-size:1440px 810px;backface-visibility:hidden;will-change:transform,opacity}
+.screen .full{inset:0;border-radius:18px}
+.screen .frame{position:absolute;inset:-14px;border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.35);box-shadow:0 40px 120px rgba(0,0,0,.55),0 0 80px rgba(94,234,212,.18);}
+.piece{border-radius:6px}
+.pz{position:absolute;transform-style:preserve-3d;will-change:transform,opacity}
+.pz>i{position:absolute;inset:0;background-repeat:no-repeat}
+.call{position:absolute;opacity:0;font:700 21px var(--mono);letter-spacing:.04em;color:#e9fffb;padding:8px 16px;border-radius:999px;background:rgba(6,24,30,.82);border:1.5px solid var(--mint);box-shadow:0 0 30px rgba(94,234,212,.45);white-space:nowrap}
+#ui{pointer-events:none}
+.cap{position:absolute;left:100px;width:520px;font-weight:900;font-size:64px;line-height:1.02;letter-spacing:-.02em;text-wrap:balance;opacity:0;text-shadow:0 4px 30px rgba(0,0,0,.5)}
+.cap small{display:block;font:600 26px/1.35 var(--disp);letter-spacing:0;color:#cfe3ee;margin-top:18px;text-wrap:pretty}
+.lab{position:absolute;left:112px;font:600 19px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mint);opacity:0}
+.grad{background:linear-gradient(92deg,var(--mint),var(--sky) 45%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{position:absolute;left:0;right:0;text-align:center;font-weight:900;letter-spacing:-.03em;opacity:0}
+#hand{position:absolute;width:190px;opacity:0;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));transform-origin:20% 10%}
+.icon{position:absolute;width:120px;height:120px;border-radius:28px;box-shadow:0 18px 50px rgba(0,0,0,.5);opacity:0}
+.dev{position:absolute;opacity:0;background:#0b0f18;border:2px solid rgba(255,255,255,.25);box-shadow:0 40px 100px rgba(0,0,0,.6),inset 0 0 0 10px #111827;overflow:hidden}
+.dev img{position:absolute;object-fit:cover;object-position:top left}
+.devlab{position:absolute;font:700 26px var(--disp);opacity:0;text-align:center}
+#stamp{position:absolute;opacity:0;padding:16px 30px;border:5px solid var(--mint);border-radius:18px;font:900 44px var(--disp);color:var(--mint);background:rgba(5,30,32,.78);transform:rotate(-8deg);box-shadow:0 0 60px rgba(94,234,212,.5)}
+#end{position:absolute;inset:0;display:grid;place-items:center;opacity:0}
+#end .box{display:grid;justify-items:center;gap:18px;text-align:center}
+#end img{width:220px;height:220px;border-radius:52px;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 120px rgba(125,211,252,.35)}
+#end h1{margin:0;font-size:118px;font-weight:900;letter-spacing:-.035em}
+#end p{margin:0;font:600 34px var(--disp);color:#d6e6ef}
+#end .row{display:flex;gap:16px;margin-top:10px}
+#end .pill{font:700 24px var(--mono);letter-spacing:.08em;padding:10px 22px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.06)}
+#flash{position:absolute;inset:0;background:radial-gradient(circle at var(--fx,60%) var(--fy,50%),rgba(255,255,255,.95),rgba(180,240,255,.4) 25%,transparent 60%);opacity:0;mix-blend-mode:screen}
+#vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55));pointer-events:none}
+#black{position:absolute;inset:0;background:#000;opacity:0}
+</style></head>
+<body>
+<canvas id="bg" width="1920" height="1080"></canvas>
+<img id="fp" alt="">
+<div id="stage"></div>
+<canvas id="fx" width="1920" height="1080"></canvas>
+<div id="ui"></div>
+<div id="vig"></div>
+<div id="flash"></div>
+<div id="black"></div>
+<script>
+'use strict';
+// ───────── timing (film seconds) ─────────
+// The music (Family Projekt, 67.5 s) plays 0→45, then again from 7.5 → 67.5. Total 105 s.
+const DAUER = 105;
+const musik = t => t < 45 ? t : t - 37.5;          // film time → music time (Family Projekt footage is cut to it)
+window.DAUER = DAUER;
+const W = 1920, H = 1080;
+// ───────── helpers ─────────
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lin = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = x => 1 - Math.pow(1 - x, 3);
+const eIn = x => x * x * x;
+const eIO = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eBack = x => { const c1 = 1.55, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const fade = (t, a, b, c, d) => Math.min(lin(t, a, b), 1 - lin(t, c, d));   // in a→b, out c→d
+function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const $ = id => document.getElementById(id);
+const el = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || $('ui')).append(e); return e; };
+const TOENE = { whoosh: [], tick: [], zack: [], strahl: [], stempel: [], plopp: [], tipp: [] };
+window.TOENE = TOENE;
+
+// ───────── background: deep space, mycel filaments, stars (pre-drawn once) ─────────
+const bg = $('bg'), g = bg.getContext('2d');
+const fx = $('fx'), f = fx.getContext('2d');
+function makeMycel(seed, hueA, hueB) {
+  const c = document.createElement('canvas'); c.width = 2600; c.height = 1500; const x = c.getContext('2d'); const r = rng(seed);
+  x.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 420; i++) {
+    let px = r() * 2600, py = r() * 1500, a = r() * Math.PI * 2; const hue = lerp(hueA, hueB, r()), len = 40 + r() * 140;
+    x.strokeStyle = `hsla(${hue},95%,${58 + r() * 22}%,${0.14 + r() * 0.3})`; x.lineWidth = 0.6 + r() * 1.8; x.beginPath(); x.moveTo(px, py);
+    for (let k = 0; k < len; k++) { a += (r() - .5) * .35; px += Math.cos(a) * 4; py += Math.sin(a) * 4; x.lineTo(px, py); if (r() < .015) { x.stroke(); x.beginPath(); x.moveTo(px, py); } }
+    x.stroke();
+  }
+  for (let i = 0; i < 1600; i++) { const s = r() * 1.8 + .2; x.fillStyle = `hsla(${lerp(hueA, hueB, r())},80%,85%,${.25 + r() * .7})`; x.beginPath(); x.arc(r() * 2600, r() * 1500, s, 0, 7); x.fill(); }
+  // nebula glow
+  for (let i = 0; i < 22; i++) { const gx = r() * 2600, gy = r() * 1500, rad = 200 + r() * 500, gr = x.createRadialGradient(gx, gy, 0, gx, gy, rad); const hue = lerp(hueA, hueB, r());
+    gr.addColorStop(0, `hsla(${hue},90%,55%,.24)`); gr.addColorStop(1, 'hsla(0,0%,0%,0)'); x.fillStyle = gr; x.fillRect(gx - rad, gy - rad, rad * 2, rad * 2); }
+  // glow: a blurred copy of the filaments laid over them
+  const gl = document.createElement('canvas'); gl.width = 1300; gl.height = 750; const gx2 = gl.getContext('2d'); gx2.filter = 'blur(5px)'; gx2.drawImage(c, 0, 0, 1300, 750);
+  x.globalCompositeOperation = 'lighter'; x.globalAlpha = .9; x.drawImage(gl, 0, 0, 2600, 1500); x.globalAlpha = 1;
+  return c;
+}
+const MYCEL = makeMycel(7, 170, 275), MYCEL2 = makeMycel(19, 300, 380);
+const STARS = (() => { const r = rng(3), a = []; for (let i = 0; i < 260; i++) a.push({ x: r() * W, y: r() * H, z: r(), p: r() * 6.28 }); return a; })();
+
+// glossy 3D bubbles (the Private Brain look): soft body, rim light, highlight, small inner reflection
+const BUB = (() => { const r = rng(11), a = []; for (let i = 0; i < 46; i++) a.push({ x: r() * W, y: r() * H, z: .3 + r() * 1.2, rad: 18 + r() * 70, hue: [190, 280, 160, 320, 210][i % 5], ph: r() * 6.28, sp: .15 + r() * .5 }); return a; })();
+function bubble(c, x, y, rad, hue, alpha) {
+  if (rad < 1 || alpha <= 0) return;
+  c.save(); c.globalAlpha = alpha;
+  let gr = c.createRadialGradient(x - rad * .35, y - rad * .4, rad * .1, x, y, rad);
+  gr.addColorStop(0, `hsla(${hue},95%,82%,.85)`); gr.addColorStop(.55, `hsla(${hue},85%,55%,.42)`); gr.addColorStop(.86, `hsla(${hue + 30},90%,45%,.25)`); gr.addColorStop(1, `hsla(${hue + 40},100%,75%,.75)`);
+  c.fillStyle = gr; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill();
+  gr = c.createRadialGradient(x - rad * .4, y - rad * .45, 0, x - rad * .4, y - rad * .45, rad * .45);
+  gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.beginPath(); c.arc(x - rad * .4, y - rad * .45, rad * .45, 0, 7); c.fill();
+  c.strokeStyle = `hsla(${hue + 20},100%,85%,.55)`; c.lineWidth = Math.max(1, rad * .04); c.beginPath(); c.arc(x, y, rad * .93, .2, 2.3); c.stroke();
+  c.restore();
+}
+// water caustics, computed small and drawn large
+const CW = 192, CH = 108, cau = document.createElement('canvas'); cau.width = CW; cau.height = CH; const cx2 = cau.getContext('2d'); const cimg = cx2.createImageData(CW, CH);
+function caustics(t, strength) {
+  for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
+    const u = x / CW * 9, v = y / CH * 5.2;
+    let s = Math.sin(u * 1.7 + t * 1.1 + Math.sin(v * 2.1 + t * .7)) + Math.sin(v * 2.3 - t * .9 + Math.sin(u * 1.3 - t * .5)) + Math.sin((u + v) * 1.1 + t * .6);
+    s = Math.pow(1 - Math.abs(s) / 3, 6);
+    const i = (y * CW + x) * 4; cimg.data[i] = 40 + 160 * s; cimg.data[i + 1] = 160 + 95 * s; cimg.data[i + 2] = 200 + 55 * s; cimg.data[i + 3] = 255 * s * strength;
+  }
+  cx2.putImageData(cimg, 0, 0);
+}
+
+function drawBackground(t) {
+  g.globalCompositeOperation = 'source-over';
+  // base colour changes with the chapter: night blue → teal water → warm finale
+  const water = fade(t, 52, 53.5, 59.5, 61);
+  const warm = fade(t, 89.5, 91, 104, 106);
+  const top = `rgb(${lerp(6, 4, water) + warm * 14},${lerp(8, 30, water) + warm * 6},${lerp(20, 44, water) + warm * 4})`;
+  const bot = `rgb(${lerp(2, 2, water)},${lerp(3, 12, water)},${lerp(10, 24, water)})`;
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  // mycel layer slowly turning, brighter on the drops
+  const pulse = .55 + .45 * Math.pow(Math.max(0, Math.sin((musik(t) / 7.5) * Math.PI * 4)), 8) * .4 + (lin(t, 7.4, 7.9) - lin(t, 8, 10)) * .5;
+  const intro = lin(t, 0, 5);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  g.globalAlpha = clamp((.55 + .45 * intro) * (pulse + .25) * (1 - water * .6));
+  g.translate(W / 2, H / 2); g.rotate(t * .012); const sc = 1.05 + t * .002; g.scale(sc, sc); g.drawImage(MYCEL, -1300 - t * 4, -750); g.restore();
+  if (warm > 0) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = warm * .55; g.translate(W / 2, H / 2); g.rotate(-t * .02); g.scale(1.7, 1.7); g.drawImage(MYCEL2, -1300, -750); g.restore(); }
+  // twinkling stars with depth drift
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (const s of STARS) { const x = (s.x - t * 14 * s.z + W * 4) % W, a = .3 + .7 * Math.abs(Math.sin(t * 1.3 + s.p)); g.fillStyle = `rgba(220,240,255,${a * (.4 + .6 * intro)})`; g.fillRect(x, s.y, 1 + s.z * 1.6, 1 + s.z * 1.6); }
+  g.restore();
+  // water caustics
+  if (water > 0) { caustics(t * .9, water * .7); g.save(); g.globalCompositeOperation = 'lighter'; g.imageSmoothingEnabled = true; g.filter = 'blur(6px)'; g.drawImage(cau, 0, 0, W, H); g.restore(); }
+  // floating bubbles (rise in water, drift elsewhere)
+  const bubA = clamp(lin(t, 0.6, 3.5) * (1 - lin(t, 7.2, 8.2)) + fade(t, 44.8, 46, 51.5, 52.8) * .8 + water * 1 + fade(t, 66.8, 68, 74, 75.5) * .7 + fade(t, 81.5, 83, 89, 90.5) * .9 + warm * .9 + fade(t, 20, 21, 21.6, 22.6) * .6);
+  if (bubA > 0) for (const b of BUB) {
+    const rise = water * t * 60 * b.sp;
+    const x = (b.x + Math.sin(t * b.sp + b.ph) * 40 * b.z + W) % W, y = ((b.y - rise - t * 8 * b.z) % (H + 200) + H + 200) % (H + 200) - 100;
+    bubble(g, x, y, b.rad * b.z, b.hue, bubA * (.35 + .4 * b.z));
+  }
+}
+
+// ───────── app screens: pieces fly in and assemble ─────────
+const TEILE = window.TEILE || {};
+const stage = $('stage');
+function buildScreen(key, opts) {
+  const info = TEILE[key]; const root = el('div', 'screen', stage);
+  const frame = el('div', 'frame', root);
+  const r = rng(opts.seed || 1);
+  const tiles = [], pieces = [], conts = [];
+  // base: the empty page as colourful 3D jigsaw pieces ("Gedanken"), which lose their colour when they lock in
+  const TX = 9, TY = 5, cw = 1440 / TX, ch = 810 / TY, m = 34;
+  const hEdge = [], vEdge = [];   // +1 tab out / -1 tab in for internal edges
+  for (let j = 0; j < TY; j++) { hEdge.push([]); for (let i = 0; i < TX; i++) hEdge[j].push(r() < .5 ? 1 : -1); }
+  for (let j = 0; j < TY; j++) { vEdge.push([]); for (let i = 0; i < TX; i++) vEdge[j].push(r() < .5 ? 1 : -1); }
+  const HUES = [168, 200, 262, 320, 38, 140, 290, 186];
+  for (let j = 0; j < TY; j++) for (let i = 0; i < TX; i++) {
+    const top = j === 0 ? 0 : -hEdge[j - 1][i], bottom = j === TY - 1 ? 0 : hEdge[j][i];
+    const left = i === 0 ? 0 : -vEdge[j][i - 1], right = i === TX - 1 ? 0 : vEdge[j][i];
+    const path = jigsaw(cw, ch, m, top, right, bottom, left);
+    const x = i * cw, y = j * ch, hue = HUES[(i * 3 + j * 5) % HUES.length];
+    const wrap = el('div', 'pz', root); Object.assign(wrap.style, { left: x - m + 'px', top: y - m + 'px', width: cw + 2 * m + 'px', height: ch + 2 * m + 'px' });
+    const layers = [];
+    for (let k = 3; k >= 0; k--) {   // back layers give thickness, the front layer carries the picture
+      const lay = el('i', null, wrap); lay.style.clipPath = `path('${path}')`;
+      if (k > 0) { lay.style.transform = `translateZ(${-k * 7}px)`; lay.style.background = `hsl(${hue},70%,${30 - k * 4}%)`; }
+      else { const bp = `${-(x - m)}px ${-(y - m)}px`; lay.dataset.bp = bp; Object.assign(lay.style, { backgroundImage: `url(bilder/${key}-skelett.png)`, backgroundSize: '1440px 810px', backgroundPosition: bp }); }
+      layers.push(lay);
+    }
+    tiles.push({ d: wrap, front: layers[layers.length - 1], hue, k: (i + j * 1.3) / (TX + TY * 1.3 - 2.3) * .85 + r() * .15, fly: mkFly(wrap, { x, y, w: cw, h: ch }, r, .9) });
+  }
+  for (const c of info.containers) {
+    const d = el('div', 'piece', root);
+    Object.assign(d.style, { left: c.x + 'px', top: c.y + 'px', width: c.w + 'px', height: c.h + 'px', backgroundImage: `url(bilder/${key}-skelett.png)`, backgroundPosition: `${-c.x}px ${-c.y}px` });
+    conts.push(mkFly(d, c, r, .6));
+  }
+  // leaves in reading order with a little shuffle, big ones first so text lands on cards
+  const leaves = info.leaves.map((l, i) => ({ ...l, i, o: l.y * 1.2 + l.x * .35 + r() * 260 - (l.w * l.h > 40000 ? 400 : 0) })).sort((a, b) => a.o - b.o);
+  for (const l of leaves) {
+    const d = el('div', 'piece', root);
+    Object.assign(d.style, { left: l.x + 'px', top: l.y + 'px', width: l.w + 'px', height: l.h + 'px', backgroundImage: `url(bilder/${key}.png)`, backgroundPosition: `${-l.x}px ${-l.y}px` });
+    pieces.push(mkFly(d, l, r, 1));
+  }
+  const full = el('div', 'full', root); full.style.backgroundImage = `url(bilder/${key}.png)`;
+  for (const [re, label, ox, oy] of (CALLS[key] || [])) { const q = pieces.find(pc => re.test(pc.rect.text || '')); if (!q) continue; const c = el('div', 'call'); c.textContent = label; callEls.push({ q, c, ox, oy, key, opts }); }
+  return { key, root, frame, tiles, conts, pieces, full, ...opts };
+}
+function jigsaw(w, h, m, top, right, bottom, left) {
+  // piece outline in the local box (cell plus margin m on every side); tabs are about a quarter of the shorter side
+  const t = Math.min(w, h) * .2, P = [];
+  const edge = (x0, y0, x1, y1, s) => {   // straight edge with an optional tab bulging to the left of travel (s=+1) or right (s=-1)
+    if (!s) { P.push(`L ${x1} ${y1}`); return; }
+    const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = uy * s, ny = -ux * s;
+    const pt = (a, b) => `${(x0 + ux * a + nx * b).toFixed(1)} ${(y0 + uy * a + ny * b).toFixed(1)}`;
+    const c = L / 2;
+    P.push(`L ${pt(c - t * .55, 0)}`, `C ${pt(c - t * .35, 0)} ${pt(c - t * .95, t * .9)} ${pt(c, t * 1.05)}`, `C ${pt(c + t * .95, t * .9)} ${pt(c + t * .35, 0)} ${pt(c + t * .55, 0)}`, `L ${x1} ${y1}`);
+  };
+  const a = m, b = m + w, c = m, d = m + h;
+  P.push(`M ${a} ${c}`); edge(a, c, b, c, top); edge(b, c, b, d, right); edge(b, d, a, d, bottom); edge(a, d, a, c, left); P.push('Z');
+  return P.join(' ');
+}
+function mkFly(d, rect, r, far) {
+  const ang = r() * Math.PI * 2, dist = (700 + r() * 900) * far;
+  return { d, rect, dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist * .7, dz: -600 - r() * 1600 * far, rx: (r() - .5) * 220, ry: (r() - .5) * 260, rz: (r() - .5) * 160, s0: .25 + r() * .4, wob: r() * 6.28, amp: 90 + r() * 220, kind: 'spiral' };
+}
+// place a screen on the canvas: scale and where its top-left lands
+function place(S, t, base) {
+  const { cx, cy, sc, ry = 0, rx = 0, z = 0, op = 1 } = base;
+  S.root.style.transform = `translate3d(${cx - 720}px,${cy - 405}px,${z}px) rotateY(${ry}deg) rotateX(${rx}deg) scale(${sc})`;
+  S.root.style.opacity = op; S.root.style.display = op <= 0.001 ? 'none' : 'block';
+}
+function flyStyle(p, x) {   // x: 0 far away … 1 landed
+  if (x <= 0) { p.d.style.opacity = 0; return; }
+  const e = eBack(clamp(x)), q = 1 - e;
+  const sp = Math.sin(q * 5 + p.wob) * p.amp * q, sq = Math.cos(q * 4 + p.wob) * p.amp * .6 * q;
+  p.d.style.opacity = clamp(x * 2.2);
+  p.d.style.transform = `translate3d(${p.dx * q + sp}px,${p.dy * q + sq}px,${p.dz * q}px) rotateX(${p.rx * q}deg) rotateY(${p.ry * q}deg) rotateZ(${p.rz * q}deg) scale(${lerp(p.s0, 1, e)})`;
+  const glow = clamp(1 - Math.abs(x - .75) * 3);
+  if (p.d.className === 'pz') { p.d.style.filter = glow > .02 ? `drop-shadow(0 0 ${18 * glow}px hsla(180,100%,70%,${.9 * glow}))` : 'none'; return; }
+  p.d.style.boxShadow = glow > .02 ? `0 0 ${30 * glow}px rgba(94,234,212,${.8 * glow}), 0 0 ${80 * glow}px rgba(167,139,250,${.45 * glow})` : 'none';
+}
+// sparks when a piece lands (drawn on the fx canvas, in screen coordinates)
+function sparks(cx, cy, age, hue, n, seed) {
+  // a small neuron firing: curved, branching filaments grow out and fade, with glowing tips
+  if (age < 0 || age > .9) return; const r = rng(seed), k = eOut(clamp(age / .55)), a = 1 - clamp((age - .3) / .6);
+  f.save(); f.globalCompositeOperation = 'lighter'; f.lineCap = 'round';
+  const arms = 4 + Math.floor(n / 5);
+  for (let i = 0; i < arms; i++) {
+    let x = cx, y = cy, an = r() * 6.28; const len = (40 + r() * 90) * k, steps = 10; const h = hue + r() * 50;
+    f.strokeStyle = `hsla(${h},100%,72%,${.85 * a})`; f.lineWidth = 2.2; f.beginPath(); f.moveTo(x, y);
+    for (let st = 0; st < steps; st++) { an += (r() - .5) * .9; x += Math.cos(an) * len / steps; y += Math.sin(an) * len / steps; f.lineTo(x, y);
+      if (st === 5 && r() < .7) { const bx = x, by = y; let ba = an + (r() < .5 ? .9 : -.9); f.moveTo(bx, by); let xx = bx, yy = by; for (let q = 0; q < 4; q++) { ba += (r() - .5) * .8; xx += Math.cos(ba) * len / 12; yy += Math.sin(ba) * len / 12; f.lineTo(xx, yy); } f.moveTo(x, y); } }
+    f.stroke(); f.fillStyle = `hsla(${h},100%,85%,${a})`; f.beginPath(); f.arc(x, y, 3.2 * a + 1, 0, 7); f.fill();
+  }
+  const gr = f.createRadialGradient(cx, cy, 0, cx, cy, 40 * k + 6); gr.addColorStop(0, `hsla(${hue},100%,85%,${.7 * a})`); gr.addColorStop(1, 'hsla(0,0%,0%,0)'); f.fillStyle = gr; f.beginPath(); f.arc(cx, cy, 40 * k + 6, 0, 7); f.fill();
+  f.restore();
+}
+// a synapse: a curved glowing link between two points with a travelling pulse
+function synapse(x0, y0, x1, y1, age, hue, bend) {
+  if (age < 0 || age > 1.4) return; const a = 1 - clamp((age - .6) / .8), k = eOut(clamp(age / .5));
+  const mx = (x0 + x1) / 2 - (y1 - y0) * bend, my = (y0 + y1) / 2 + (x1 - x0) * bend;
+  const qx = (u) => (1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * mx + u * u * x1, qy = (u) => (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * my + u * u * y1;
+  f.save(); f.globalCompositeOperation = 'lighter'; f.lineCap = 'round';
+  f.strokeStyle = `hsla(${hue},100%,72%,${.55 * a})`; f.lineWidth = 2; f.beginPath(); f.moveTo(x0, y0);
+  for (let u = 0; u <= k; u += .05) f.lineTo(qx(u), qy(u)); f.stroke();
+  const u = clamp(age / .9); f.fillStyle = `hsla(${hue},100%,88%,${a})`; f.beginPath(); f.arc(qx(u), qy(u), 4, 0, 7); f.fill();
+  f.restore();
+}
+// per-screen schedule (film seconds)
+const PLAN = [
+  { key: 'suche', seed: 3, base: [7.5, 13.2], cont: [12.2, 14.2], leaf: [13.0, 19.6], zack: 20.0, hold: [20.0, 22.6], out: [22.4, 23.6], pos: { cx: 1255, cy: 560, sc: .76 } },
+  { key: 'explorer', seed: 5, base: [22.6, 24.6], cont: [24.0, 25.2], leaf: [24.4, 28.2], zack: 28.5, hold: [28.5, 30.1], out: [29.9, 31.0], pos: { cx: 1255, cy: 560, sc: .76 } },
+  { key: 'postfach', seed: 7, base: [30.1, 32.0], cont: [31.4, 32.6], leaf: [31.8, 35.3], zack: 35.6, hold: [35.6, 37.6], out: [37.4, 37.6], pos: { cx: 1255, cy: 560, sc: .76 } },
+  { key: 'mail-offen', seed: 9, base: [37.5, 37.6], cont: [37.5, 37.7], leaf: [37.6, 39.8], zack: 40.0, hold: [40.0, 45.2], out: [44.6, 45.6], pos: { cx: 1255, cy: 560, sc: .76 } },
+];
+let SCREENS = [];
+const CALLS = {
+  suche: [[/^Rechnung vom Zahnarzt/, 'Suchfeld', -220, -120], [/^Bedeutungssuche/, 'Suche nach Bedeutung', -40, -130], [/^📦 Rechnung-Zahnarzt/, 'Treffer mit Fundstelle', -120, 95], [/^✓ Geprüft/, 'Prüfung je Datei', 120, 90], [/^🎤/, 'Spracheingabe', 40, -150]],
+  explorer: [[/^📁 Alle Dateien/, 'Ordnerbaum', -60, -140], [/^✉️ E-Mails \(/, 'Mails nach Absender', 160, -60], [/^↕ Neueste oben/, 'Sortieren', -40, -110], [/^🔎 auch im Inhalt/, 'Suche im Inhalt', 60, -120]],
+  postfach: [[/^📥 Posteingang/, 'Zahlen vom Server', -60, -120], [/^🗑 Papierkorb/, 'Papierkorb', 160, 40], [/^🚫 Spam/, 'Spam-Ordner', 180, -20], [/^S\nIhre Rechnung/, 'Neue Mails', 260, -110]],
+  'mail-offen': [[/^🛡 Schutz/, 'Schutz-Prüfung', 60, -110]],
+};
+const callEls = [];
+const SX = x => 1255 + (x - 720) * .76, SY = y => 560 + (y - 405) * .76;   // app pixel → film pixel
+
+// ───────── captions and other actors ─────────
+const CAPS = [
+  // [start, end, top, label, html]
+  [7.9, 13.0, 330, '01 · Am Anfang', 'Erst sind es nur <span class="grad">Teile</span><small>Knöpfe, Texte, ein Suchfeld. Sie fliegen herbei und suchen ihren Platz.</small>'],
+  [13.4, 19.6, 330, '01 · Es fügt sich', 'Stück für Stück entsteht <span class="grad">deine App</span><small>Alles, was du hast, an einem Ort: Mails, Dokumente, Fotos und Notizen.</small>'],
+  [20.1, 22.7, 330, '01 · Suche', 'Sucht nach <span class="grad">Bedeutung</span><small>„Rechnung vom Zahnarzt“ findet auch die PDF, in der nur „Zahnreinigung“ steht.</small>'],
+  [22.8, 30.1, 330, '02 · Explorer', 'Jede Datei <span class="grad">genau einmal</span><small>Im Ordnerbaum: E-Mails nach Absender, Anhänge unter ihrer Mail, Fotos und Dokumente nach Ordner.</small>'],
+  [30.3, 37.6, 330, '03 · Postfach', 'Alle <span class="grad">Mail-Konten</span> in einer App<small>Telekom, Google, GMX und mehr. Papierkorb, Spam und Wiederherstellen wie beim Anbieter.</small>'],
+  [37.8, 45.1, 330, '04 · Schutz', 'Jede Datei wird <span class="grad">geprüft</span><small>Versteckte Befehle und Tricks fallen auf. Markiert wird, gelöscht wird nichts.</small>'],
+  [67.8, 74.9, 300, '07 · Werkzeuge', 'Mit Werkzeugen aus der <span class="grad">Familie</span><small>Pinnwand, Such-Tool, Kim-Sync, Datei-Post und mehr, per Code freischaltbar im ☰-Menü.</small>'],
+];
+const capEls = CAPS.map(([a, b, top, lab, html]) => { const L = el('div', 'lab'); L.textContent = lab; L.style.top = top - 52 + 'px'; const C = el('div', 'cap', null, html); C.style.top = top + 'px'; return { a, b, L, C }; });
+function drawCaps(t) {
+  for (const c of capEls) {
+    const x = fade(t, c.a, c.a + .55, c.b - .45, c.b);
+    c.C.style.opacity = x; c.L.style.opacity = x;
+    const k = 1 - eOut(lin(t, c.a, c.a + .7));
+    c.C.style.transform = `translate(${-40 * k}px,${18 * k}px)`; c.C.style.filter = k > .01 ? `blur(${k * 8}px)` : 'none';
+    c.L.style.transform = `translateX(${-60 * k}px)`;
+  }
+}
+// intro logo + title
+const introLogo = el('img'); introLogo.src = 'assets/pb-logo.png'; Object.assign(introLogo.style, { position: 'absolute', width: '260px', height: '260px', left: '830px', top: '300px', borderRadius: '62px', opacity: 0, boxShadow: '0 30px 100px rgba(0,0,0,.6), 0 0 140px rgba(125,211,252,.45)' });
+const introT = el('div', 'big', null, 'Private Brain <span class="grad">Pro</span>'); Object.assign(introT.style, { top: '600px', fontSize: '112px' });
+const introS = el('div', 'big', null, 'Dein privates zweites Gehirn'); Object.assign(introS.style, { top: '742px', fontSize: '38px', fontWeight: 600, color: '#cfe3ee' });
+// big statements
+function bigLine(html, top, size) { const d = el('div', 'big', null, html); d.style.top = top + 'px'; d.style.fontSize = size + 'px'; return d; }
+const ring1 = bigLine('Eine App. <span class="grad">Alles privat.</span>', 120, 96);
+const watBack = el('div'); Object.assign(watBack.style, { position: 'absolute', left: '260px', right: '260px', top: '250px', height: '460px', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(2,14,24,.78), rgba(2,14,24,0) 70%)', opacity: 0 });
+const wat = [bigLine('Keine Cloud.', 300, 104), bigLine('Verschlüsselt im <span class="grad">eigenen Ordner.</span>', 450, 84), bigLine('Die Originale bleiben unangetastet.', 600, 54)];
+const heim = [bigLine('In Heimarbeit gebaut.', 340, 96), bigLine('Kein großes Unternehmen dahinter.', 480, 62), bigLine('Deine Daten bleiben <span class="grad">bei dir.</span>', 600, 78)];
+const kin = [bigLine('<span style="color:#fff">Einlesen.</span>', 250, 150), bigLine('<span class="grad">Prüfen.</span>', 430, 150), bigLine('<span style="background:linear-gradient(92deg,#a78bfa,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent">Finden.</span>', 610, 150)];
+const fpLab = el('div', 'lab'); fpLab.textContent = '06 · Teil von Family Projekt'; Object.assign(fpLab.style, { top: '980px', left: '0', right: '0', textAlign: 'center' });
+const fpTop = el('div'); Object.assign(fpTop.style, { position: 'absolute', left: '220px', right: '220px', top: '-90px', height: '470px', borderRadius: '50%', background: 'radial-gradient(ellipse at 50% 48%, rgba(4,6,14,1) 42%, rgba(4,6,14,.85) 58%, rgba(4,6,14,0) 74%)', opacity: 0, filter: 'blur(6px)' });
+const fpTitle = bigLine('Eine wachsende <span class="grad">Familie</span> von Apps', 110, 74);
+const fpStrip = el('div'); Object.assign(fpStrip.style, { position: 'absolute', left: 0, right: 0, top: '800px', height: '280px', background: 'linear-gradient(transparent, rgba(3,5,12,.88) 45%)', opacity: 0 });
+const fpCap = bigLine('Private Brain Pro gehört zur <span class="grad">Familie</span>', 860, 58);
+// hand (the finger from Workflow PDF)
+const hand = el('img'); hand.id = 'hand'; hand.src = 'assets/hand-tippen.png';
+// shield stamp
+const stamp = el('div'); stamp.id = 'stamp'; stamp.textContent = '✓ Geprüft · nichts aufgefallen';
+// tools orbit
+const TOOLS = ['pinnwand', 'suche', 'kimsync', 'dateipost', 'sendepruefer', 'auslieferung', 'inandout', 'fpvideo', 'workflowpdf'];
+const toolEls = TOOLS.map(k => { const i = el('img', 'icon'); i.src = `assets/tools/${k}.${k === 'dateipost' ? 'svg' : 'png'}`; return i; });
+const orbitLogo = el('img'); orbitLogo.src = 'assets/pb-logo.png'; Object.assign(orbitLogo.style, { position: 'absolute', width: '230px', height: '230px', borderRadius: '54px', left: '1185px', top: '415px', opacity: 0, boxShadow: '0 0 120px rgba(125,211,252,.5),0 30px 80px rgba(0,0,0,.6)' });
+// devices
+const devs = [
+  { cls: 'tab', img: 'bilder/suche.png', w: 900, h: 506, x: 120, y: 300, lab: 'Tablet · Android' },
+  { cls: 'pc', img: 'bilder/explorer.png', w: 780, h: 439, x: 1040, y: 220, lab: 'PC · Windows' },
+  { cls: 'phone', img: 'bilder/handy-postfach.png', w: 250, h: 534, x: 1500, y: 470, lab: 'Handy · Android' },
+].map(d => { const box = el('div', 'dev'); Object.assign(box.style, { width: d.w + 'px', height: d.h + 'px', left: d.x + 'px', top: d.y + 'px', borderRadius: d.cls === 'phone' ? '36px' : '22px' }); const im = el('img', null, box); im.src = d.img; Object.assign(im.style, { left: '10px', top: '10px', width: d.w - 20 + 'px', height: d.h - 20 + 'px', borderRadius: d.cls === 'phone' ? '28px' : '14px' }); const lab = el('div', 'devlab'); lab.textContent = d.lab; Object.assign(lab.style, { left: d.x + 'px', width: d.w + 'px', top: d.y + d.h + 24 + 'px' }); return { ...d, box, lab }; });
+const devTitle = bigLine('Für <span class="grad">Android</span> und <span class="grad">Windows</span>', 90, 84);
+// end card
+const end = el('div'); end.id = 'end'; end.innerHTML = '<div class="box"><img src="assets/pb-logo.png" alt=""><h1>Private Brain <span class="grad">Pro</span></h1><p>Dein privates zweites Gehirn · ein Teil von Family Projekt</p><div class="row"><span class="pill">ANDROID</span><span class="pill">WINDOWS</span><span class="pill">FAMILY-PROJEKT.DE</span></div></div>';
+
+// ───────── ring / fly-through slideshow ─────────
+const ringKeys = ['suche', 'explorer', 'postfach', 'mail-offen', 'einlesen'];
+const ringEls = ringKeys.map(k => { const d = el('div', 'screen', stage); d.style.backgroundImage = `url(bilder/${k}.png)`; Object.assign(d.style, { backgroundSize: '1440px 810px', borderRadius: '24px', boxShadow: '0 30px 90px rgba(0,0,0,.6),0 0 60px rgba(125,211,252,.25)', opacity: 0 }); return d; });
+
+// ───────── sound marks (for the cut script) ─────────
+(function marks() {
+  for (const s of [7.5, 22.5, 30, 37.5, 45, 52.5, 60, 67.5, 75, 82.5, 90, 97.5]) TOENE.whoosh.push(s);
+  for (const p of PLAN) TOENE.zack.push(p.zack);
+  TOENE.strahl.push(42.0); TOENE.stempel.push(44.0); TOENE.tipp.push(21.2, 36.9);
+  for (let i = 0; i < TOOLS.length; i++) TOENE.plopp.push(68.2 + i * .32);
+})();
+
+// ───────── render ─────────
+let fpShown = -1;
+async function render(t) {
+  f.clearRect(0, 0, W, H);
+  drawBackground(t);
+  // Family Projekt footage (music time 22.5–30 and 60–63.5), with soft edges
+  const m = musik(t);
+  const fpA = Math.max(fade(t, 59.6, 60.4, 67.0, 67.8), fade(t, 97.2, 97.8, 100.2, 101.0));
+  const fpImg = $('fp');
+  if (fpA > 0) { const n = Math.round(m * 30); const nn = Math.min(Math.max(n, 675), 2024); if (nn !== fpShown) { fpImg.src = `assets/fp/m${String(nn).padStart(5, '0')}.jpg`; fpShown = nn; await fpImg.decode().catch(() => {}); } }
+  fpImg.style.opacity = fpA;
+  fpTop.style.opacity = fade(t, 59.6, 60.2, 67.0, 67.8); fpTitle.style.opacity = fade(t, 60.3, 61.0, 66.8, 67.5); fpStrip.style.opacity = fade(t, 61.8, 62.6, 66.6, 67.4); fpLab.style.opacity = fade(t, 61, 61.8, 66.6, 67.4); fpCap.style.opacity = fade(t, 62.2, 63.2, 66.6, 67.4);
+
+  // intro (0–7.5)
+  const lg = eBack(lin(t, 1.6, 3.4));
+  introLogo.style.opacity = fade(t, 1.6, 2.4, 6.9, 7.5);
+  introLogo.style.transform = `translateY(${(1 - lg) * 90}px) scale(${lerp(.4, 1, lg) * (1 + .03 * Math.sin(t * 2))}) rotate(${(1 - lg) * -20}deg)`;
+  introT.style.opacity = fade(t, 3.2, 4.0, 6.9, 7.5); introT.style.transform = `translateY(${(1 - eOut(lin(t, 3.2, 4.2))) * 40}px)`; introT.style.letterSpacing = `${lerp(.2, -.035, eOut(lin(t, 3.2, 5)))}em`;
+  introS.style.opacity = fade(t, 4.3, 5.0, 6.9, 7.5);
+  // bubbles gather into the logo during the intro
+  if (t < 3.4) { const k = lin(t, .4, 2.6); for (let i = 0; i < 22; i++) { const r = rng(100 + i), a = r() * 6.28, d = lerp(700, 0, eIO(k)) + 40; bubble(f, 960 + Math.cos(a + t * .6) * d, 430 + Math.sin(a + t * .6) * d * .6, lerp(50, 12, k) * (.6 + r()), [190, 280, 160][i % 3], (1 - lin(t, 2.6, 3.4)) * lin(t, .3, .9)); } }
+
+  // app screens
+  for (const S of SCREENS) {
+    const p = S, inA = lin(t, p.base[0] - .3, p.base[0]), outX = lin(t, p.out[0], p.out[1]);
+    if (t < p.base[0] - .3 || t > p.out[1] + .05) { S.root.style.display = 'none'; continue; }
+    // camera: slow drift while building, settles at the zack, flies away at the end
+    const settle = eOut(lin(t, p.base[0], p.zack));
+    const ry = lerp(-16, -4, settle) + Math.sin(t * .7) * 1.2 - outX * 50, rx = lerp(8, 2, settle) + outX * 6;
+    const z = -outX * 1800 + lerp(-200, 0, settle);
+    place(S, t, { ...p.pos, ry, rx, z, op: inA * (1 - eIn(outX)) });
+    S.frame.style.opacity = lin(t, p.base[0], p.base[1]);
+    const pzDur = Math.min(1.6, (p.base[1] - p.base[0]) * .45);
+    for (const T of S.tiles) {
+      const s0 = lerp(p.base[0], p.base[1] - pzDur, T.k), x = lin(t, s0, s0 + pzDur);
+      flyStyle(T.fly, x);
+      // colour of thought while flying, the real page once it locks in
+      const col = 1 - eOut(lin(t, s0 + pzDur * .7, s0 + pzDur * 1.25));
+      T.front.style.backgroundImage = col > .01 ? `radial-gradient(circle at 30% 25%,hsla(${T.hue},100%,88%,${.85 * col}),hsla(${T.hue},90%,58%,${.9 * col}) 45%,hsla(${T.hue + 30},85%,40%,${.92 * col})),url(bilder/${S.key}-skelett.png)` : `url(bilder/${S.key}-skelett.png)`;
+      T.front.style.backgroundSize = '100% 100%,1440px 810px'; if (col <= .01) T.front.style.backgroundSize = '1440px 810px';
+      T.front.style.backgroundPosition = col > .01 ? `0 0,${T.front.dataset.bp || ''}` : T.front.dataset.bp;
+      // back layers fade out after locking, so the page is flat again
+      const back = 1 - lin(t, s0 + pzDur * 1.1, s0 + pzDur * 1.6); for (const lay of T.d.children) if (lay !== T.front) lay.style.opacity = back;
+      const land = s0 + pzDur * .62; if (t > land && t < land + .7 && t < p.zack) sparks(SX(T.fly.rect.x + T.fly.rect.w / 2), SY(T.fly.rect.y + T.fly.rect.h / 2), t - land, T.hue, 14, T.hue * 13 + S.seed);
+      if (!T.mark) { T.mark = 1; TOENE.tick.push(+land.toFixed(3)); }
+    }
+    const nC = S.conts.length, nP = S.pieces.length;
+    S.conts.forEach((c, i) => { const s0 = lerp(p.cont[0], p.cont[1] - .7, nC > 1 ? i / (nC - 1) : 0); flyStyle(c, lin(t, s0, s0 + .9)); });
+    const landHue = [170, 260, 200][S.seed % 3];
+    S.pieces.forEach((q, i) => {
+      const s0 = lerp(p.leaf[0], p.leaf[1] - 1.0, nP > 1 ? Math.pow(i / (nP - 1), .9) : 0), x = lin(t, s0, s0 + 1.0);
+      flyStyle(q, x);
+      // sparks at landing, in canvas coordinates (screen scaled around its centre)
+      const land = s0 + 1.0 * .62; // eBack crosses 1 early
+      if (i % 2 === 0 && t > land && t < land + .9 && t < p.zack) { const sc = p.pos.sc; const cx = p.pos.cx + (q.rect.x + q.rect.w / 2 - 720) * sc, cy = p.pos.cy + (q.rect.y + q.rect.h / 2 - 405) * sc; sparks(cx, cy, t - land, landHue, 10, i * 7 + S.seed); }
+      q.land = land;
+      if (i > 0 && i % 2 === 0 && t > land && t < land + 1.4 && t < p.zack) { const o = S.pieces[i - 2], ox = SX(o.rect.x + o.rect.w / 2), oy = SY(o.rect.y + o.rect.h / 2); synapse(ox, oy, SX(q.rect.x + q.rect.w / 2), SY(q.rect.y + q.rect.h / 2), t - land, landHue + 40, ((i * 37) % 10) / 10 - .5); }
+      if (i % 5 === 0 && !q.mark) { q.mark = 1; TOENE.tick.push(+(land).toFixed(3)); }
+    });
+    // zack: flash, the full picture replaces the pieces
+    const fz = lin(t, p.zack, p.zack + .12);
+    S.full.style.opacity = fz; S.full.style.display = fz > 0 ? 'block' : 'none';
+    const hide = t > p.zack + .12; for (const q of S.pieces) if (hide) q.d.style.opacity = 0; for (const c of S.conts) if (hide) c.d.style.opacity = 0;
+    if (t >= p.zack - .05 && t < p.zack + .6) { const a = t - p.zack; f.save(); f.globalCompositeOperation = 'lighter'; f.strokeStyle = `rgba(190,255,245,${clamp(1 - a / .6)})`; f.lineWidth = 6 * (1 - a / .6) + 1; f.beginPath(); { const R = 80 + 900 * eOut(clamp(a / .6)), Ry = 50 + 520 * eOut(clamp(a / .6)); for (let an = 0; an <= 6.3; an += .05) { const w = 1 + .07 * Math.sin(an * 5 + a * 9) + .04 * Math.sin(an * 11 - a * 13); const x = p.pos.cx + Math.cos(an) * R * w, y = p.pos.cy + Math.sin(an) * Ry * w; an ? f.lineTo(x, y) : f.moveTo(x, y); } } f.stroke(); f.restore(); }
+  }
+  for (const C of callEls) {
+    const p = C.opts, show = C.q.land ? fade(t, C.q.land + .15, C.q.land + .55, p.zack - .1, p.zack + .25) : 0;
+    C.c.style.opacity = show; if (show <= 0) continue;
+    const px = SX(C.q.rect.x + C.q.rect.w / 2), py = SY(C.q.rect.y + C.q.rect.h / 2), k = eBack(lin(t, C.q.land + .15, C.q.land + .7));
+    const cx = px + C.ox * k, cy = py + C.oy * k;
+    C.c.style.left = cx + 'px'; C.c.style.top = cy + 'px'; C.c.style.transform = `translate(-50%,-50%) scale(${lerp(.4, 1, k)})`;
+    f.save(); f.globalCompositeOperation = 'lighter'; f.strokeStyle = `rgba(94,234,212,${.85 * show})`; f.lineWidth = 2.5; f.lineCap = 'round';
+    f.beginPath(); f.moveTo(px, py); f.bezierCurveTo(px + C.ox * .1, py + C.oy * .7, cx - C.ox * .5, cy - C.oy * .05, cx, cy); f.stroke();
+    f.fillStyle = `rgba(200,255,250,${show})`; f.beginPath(); f.arc(px, py, 6, 0, 7); f.fill(); f.restore();
+  }
+  const zackFlash = Math.max(0, ...PLAN.map(p => t >= p.zack - .04 && t < p.zack + .4 ? (1 - (t - p.zack) / .4) * .85 : 0));
+  $('flash').style.opacity = zackFlash; $('flash').style.setProperty('--fx', '63%');
+
+  // hand taps the search button (21) and a mail (36.6)
+  const h1 = fade(t, 20.5, 20.9, 22.0, 22.4), h2 = fade(t, 36.0, 36.4, 37.3, 37.6);
+  if (h1 > 0 || h2 > 0) {
+    const tgt = h1 > 0 ? { x: SX(1310), y: SY(180), tap: 21.2 } : { x: SX(520), y: SY(322), tap: 36.9 };
+    const k = eOut(lin(t, tgt.tap - .7, tgt.tap)), press = Math.max(0, 1 - Math.abs(t - tgt.tap) / .12);
+    hand.style.opacity = Math.max(h1, h2); hand.style.left = lerp(tgt.x + 260, tgt.x - 30, k) + 'px'; hand.style.top = lerp(tgt.y + 300, tgt.y - 12, k) + 'px'; hand.style.transform = `scale(${1 - .1 * press}) rotate(${-8 + 8 * k}deg)`;
+    if (t > tgt.tap && t < tgt.tap + .6) { const a = (t - tgt.tap) / .6; f.save(); f.strokeStyle = `rgba(94,234,212,${1 - a})`; f.lineWidth = 4; f.beginPath(); f.arc(tgt.x, tgt.y, 10 + 60 * eOut(a), 0, 7); f.stroke(); f.restore(); }
+  } else hand.style.opacity = 0;
+
+  // scan beam over the open mail and the stamp
+  if (t > 41.8 && t < 44.2) { const k = eIO(lin(t, 42, 43.8)); const x0 = SX(560), x1 = SX(1440), y0 = SY(95), y1 = SY(300); const y = lerp(y0, y1, k); const gr = f.createLinearGradient(0, y - 40, 0, y + 6); gr.addColorStop(0, 'rgba(94,234,212,0)'); gr.addColorStop(1, 'rgba(94,234,212,.75)'); f.fillStyle = gr; f.fillRect(x0, y - 40, x1 - x0, 46); f.fillStyle = 'rgba(200,255,250,.95)'; f.fillRect(x0, y, x1 - x0, 3); }
+  const st = lin(t, 43.95, 44.25); stamp.style.opacity = fade(t, 43.95, 44.05, 45.0, 45.4); stamp.style.left = '1080px'; stamp.style.top = '700px'; stamp.style.transform = `rotate(-8deg) scale(${lerp(2.4, 1, eOut(st))})`;
+
+  // ring of finished screens (45–52.5)
+  const ringA = fade(t, 44.9, 45.6, 52.0, 52.7);
+  ring1.style.opacity = fade(t, 45.8, 46.6, 51.8, 52.5); ring1.style.transform = `translateY(${(1 - eOut(lin(t, 45.8, 46.8))) * 30}px)`;
+  ringEls.forEach((d, i) => {
+    const flyThrough = lin(t, 94.4, 97.6);
+    if (ringA > 0) {
+      const a = (i / ringEls.length) * Math.PI * 2 + (t - 45) * .42, R = 1050;
+      const x = Math.sin(a) * R, z = Math.cos(a) * R - 900;
+      d.style.display = 'block'; d.style.opacity = ringA * (.35 + .65 * (Math.cos(a) * .5 + .5));
+      d.style.transform = `translate3d(${960 - 720 + x}px,${560 - 405}px,${z}px) rotateY(${a * 57.3}deg) scale(.62)`;
+    } else if (flyThrough > 0 && flyThrough < 1) {
+      // fast fly-through toward the camera, one after another
+      const k = clamp(flyThrough * ringEls.length - i * .7, 0, 1.6);
+      const zz = lerp(-4200, 1400, k / 1.6), op = k > 0 ? clamp(1.6 - k) * clamp(k * 3) : 0;
+      d.style.display = op > 0 ? 'block' : 'none'; d.style.opacity = op;
+      d.style.transform = `translate3d(${960 - 720 + (i % 2 ? 380 : -380)}px,${540 - 405 + (i % 3 - 1) * 160}px,${zz}px) rotateY(${i % 2 ? -18 : 18}deg) scale(.7)`;
+    } else { d.style.opacity = 0; d.style.display = 'none'; }
+  });
+
+  // water: no cloud, own folder (52.5–60)
+  watBack.style.opacity = fade(t, 52.8, 53.6, 59.4, 60);
+  wat.forEach((d, i) => { const a = 53 + i * 1.9; d.style.opacity = fade(t, a, a + .6, 59.4, 60); d.style.transform = `translateY(${(1 - eOut(lin(t, a, a + .9))) * 50}px)`; d.style.filter = `blur(${(1 - eOut(lin(t, a, a + .6))) * 10}px)`; });
+  // a lock made of light, drawn on fx
+  const lockA = fade(t, 52.8, 53.6, 59.3, 60);
+  if (lockA > 0) { const cx = 960, cy = 190, k = eBack(lin(t, 52.8, 54)); f.save(); f.globalAlpha = lockA; f.translate(cx, cy); f.scale(k, k); f.lineWidth = 12; f.strokeStyle = 'rgba(200,255,250,.95)'; f.shadowColor = 'rgba(94,234,212,1)'; f.shadowBlur = 40; f.beginPath(); f.arc(0, -10, 42, Math.PI, 0); f.lineTo(42, 20); f.moveTo(-42, 20); f.lineTo(-42, -10); f.stroke(); f.fillStyle = 'rgba(94,234,212,.25)'; f.strokeRect(-62, 20, 124, 86); f.fillRect(-62, 20, 124, 86); f.beginPath(); f.arc(0, 56, 10, 0, 7); f.fillStyle = 'rgba(220,255,250,.95)'; f.fill(); f.restore(); }
+
+  // tools orbit (67.5–75)
+  const orA = fade(t, 67.4, 68.2, 74.4, 75.2);
+  orbitLogo.style.opacity = orA; orbitLogo.style.transform = `scale(${lerp(.6, 1, eBack(lin(t, 67.5, 68.5))) * (1 + .03 * Math.sin(t * 2.4))})`;
+  toolEls.forEach((d, i) => {
+    const pop = eBack(lin(t, 68.2 + i * .32, 68.7 + i * .32)), a = i / toolEls.length * 6.28 + (t - 67.5) * .55;
+    const x = 1300 + Math.cos(a) * 430, y = 530 + Math.sin(a) * 250, s = .75 + .3 * (Math.sin(a) * .5 + .5);
+    d.style.opacity = orA * clamp(pop * 1.5); d.style.left = x - 60 + 'px'; d.style.top = y - 60 + 'px'; d.style.transform = `scale(${s * pop})`; d.style.zIndex = Math.round(s * 10);
+  });
+
+  // devices (75–82.5)
+  devTitle.style.opacity = fade(t, 75.6, 76.4, 81.8, 82.5);
+  devs.forEach((d, i) => { const a = 75.4 + i * .45, k = eBack(lin(t, a, a + .9)); const o = fade(t, a, a + .4, 81.8, 82.5); d.box.style.opacity = o; d.lab.style.opacity = fade(t, a + .6, a + 1, 81.8, 82.5); d.box.style.transform = `perspective(1600px) translateY(${(1 - k) * 260}px) rotateX(${(1 - k) * 40}deg) rotateY(${[10, -12, -16][i] + Math.sin(t * .8 + i) * 2}deg)`; });
+
+  // home-made (82.5–90)
+  heim.forEach((d, i) => { const a = 83 + i * 1.9; d.style.opacity = fade(t, a, a + .7, 89.3, 90); d.style.transform = `translateY(${(1 - eOut(lin(t, a, a + 1))) * 40}px)`; });
+
+  // kinetic finale (90–94.5): Einlesen. Prüfen. Finden.
+  kin.forEach((d, i) => { const a = 90.05 + i * 1.0, k = eBack(lin(t, a, a + .5)); d.style.opacity = fade(t, a, a + .15, 94.0, 94.6); d.style.transform = `translateX(${(1 - k) * (i % 2 ? 300 : -300)}px) skewX(${(1 - k) * -14}deg) scale(${lerp(1.4, 1, k)})`; });
+  if (t > 90 && t < 94.6) for (let i = 0; i < 3; i++) { const a = t - (90.05 + i); if (a > 0 && a < .8) sparks(960, [330, 510, 690][i], a, [190, 170, 280][i], 40, 50 + i); }
+
+  // end card (100.5–105)
+  const eA = fade(t, 100.4, 101.4, 104.2, 104.95);
+  end.style.opacity = eA; end.firstChild.style.transform = `scale(${lerp(.92, 1, eOut(lin(t, 100.4, 102)))})`;
+  $('black').style.opacity = Math.max(lin(t, 104.3, 105), 1 - lin(t, 0, .8));
+  drawCaps(t);
+}
+window.render = render;
+
+window.bereit = (async () => {
+  if (!window.TEILE) { const r = await fetch('bilder/teile.json').catch(() => null); if (r) Object.assign(TEILE, await r.json()); }
+  SCREENS = PLAN.map(p => buildScreen(p.key, p));
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  const pics = ['suche', 'explorer', 'postfach', 'mail-offen', 'einlesen'].flatMap(k => [k, k + '-skelett']).map(k => { const i = new Image(); i.src = `bilder/${k}.png`; return i.decode().catch(() => {}); });
+  await Promise.all(pics); await document.fonts.ready;
+  return true;
+})();
+</script>
+</body></html>

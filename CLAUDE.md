@@ -1,5 +1,9 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Übergabe 2026-10-23:** Geschenkbox für Jens nur mit Private Brain Pro und Workflow PDF Pro (Android + Windows,
+ohne iOS/PWA) und drei Filmen, `https://claude.ai/artifact/XPEQpCH7axafiTRB7y1RB7`, Quelle `docs/geschenk/geschenk-jens.html`.
+Desktop-OAuth-Client „Private Brain Pro Windows“ im Projekt `privat-brain-pro` angelegt. [Brief](BRIEF_UEBERGABE_2026-10-23_GESCHENK.md).
+
 **Windows .29 veröffentlicht (23.10.2026):** PR #69 und die enthaltenen Korrekturen
 aus #67 sind übernommen. [Windows-Release](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29),
 Quelle `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, Release 39920396303 grün;
