@@ -106,6 +106,10 @@ impl Host {
         *self.dialog.lock().unwrap()=None;*self.dialog_config.lock().unwrap()=Value::Null;result
     }
     pub fn event(&self,name:&str,data:Value){
+        #[cfg(feature="messprobe")]
+        if name=="Desktop:startupFailure"{
+            let _=std::fs::write(self.data.join("engine-probe.txt"),data.to_string());
+        }
         if let Some(window)=self.app.get_webview_window("main"){
             let detail=json!({"name":name,"data":data});let _=window.eval(format!("window.dispatchEvent(new CustomEvent('pb-native',{{detail:{}}}));",detail));
         }

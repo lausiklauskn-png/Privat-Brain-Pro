@@ -11,7 +11,9 @@ pub struct Engine {
 }
 impl Engine {
     pub fn start(runtime: &Path, data: &Path, host: &Arc<Host>) -> Result<Arc<Self>, String> {
-        let java = runtime.join(if cfg!(windows) { "jre/bin/javaw.exe" } else { "jre/bin/java" });
+        // java.exe retains redirected standard handles when our parent is a GUI
+        // application. CREATE_NO_WINDOW below prevents any console window.
+        let java = runtime.join(if cfg!(windows) { "jre/bin/java.exe" } else { "jre/bin/java" });
         let classpath = std::env::join_paths([runtime.join("engine/classes"), runtime.join("engine/lib/*")]).map_err(|_| "APP_RUNTIME_UNAVAILABLE")?;
         let mut command = Command::new(java);
         command.env_remove("JAVA_TOOL_OPTIONS").env_remove("_JAVA_OPTIONS").env_remove("JDK_JAVA_OPTIONS");
@@ -54,6 +56,11 @@ impl Engine {
                 }
             }
             for (_, reply) in reader_engine.pending.lock().unwrap().drain() { let _=reply.send(Err("APP_RUNTIME_UNAVAILABLE".into())); }
+            #[cfg(feature="messprobe")]
+            if let Some(host)=weak_host.upgrade(){
+                let status=reader_engine.child.lock().ok().and_then(|mut child|child.try_wait().ok()).flatten().and_then(|status|status.code());
+                let _=std::fs::write(host.data.join("engine-probe.txt"),format!("Protocol stream closed; child exit code: {:?}\n",status));
+            }
         });
         Ok(engine)
     }

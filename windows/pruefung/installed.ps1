@@ -16,7 +16,9 @@ function Phase($name) {
   $code = $LASTEXITCODE
   $probe = Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro\startup-probe.txt'
   if (Test-Path $probe) { Copy-Item $probe "windows/pruef-out/$name-startup.txt"; Get-Content $probe }
-  $java = Get-CimInstance Win32_Process -Filter "name='javaw.exe'" | Select-Object ProcessId, ParentProcessId
+  $engineProbe = Join-Path $env:LOCALAPPDATA 'de.familyprojekt.privatebrain.pro\engine-probe.txt'
+  if (Test-Path $engineProbe) { Copy-Item $engineProbe "windows/pruef-out/$name-engine.txt"; Get-Content $engineProbe }
+  $java = Get-CimInstance Win32_Process -Filter "name='javaw.exe' OR name='java.exe'" | Select-Object ProcessId, ParentProcessId
   $children = @($java | Where-Object ParentProcessId -eq $app.Id | ForEach-Object ProcessId)
   $children += @($java | Where-Object { $_.ParentProcessId -in $children } | ForEach-Object ProcessId)
   Get-Process private-brain-pro -ErrorAction SilentlyContinue | Stop-Process -Force

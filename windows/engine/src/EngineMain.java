@@ -37,7 +37,12 @@ public final class EngineMain {
                 };
                 DesktopState state=new DesktopState(Path.of(args[0]),protection);
                 service.complete(new DesktopService(state,Path.of(args[1]),EngineMain::host));
-            }catch(Throwable error){service.completeExceptionally(error);}
+            }catch(Throwable error){
+                org.json.JSONArray types=new org.json.JSONArray();
+                for(int i=0;i<8&&error!=null;i++,error=error.getCause())types.put(error.getClass().getName());
+                event("Desktop:startupFailure",new JSONObject().put("types",types));
+                service.completeExceptionally(new IOException("APP_RUNTIME_UNAVAILABLE"));
+            }
         });
         try(BufferedReader input=new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8))){
             String line;
