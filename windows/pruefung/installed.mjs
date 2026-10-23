@@ -36,6 +36,8 @@ try{
   if(!page)console.error('Observed app pages',browser.contexts().flatMap(c=>c.pages()).map(p=>p.url()));
   assert.ok(page,'Installed main page exists');
   page.on('pageerror',error=>report.errors.push(error.message));
+  report.modelRequests=[];
+  page.on('response',response=>{const url=response.url();if(url.startsWith('https://tauri.localhost/models/')||url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))report.modelRequests.push({url:url.split('?')[0],status:response.status()});});
   await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
   const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
   ok('raw calls without the private app capability are denied',await page.evaluate(async()=>{try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProFiles',method:'listOriginals',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}}));
@@ -102,12 +104,20 @@ try{
     const partial=await call('ProSemantic','getState');ok('cancelled model download leaves a truthful resumable state',!partial.running&&(partial.installed||partial.present>0));
     const model=await call('ProSemantic','install');ok('complete real model download matches the pinned fingerprints',model.installed===true);
     await page.evaluate(()=>PBNetwork.setOffline(true));
+    ok('native local files remain readable through normal IPC after the app internet switch turns off',Buffer.from((await call('ProFiles','readOriginal',{hash,offset:0})).data,'base64').equals(bytes));
     const meaning=await page.evaluate(async()=>{
       await SbkimEmbedding.init();const q=await SbkimEmbedding.embedQuery('Rechnung vom Zahnarzt'),near=await SbkimEmbedding.embedPassage('Zahnarztrechnung über 120 Euro für eine Füllung'),far=await SbkimEmbedding.embedPassage('Wetterbericht: morgen Regen in Hamburg');
       const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);return{dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline,fallback:SbkimEmbedding.getModelFallback()};
     });
     ok('installed WebView2 understands meaning from the local e5 model while offline',meaning.dim===384&&meaning.near>meaning.far+0.02&&meaning.source==='local'&&meaning.root==='https://tauri.localhost/models/'&&meaning.offline&&!meaning.fallback);
     report.model=meaning;await page.evaluate(()=>PBNetwork.setOffline(false));
+    await call('ProSemantic','markLoading');
+    const renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});
+    await pause(2000);await browser.close();browser=null;page=null;await connect();
+    for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}assert.ok(page,'App recovers its main page after a renderer crash');
+    await page.waitForFunction(()=>window.Capacitor&&window.PBSemantic,null,{timeout:90000});
+    const guarded=await call('ProSemantic','getState');ok('real renderer crash recovers the app and prevents automatic model restart',guarded.installed&&guarded.crashes>0);
+    await call('ProSemantic','clearCrash');
   }else{
     const hash=createHash('sha256').update('Windows-Probe: Fahrzeug Radstand 2820 Millimeter').digest('hex');
     ok('catalog persists across process restart and reinstallation',await page.evaluate(()=>CATALOG.some(r=>r.name==='windows-proof.txt')));

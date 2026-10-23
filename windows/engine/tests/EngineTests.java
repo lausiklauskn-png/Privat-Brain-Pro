@@ -150,6 +150,11 @@ public final class EngineTests {
         ok(protection.has("items"),"protection adapter accepts the actual frontend items contract");
         JSONObject key=service.call("ProProtect","setKey",new JSONObject().put("service","virustotal"));
         ok(key.getBoolean("saved")&&!key.getBoolean("removed")&&key.has("state")&&!key.toString().contains("fixture-only-protection-key-not-real"),"native protection key commit returns the same saved/state contract without exposing the key");
+        service.call("ProSemantic","markLoading",new JSONObject());service.call("DesktopInternal","rendererGone",new JSONObject());
+        ok(service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==1,"renderer loss during model startup persists a guard against automatic retry");
+        service.call("DesktopInternal","rendererGone",new JSONObject());
+        ok(service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==1,"repeated renderer notices do not count the same interrupted model startup twice");
+        service.call("ProSemantic","clearCrash",new JSONObject());ok(service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==0,"only an explicit retry clears the model crash guard");
     }
     static void tls(DesktopState state)throws Exception {
         AppNetwork.setOffline(state,false);
@@ -191,6 +196,8 @@ public final class EngineTests {
         }
     }
     static void updatesAndExports(Path root,DesktopState state)throws Exception {
+        ok("ort-wasm-simd.wasm".equals(BundledRoutes.file(BundledRoutes.PREFIX+"/dist/ort-wasm-simd.wasm"))&&"transformers.min.js".equals(BundledRoutes.file(BundledRoutes.PREFIX+"/dist/transformers.min.js?cache=1")),"actual model library and WASM URLs use Android's shared local routing rules");
+        ok(BundledRoutes.file(BundledRoutes.PREFIX+"-foreign/dist/transformers.min.js")==null&&BundledRoutes.modelPath(BundledRoutes.MODEL_PREFIX+"../secrets")==null,"similar CDN packages and traversing model paths are never mapped to local files");
         String version="1.0.0-preview.30",tag="windows-v"+version,name="Private-Brain-Pro-Windows-"+version+"-x64-setup.exe";
         String url="https://github.com/"+UpdatePolicy.REPOSITORY+"/releases/download/"+tag+"/"+name;
         JSONObject asset=new JSONObject().put("name",name).put("browser_download_url",url).put("state","uploaded").put("size",100);

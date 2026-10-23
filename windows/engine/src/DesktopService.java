@@ -68,6 +68,7 @@ final class DesktopService {
             }
             case "DesktopInternal" -> {
                 if(method.equals("modelAsset"))yield model.asset(required(o,"url"));
+                if(method.equals("rendererGone")){model.rendererGone();yield yes();}
                 if(method.equals("mailLink"))yield new JSONObject().put("url",BrowserLinks.resolve(required(o,"url")));
                 if(method.equals("receive"))yield receive(o.getJSONArray("paths"));
                 throw new MailFailure("INVALID_INPUT");

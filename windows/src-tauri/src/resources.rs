@@ -7,7 +7,7 @@ use tauri::Manager;
 pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
     #[cfg(windows)] {
         use windows::{core::{HSTRING,PWSTR,Interface,BOOL},Win32::System::Com::{IStream,STGM_READ,STGM_SHARE_DENY_WRITE},Win32::UI::Shell::SHCreateStreamOnFileEx};
-        use webview2_com::{Microsoft::Web::WebView2::Win32::{ICoreWebView2_22,COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL},WebResourceRequestedEventHandler,NavigationStartingEventHandler,take_pwstr};
+        use webview2_com::{Microsoft::Web::WebView2::Win32::{ICoreWebView2_22,COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL,COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED},WebResourceRequestedEventHandler,NavigationStartingEventHandler,ProcessFailedEventHandler,take_pwstr};
         let navigate=window.clone();
         window.with_webview(move|view|{
             let probe=host.data.join("startup-probe.txt");
@@ -17,7 +17,7 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                 {let mut version=PWSTR::null();view.environment().BrowserVersionString(&mut version)?;let _=std::fs::write(&probe,format!("WebView2 {}\n",take_pwstr(version)));}
                 let advanced:ICoreWebView2_22=core.cast()?;let environment=view.environment();
                 advanced.AddWebResourceRequestedFilterWithRequestSourceKinds(&HSTRING::from("*"),COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL)?;
-                let nav_host=host.clone();
+                let nav_host=host.clone();let crash_host=host.clone();
                 let callback=WebResourceRequestedEventHandler::create(Box::new(move|_,arguments|{
                     let Some(arguments)=arguments else{return Ok(())};
                     let request=arguments.Request()?;let mut raw=PWSTR::null();request.Uri(&mut raw)?;let value=take_pwstr(raw);
@@ -63,6 +63,17 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                     Ok(())
                 }));
                 core.add_NavigationStarting(&navigation,&mut token)?;core.add_FrameNavigationStarting(&navigation,&mut token)?;
+                let failed=ProcessFailedEventHandler::create(Box::new(move|core,arguments|{
+                    let (Some(core),Some(arguments))=(core,arguments)else{return Ok(())};
+                    let mut kind=Default::default();arguments.ProcessFailedKind(&mut kind)?;
+                    if kind==COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED{
+                        let engine=crash_host.engine.lock().unwrap().clone();
+                        if let Some(engine)=engine{let _=engine.call("DesktopInternal","rendererGone",json!({}));}
+                        core.Navigate(&HSTRING::from("https://tauri.localhost/index.html"))?;
+                    }
+                    Ok(())
+                }));
+                core.add_ProcessFailed(&failed,&mut token)?;
                 // Already on the WebView UI thread: use its controller directly,
                 // rather than queueing another Tauri window operation from here.
                 core.Navigate(&HSTRING::from("https://tauri.localhost/index.html"))?;Ok(())

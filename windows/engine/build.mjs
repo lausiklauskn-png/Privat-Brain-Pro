@@ -77,6 +77,13 @@ if(pinsStart<0||pinsEnd<pinsStart)throw Error('Review shared semantic pin parser
 const pinsSource='package de.familyprojekt.privatebrain.pro;\nimport java.util.*;\nimport org.json.*;\nfinal class SemanticPins {\n    static List<SemanticModel.Entry> entries(java.nio.file.Path path) throws Exception {\n        String text=java.nio.file.Files.readString(path);\n'+pinsOriginal.slice(pinsStart,pinsEnd)+'}\n';
 await writeFile(join(generated,'SemanticPins.java'),pinsSource);
 receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProSemanticPlugin.java#entries',sha256:hash(pinsOriginal),generatedSha256:hash(pinsSource),byteIdentical:false});
+// Keep exact library/model routing rules shared with Android (including /dist/).
+const routesOriginal=await readFile(join(source,'BundledLibrary.java'),'utf8');
+const routesStart=routesOriginal.indexOf('    static final String PREFIX ='),routesEnd=routesOriginal.indexOf('    private static Map<String, String> headers()');
+if(routesStart<0||routesEnd<routesStart)throw Error('Review shared bundled asset routes');
+const routesSource='package de.familyprojekt.privatebrain.pro;\nimport java.util.*;\nfinal class BundledRoutes {\n'+routesOriginal.slice(routesStart,routesEnd).replace('https://localhost/models/','https://tauri.localhost/models/')+'}\n';
+await writeFile(join(generated,'BundledRoutes.java'),routesSource);
+receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/BundledLibrary.java#routes',sha256:hash(routesOriginal),generatedSha256:hash(routesSource),byteIdentical:false});
 const config=JSON.parse(await readFile(join(here,'../src-tauri/tauri.conf.json'),'utf8'));
 const match=/^(\d+)\.(\d+)\.(\d+)-preview\.(\d+)$/.exec(config.version);
 if(!match)throw Error('Review Windows version metadata');
@@ -85,7 +92,7 @@ const files=(await readdir(join(here,'src'))).filter(n=>n.endsWith('.java')).map
 await rm(join(build,'classes'),{recursive:true,force:true});
 await mkdir(join(build,'classes'),{recursive:true});
 const libraries=deps.map(d=>join(build,'lib',`${d.name}-${d.version}.jar`)).join(delimiter);
-const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),join(generated,'SemanticPins.java'),join(generated,'DesktopBuild.java'),...files];
+const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),join(generated,'SemanticPins.java'),join(generated,'BundledRoutes.java'),join(generated,'DesktopBuild.java'),...files];
 execFileSync('java',args,{stdio:'inherit'});
 await writeFile(join(build,'shared-source.json'),JSON.stringify({sources:receipt,dependencies:deps},null,2)+'\n');
 console.log(`${receipt.length} shared Android sources compiled for Windows (${receipt.filter(x=>x.byteIdentical).length} byte-identical).`);

@@ -5,7 +5,7 @@
   const active=new Set();
   // Modul 03's library address is answered from the APK by MainActivity, never by the internet.
   const BUNDLED='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
-  const isRemote=value=>{try{const u=new URL(value,location.href);if(u.href===BUNDLED||u.href.startsWith(BUNDLED+'/'))return false;return /^(https?|wss?):$/.test(u.protocol)&&u.origin!==location.origin;}catch{return true;}};
+  const isRemote=value=>{try{const u=new URL(value,location.href);if(u.href===BUNDLED||u.href.startsWith(BUNDLED+'/'))return false;if(window.Capacitor?.getPlatform?.()==='windows'&&['http:','https:'].includes(u.protocol)&&u.hostname==='ipc.localhost'&&!u.port)return false;return /^(https?|wss?):$/.test(u.protocol)&&u.origin!==location.origin;}catch{return true;}};
   const blocked=()=>new DOMException('APP_OFFLINE','NetworkError');
   function check(value){if(isRemote(value)&&(!ready||offline))throw blocked();}
   function apply(value){
