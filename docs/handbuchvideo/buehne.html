@@ -7,16 +7,16 @@
 /* Bühne für die Aufnahme. Größe kommt aus ?w=&h= (quer 1920×1080, hochkant 1080×1920).
    Die App läuft im iframe #app; nichts auf der Bühne liegt ÜBER der App außer der
    Hand und dem Klick-Ring (Klaus: „nichts abdecken"). Texte stehen im Band darunter. */
-:root{--rot:#5b43c9;--rot-d:#1f6f86;--ink:#161a2a;--mint:#2bb3a3}
+:root{--rot:#34416b;--rot-d:#1f3d47;--ink:#161a24;--mint:#b8935a}
 html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaVu Sans",system-ui,sans-serif}
 /* overflow:CLIP, nicht hidden (Klaus 2026-09-28: Band hochkant abgeschnitten): „hidden" ist ein Rollbereich —
    rollt die App im iframe ein Element ins Bild (scrollIntoView), während die Kamera zoomt, rollte die GANZE Bühne
    mit, samt Band (gemessen 915 px nach links). „clip" schneidet ab, ohne zu rollen. */
 #stage{position:relative;overflow:clip;
-  background:radial-gradient(ellipse at 18% 22%,rgba(167,139,250,.38),transparent 46%),radial-gradient(ellipse at 84% 78%,rgba(45,212,191,.32),transparent 48%),radial-gradient(ellipse at 70% 12%,rgba(125,211,252,.30),transparent 40%),linear-gradient(160deg,#f6f4ff,#eef7fb 55%,#f4f1fb)}
+  background:radial-gradient(ellipse at 18% 22%,rgba(52,65,107,.16),transparent 46%),radial-gradient(ellipse at 84% 78%,rgba(184,147,90,.14),transparent 48%),linear-gradient(160deg,#eceef2,#d9dce2 55%,#caced6)}
 /* Hintergrund: von ChatGPT gezeichnet (Klaus 2026-09-28), hell, Mitte frei */
 
-.blase{position:absolute;border-radius:50%;opacity:.55;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.95),rgba(196,181,253,.55) 38%,rgba(91,67,201,.28) 70%,rgba(45,212,191,.35));box-shadow:inset -10px -14px 30px rgba(91,67,201,.25);animation:schweben 18s ease-in-out infinite}
+.blase{position:absolute;border-radius:50%;opacity:.42;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.92),rgba(150,158,190,.6) 20%,rgba(52,62,104,.72) 58%,rgba(22,27,52,.85));box-shadow:inset -10px -14px 30px rgba(10,12,30,.35),0 14px 30px rgba(20,24,50,.18);animation:schweben 18s ease-in-out infinite}
 @keyframes schweben{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-60px)}}
 
 #kamera{position:absolute;left:0;top:0;transform-origin:0 0;transition:transform 1.1s cubic-bezier(.45,.05,.2,1)}
@@ -36,6 +36,7 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
 #bandText b{color:var(--rot)}
 #kapitel{position:absolute;color:var(--ink);font-weight:800;letter-spacing:.02em;opacity:0;transition:opacity .5s}
 #kapitel.an{opacity:.92}
+#kapitel.an.verdeckt{opacity:0}   /* beim Heranzoomen läuft das Bild über die Kapitelzeile (Klaus 2026-10-23) */
 #kapitel .nr{display:inline-block;background:var(--rot);border-radius:12px;padding:10px 4px;margin-inline-end:14px}
 
 /* Hand und Klick-Ring */
@@ -91,8 +92,9 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
   <div class="blase" style="left:2%;top:8%;width:150px;height:150px;animation-delay:-3s"></div>
   <div class="blase" style="left:48%;top:88%;width:90px;height:90px;animation-delay:-9s"></div>
   <div id="kamera">
-    <div id="geraet"><div id="schirm"><iframe id="app" title="Private Brain Pro"></iframe></div></div>
+    <div id="geraet"><div id="schirm"><iframe id="app" title="Private Brain Pro"></iframe><canvas id="wechsel" hidden style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5"></canvas></div></div>
   </div>
+  <canvas id="puzzle" style="position:absolute;left:0;top:0;pointer-events:none;z-index:46"></canvas>
   <div id="kapitel"></div>
   <div id="band"><div id="bandText"></div></div>
   <div id="hand" data-art="zeigen"><div class="dreh"><img class="zeigen" src="hand-zeigen.png" alt=""><img class="tippen" src="hand-tippen.png" alt=""></div></div>
@@ -130,6 +132,164 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
     kap.style.whiteSpace = 'nowrap'; kap.style.boxShadow = '0 8px 24px rgba(30,40,70,.18)'; }
   else { kap.style.left = '40px'; kap.style.top = '40px'; kap.style.writingMode = 'vertical-rl'; kap.style.transform = 'rotate(180deg)'; kap.style.top = '60px'; }
   if (hoch) document.getElementById('bandText').style.fontSize = '42px';
+
+
+  // ── Kapitelwechsel: kleine bunte 3D-Puzzleteile mit Leuchtfäden, wie im Werbefilm (Klaus 2026-10-23:
+  //    „nur in kleinen Elementen, sodass man nicht abgelenkt wird … es soll Spaß machen, der Seitenwechsel“) ──
+  const pz = document.getElementById('puzzle'); pz.width = W; pz.height = H; const g = pz.getContext('2d');
+  const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), eOut = x => 1 - Math.pow(1 - x, 3);
+  const eBack = x => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const rng = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const HUES = [168, 200, 262, 320, 38, 140, 290, 186];
+  function stueck(w, h, m, top, right, bottom, left) {
+    const t = Math.min(w, h) * .22, P = new Path2D();
+    const edge = (x0, y0, x1, y1, s) => { if (!s) { P.lineTo(x1, y1); return; }
+      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = uy * s, ny = -ux * s, c = L / 2;
+      const pt = (a, b) => [x0 + ux * a + nx * b, y0 + uy * a + ny * b];
+      P.lineTo(...pt(c - t * .55, 0)); P.bezierCurveTo(...pt(c - t * .35, 0), ...pt(c - t * .95, t * .9), ...pt(c, t * 1.05));
+      P.bezierCurveTo(...pt(c + t * .95, t * .9), ...pt(c + t * .35, 0), ...pt(c + t * .55, 0)); P.lineTo(x1, y1); };
+    P.moveTo(m, m); edge(m, m, m + w, m, top); edge(m + w, m, m + w, m + h, right); edge(m + w, m + h, m, m + h, bottom); edge(m, m + h, m, m, left); P.closePath();
+    return P;
+  }
+  let lauf = 0;
+  function puzzleUebergang(seed) {
+    const r = rng(seed * 7919 + 13), C = 3, R = 2, cs = 40, m = 12, id = ++lauf;
+    const cx = hoch ? W - 150 : 150, cy = hoch ? 150 : (gy + gH * .5);
+    const he = [], ve = []; for (let j = 0; j < R; j++) { he.push([]); ve.push([]); for (let i = 0; i < C; i++) { he[j].push(r() < .5 ? 1 : -1); ve[j].push(r() < .5 ? 1 : -1); } }
+    const teile = [];
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
+      const top = j ? -he[j - 1][i] : 0, bottom = j < R - 1 ? he[j][i] : 0, left = i ? -ve[j][i - 1] : 0, right = i < C - 1 ? ve[j][i] : 0;
+      const an = r() * 6.283, dist = 260 + r() * 260;
+      teile.push({ P: stueck(cs, cs, m, top, right, bottom, left), x: cx + (i - C / 2) * cs, y: cy + (j - R / 2) * cs, hue: HUES[(i * 3 + j * 5 + seed) % 8],
+        dx: Math.cos(an) * dist, dy: Math.sin(an) * dist * .8, rot: (r() - .5) * 5, wob: r() * 6.28, d0: .05 + (i + j * C) * .07,
+        ox: (r() - .5) * 2, oy: -.6 - r() * .8, orot: (r() - .5) * 4 });
+    }
+    const t0 = performance.now(), DAUER = 2000, ZACK = .95;
+    (window.__puzzleTon = window.__puzzleTon || []).push(t0);
+    const faeden = [0, 1].map(k => ({ x1: hoch ? W / 2 + (k - .5) * 300 : gx + 6, y1: hoch ? gy + 6 : gy + gH * (.3 + .4 * k), bend: k ? .28 : -.25, hue: k ? 262 : 186 }));
+    const male = now => {
+      if (id !== lauf) return; const t = (now - t0) / 1000; g.clearRect(0, 0, W, H);
+      if (t * 1000 > DAUER) return;
+      // Leuchtfäden vom fertigen Puzzle zum Gerät, mit wanderndem Licht
+      for (const f of faeden) { const age = t - ZACK - .05; if (age < 0) continue;
+        const a = 1 - clamp((age - .55) / .45), k = eOut(clamp(age / .45));
+        const mx = (cx + f.x1) / 2 - (f.y1 - cy) * f.bend, my = (cy + f.y1) / 2 + (f.x1 - cx) * f.bend;
+        const qx = u => (1 - u) * (1 - u) * cx + 2 * (1 - u) * u * mx + u * u * f.x1, qy = u => (1 - u) * (1 - u) * cy + 2 * (1 - u) * u * my + u * u * f.y1;
+        g.save(); g.lineCap = 'round'; g.shadowColor = `hsla(${f.hue},90%,60%,${a})`; g.shadowBlur = 14;
+        g.strokeStyle = `hsla(${f.hue},85%,58%,${.75 * a})`; g.lineWidth = 2.6; g.beginPath(); g.moveTo(cx, cy);
+        for (let u = 0; u <= k; u += .04) g.lineTo(qx(u), qy(u)); g.stroke();
+        const u = clamp(age / .6); g.fillStyle = `hsla(${f.hue},100%,75%,${a})`; g.beginPath(); g.arc(qx(u), qy(u), 5, 0, 7); g.fill(); g.restore(); }
+      // Teile: fliegen auf Spiralen herein, rasten ein, schweben danach auseinander
+      for (const p of teile) {
+        const x = clamp((t - p.d0) / (ZACK - p.d0)), e = eBack(x), q = 1 - e, w = t > ZACK + .45 ? eOut(clamp((t - ZACK - .45) / .6)) : 0;
+        if (x <= 0) continue;
+        const sp = Math.sin(q * 5 + p.wob) * 60 * q, sq = Math.cos(q * 4 + p.wob) * 40 * q;
+        const px = p.x + p.dx * q + sp + p.ox * 120 * w, py = p.y + p.dy * q + sq + p.oy * 120 * w, sc = (.45 + .55 * clamp(e)) * (1 - .4 * w);
+        g.save(); g.globalAlpha = clamp(x * 3) * (1 - w); g.translate(px + cs / 2 + m, py + cs / 2 + m); g.rotate(p.rot * q + p.orot * w); g.scale(sc, sc); g.translate(-cs / 2 - m, -cs / 2 - m);
+        for (let k = 3; k >= 1; k--) { g.save(); g.translate(k * 1.6, k * 2.2); g.fillStyle = `hsl(${p.hue},70%,${34 - k * 5}%)`; g.fill(p.P); g.restore(); }   // Dicke
+        const gr = g.createLinearGradient(m, m, m + cs, m + cs); gr.addColorStop(0, `hsl(${p.hue},90%,72%)`); gr.addColorStop(1, `hsl(${p.hue + 25},80%,52%)`);
+        g.fillStyle = gr; g.shadowColor = `hsla(${p.hue},90%,60%,.55)`; g.shadowBlur = 10; g.fill(p.P);
+        g.shadowBlur = 0; g.globalAlpha *= .55; g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.ellipse(m + cs * .34, m + cs * .28, cs * .2, cs * .1, -.6, 0, 7); g.fill();   // Glanz
+        g.restore();
+      }
+      // Zack: ein Ring und kleine Funken, wenn die Teile einrasten
+      const za = t - ZACK; if (za >= 0 && za < .6) { const k = eOut(za / .6), a = 1 - za / .6;
+        g.save(); g.strokeStyle = `hsla(186,90%,55%,${a})`; g.lineWidth = 3 * a + 1; g.beginPath(); g.ellipse(cx, cy, 30 + 90 * k, 24 + 64 * k, 0, 0, 7); g.stroke();
+        for (let i = 0; i < 9; i++) { const an = i / 9 * 6.283 + seed, rr = 34 + 70 * k; g.fillStyle = `hsla(${HUES[i % 8]},95%,60%,${a})`; g.beginPath(); g.arc(cx + Math.cos(an) * rr, cy + Math.sin(an) * rr * .8, 3.5 * a + 1, 0, 7); g.fill(); }
+        g.restore(); }
+      requestAnimationFrame(male);
+    };
+    requestAnimationFrame(male);
+  }
+
+  // ── Seitenwechsel als Puzzle (Klaus 2026-10-23: „lebendig von allen Seiten kommend … Farben von Private Brain Pro …
+  //    man soll sehen, wie es sich zusammensetzt … am Ende kommt die Seite heraus, die bedient werden soll …
+  //    jedes Mal ein anderer Übergang“). Die neue Seite liegt als Bild vor; ihre Teile fliegen herein, tragen
+  //    unterwegs eine Private-Brain-Farbe und werden beim Einrasten zur echten Seite. Danach liegt darunter die App. ──
+  const wc = document.getElementById('wechsel'), wg = wc.getContext('2d');
+  const SW = appW * zoomApp, SH = appH * zoomApp; wc.width = SW; wc.height = SH;
+  const PBF = ['#5a4330', '#3d4a6b', '#2f5d62', '#7a6347', '#4a4f5a', '#6b5a44', '#33505e', '#584a3a'];   // gedeckte App-Farben, dunkler (Klaus: „seriös … etwas dunkler als die App“)
+  const ladeBild = u => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = u; });
+  let altBild = null;
+  function hintergrund(a) {      // heller Private-Brain-Grund wie die Bühne, mit weichem Leuchten und Fäden
+    const gr = wg.createLinearGradient(0, 0, SW, SH); gr.addColorStop(0, '#ece6ff'); gr.addColorStop(1, '#dcf3f1');
+    wg.globalAlpha = a; wg.fillStyle = gr; wg.fillRect(0, 0, SW, SH);
+    for (const [x, y, rr, c] of [[.2, .3, .5, '91,67,201'], [.8, .75, .5, '43,179,163'], [.6, .15, .35, '120,90,230']]) {
+      const g2 = wg.createRadialGradient(x * SW, y * SH, 0, x * SW, y * SH, rr * SW); g2.addColorStop(0, `rgba(${c},.28)`); g2.addColorStop(1, `rgba(${c},0)`); wg.fillStyle = g2; wg.fillRect(0, 0, SW, SH); }
+    wg.strokeStyle = 'rgba(91,67,201,.12)'; wg.lineWidth = 2;
+    for (let k = 0; k < 7; k++) { wg.beginPath(); for (let x = -20; x <= SW + 20; x += 20) { const y = SH * (k + .5) / 7 + Math.sin(x / 140 + k * 1.7) * 38 + Math.sin(x / 61 + k) * 9; x < 0 ? wg.moveTo(x, y) : wg.lineTo(x, y); } wg.stroke(); }
+    wg.globalAlpha = 1;
+  }
+  const ARTEN = [
+    { C: 8, R: 5, n: 'spirale' }, { C: 10, R: 6, n: 'regen' }, { C: 8, R: 5, n: 'seiten' }, { C: 9, R: 6, n: 'explosion' },
+    { C: 10, R: 6, n: 'welle' }, { C: 8, R: 5, n: 'kippen' }, { C: 9, R: 5, n: 'klick' }, { C: 10, R: 6, n: 'wirbel' }];
+  async function puzzleSeite(neuUrl, artNr, ox, oy) {
+    const neu = await ladeBild(neuUrl), A = ARTEN[artNr % ARTEN.length], r = rng(artNr * 977 + 5);
+    const { C, R } = A, cw = SW / C, ch = SH / R, m = Math.min(cw, ch) * .3;
+    const he = [], ve = []; for (let j = 0; j < R; j++) { he.push([]); ve.push([]); for (let i = 0; i < C; i++) { he[j].push(r() < .5 ? 1 : -1); ve[j].push(r() < .5 ? 1 : -1); } }
+    const teile = [];
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) {
+      const top = j ? -he[j - 1][i] : 0, bottom = j < R - 1 ? he[j][i] : 0, left = i ? -ve[j][i - 1] : 0, right = i < C - 1 ? ve[j][i] : 0;
+      const tx = i * cw, ty = j * ch, cx = tx + cw / 2, cy = ty + ch / 2, an = r() * 6.283;
+      const p = { P: stueck(cw, ch, m, top, right, bottom, left), tx, ty, cx, cy, farbe: PBF[(i * 3 + j * 5 + artNr) % PBF.length],
+        rot: (r() - .5) * 1.2, sc: .82 + r() * .12, wob: r() * 6.28, sx: 0, sy: 0, d: 0, spin: 0 };
+      const dc = Math.hypot(cx - SW / 2, cy - SH / 2) / Math.hypot(SW / 2, SH / 2);
+      switch (A.n) {
+        case 'spirale': { const dist = 170 + r() * 170; p.sx = cx + Math.cos(an) * dist; p.sy = cy + Math.sin(an) * dist * .8; p.d = r() * .95; p.swirl = 1; break; }
+        case 'regen': p.sx = cx + (r() - .5) * 60; p.sy = cy - 140 - r() * 140; p.d = i * .055 + r() * .35; break;
+        case 'seiten': p.sx = cx + (j % 2 ? 1 : -1) * (220 + r() * 160); p.sy = cy + (r() - .5) * 40; p.d = j * .09 + (j % 2 ? C - i : i) * .05; break;
+        case 'explosion': p.sx = cx + (SW / 2 - cx) * .3; p.sy = cy + (SH / 2 - cy) * .3; p.sc = .6; p.d = dc * .8 + r() * .15; break;
+        case 'welle': p.sx = cx + 180 + r() * 140; p.sy = cy + 120 + r() * 100; p.d = ((C - i) + (R - j)) * .055 + r() * .1; break;
+        case 'kippen': p.sx = cx; p.sy = cy - 40 - r() * 40; p.sc = .55; p.rot = (r() < .5 ? -1 : 1) * (.5 + r() * .4); p.d = (i + j) * .06 + r() * .08; break;
+        case 'klick': p.sx = cx + (ox - cx) * .35; p.sy = cy + (oy - cy) * .35; p.sc = .6; p.d = Math.hypot(cx - ox, cy - oy) / Math.hypot(SW, SH) * 1.1 + r() * .12; p.swirl = .5; break;
+        case 'wirbel': { const a0 = Math.atan2(cy - SH / 2, cx - SW / 2), rr = Math.hypot(cx - SW / 2, cy - SH / 2) + 160 + r() * 120; p.sx = SW / 2 + Math.cos(a0) * rr; p.sy = SH / 2 + Math.sin(a0) * rr * .8; p.spin = .7; p.d = (1 - dc) * .6 + r() * .25; break; }
+      }
+      teile.push(p);
+    }
+    const maxD = Math.max(...teile.map(p => p.d)); for (const p of teile) p.d = .2 + p.d / maxD * .75;   // alle starten zwischen 0,2 und 0,95 s
+    const FLUG = .95, ENDE = .95 + FLUG + .15, t0 = performance.now();
+    (window.__puzzleTon = window.__puzzleTon || []).push(t0);
+    const gelandet = [];
+    wc.hidden = false;
+    await new Promise(fertig => {
+      const male = now => {
+        const t = (now - t0) / 1000; wg.clearRect(0, 0, SW, SH);
+        wg.fillStyle = '#f5f0e6'; wg.fillRect(0, 0, SW, SH);   // Grund wie die App; die alte Seite blendet langsam aus
+        if (altBild) { const a = 1 - eOut(clamp(t / 1.3)); if (a > 0) { wg.save(); wg.globalAlpha = a; const s2 = 1 - .015 * (1 - a); wg.translate(SW / 2, SH / 2); wg.scale(s2, s2); wg.drawImage(altBild, -SW / 2, -SH / 2, SW, SH); wg.restore(); } }
+        // gelandete Teile zuerst (flach), fliegende darüber (mit Dicke und Farbe)
+        const order = teile.map(p => ({ p, x: clamp((t - p.d) / FLUG) })).sort((a, b) => (a.x >= 1 ? 0 : 1) - (b.x >= 1 ? 0 : 1));
+        for (const { p, x } of order) {
+          if (x <= 0) continue;
+          const e = eOut(x), q = 1 - e;
+          let px = p.sx + (p.tx + cw / 2 - p.sx) * e, py = p.sy + (p.ty + ch / 2 - p.sy) * e;
+          if (p.swirl) { px += Math.sin(q * 4 + p.wob) * 50 * q * p.swirl; py += Math.cos(q * 3 + p.wob) * 36 * q * p.swirl; }
+          if (p.spin) { const a = Math.atan2(py - SH / 2, px - SW / 2) - p.spin * q, d = Math.hypot(px - SW / 2, py - SH / 2); px = SW / 2 + Math.cos(a) * d; py = SH / 2 + Math.sin(a) * d; }
+          const sc = p.sc + (1 - p.sc) * e, rot = p.rot * q, farbe = 1 - clamp((x - .4) / .6);
+          wg.save(); wg.globalAlpha = .15 + .85 * eOut(clamp(x * 1.4)); wg.translate(px, py); wg.rotate(rot); wg.scale(sc, sc); wg.translate(-cw / 2 - m, -ch / 2 - m);
+          if (farbe > 0) { wg.save(); wg.translate(1.5 * farbe, 2.5 * farbe); wg.fillStyle = `rgba(20,24,40,${.25 * farbe})`; wg.fill(p.P); wg.restore(); }   // leichter Schatten statt dicker Farbschichten
+          wg.save(); wg.clip(p.P); wg.drawImage(neu, p.tx - m, p.ty - m, cw + 2 * m, ch + 2 * m, 0, 0, cw + 2 * m, ch + 2 * m);
+          if (farbe > 0) { wg.globalAlpha *= .5 * farbe; wg.fillStyle = p.farbe; wg.fillRect(0, 0, cw + 2 * m, ch + 2 * m); }
+          wg.restore();
+          const glanz = clamp(1 - Math.abs(x - .9) * 5); if (glanz > 0) { wg.strokeStyle = `rgba(184,147,90,${.45 * glanz})`; wg.lineWidth = 1.5; wg.stroke(p.P); }
+          wg.restore();
+          if (x >= 1 && !p.land) { p.land = t; gelandet.push(p); }
+        }
+        // Leuchtfäden zwischen den zuletzt eingerasteten Teilen, mit wanderndem Licht
+        for (let k = 1; k < gelandet.length; k++) { const a0 = gelandet[k - 3] || gelandet[0], b0 = gelandet[k], age = t - b0.land; if (age > .8) continue; if (k % 7) continue;
+          const al = 1 - clamp((age - .35) / .65), kk = eOut(clamp(age / .35)), bend = (k % 4 ? .3 : -.3);
+          const mx = (a0.cx + b0.cx) / 2 - (b0.cy - a0.cy) * bend, my = (a0.cy + b0.cy) / 2 + (b0.cx - a0.cx) * bend;
+          const qx = u => (1 - u) * (1 - u) * a0.cx + 2 * (1 - u) * u * mx + u * u * b0.cx, qy = u => (1 - u) * (1 - u) * a0.cy + 2 * (1 - u) * u * my + u * u * b0.cy;
+          wg.save(); wg.lineCap = 'round'; wg.strokeStyle = `rgba(184,147,90,${.55 * al})`; wg.lineWidth = 1.6;
+          wg.beginPath(); wg.moveTo(a0.cx, a0.cy); for (let u = 0; u <= kk; u += .05) wg.lineTo(qx(u), qy(u)); wg.stroke();
+          const u = clamp(age / .5); wg.fillStyle = `rgba(214,184,130,${al})`; wg.beginPath(); wg.arc(qx(u), qy(u), 3.5, 0, 7); wg.fill(); wg.restore(); }
+        // Zack: wenn alles sitzt, ein heller Ring über die Seite
+        const za = t - (ENDE - .35); if (za > 0) { const k = eOut(clamp(za / .35)), a = 1 - k; wg.save(); wg.strokeStyle = `rgba(184,147,90,${.3 * a})`; wg.lineWidth = 3 * a + 1;
+          wg.beginPath(); wg.ellipse(SW / 2, SH / 2, 60 + SW * .6 * k, 40 + SH * .6 * k, 0, 0, 7); wg.stroke(); wg.restore(); }
+        if (t < ENDE) requestAnimationFrame(male); else { wc.hidden = true; altBild = null; fertig(); }
+      };
+      requestAnimationFrame(male);
+    });
+  }
 
   const warte = ms => new Promise(r => setTimeout(r, ms));
   const hand = document.getElementById('hand');
@@ -191,11 +351,19 @@ html,body{margin:0;overflow:hidden;background:#101216;font-family:"Inter","DejaV
       if (t.classList.contains('an')) { t.classList.remove('an'); setTimeout(() => { t.innerHTML = html; t.classList.add('an'); }, 280); }
       else { t.innerHTML = html; t.classList.add('an'); }
     },
-    kapitel(nr, titel) { kap.innerHTML = nr ? `<span class="nr">${nr}</span>${titel}` : ''; kap.classList.toggle('an', !!nr); },
+    kapitel(nr, titel) { kap.dataset.nr = nr || ''; kap.innerHTML = nr ? `<span class="nr">${nr}</span>${titel}` : ''; kap.classList.toggle('an', !!nr); },
     // Zoom auf einen Ausschnitt (Bühnen-Koordinaten), null = zurück
+    // Seitenwechsel: altes Bild über die App legen (vor dem Klick), dann die neue Seite als Puzzle zusammensetzen
+    async wechselAlt(url) { altBild = await ladeBild(url); wg.clearRect(0, 0, SW, SH); wg.drawImage(altBild, 0, 0, SW, SH); wc.hidden = false; },
+    wechselVerbergen(an) { wc.style.visibility = an ? 'hidden' : ''; },
+    wechselPuzzle: (url, art, ox, oy) => puzzleSeite(url, art, ox, oy),
+    kameraSofort(transform) { kamera.style.transition = 'none'; const alt = kamera.style.transform; kamera.style.transform = transform; void kamera.offsetWidth; return alt; },
+    kameraWeich() { void kamera.offsetWidth; kamera.style.transition = ''; },
     zoom(r, faktor) {
+      kap.classList.toggle('verdeckt', !!r);
       if (!r) { kamera.style.transform = ''; return; }
-      const f = faktor || 1.8; const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      let f = faktor || 1.8; if (hoch) f = 1 + (f - 1) * .5;   // hochkant ist die App schon vergrößert
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
       let tx = W / 2 - cx * f, ty = (H - bandH) / 2 - cy * f;
       kamera.style.transform = `translate(${tx}px,${ty}px) scale(${f})`;
     },
