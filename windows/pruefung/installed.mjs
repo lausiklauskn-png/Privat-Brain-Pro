@@ -8,6 +8,7 @@ import {resolve} from 'node:path';
 const phase=process.argv[2]||'first',out=resolve(process.argv[3]||'windows-report.json');
 const report={phase,source:process.env.PB_SOURCE_COMMIT||'',checks:[],errors:[]};
 const expectedVersion=JSON.parse(await readFile(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8')).version;
+const modelPins=JSON.parse(await readFile(new URL('../../tools/native/semantic-model.json',import.meta.url),'utf8'));
 const ok=(name,value)=>{assert.ok(value,name);report.checks.push(name);console.log('PASS '+name);};
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const PASSWORD='CI-Tresor-ä-Probe-2026';
@@ -37,6 +38,8 @@ try{
   assert.ok(page,'Installed main page exists');
   page.on('pageerror',error=>report.errors.push(error.message));
   report.modelRequests=[];
+  report.modelConsole=[];
+  page.on('console',message=>{const value=message.text();if(/embedding|MODUL 03|wasm|onnx|model.*load/i.test(value)&&report.modelConsole.length<30)report.modelConsole.push(value.slice(0,1500));});
   page.on('response',response=>{const url=response.url();if(url.startsWith('https://tauri.localhost/models/')||url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))report.modelRequests.push({url:url.split('?')[0],status:response.status()});});
   await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
   const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
@@ -120,6 +123,13 @@ try{
     const model=await call('ProSemantic','install');ok('complete real model download matches the pinned fingerprints',model.installed===true);
     await page.evaluate(()=>PBNetwork.setOffline(true));
     ok('native local files remain readable through normal IPC after the app internet switch turns off',Buffer.from((await call('ProFiles','readOriginal',{hash,offset:0})).data,'base64').equals(bytes));
+    report.modelEndpoints=await page.evaluate(async()=>{
+      const base='https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+      const urls=[base,base+'/dist/ort-wasm-simd.wasm','https://tauri.localhost/models/Xenova/multilingual-e5-small/config.json'];const results=[];
+      for(const url of urls){const response=await fetch(url),bytes=await response.arrayBuffer();const sha=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('');results.push({url,status:response.status(),type:response.headers.get('content-type'),size:bytes.byteLength,sha256:sha});}return results;
+    });
+    console.log('MODEL endpoints '+JSON.stringify(report.modelEndpoints));
+    ok('offline native endpoints stream the exact pinned library, WASM and model configuration',report.modelEndpoints.every(r=>r.status===200)&&report.modelEndpoints[0].sha256===modelPins.library.files['transformers.min.js']&&report.modelEndpoints[1].sha256===modelPins.library.files['ort-wasm-simd.wasm']&&report.modelEndpoints[2].sha256===modelPins.model.files['config.json']);
     const meaning=await page.evaluate(async()=>{
       await SbkimEmbedding.init();const q=await SbkimEmbedding.embedQuery('Rechnung vom Zahnarzt'),near=await SbkimEmbedding.embedPassage('Zahnarztrechnung über 120 Euro für eine Füllung'),far=await SbkimEmbedding.embedPassage('Wetterbericht: morgen Regen in Hamburg');
       const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);return{dim:q.length,near:dot(q,near),far:dot(q,far),source:SbkimEmbedding.getModelSource(),root:SbkimEmbedding.getModelRoot(),offline:PBNetwork.offline,fallback:SbkimEmbedding.getModelFallback()};
@@ -145,5 +155,5 @@ try{
     await page.waitForFunction(()=>window.vaultResult,{},{timeout:90000});ok('separate native dialog unlocks the same folder',await page.evaluate(()=>vaultResult.unlocked&&vaultResult.state.unlocked));
   }
   ok('no uncaught app runtime error during native acceptance',report.errors.length===0);
-}catch(error){report.failure=error.message;console.error(error.message);process.exitCode=1;try{await page?.screenshot({path:out+'.png'});}catch{}}
+}catch(error){report.failure=error.message;console.error(error.message);if(report.modelRequests)console.error('MODEL diagnostics '+JSON.stringify({requests:report.modelRequests,console:report.modelConsole}));process.exitCode=1;try{await page?.screenshot({path:out+'.png'});}catch{}}
 finally{await mkdir(resolve(out,'..'),{recursive:true});await writeFile(out,JSON.stringify(report,null,2));await browser?.close().catch(()=>{});}
