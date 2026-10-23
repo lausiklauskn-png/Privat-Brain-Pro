@@ -42,12 +42,7 @@ final class ShareInbox {
         name = name.replaceAll("[\\p{Cntrl}<>:\"|?*]", "").trim();
         while (name.startsWith(".")) name = name.substring(1);
         if (name.isEmpty()) name = fallback;
-        if (name.length() > 120) {
-            int dot = name.lastIndexOf('.');
-            String ext = dot > 0 && name.length() - dot <= 10 ? name.substring(dot) : "";
-            name = name.substring(0, 120 - ext.length()) + ext;
-        }
-        return name;
+        return PortableNames.safe(name,120,200);
     }
 
     static String safeMime(String raw) {

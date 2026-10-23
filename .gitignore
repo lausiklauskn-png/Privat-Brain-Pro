@@ -30,3 +30,11 @@ keystore.properties
 
 # Downloaded build inputs (meaning model, transformers.js), checked by hash
 .cache/
+
+# Windows: generated shared engine, bundled private runtime and native output
+windows/engine/build/
+windows/runtime/
+windows/dist/
+windows/src-tauri/target/
+windows/distribution/
+windows/pruef-out/

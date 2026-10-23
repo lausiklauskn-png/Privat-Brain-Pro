@@ -1,0 +1,94 @@
+//! WebView2 request boundary; pinned model files stay local even with internet off.
+use std::sync::{Arc,atomic::Ordering};
+use crate::{host::Host,win};
+use serde_json::json;
+use tauri::Manager;
+
+pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
+    #[cfg(windows)] {
+        use windows::{core::{HSTRING,PWSTR,Interface,BOOL},Win32::System::Com::{IStream,STGM_READ,STGM_SHARE_DENY_WRITE},Win32::UI::Shell::SHCreateStreamOnFileEx};
+        use webview2_com::{Microsoft::Web::WebView2::Win32::{ICoreWebView2_22,COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL,COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED},WebResourceRequestedEventHandler,NavigationStartingEventHandler,ProcessFailedEventHandler,take_pwstr};
+        let navigate=window.clone();
+        window.with_webview(move|view|{
+            let probe=host.data.join("startup-probe.txt");
+            let setup=(||->windows::core::Result<()>{unsafe{
+                let core=view.controller().CoreWebView2()?;
+                #[cfg(feature="messprobe")]
+                {let mut version=PWSTR::null();view.environment().BrowserVersionString(&mut version)?;let _=std::fs::write(&probe,format!("WebView2 {}\n",take_pwstr(version)));}
+                let advanced:ICoreWebView2_22=core.cast()?;let environment=view.environment();
+                advanced.AddWebResourceRequestedFilterWithRequestSourceKinds(&HSTRING::from("*"),COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,COREWEBVIEW2_WEB_RESOURCE_REQUEST_SOURCE_KINDS_ALL)?;
+                let nav_host=host.clone();let crash_host=host.clone();
+                let callback=WebResourceRequestedEventHandler::create(Box::new(move|_,arguments|{
+                    let Some(arguments)=arguments else{return Ok(())};
+                    let request=arguments.Request()?;let mut raw=PWSTR::null();request.Uri(&mut raw)?;let value=take_pwstr(raw);
+                    let Ok(url)=tauri::Url::parse(&value)else{return Ok(())};
+                    let remote_model=url.scheme()=="https"&&url.host_str()==Some("huggingface.co")&&url.path().starts_with("/Xenova/multilingual-e5-small/");
+                    if remote_model{
+                        let response=environment.CreateWebResourceResponse(None::<&IStream>,404,&HSTRING::from("Use the native model download"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;return Ok(());
+                    }
+                    let model=(url.scheme()=="https"&&url.host_str()==Some("cdn.jsdelivr.net")&&url.path().starts_with("/npm/@xenova/transformers@2.17.2"))
+                        ||(url.scheme()=="https"&&url.host_str()==Some("pbmodel.localhost"));
+                    if model {
+                        let engine=host.engine.lock().unwrap().clone();
+                        let response=engine.and_then(|e|e.call("DesktopInternal","modelAsset",json!({"url":value})).ok());
+                        if let Some(path)=response.as_ref().and_then(|r|r.get("path")).and_then(|p|p.as_str()){
+                            let path=std::path::PathBuf::from(path);
+                            if path.starts_with(host.data.join("semantic"))&&win::no_links(&path).is_ok(){
+                                if let Ok(stream)=SHCreateStreamOnFileEx(&HSTRING::from(path.to_string_lossy().as_ref()),(STGM_READ|STGM_SHARE_DENY_WRITE).0,0,false,None){
+                                    let mime=match path.extension().and_then(|x|x.to_str()).unwrap_or(""){"js"=>"text/javascript","json"=>"application/json","wasm"=>"application/wasm",_=>"application/octet-stream"};
+                                    let headers=format!("Content-Type: {}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store",mime);
+                                    let response=environment.CreateWebResourceResponse(&stream,200,&HSTRING::from("OK"),&HSTRING::from(headers))?;arguments.SetResponse(&response)?;return Ok(());
+                                }
+                            }
+                        }
+                        let response=environment.CreateWebResourceResponse(None::<&IStream>,404,&HSTRING::from("Local model unavailable"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;return Ok(());
+                    }
+                    let local=url.scheme()=="https"&&[Some("tauri.localhost"),Some("pbtool.localhost"),Some("ipc.localhost")].contains(&url.host_str());
+                    if !local&&["http","https","ws","wss"].contains(&url.scheme())&&host.offline.load(Ordering::SeqCst){
+                        let response=environment.CreateWebResourceResponse(None::<&IStream>,403,&HSTRING::from("APP_OFFLINE"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;
+                    }
+                    Ok(())
+                }));
+                let mut token=0;core.add_WebResourceRequested(&callback,&mut token)?;
+                let navigation=NavigationStartingEventHandler::create(Box::new(move|_,arguments|{
+                    let Some(arguments)=arguments else{return Ok(())};let mut raw=PWSTR::null();arguments.Uri(&mut raw)?;let value=take_pwstr(raw);
+                    let Ok(url)=tauri::Url::parse(&value)else{return Ok(())};
+                    if url.scheme()=="https"&&url.host_str()==Some("tauri.localhost")&&url.path().starts_with("/_pb_mail_link/"){
+                        arguments.SetCancel(true)?;let mut gesture=BOOL::default();arguments.IsUserInitiated(&mut gesture)?;
+                        if gesture.as_bool(){
+                            let engine=nav_host.engine.lock().unwrap().clone();
+                            if let Some(engine)=engine{
+                                if let Ok(result)=engine.call("DesktopInternal","mailLink",json!({"url":value})){
+                                    if let Some(target)=result.get("url").and_then(|v|v.as_str()){let _=win::open(target);}
+                                }
+                            }
+                        }
+                    }
+                    Ok(())
+                }));
+                core.add_NavigationStarting(&navigation,&mut token)?;core.add_FrameNavigationStarting(&navigation,&mut token)?;
+                let failed=ProcessFailedEventHandler::create(Box::new(move|core,arguments|{
+                    let (Some(core),Some(arguments))=(core,arguments)else{return Ok(())};
+                    let mut kind=Default::default();arguments.ProcessFailedKind(&mut kind)?;
+                    if kind==COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED{
+                        let engine=crash_host.engine.lock().unwrap().clone();
+                        if let Some(engine)=engine{let _=engine.call("DesktopInternal","rendererGone",json!({}));}
+                        core.Navigate(&HSTRING::from("https://tauri.localhost/index.html"))?;
+                    }
+                    Ok(())
+                }));
+                core.add_ProcessFailed(&failed,&mut token)?;
+                // Already on the WebView UI thread: use its controller directly,
+                // rather than queueing another Tauri window operation from here.
+                core.Navigate(&HSTRING::from("https://tauri.localhost/index.html"))?;Ok(())
+            }})();
+            if let Err(error)=setup{
+                #[cfg(feature="messprobe")]
+                {let _=std::fs::write(&probe,format!("WebView setup: {:?}\n",error));}
+                let _=navigate.close();
+            }
+        }).map_err(|_|"APP_WEBVIEW_UNAVAILABLE")?;
+        Ok(())
+    }
+    #[cfg(not(windows))] {let _=(window,host);Err("APP_WEBVIEW_UNAVAILABLE".into())}
+}

@@ -1,5 +1,18 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Windows-Freigabe 23.10.2026:** Klaus beauftragt die Übernahme von PR #69 mit
+allen nötigen Voraussetzungen und die Veröffentlichung zum Herunterladen für
+ein Geschenkpaket durch Claude Code. #69 enthält die gemeinsamen Korrekturen
+aus #67. Windows- und Android-Abnahme auf `079433d` vollständig grün
+(39885843960 / 39885843963). Anleitung und feste Downloadpfade:
+[Geschenkpaket für Windows](docs/GESCHENKPAKET-WINDOWS.md). Die Veröffentlichung
+verlangt erneut beide grünen main-Ketten; kein Android-Release zusätzlich auslösen.
+
+**Aktueller Auftrag 23.10.2026:** Klaus beauftragt die erneute Prüfung der
+veröffentlichten V28, Fehlerkorrekturen und eine zusätzliche Windows-Version.
+`AGENTS.md` und `docs/BAUSTAND-WINDOWS.md` sind der aktuelle Anker. Die Windows-
+Erweiterung baut auf der veröffentlichten V28 mit den geprüften Korrekturen auf.
+
 **Vorschau .28 veröffentlicht (2026-10-22), in der App „v1.0.28“.** [APK .28](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.28/Private-Brain-Pro-1.0.0-preview.28.apk) über die vorhandene App installieren; daneben `.aab`.
 PR #66, VersionCode 28, Tag `v1.0.0-preview.28`, Quelle main `8dae28113f7fa19a4446406f492e0c307c4ef0cb` (Main-CI 39857714825: native-smoke grün). Release-Lauf 39859560733: Signatur, Updateprobe .27 → .28, Veröffentlichung.
 APK SHA-256 `a8a4de0e…d424a647` (7.446.584 Bytes), AAB `dcd69685…6055641b9` (7.267.253 Bytes), unabhängig geladen, gleich SHA256SUMS.

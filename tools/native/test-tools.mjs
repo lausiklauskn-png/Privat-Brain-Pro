@@ -2,7 +2,7 @@
 // tools open inside the app, a file a tool hands out goes into Private Brain Pro. Real tool pages (Kimboard, Kimseek).
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
 const root=resolve('www'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json','.svg':'image/svg+xml'};
@@ -28,13 +28,14 @@ try{
   // ---------- a buyer without a code ----------
   let {page,errors}=await app(browser,null);
   ok('Menu lists the tools, locked without a code',(await menuItem(page,'pinnwand').textContent()).replace(/\s/g,'').startsWith('🔒Pinnwand')&&(await menuItem(page,'kimsync').getAttribute('data-open'))==='false');
+  await page.waitForLoadState('load');
+  ok('Only one pin board entry exists: the licensed tool, with no legacy floating board',await page.evaluate(()=>document.querySelectorAll('.native-options-panel [data-tool="pinnwand"]').length===1&&!document.getElementById('pbPinBtn')&&!document.getElementById('pbPinPanel')&&!document.querySelector('script[src="modules/pinnwand-widget.js"]')));
   // Klaus 2026-10-22: each program shows its own icon, and it really loads (no emoji fallback).
   await page.waitForFunction(()=>[...document.querySelectorAll('.pb-tools-menu img.pb-tool-icon')].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:20000});
   ok('Every menu entry shows the program\'s own icon',await page.evaluate(()=>{const items=[...document.querySelectorAll('.pb-tools-menu .pb-tools-item')];return items.length===9&&items.every(b=>{const i=b.querySelector('img.pb-tool-icon');return i&&i.naturalWidth>0&&new URL(i.src).pathname==='/tool-icons/'+b.dataset.tool+(b.dataset.tool==='dateipost'?'.svg':'.png');});}));
   await menuItem(page,'pinnwand').evaluate(b=>b.click());
   ok('A locked tool says where the code goes and leads to settings',await page.evaluate(()=>alerts.at(-1).includes('Werkzeuge freischalten')&&document.getElementById('panel-settings').classList.contains('on')));
-  await page.evaluate(()=>{const b=document.createElement('button');b.id='pbPinBtn';document.body.append(b);window.pinClicks=0;b.addEventListener('click',()=>pinClicks++);b.click();});
-  ok('The built-in pin board does not open without a code',await page.evaluate(()=>pinClicks===0&&alerts.length===2));
+  ok('A locked pin board opens no tool frame or legacy panel',await page.locator('.pb-tool-frame,#pbPinPanel').count()===0);
   // ---------- the publisher on his device ----------
   await settings(page);
   // The visible box is plain: tools, code field, button; no studio, no long explanations (Klaus 2026-10-22).
@@ -42,6 +43,26 @@ try{
   ok('Each tool in the box stands on its own line with icon, full name and state',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b'),i=li.querySelector('.pb-tool-icon');const r=li.getBoundingClientRect();return n&&s&&i&&n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=r.right+1&&s.getBoundingClientRect().top<r.bottom;})));
   await page.setViewportSize({width:360,height:740});
   ok('On a phone (360 px) no tool name is cut off',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b');return n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=li.getBoundingClientRect().right+1;})));
+  for(const width of [320,360,1280,2560]){
+    await page.setViewportSize({width,height:1000});
+    for(const language of ['de','en','ru','pl']){
+      await page.evaluate(lang=>document.documentElement.lang=lang,language);
+      await page.waitForTimeout(40);
+      ok(`${language} at ${width}px: one tool per row, complete names and an accessible lock without repeated status text`,await page.evaluate(()=>{
+        const items=[...document.querySelectorAll('.pb-license-tools li')];
+        return items.length===8&&items.every((li,i)=>{
+          const r=li.getBoundingClientRect(),name=li.querySelector('.pb-license-name'),status=li.querySelector('b');
+          const range=document.createRange();range.selectNodeContents(name);
+          return (!i||r.top>=items[i-1].getBoundingClientRect().bottom-1)&&name.scrollWidth<=name.clientWidth+1&&range.getClientRects().length===1&&status.textContent==='🔒'&&Boolean(status.getAttribute('aria-label'));
+        });
+      }));
+      if(language==='de'&&process.env.PB_CAPTURE_LICENSE&&[360,2560].includes(width)){
+        await mkdir(process.env.PB_CAPTURE_LICENSE,{recursive:true});
+        await page.locator('#pb-license').screenshot({path:resolve(process.env.PB_CAPTURE_LICENSE,`werkzeuge-${width}.png`)});
+      }
+    }
+  }
+  await page.evaluate(()=>document.documentElement.lang='de');
   await page.setViewportSize({width:1280,height:900});
   // Like the other studios: a long press (1.5 s) on the ©; a short press or a swipe opens nothing (Klaus 2026-10-22).
   const mark=page.locator('#pbCopyright');await mark.scrollIntoViewIfNeeded();

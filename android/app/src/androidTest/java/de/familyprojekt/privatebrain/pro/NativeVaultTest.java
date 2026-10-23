@@ -206,6 +206,11 @@ public class NativeVaultTest {
         JSONObject info = v.catalogInfo();
         assertEquals(1, info.getLong("version"));
         assertEquals("erste Sicherung", new String(v.catalogRead(1, 0), StandardCharsets.UTF_8));
+        // Corrupt every surviving backup: this is damage, never an empty vault.
+        File previous = fixture("vaultA/Private Brain/Katalog/katalog-1.pbv");
+        try (RandomAccessFile f = new RandomAccessFile(previous, "rw")) { f.setLength(3); }
+        try { v.catalogInfo(); fail("damaged backups reported as absent"); }
+        catch (VaultCrypto.Failure damaged) { assertEquals("VAULT_DAMAGED", code(damaged)); }
         reset();
     }
 }

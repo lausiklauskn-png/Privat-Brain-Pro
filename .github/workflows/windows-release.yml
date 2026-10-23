@@ -1,0 +1,115 @@
+name: Geprüften Windows-Installer manuell veröffentlichen
+# No tag-push publication. Klaus approves the concrete result before dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Vollständiger geprüfter aktueller main-Commit
+        required: true
+        type: string
+      tag:
+        description: Neuer Windows-Tag, etwa windows-v1.0.0-preview.29
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: private-brain-windows-release
+  cancel-in-progress: false
+jobs:
+  pruefen:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.gates.outputs.run }}
+      version: ${{ steps.gates.outputs.version }}
+      installer: ${{ steps.gates.outputs.installer }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Aktuellen main, beide Abnahmen und unveränderten Installer verlangen
+        id: gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_COMMIT: ${{ inputs.commit }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'lausiklauskn-png/Privat-Brain-Pro'
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ && "$EXPECTED_COMMIT" == "$GITHUB_SHA" ]]
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" = "$GITHUB_SHA"
+          [[ "$RELEASE_TAG" =~ ^windows-v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-preview\.(0|[1-9][0-9]*)$ ]]
+          version="${RELEASE_TAG#windows-v}"
+          test "$(jq -r .version windows/src-tauri/tauri.conf.json)" = "$version"
+          test "$(jq -r .version windows/package.json)" = "$version"
+          grep -qx "version = \"$version\"" windows/src-tauri/Cargo.toml
+          grep -Fq "versionName \"$version\"" android/app/build.gradle
+          test "$(jq -r '.bundle.createUpdaterArtifacts // false' windows/src-tauri/tauri.conf.json)" = false
+          test -z "$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then exit 1; fi
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' > old-tags.txt
+          git ls-remote --tags --refs origin 'refs/tags/windows-v*' | sed 's#.*refs/tags/##' >> old-tags.txt
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const parse=t=>{const m=/^windows-v(\d+)\.(\d+)\.(\d+)(?:-preview\.(\d+))?$/.exec(t);return m?[+m[1],+m[2],+m[3],m[4]===undefined?Number.MAX_SAFE_INTEGER:+m[4]]:null;};
+          const next=parse(process.env.RELEASE_TAG);
+          for(const tag of readFileSync('old-tags.txt','utf8').trim().split(/\s+/)){
+            const old=parse(tag);if(!old)continue;
+            const i=next.findIndex((n,i)=>n!==old[i]);if(i<0||next[i]<old[i])throw Error('Windows version must increase: '+tag);
+          }
+          NODE
+          run=''
+          for workflow in android.yml windows-app.yml; do
+            accepted=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$GITHUB_SHA&per_page=100" --jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .head_branch == "main" and .event == "push" and .conclusion == "success")] | sort_by(.run_started_at) | last | .id // empty')
+            test -n "$accepted"
+            if test "$workflow" = windows-app.yml; then run="$accepted"; fi
+          done
+          gh run download "$run" --repo "$GITHUB_REPOSITORY" --name windows-installer --dir release-files
+          (cd release-files && sha256sum -c SHA256SUMS)
+          test "$(jq -r .sourceCommit release-files/windows-build.json)" = "$GITHUB_SHA"
+          test "$(jq -r .version release-files/windows-build.json)" = "$version"
+          test "$(jq -r .signing release-files/windows-build.json)" = unsigned
+          test "$(jq -r .testEndpoint release-files/windows-build.json)" = false
+          installer="Private-Brain-Pro-Windows-$version-x64-setup.exe"
+          test "$(jq -r .installer release-files/windows-build.json)" = "$installer"
+          test "$(sha256sum "release-files/$installer" | cut -d' ' -f1)" = "$(jq -r .sha256 release-files/windows-build.json)"
+          { echo "run=$run"; echo "version=$version"; echo "installer=$installer"; } >> "$GITHUB_OUTPUT"
+  veroeffentlichen:
+    needs: pruefen
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Genau den abgenommenen Installer veröffentlichen und unabhängig vergleichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          ACCEPTANCE_RUN: ${{ needs.pruefen.outputs.run }}
+          VERSION: ${{ needs.pruefen.outputs.version }}
+          INSTALLER: ${{ needs.pruefen.outputs.installer }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" = "$GITHUB_SHA"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then exit 1; fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then exit 1; fi
+          gh run download "$ACCEPTANCE_RUN" --repo "$GITHUB_REPOSITORY" --name windows-installer --dir release-files
+          (cd release-files && sha256sum -c SHA256SUMS)
+          cat > notes.md <<NOTES
+          Private Brain Pro für Windows 10/11, 64 Bit. Version $VERSION.
+
+          Unsigniertes NSIS-Setup pro Benutzer, eigene Java-Laufzeit enthalten. Windows kann beim Start auf den unbekannten Herausgeber hinweisen. Keine automatische Installation von Updates.
+
+          Geprüfter Quellstand: $GITHUB_SHA. Windows-Abnahme: $ACCEPTANCE_RUN. Derselbe geprüfte Installer wird übernommen, nicht neu gebaut. Prüfsummen stehen in SHA256SUMS.
+
+          Dateien, Postfach und Speicherort nutzen den gemeinsamen Android-Kern. System-Spracherkennung hängt von Mikrofon und installiertem Sprachpaket ab. Google-Anmeldung erfordert ein zugelassenes Konto im bestehenden Google-Projekt; der Live-Zugriff ist nicht Bestandteil der automatischen Prüfungen. Am eigenen Rechner von Klaus nicht gemessen.
+          NOTES
+          gh release create "$RELEASE_TAG" release-files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title "Private Brain Pro für Windows $VERSION" --notes-file notes.md
+          mkdir independent
+          for file in "$INSTALLER" SHA256SUMS windows-build.json shared-source.json; do
+            curl --disable -fsSL --retry 5 --retry-all-errors "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/$file" -o "independent/$file"
+            cmp "independent/$file" "release-files/$file"
+          done
+          (cd independent && sha256sum -c SHA256SUMS)

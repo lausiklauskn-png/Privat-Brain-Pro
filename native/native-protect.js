@@ -116,6 +116,11 @@
       VAULT_BUSY: ['läuft bereits', 'already running', 'уже выполняется', 'już trwa'],
       UNAVAILABLE: ['nicht verfügbar', 'unavailable', 'недоступно', 'niedostępne'] }
   };
+  if(window.Capacitor?.getPlatform?.()==='windows'){
+    W.helper=['Microsoft Defender unter Windows','Microsoft Defender on Windows','Microsoft Defender в Windows','Microsoft Defender w Windows'];
+    W.noFolder=['Erst einen Speicherort wählen (oben). Die Listen werden verschlüsselt nur im gewählten Ordner abgelegt.','Choose a storage location first (above). Lists are stored encrypted only in the selected folder.','Сначала выберите место хранения (выше). Списки хранятся зашифрованно только в выбранной папке.','Najpierw wybierz miejsce zapisu (wyżej). Listy są szyfrowane i zapisywane tylko w wybranym folderze.'];
+    W.helperInfo=['Eine entschlüsselte Kopie wird nach Bestätigung an Defender übergeben. Es gelten die Windows-Einstellungen, einschließlich möglicher Cloud-Prüfung.','After confirmation, a decrypted copy is passed to Defender. Windows settings apply, including possible cloud checking.','После подтверждения расшифрованная копия передаётся Defender. Действуют настройки Windows, включая возможную проверку в облаке.','Po potwierdzeniu odszyfrowana kopia trafia do Defendera. Obowiązują ustawienia Windows, w tym możliwa kontrola w chmurze.'];
+  }
   const t = key => (W[key] || [key])[lang()];
   const err = code => (W.errors[code] || W.errors.UNAVAILABLE)[lang()];
   const codeOf = error => String(error?.code || error?.message || 'UNAVAILABLE').match(/[A-Z][A-Z_]{3,}/)?.[0] || 'UNAVAILABLE';
@@ -322,7 +327,24 @@
       box.append(vt);
       if (handOut) {
         const helper = make('button', t('helperButton'), 'mail-button pb-schutz-helper'); helper.type = 'button';
-        helper.onclick = () => handOut(); box.append(helper);
+        if(window.Capacitor?.getPlatform?.()==='windows'){
+          helper.textContent='Microsoft Defender';
+          helper.onclick=async()=>{
+            const translations={
+              de:['Eine entschlüsselte Kopie an Microsoft Defender übergeben? Defender verwendet die Windows-Einstellungen, einschließlich möglicher Cloud-Prüfung.','Prüfung beendet. Defender meldet keinen Befund. Das ist keine Garantie.','Defender meldet einen Befund oder Prüfungsfehler. Prüfe die Datei in Windows-Sicherheit.','Defender-Prüfung nicht verfügbar oder fehlgeschlagen. Die Datei ist ungeprüft.'],
+              en:['Send a decrypted copy to Microsoft Defender? Defender uses your Windows settings, including possible cloud checking.','Scan completed. Defender reports no finding. This is no guarantee.','Defender reports a finding or scan error. Check the file in Windows Security.','Defender scan unavailable or failed. The file remains unchecked.'],
+              ru:['Передать расшифрованную копию Microsoft Defender? Он использует настройки Windows, включая возможную проверку в облаке.','Проверка завершена. Defender не сообщает об угрозах. Это не гарантия.','Defender сообщает об угрозе или ошибке. Проверьте файл в безопасности Windows.','Defender недоступен или проверка не удалась. Файл не проверен.'],
+              pl:['Przekazać odszyfrowaną kopię do Microsoft Defender? Używa on ustawień Windows, w tym możliwej kontroli w chmurze.','Skan zakończony. Defender nie zgłasza zagrożenia. To nie jest gwarancja.','Defender zgłasza zagrożenie lub błąd. Sprawdź plik w Zabezpieczeniach Windows.','Defender niedostępny lub skan nieudany. Plik pozostaje niesprawdzony.']
+            };const messages=translations[document.documentElement.lang]||translations.en;
+            if(!confirm(messages[0]))return;helper.disabled=true;
+            try{
+              const options=a.ref||a.id?{vaultRef:a.ref||a.id}:a.data?{name:a.name,data:a.data}:{hash:a.sha256};
+              const result=await Capacitor.Plugins.ProFiles.scan(options);
+              label.textContent=messages[result.status==='completed'?1:result.status==='attention'?2:3];label.dataset.state=result.status==='completed'?'unauffaellig':'nicht-geprueft';
+            }catch{label.textContent=messages[3];label.dataset.state='nicht-geprueft';}
+            finally{helper.disabled=false;}
+          };
+        }else helper.onclick = () => handOut(); box.append(helper);
       }
     });
     return box;
