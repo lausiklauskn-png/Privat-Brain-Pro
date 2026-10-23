@@ -29,7 +29,7 @@ const mails={
     body:{subject:'Ihr Paket kommt heute',from:'"DPD" <noreply@dpd.de>',to:account.email,replyTo:'',messageId:'<d@x>',
       raw:'From: "DPD" <noreply@dpd.de>\r\nSubject: Ihr Paket kommt heute\r\n\r\nText',text:'Sendungsverfolgung: https://tracking.dpd.de/status/123',html:'',attachments:[]}}
 };
-async function device(name,{offline=false,unlocked=true}={}){
+async function device(name,{offline=false,unlocked=true,platform='android'}={}){
   const calls=[],context=await browser.newContext({viewport:{width:1280,height:900}});
   const page=await context.newPage(),errors=[],dialogs=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('dialog',d=>{dialogs.push(d.message());d.accept();});
@@ -67,11 +67,11 @@ async function device(name,{offline=false,unlocked=true}={}){
     }
     throw new Error('Unknown '+plugin+'.'+method);
   });
-  await page.addInitScript(()=>{
+  await page.addInitScript(platform=>{
     delete window.showDirectoryPicker;
     const wrap=plugin=>new Proxy({},{get:(_,m)=>m==='then'?undefined:async args=>{try{return await window.fixture(plugin,m,args);}catch(error){throw{code:String(error?.message||error).match(/[A-Z][A-Z_]{3,}/)?.[0]||'UNKNOWN'};}}});
-    window.Capacitor={Plugins:{ProVault:wrap('ProVault'),ProMail:wrap('ProMail'),ProProtect:wrap('ProProtect'),ProLinks:wrap('ProLinks'),ProDevice:{async getInfo(){return{platform:'android',versionName:'0.1.0-preview.18-debug',nativeMail:true};}}}};
-  });
+    window.Capacitor={getPlatform:()=>platform,Plugins:{ProVault:wrap('ProVault'),ProMail:wrap('ProMail'),ProProtect:wrap('ProProtect'),ProLinks:wrap('ProLinks'),ProDevice:{async getInfo(){return{platform,versionName:'0.1.0-preview.18-debug',nativeMail:true};}}}};
+  },platform);
   await page.goto(origin);await page.waitForFunction(()=>window.PBSchutz&&window.PBWorkspace&&typeof db!=='undefined'&&db);
   return{page,errors,dialogs,calls,protect,context};
 }
@@ -153,5 +153,13 @@ try{
   await openMail(B.page,1);
   ok('Locked: rules still give hints, lists say "nicht geprüft" with the reason',await B.page.locator('.pb-schutz-mail li[data-code]').count()>3&&await B.page.locator('.pb-schutz-sources').textContent().then(t=>t.includes('nicht geprüft')&&t.includes('gesperrt')));
   ok('No page errors on device B',B.errors.length===0);
-  console.log(`${count} protection simulation checks passed (browser, Android plugins stubbed).`);
+  const C=await device('Windows',{platform:'windows'});
+  await C.page.click('[data-tab=settings]');
+  ok('Windows protection card initializes with its own system scanner label',await C.page.locator('#schutzPlace').textContent().then(t=>t.includes('Microsoft Defender')&&!t.includes('auf dem Tablet')));
+  for(const language of ['de','en','ru','pl']){
+    await C.page.evaluate(lang=>document.documentElement.lang=lang,language);
+    ok('Windows protection card remains present after language '+language,await C.page.locator('#schutzPlace').isVisible());
+  }
+  ok('Windows protection text adaptation causes no initialization or language-switch error',C.errors.length===0);
+  console.log(`${count} protection simulation checks passed (browser, Android/Windows plugins stubbed).`);
 }finally{await browser?.close();}
