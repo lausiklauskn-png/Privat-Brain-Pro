@@ -64,6 +64,17 @@ html[data-pb-theme] .mail-copy-fields>summary { font-weight:600; padding:7px 0; 
 html[data-pb-theme] .mail-report { border-radius:7px; }
 html[data-pb-theme] .mail-all-head,html[data-pb-theme] .mail-all-switch { background:var(--card); }
 html[data-pb-theme] .topic-suggest { background:var(--card); border-radius:6px; }
+/* Availability describes the original; the neighbouring button describes its saved check. */
+html[data-pb-theme] .pb-record-availability { display:inline-block; max-width:100%; margin:4px 8px 0 0; color:var(--mut); font-size:.78rem; line-height:1.5; overflow-wrap:anywhere; vertical-align:middle; }
+html[data-pb-theme] .pb-record-availability[data-original=missing],
+html[data-pb-theme] .pb-record-availability[data-original=unavailable] { color:var(--warn); }
+html[data-pb-theme] .pb-check-badge { max-width:100%; border-radius:5px; border-color:var(--line); color:var(--mut); white-space:normal; text-align:left; overflow-wrap:anywhere; line-height:1.4; }
+html[data-pb-theme] .pb-check-badge[data-check=clean] { color:var(--good); border-color:var(--line); }
+html[data-pb-theme] .pb-check-badge[data-check=found],
+html[data-pb-theme] .pb-check-report .pb-check-found li { color:var(--bad); border-color:var(--line); }
+html[data-pb-theme] .pb-check-badge[data-check=partly] { color:var(--warn); border-color:var(--line); }
+html[data-pb-theme] .pb-mail-index-status { padding:5px 0 8px; margin:5px 0 9px; border-bottom:1px solid var(--line); }
+html[data-pb-theme] .pb-mail-index-scope { margin:5px 0 0; color:var(--mut); font-size:.78rem; line-height:1.5; }
 @media(min-width:1051px) {
   html[data-pb-theme] .mail-layout { grid-template-columns:180px minmax(230px,300px) minmax(0,1fr); }
 }

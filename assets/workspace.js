@@ -36,6 +36,7 @@
     files:['Dateien','files','файлов','plików'],oneFile:['Datei','file','файл','plik'],withFind:['mit Fund','with a finding','с находкой','ze znaleziskiem'],
     partlyShort:['teilweise geprüft','partly checked','частично','częściowo'],noOriginal:['Original fehlt','original missing','нет оригинала','brak oryginału'],
     openShort:['noch nicht geprüft','not checked yet','не проверено','niesprawdzone'],
+    accessUnconfirmed:['Zugriff unbestätigt','access unconfirmed','доступ не подтверждён','dostęp niepotwierdzony'],
     collapseAll:['Alle zuklappen','Collapse all','Свернуть всё','Zwiń wszystko'],collapse:['Zuklappen','Collapse','Свернуть','Zwiń'],expand:['Aufklappen','Expand','Развернуть','Rozwiń'],
     hideTree:['Ordnerbaum ausblenden','Hide folder tree','Скрыть дерево папок','Ukryj drzewo folderów'],showTree:['Ordnerbaum zeigen','Show folder tree','Показать дерево папок','Pokaż drzewo folderów'],
     openFolder:['Ordner öffnen','Open folder','Открыть папку','Otwórz folder'],topicsHead:['Kategorien (Vorschlag)','Categories (suggestion)','Категории (предложение)','Kategorie (propozycja)'],
@@ -283,8 +284,14 @@
     // Counts and check state, from the bottom up.
     const stateOf=e=>window.PBCheck?.stateFor?PBCheck.stateFor(e.r):'open';
     const vaultState=v=>window.PBCheck?.vaultState?PBCheck.vaultState(v):'open';
-    const tally=n=>{const t={n:0,found:0,partly:0,missing:0,open:0,clean:0};
-      for(const e of n.files){t.n++;t[stateOf(e)]=(t[stateOf(e)]||0)+1;}
+    const tally=n=>{const t={n:0,found:0,partly:0,missing:0,open:0,clean:0,unconfirmed:0};
+      for(const e of n.files){
+        t.n++;const state=stateOf(e),availability=window.PBRecordStatus?.availability(e.r).key;
+        if(state!=='missing'||!availability)t[state]=(t[state]||0)+1;
+        // A saved check result does not prove that its original is still here.
+        if(availability==='missing')t.missing++;
+        else if(['unknown','unavailable','source'].includes(availability))t.unconfirmed++;
+      }
       for(const v of n.vault){t.n++;t[vaultState(v)]=(t[vaultState(v)]||0)+1;}
       for(const k of n.kids){const s=tally(k);for(const x in s)t[x]=(t[x]||0)+s[x];}
       n.tally=t;return t;};
@@ -299,6 +306,7 @@
     if(t.found)parts.push('⚠ '+t.found+' '+text('withFind'));
     if(t.partly)parts.push('◐ '+t.partly+' '+text('partlyShort'));
     if(t.missing)parts.push('⊘ '+t.missing+' '+text('noOriginal'));
+    if(t.unconfirmed)parts.push('○ '+t.unconfirmed+' '+text('accessUnconfirmed'));
     if(t.open)parts.push('○ '+t.open+' '+text('openShort'));
     return parts.join(' · ');
   }
@@ -363,7 +371,7 @@
     const kind=kindOf(e.r,e.path),sender=kind==='attach'?attachSender(e.path):'';row.dataset.kind=kind;
     name.textContent=kindIcon(kind)+' '+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
     const date=e.r.date?new Date(e.r.date).toLocaleDateString(document.documentElement.lang):'';
-    const where=window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog');
+    const where=window.PBRecordStatus?'':window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog');
     const from=kind==='attach'?'📎 '+text('fromMail')+' '+senderLabel(sender).slice(3):kind==='mail'?text('from')+' '+tidy(e.r.mail?.from||e.path.split('/')[1]||'?'):'';
     meta.textContent=[from,kind==='mail'||kind==='attach'?'':e.path.split('/').slice(0,-1).join('/'),fmtKB(e.r.size||0),date,where].filter(Boolean).join(' · ');
     info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
@@ -437,6 +445,7 @@
   new MutationObserver(syncNavigation).observe(el('panel-search'),{attributes:true,attributeFilter:['class']});
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
+  window.addEventListener('pb-originals-change',refresh);
   window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);

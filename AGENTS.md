@@ -1,5 +1,13 @@
 # Private Brain Pro — laufender Auftrag
 
+- Fortsetzung 24.10.2026: Klaus beauftragt die eigenständige Weiterarbeit ohne
+  weitere Rückfragen. Nächster abgegrenzter Schritt für Android .31: Original-
+  verfügbarkeit und historischen Prüfstand getrennt zeigen, Mailtext-Prüfumfang
+  und ungespeicherte Berichte ehrlich benennen. Kein automatisches Laden von
+  Originalen/Anhängen durch die Anzeige. [Umfang](docs/design/umbau-2026-10-24/STATUS-ORIGINALE-PRUEFUNG.md).
+  .31 ist bis zum erfolgreichen Release als in Arbeit zu behandeln; .30 bleibt
+  der veröffentlichte Download. Keine Überschreibung vorhandener Release-Dateien.
+
 - Neuer ausdrücklicher Freibrief von Klaus am 24.10.2026 in diesem Chat:
   den eigenständigen Designumbau umsetzen, nötige PRs und Commits selbstständig
   übernehmen, das Repo aktualisieren und die native Android-App als signierte

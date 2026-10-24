@@ -49,6 +49,7 @@
     account: ['Konto', 'Account', 'Аккаунт', 'Konto'],
     folder: ['Ordner', 'Folder', 'Папка', 'Folder'],
     textMissing: ['Der Text ist zu groß oder nur als Bild vorhanden. Beim Anbieter öffnen.', 'The text is too large or only an image. Open with provider.', 'Текст слишком большой или только картинка. Откройте у провайдера.', 'Tekst jest za duży lub tylko jako obraz. Otwórz u dostawcy.'],
+    textScope: ['Gespeicherter Mailtext. Der Abruf liest höchstens 8.000 Zeichen je Mail; Original und Anhänge werden hier nicht geladen.', 'Stored email text. Fetching reads up to 8,000 characters per email; the original and attachments are not downloaded here.', 'Сохранённый текст письма. Загружается не более 8 000 символов на письмо; оригинал и вложения здесь не загружаются.', 'Zapisany tekst e-maila. Pobieranie odczytuje do 8 000 znaków na wiadomość; oryginał i załączniki nie są tu pobierane.'],
     dupesTitle: ['✉️ Mails, die doppelt sein könnten', '✉️ Emails that may be duplicates', '✉️ Письма, которые могут повторяться', '✉️ Wiadomości, które mogą się powtarzać'],
     dupesHelp: ['Gleicher Absender und Betreff, aber anderer Text und keine Mail-Kennung. Nichts wurde überschrieben. Bitte entscheiden:', 'Same sender and subject, but different text and no message ID. Nothing was overwritten. Please decide:', 'Тот же отправитель и тема, но другой текст и нет идентификатора. Ничего не перезаписано. Решите:', 'Ten sam nadawca i temat, ale inny tekst i brak identyfikatora. Nic nie nadpisano. Zdecyduj:'],
     same: ['Gleich – zusammenlegen', 'Same – merge', 'Одинаковые – объединить', 'Takie same – połącz'],
@@ -171,7 +172,8 @@
   }
   /** Overwrite in place: server facts change, the user's own marks and folders stay. */
   function overwrite(rec, item, body, loc, accountEmail) {
-    const before = JSON.stringify([rec.name, rec.mail?.from, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody?.length, rec.mailRemotes]);
+    const checkedText = rec.pruefung?.mail ? JSON.stringify([rec.mail?.from || '', rec.mail?.to || '', rec.mail?.subject || rec.name || '', rec.mailBody || rec.snippet || '']) : null;
+    const before = JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes]);
     rec.name = (item.subject || rec.name || t('noSubject')).slice(0, 140);
     rec.mail = { ...(rec.mail || {}), from: item.from || rec.mail?.from || '', subject: item.subject || rec.mail?.subject || '', date: item.date ? new Date(item.date).toUTCString() : rec.mail?.date || '' };
     if (!rec.mail.to) rec.mail.to = accountEmail || '';
@@ -184,8 +186,10 @@
     addLocation(rec, loc); rec.tags = rec.tags || []; rec.dupes = rec.dupes || [];
     // Found again in a read folder: someone took it back out of the trash. Never move it by itself again.
     if (rec.mailTrashed) { delete rec.mailTrashed; rec.mailKeep = 1; }
-    const changed = before !== JSON.stringify([rec.name, rec.mail?.from, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody?.length, rec.mailRemotes]);
+    const changed = before !== JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes]);
     if (changed) textFields(rec);
+    // Keep historical findings, but never present a check of an older text as the current one.
+    if (checkedText !== null && checkedText !== JSON.stringify([rec.mail?.from || '', rec.mail?.to || '', rec.mail?.subject || rec.name || '', rec.mailBody || rec.snippet || ''])) rec.pruefung = { ...rec.pruefung, mailStale: true };
     return changed;
   }
   async function create(item, body, loc, accountEmail, ctx) {
@@ -594,6 +598,14 @@
     if (where) box.append(el('p', 'mail-muted', t('account') + ': ' + where));
     const marks = el('p', 'mail-muted'); marks.textContent = [r.mailList ? t('newsletter') : '', chip(r), guarded(r) && isNewsletter(r) ? t('protected') : '', r.mailSenderRule === 'auto' ? t('autoOn') : '', r.mailHasAttachments ? t('attachments') : ''].filter(Boolean).join(' · ');
     if (marks.textContent) box.append(marks);
+    if (window.PBRecordStatus) {
+      const state = el('div', 'pb-mail-index-status');
+      state.dataset.hash = r.hash;
+      state.append(PBRecordStatus.render(r));
+      if (window.PBCheck?.badge) state.append(PBCheck.badge(r));
+      state.append(el('p', 'hint pb-mail-index-scope', t('textScope')));
+      box.append(state);
+    }
     const address = senderAddress(r.mail.from), tools = el('div', 'mail-reader-actions');
     for (const [key, value] of [['isAd', 'ad'], ['isImportant', 'important']]) {
       const b = button(t(key), async () => { await setSender(address, 'mailSenderMark', r.mailSenderMark === value ? '' : value); draw(); });

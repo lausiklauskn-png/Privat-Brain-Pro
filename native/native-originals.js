@@ -3,7 +3,16 @@
   'use strict';
   const files=window.Capacitor?.Plugins?.ProFiles;
   if(typeof files?.beginImport!=='function')return;
-  const stored=new Set(),cache=new Map(),chunk=256*1024;
+  const stored=new Set(),cache=new Map(),chunk=256*1024,observed=new Map();
+  let originalsReady=false,originalsError=false;
+  const changed=()=>window.dispatchEvent(new Event('pb-originals-change'));
+  // A loaded metadata list is not a byte-integrity check. Observed read failures
+  // are kept separate from a missing entry; no extra native reads are made here.
+  function statusFor(hash){
+    if(observed.has(hash))return observed.get(hash);
+    if(stored.has(hash))return 'local';
+    return originalsError?'unavailable':originalsReady?'missing':'unknown';
+  }
   const words={
     de:['Original erneut auswählen','Die Vorschau ist vorhanden, aber die Originaldatei fehlt. Wähle dieselbe Datei erneut aus. Der Katalog bleibt erhalten.','Datei auswählen','Abbrechen','Diese Datei passt nicht zum Original. Bitte dieselbe Originaldatei auswählen.','Original konnte nicht gespeichert oder gelesen werden. Prüfe den freien Speicher und versuche es erneut.','Dauerhafte Originalkopien in dieser App. Die Quelldateien bleiben unverändert. Ältere fehlende Originale kannst du erneut auswählen.','Lokale Kopie'],
     en:['Select original again','The preview is available but the original file is missing. Select the same file again. The catalog is preserved.','Select file','Cancel','This file does not match the original. Select the same original file.','Unable to save or read the original. Check free storage and try again.','Original copies are stored permanently in this app. Source files stay unchanged. You can select older missing originals again.','Local copy'],
@@ -36,11 +45,11 @@
         }
         await files.finishImport({ticket});
       }
-      stored.add(hash);mark(file,hash);return hash;
+      stored.add(hash);observed.delete(hash);mark(file,hash);changed();return hash;
     }catch(error){if(ticket)await files.abortImport({ticket}).catch(()=>{});throw new Error(t(5));}
   }
   const oldResolve=window.resolveFile,oldOpen=window.openFile,oldLightbox=window.openLightbox;
-  async function resolve(r){
+  async function readOriginal(r){
     if(SESSION_FILES.has(r.hash))return SESSION_FILES.get(r.hash);
     if(cache.has(r.hash))return cache.get(r.hash);
     const info=await files.originalInfo({hash:r.hash});
@@ -55,6 +64,17 @@
     const file=mark(new File(parts,r.name||info.name,{type:info.type}),r.hash);
     if(await sha256(await file.arrayBuffer())!==r.hash)throw new Error(t(5));
     cache.set(r.hash,file);if(cache.size>4)cache.delete(cache.keys().next().value);stored.add(r.hash);return file;
+  }
+  async function resolve(r){
+    const before=statusFor(r.hash);
+    try{
+      const file=await readOriginal(r);
+      if(file){observed.delete(r.hash);if(statusFor(r.hash)!==before)changed();}
+      else{stored.delete(r.hash);observed.set(r.hash,'missing');changed();}
+      return file;
+    }catch(error){
+      stored.delete(r.hash);cache.delete(r.hash);observed.set(r.hash,'unavailable');changed();throw error;
+    }
   }
   const make=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
   const missingRecords=()=>CATALOG.filter(x=>!x.mail&&!x.mailIndex&&!stored.has(x.hash)&&!SESSION_FILES.has(x.hash));
@@ -130,8 +150,11 @@
     if(window.PBFolders){window.PBFolders.refresh();return;}
     for(const id of ['chooseLibrary','pauseLibrary']){const e=document.getElementById(id);if(e)e.hidden=true;}
   }
-  window.PBOriginals={stored,resolve,reconnect,searchFolder,missingRecords,notice,label:()=>t(7),async storeItem(item){const hash=await save(item.file);if(window.PBFolders)await window.PBFolders.copy(hash,item.file.name);return item;}};
+  window.PBOriginals={stored,resolve,reconnect,searchFolder,missingRecords,notice,statusFor,snapshot:()=>Object.freeze({ready:originalsReady,error:originalsError}),label:()=>t(7),async storeItem(item){const hash=await save(item.file);if(window.PBFolders)await window.PBFolders.copy(hash,item.file.name);return item;}};
   new MutationObserver(notice).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-  files.listOriginals().then(result=>{for(const hash of result.items)stored.add(hash);window.PBWorkspace.refresh();}).catch(()=>{});
+  files.listOriginals().then(result=>{
+    if(!Array.isArray(result?.items)||result.items.some(hash=>typeof hash!=='string'||!/^[a-f0-9]{64}$/.test(hash)))throw new Error('Original list unavailable');
+    for(const hash of result.items)stored.add(hash);originalsReady=true;originalsError=false;changed();window.PBWorkspace.refresh();
+  }).catch(()=>{originalsReady=false;originalsError=true;changed();});
   notice();
 })();

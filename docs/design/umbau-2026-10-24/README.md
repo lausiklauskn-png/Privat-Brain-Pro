@@ -24,6 +24,10 @@ signierten Android-Update-APK ausdrücklich freigegeben.
 
 ## Weitere konkrete Vorschläge
 
+Der nächste App-Schritt setzt die getrennte Darstellung von Original und
+Prüfung um: [Bedienung, Umfang und technische Grenzen](STATUS-ORIGINALE-PRUEFUNG.md).
+Die Veröffentlichung von .31 wird nach abgeschlossenen Abnahmen hier nachgetragen.
+
 1. **Gemischte Sammlung über vorhandene Tags:** zusammengehörige Mails und Dateien
    unter einem Vorgang finden. Eigene Ansichtsadapter statt den Explorer mit allen
    Index-Mails zu fluten; zunächst keine neue Datenmigration.
