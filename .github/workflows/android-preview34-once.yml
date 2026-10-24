@@ -1,0 +1,133 @@
+# Temporary, explicit release request for the already verified .34 main commit.
+# Replace 1fe0f684ec3b6c7e645c55387ec698f8e96204fb only after all 11 checks on that main commit are green.
+# Remove this file after the public .34 download has been independently verified.
+name: Einmalige signierte Android-Vorschau .34 anfordern
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/android-preview34-once.yml']
+permissions:
+  contents: read
+  checks: read
+  actions: write
+concurrency:
+  group: android-preview34-one-shot
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    if: github.repository == 'lausiklauskn-png/Privat-Brain-Pro' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 1fe0f684ec3b6c7e645c55387ec698f8e96204fb
+      RELEASE_TAG: v1.0.0-preview.34
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bereits geprüfte Quelle und einmalige Anforderung prüfen
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GH_REPO" = lausiklauskn-png/Privat-Brain-Pro
+          test "$GITHUB_REF" = refs/heads/main
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$RELEASE_TAG" = v1.0.0-preview.34
+          skip() {
+            printf 'dispatch=false\n' >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          # A durable pre-request marker makes a manual re-run conservative even
+          # when the dispatch response was lost. Never resend that request blindly.
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/dispatch-artifacts.json"
+          if jq -e '[.[].artifacts[] | select(.name == "preview34-dispatch-intent" and .expired == false)] | length > 0' "$RUNNER_TEMP/dispatch-artifacts.json" >/dev/null; then
+            skip 'Eine .34-Anforderung wurde für diesen Lauf bereits vorgemerkt. Den bestehenden Release-Lauf prüfen; keine erneute Anforderung.'
+          fi
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/dispatch-releases.json"
+          if jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length > 0' "$RUNNER_TEMP/dispatch-releases.json" >/dev/null; then
+            skip 'Für .34 besteht bereits eine Veröffentlichung oder ein Entwurf. Unverändert belassen und prüfen; nichts erneut anfordern.'
+          fi
+          # Checkout fetched all tags. An existing tag without a release is an
+          # explicit stop, not permission to publish or move that tag.
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo 'Der .34-Tag besteht bereits. Keine Anforderung ohne Prüfung dieses Zustands.' >&2
+            exit 1
+          fi
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current_main=$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)
+          test "$current_main" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+          git show "$SOURCE_SHA:android/app/build.gradle" > "$RUNNER_TEMP/dispatch-source.gradle"
+          python3 - "$RUNNER_TEMP/dispatch-source.gradle" <<'PY'
+          import re, sys
+          from pathlib import Path
+          text = Path(sys.argv[1]).read_text()
+          assert re.findall(r'^\s*versionCode\s+(\d+)\s*$', text, re.M) == ['34'], 'Exact source versionCode 34 required'
+          assert re.findall(r'^\s*versionName\s+"([^"\n]+)"\s*$', text, re.M) == ['1.0.0-preview.34'], 'Exact source versionName .34 required'
+          PY
+          gh api --paginate --slurp "repos/$GH_REPO/commits/$SOURCE_SHA/check-runs?filter=latest&per_page=100" > "$RUNNER_TEMP/dispatch-checks.json"
+          jq -e --arg sha "$SOURCE_SHA" '
+            ["build","deploy","report-build-status","Responsive Oberfläche (firefox)","Responsive Oberfläche (webkit)","validate","native-smoke","upgrade-probe-smoke","windows","encrypted-signing","shared-engine"] as $required
+            | [.[].check_runs[] | select(.app.slug == "github-actions")] as $checks
+            | (($checks | map(.name) | unique | sort) == ($required | sort))
+              and all($checks[]; .head_sha == $sha and .status == "completed" and .conclusion == "success")
+          ' "$RUNNER_TEMP/dispatch-checks.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?per_page=100" > "$RUNNER_TEMP/dispatch-runs.json"
+          if jq -e --arg sha "$GITHUB_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | length > 0' "$RUNNER_TEMP/dispatch-runs.json" >/dev/null; then
+            skip 'Für diesen Dispatch-Commit besteht bereits ein manueller Release-Lauf, möglicherweise als Testlauf. Diesen prüfen oder gezielt wiederholen; keine zweite Anforderung.'
+          fi
+          if jq -e '[.[].workflow_runs[] | select(.status != "completed")] | length > 0' "$RUNNER_TEMP/dispatch-runs.json" >/dev/null; then
+            echo 'Ein anderer Android-Release läuft oder wartet bereits. Keine zweite Anforderung.' >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/preview34-one-shot"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP']) / 'preview34-one-shot'
+          request = {'ref':'main','inputs':{'channel':'test','tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dry_run':False}}
+          intent = {'release_tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dispatcher_commit':os.environ['GITHUB_SHA'],'dispatcher_run_id':os.environ['GITHUB_RUN_ID'],'state':'intent recorded before request; acceptance is not yet confirmed'}
+          (folder / 'request.json').write_text(json.dumps(request) + '\n')
+          (folder / 'intent.json').write_text(json.dumps(intent) + '\n')
+          PY
+          printf 'dispatch=true\n' >> "$GITHUB_OUTPUT"
+      - name: Anforderungsabsicht vor dem nicht wiederholten Request sichern
+        if: steps.gate.outputs.dispatch == 'true'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: preview34-dispatch-intent
+          path: ${{ runner.temp }}/preview34-one-shot/intent.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Bestehenden signierten Release mit unveränderten Prüfungen starten
+        if: steps.gate.outputs.dispatch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Recheck after uploading the intent: no changed main or concurrent
+          # release may slip through that upload interval. A stop keeps the
+          # intent marker, requiring inspection rather than a blind retry.
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?per_page=100" > "$RUNNER_TEMP/dispatch-runs-final.json"
+          jq -e --arg sha "$GITHUB_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/dispatch-runs-final.json" >/dev/null
+          # Deliberately no retry for this non-idempotent POST. The existing
+          # workflow still checks source/main, native smoke, signature and upgrade.
+          gh api --silent --method POST "repos/$GH_REPO/actions/workflows/android-release.yml/dispatches" --input "$RUNNER_TEMP/preview34-one-shot/request.json"
+          for attempt in {1..10}; do
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?event=workflow_dispatch&head_sha=$GITHUB_SHA&per_page=100" > "$RUNNER_TEMP/dispatch-observed.json"
+            run_id=$(jq -r --arg sha "$GITHUB_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/dispatch-observed.json")
+            if [[ -n "$run_id" ]]; then
+              printf 'release_run_id=%s\n' "$run_id" >> "$GITHUB_OUTPUT"
+              printf 'Release angefordert: https://github.com/%s/actions/runs/%s\nQuelle: `%s`, Tag: `%s`. Veröffentlichung und signiertes Update sind separat abzuwarten.\n' "$GH_REPO" "$run_id" "$SOURCE_SHA" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'Request angenommen, aber noch keine Lauf-ID beobachtet. Nicht erneut anfordern; Actions und die vorgemerkte Absicht prüfen.' >&2
+          exit 1
