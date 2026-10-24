@@ -71,7 +71,7 @@ als verfügbar angezeigt, wenn sie tatsächlich vorhanden und geprüft sind.
   simuliert.
 - Texteingabedialoge: **26 Fälle bestanden**, einschließlich paralleler
   Tagänderungen, fehlgeschlagener Speicherung und erneutem Versuch.
-- Mailübersetzungsansicht: **49 Fälle bestanden**, automatische lokale Anzeige, bewusster Download,
+- Mailübersetzungsansicht: **52 Fälle bestanden**, automatische lokale Anzeige, bewusster Download,
   Maskierung und Rückzuordnung sowie Schließen/Navigieren mit verspäteten
   Antworten werden im Browser geprüft. Geräte-/KI-Transporte sind dort
   nachgebildet; die echte Modellinferenz wird zusätzlich separat verlangt.

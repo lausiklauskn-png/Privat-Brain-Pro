@@ -27,6 +27,7 @@
   }))['unsupported','blocked','localUnavailable','localOffline'].forEach((key,index)=>{words[code][key]=values[index];});
   for(const [code,label] of Object.entries({de:'Lokales Modell erneut versuchen',en:'Try the local model again',ru:'Повторить локальную модель',pl:'Ponów próbę modelu lokalnego'}))words[code].retry=label;
   for(const [code,values] of Object.entries({de:['Modelle und Lizenzen','Noch zu laden: '],en:['Models and licenses','Remaining download: '],ru:['Модели и лицензии','Осталось загрузить: '],pl:['Modele i licencje','Do pobrania: ']})){words[code].notices=values[0];words[code].downloadSize=values[1];}
+  for(const [code,text] of Object.entries({de:'Maschinelle Übersetzungen können Fehler enthalten. Prüfe wichtige Angaben am Original.',en:'Machine translations can contain mistakes. Check important details against the original.',ru:'Машинный перевод может содержать ошибки. Важные сведения сверяйте с оригиналом.',pl:'Tłumaczenie maszynowe może zawierać błędy. Ważne informacje sprawdzaj w oryginale.'}))words[code].deviceLimit=text;
   const t = key => (words[String(document.documentElement.lang || 'de').slice(0,2)] || words.de)[key];
   const make = (tag, cls, text) => {const node=document.createElement(tag);if(cls)node.className=cls;if(text!=null)node.textContent=text;return node;};
   const settings = () => {try{return AI;}catch{return null;}};
@@ -108,6 +109,7 @@
       for(const option of target.options)option.disabled=local&&!localLanguages.has(option.value);
       for(const option of sourceLanguage.options)option.disabled=local&&option.value!=='auto'&&!localLanguages.has(option.value);
       explanation.textContent=t(local?'deviceHint':'hint');
+      limit.textContent=t(local?'deviceLimit':'limit');
       notices.hidden=!local;downloadSize.hidden=!local||download.hidden||!Number.isFinite(pendingModelBytes)||pendingModelBytes<=0;
       downloadSize.textContent=t('downloadSize')+Math.ceil(pendingModelBytes/1048576)+' MiB';
       extra.hidden=previewTitle.hidden=preview.hidden=local;suggestions.hidden=local;
