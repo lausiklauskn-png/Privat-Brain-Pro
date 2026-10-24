@@ -17,3 +17,5 @@
 
 .pb-dup-help>summary{width:44px;height:44px;border:0}
 .pb-dup-help>summary>svg{width:20px;height:20px}
+
+#panel-dupes>#pb-mail-dupes[hidden]{display:none!important}

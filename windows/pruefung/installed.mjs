@@ -20,6 +20,34 @@ async function connect(){
   }throw Error('Installed app did not open the local test endpoint');
 }
 async function call(plugin,method,args={}){return page.evaluate(async({plugin,method,args})=>Capacitor.Plugins[plugin][method](args),{plugin,method,args});}
+// Failure evidence only: do not navigate, reload or accept another recovery URL.
+async function recoveryDiagnostics(previousPage){
+  const bounded=async(promise)=>{
+    let timer;
+    try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Recovery diagnostic timed out')),2000);})]);}
+    finally{clearTimeout(timer);}
+  };
+  const pages=browser.contexts().flatMap((context,index)=>context.pages().map(target=>({context:index,target})));
+  const evidence={expectedURL:'https://tauri.localhost/index.html',connected:browser.isConnected(),
+    previousPage:{url:previousPage.url(),closed:previousPage.isClosed()},pageCount:pages.length,
+    pages:pages.map(({context,target})=>({context,url:target.url(),closed:target.isClosed()}))};
+  const appPages=pages.filter(({target})=>{try{const url=new URL(target.url());return url.origin==='https://tauri.localhost'&&['/','/index.html'].includes(url.pathname);}catch{return false;}}).slice(0,2);
+  const tasks=appPages.map(async({target})=>{
+    try{return{url:target.url(),state:await bounded(target.evaluate(()=>({readyState:document.readyState,
+      workspace:Boolean(window.PBWorkspace),semantic:Boolean(window.PBSemantic),bridge:Boolean(window.Capacitor),
+      catalogReady:typeof CATALOG!=='undefined'&&Array.isArray(CATALOG),
+      importedFixturePresent:typeof CATALOG!=='undefined'&&Array.isArray(CATALOG)&&CATALOG.some(record=>record.name==='windows-proof.txt')})))};}
+    catch(error){return{url:target.url(),error:error.message};}
+  });
+  const targets=(async()=>{
+    let session;
+    try{session=await bounded(browser.newBrowserCDPSession());const value=await bounded(session.send('Target.getTargets'));return value.targetInfos.map(target=>({id:target.targetId,type:target.type,url:target.url,attached:target.attached}));}
+    catch(error){return{error:error.message};}
+    finally{if(session)void session.detach().catch(()=>{});}
+  })();
+  [evidence.appPages,evidence.targets]=await Promise.all([Promise.all(tasks),targets]);
+  return evidence;
+}
 async function dialog(){
   for(let i=0;i<80;i++){
     const target=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().includes('/windows/dialog/index.html'));
@@ -146,9 +174,15 @@ try{
     ok('installed WebView2 understands meaning from the local e5 model while offline',meaning.dim===384&&meaning.near>meaning.far+0.02&&meaning.source==='local'&&meaning.root==='https://pbmodel.localhost/models/'&&meaning.offline&&!meaning.fallback);
     report.model=meaning;await page.evaluate(()=>PBNetwork.setOffline(false));
     await call('ProSemantic','markLoading');
-    const renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});
+    const crashPage=page,renderer=await browser.contexts()[0].newCDPSession(page);void renderer.send('Page.crash').catch(()=>{});
     await pause(2000);await browser.close();browser=null;page=null;await connect();
-    for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}assert.ok(page,'App recovers its main page after a renderer crash');
+    for(let i=0;i<80;i++){page=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}
+    if(!page){
+      try{report.rendererRecovery=await recoveryDiagnostics(crashPage);}
+      catch(error){report.rendererRecovery={diagnosticError:error.message};}
+      console.error('RECOVERY diagnostics '+JSON.stringify(report.rendererRecovery));
+    }
+    assert.ok(page,'App recovers its main page after a renderer crash');
     page.on('pageerror',error=>report.errors.push(error.stack||error.message));
     await page.waitForFunction(()=>window.Capacitor&&window.PBSemantic&&window.PBWorkspace&&typeof db!=='undefined'&&db&&CATALOG.some(r=>r.name==='windows-proof.txt'),null,{timeout:90000});
     const guarded=await call('ProSemantic','getState');ok('real renderer crash recovers the app and prevents automatic model restart',guarded.installed&&guarded.crashes>0);

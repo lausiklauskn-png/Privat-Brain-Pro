@@ -71,6 +71,7 @@ try{
   await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort>summary').title.endsWith('Älteste oben'));
   ok('Restoring a state restores the menu, ordering and content switch',(await names())[0]==='Arztbrief-Orthopaedie.pdf'&&!(await page.locator('#explorerContent').isChecked()));
   await summary.click();
+  await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort').open&&document.querySelector('#pb-explorer-sort>summary').getAttribute('aria-expanded')==='true');
   ok('The menu exposes the actual criterion and reverse state',await menu.locator('[data-sort-key="date"]').getAttribute('aria-current')==='true'&&await menu.locator('[data-sort-reverse="true"]').getAttribute('aria-pressed')==='true'&&await summary.getAttribute('aria-expanded')==='true');
   await menu.locator('[data-sort-reverse="true"]').focus();await page.keyboard.press('Escape');
   ok('Escape closes the menu and returns keyboard focus',!await menu.evaluate(e=>e.open)&&await summary.evaluate(e=>e===document.activeElement));

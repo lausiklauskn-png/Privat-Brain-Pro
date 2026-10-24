@@ -306,7 +306,7 @@ try{
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));
   // Measured in one step: a background fetch may redraw the panel between finding and measuring.
   const small=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all .mail-all-switch .mail-button')].map(b=>Math.round(b.getBoundingClientRect().height)));
-  ok('Phone: "← Zurück" stays on one line',await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all .mail-all-head .mail-back');return b.getBoundingClientRect().height<=32;}));
+  ok('Phone: Back stays on one text line with a reachable touch target',await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all .mail-all-head .mail-back'),walker=document.createTreeWalker(b,NodeFilter.SHOW_TEXT),tops=new Set();for(let node;node=walker.nextNode();){if(!node.nodeValue.trim()||!node.parentElement.getClientRects().length)continue;const range=document.createRange();range.selectNodeContents(node);for(const rect of range.getClientRects())if(rect.width>0)tops.add(Math.round(rect.top));}return tops.size===1&&b.getBoundingClientRect().height>=44;}));
   ok('Phone: view buttons stay in one row and are not cut off',await page.evaluate(()=>{const row=document.querySelector('#pb-mail-all .mail-all-switch'),b=[...row.children];return new Set(b.map(x=>Math.round(x.getBoundingClientRect().top))).size===1&&row.clientHeight>=b[0].getBoundingClientRect().height;}));
   ok('Buttons are flat, 26–32 px ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=26&&h<=32));
   await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();

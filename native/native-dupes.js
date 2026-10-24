@@ -15,6 +15,8 @@
   const number=n=>Number.isFinite(n)&&n>=0?n:0;
   const bytes=n=>{n=number(n);return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KiB':(n/1048576).toFixed(1)+' MiB';};
   const catalog=make('details','pb-dup-catalog'),catalogTitle=make('summary');catalog.id='pbDuplicateCatalog';catalog.append(catalogTitle);
+  // Uncertain mail pairs require a visible reconciliation decision, not catalog cleanup.
+  const mailReview=panel.querySelector(':scope>#pb-mail-dupes');mailReview?.remove();
   const catalogBody=make('div','pb-dup-catalog-body');while(panel.firstChild)catalogBody.append(panel.firstChild);catalog.append(catalogBody);
   const card=make('section','pb-dup-physical');card.id='pbDuplicateCleanup';
   const heading=make('div','pb-dup-heading'),title=make('h2'),help=make('details','pb-dup-help'),helpTitle=make('summary'),info=make('p'),limits=make('p');helpTitle.append(window.PBIcons?.create('info')||document.createTextNode('i'));help.append(helpTitle,info,limits);heading.append(title,help);
@@ -22,7 +24,7 @@
   const status=make('p','pb-dup-status');status.id='pbDupStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   const list=make('div','pb-dup-groups');list.id='pbDupGroups';
   const selection=make('div','pb-dup-actions pb-dup-selection'),extra=make('button','ghost'),clear=make('button','ghost'),remove=make('button','pb-dup-danger'),selectedLabel=make('span','pb-dup-selected');extra.id='pbDupExtra';clear.id='pbDupClear';remove.id='pbDupDelete';extra.type=clear.type=remove.type='button';selection.append(extra,clear,selectedLabel,remove);
-  card.append(heading,actions,status,list,selection);panel.append(card,catalog);
+  card.append(heading,actions,status,list,selection);panel.append(card,catalog);if(mailReview)panel.append(mailReview);
   let scan=null,selected=new Set(),busy=false,phase='',note='',pollTimer=null,polling=false,lastProgress=null;
   const groups=()=>scan?.groups||[];
   const copies=()=>groups().flatMap(group=>group.copies);

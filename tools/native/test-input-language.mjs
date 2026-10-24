@@ -63,6 +63,7 @@ try{
   ok('The settings selector stays in sync with the quick selector',await page.locator('#pb-input-language-setting').inputValue()==='tr');
   ok('Choosing a language closes the menu and updates its visible code',await quick.innerText()==='TR'&&!await page.locator('#pb-input-language-quick').evaluate(element=>element.open));
   await quick.click();
+  await page.waitForFunction(()=>document.getElementById('pb-input-language-quick').open&&document.getElementById('pb-search-language').getAttribute('aria-expanded')==='true');
   ok('The menu identifies the selected language',await page.locator('#pb-search-language-menu [data-input-language="tr"]').getAttribute('aria-pressed')==='true'&&await quick.getAttribute('aria-expanded')==='true');
   await page.keyboard.press('Escape');
   ok('Escape closes the language menu and returns focus to its code',!await page.locator('#pb-input-language-quick').evaluate(element=>element.open)&&await quick.evaluate(element=>element===document.activeElement));
