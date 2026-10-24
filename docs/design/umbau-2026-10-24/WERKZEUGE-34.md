@@ -1,7 +1,7 @@
 # Originalprogramme und Freischaltung für .34
 
-Stand 24.10.2026: **implementiert, noch in Prüfung und nicht veröffentlicht**.
-Der aktuelle [Android-Download bleibt .33](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
+Stand 24.10.2026: **als .34 veröffentlicht**.
+[Signierte Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
 Die Zugänge ergänzen den [Bedienungsauftrag für .34](SUCHE-34.md).
 
 ## Was die vier Zugänge öffnen
@@ -44,7 +44,7 @@ aufgenommen werden. Der geheime Schlüssel bleibt auf seinem Gerät. Diese
 öffentliche Konfiguration ist noch offen; keine geräteübergreifend fertige
 Käuferfreischaltung behaupten.
 
-## Nachweise und noch ausstehende Prüfungen
+## Nachweise und Grenzen
 
 - Die Quellen `native/native-tools.js` und `native/native-license.js` enthalten
   die benannten Ziele und vorgeschaltete Freischaltprüfung. 74 Werkzeug-
@@ -53,15 +53,18 @@ Käuferfreischaltung behaupten.
   Werkzeug-ID und startet nur die festgelegte Android-Paketkennung. Fehlende
   Installation führt zu einem Ergebnis für die Oberfläche, nicht zu einem
   ungefragten Download. Der neue native Launcher-Test prüft den fehlenden Fall
-  und acht ungültige Aufrufe ohne externen Start. Zusammen mit drei neuen
-  Tests der Ordnerbereinigung sind insgesamt 60 native Tests erforderlich;
-  ihre CI-Ausführung steht aus.
+  und acht ungültige Aufrufe ohne externen Start. Zusammen mit den drei
+  Tests der Ordnerbereinigung bestanden 60 native Fälle ohne Fehler/Skips
+  auf main `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, Job `121014024355`.
+  Ein tatsächlicher Start einer installierten Fremd-App ist damit nicht belegt.
 - Quellzuordnung und erfolgreiche Pages-Bereitstellung der Webangebote sind
   belegt. Direkte HTTPS-Proben aus dieser Umgebung wurden durch die Netzrichtlinie
   mit `CONNECT 403` abgewiesen. Aktuelle Erreichbarkeit im Nutzerbrowser wird
   damit nicht als geprüft ausgegeben.
-- Android-/Windows-Abnahme, signiertes Update .33 → .34 und Prüfung eines neuen
-  öffentlichen APK-Downloads müssen vor Veröffentlichung abgeschlossen werden.
+- Android-/Windows-main und Signierung erfolgreich; Release [40142276521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142276521)
+  einschließlich signiertem Update .33 → .34 und unabhängiger öffentlicher
+  Downloadprüfung abgeschlossen.
+  [Download- und Quellnachweis](android-preview34-pruefung.json).
 
 Das neue BookLedgerPro-Liniensymbol ist eine eigene Zeichnung im Pro-Repository.
 Workflow PDF Pro nutzt das vorhandene Workflow-PDF-Symbol; Herkunft unter

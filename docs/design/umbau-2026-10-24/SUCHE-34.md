@@ -1,7 +1,6 @@
 # Kompakte Bedienung und Ordnerbereinigung für Android .34
 
-Stand 24.10.2026: **in Arbeit, noch nicht veröffentlicht**. Der öffentliche
-[Update-Download bleibt .33](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
+Stand 24.10.2026: **als .34 veröffentlicht**. [Signierte Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
 Klaus' Screenshots zeigen die native App links und das separate V3-Repo rechts.
 V3 dient als Referenz für Platzverbrauch und direkte Bedienung; sein Repo wird
 nicht geändert. Die hier ausdrücklich gewählte Bedeutungssuche bleibt erhalten.
@@ -83,8 +82,8 @@ und können erweitert werden.
 
 ## Doppelte Dateien tatsächlich vom Speicher entfernen
 
-Die neue Android-Ordnerbereinigung ist implementiert; ihre native Endabnahme
-steht noch aus. Sie ist getrennt von der bisherigen Entfernung gespeicherter
+Die Android-Ordnerbereinigung ist als .34 veröffentlicht und nativ geprüft.
+Sie ist getrennt von der bisherigen Entfernung gespeicherter
 Katalogverweise. Nur die neue Bereinigung kann ausgewählte echte Dateien aus
 einem freigegebenen Ordner löschen.
 
@@ -134,31 +133,46 @@ Die Fokusprüfungen decken den tatsächlichen An-/Aus-Schalter, Suchhöhe,
 Dateikopf und Öffnen-/Teilen-Handler, direkte Navigation, Übersichtswerte und
 Ordnerlinks, Sortierung, Palette sowie kompakte Import-/Mailhilfe ab. Vier
 Oberflächensprachen und schmale, breite sowie kurze DeX-Fenster mit großer
-Schrift gehören zur Darstellungsprüfung. Der gemeinsame Browserstand ist grün:
+Schrift gehören zur Darstellungsprüfung. Der dokumentierte Fokusstand vor
+den abschließenden Korrekturen war grün:
 126 Web-, 37 Kompakt-/Netz-, 63 Ordnerlayout-, 101 Theme-, 116 Hilfe-,
 128 Mail-Schreibhilfe-, 27 Übersicht-, 40 Sortier-, 40 Sprachwahl-, 24 Duplikatdialog- und
 74 Werkzeugprüfungen. Zusätzlich bestanden Navigation, Anpassung an Hochformat,
 Bedeutungsmodell-Schalter, Explorerarten, Originalstatus und Texteingaben sowie
-52 gemeinsame Workspace-Prüfungen. Die Startseite ist für den späteren Vergleich
-mit der öffentlichen APK per SHA-256 festgehalten:
+52 gemeinsame Workspace-Prüfungen. Für diesen früheren Fokusstand wurde
+folgender Startseitendigest festgehalten; der endgültige Vergleich steht unten:
 `b2d2611d2d9de34e65b54b0c2b6f59150f070ee704dec102ee64c989731236ce`.
 
-Ein neuer nativer Launcher-Test sowie drei Tests der physischen Bereinigung
-sind für insgesamt **60 native Tests** vorgesehen. Die neuen Fälle verwenden
-synthetische echte SAF-Dateien, darunter geänderte Inhalte, letzte Kopie,
-verlorene Schreibrechte, ungültige IDs, Teilausfall, Abbruch und Ordnerauswahl.
-Im ersten CI-Stand liefen 60 native Fälle; 59 bestanden, einschließlich aller
-drei Bereinigungsfälle. Die Manifestquellenprüfung des Launcher-Tests wurde
-auf die explizit installierte Ziel-APK umgestellt. Die vollständige Abnahme
-des ergänzten Abschlussstands steht noch aus. Browserprüfungen nachgebildeter Brücken
-ersetzen diese native Ausführung nicht.
+Ein neuer nativer Launcher-Test und drei Tests der physischen Bereinigung
+erweitern die native Prüfung. Im ersten CI-Stand liefen 60 Fälle; 59 bestanden,
+einschließlich aller drei Bereinigungsfälle. Die Manifestquellenprüfung des
+Launcher-Tests wurde auf die explizit installierte Ziel-APK umgestellt.
+Die abschließenden Ergebnisse beziehen sich ausschließlich auf `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`:
 
-Vor Veröffentlichung müssen die relevanten Android-/Windows- und
-Signierungsprüfungen, das signierte Update .33 → .34 sowie der unabhängig
-heruntergeladene öffentliche APK-Download bestätigt sein. Der Download wird
-gegen Prüfsummen, ursprüngliche Signatur im veröffentlichten Prüfbericht,
-exakte Quelle, gepackte UI-Dateien und den Digest der browsergeprüften nativen
-Startseite geprüft. Hier werden noch keine Gesamtabnahme oder neue APK behauptet.
+- Alle elf main-Prüfungen desselben Quellstands erfolgreich: Android-/Web-main [40141502607](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502607), Windows-main [40141502613](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502613),
+Signierung [40141502616](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502616) und Pages [40141502059](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502059).
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502607/job/121014024355) ohne Fehler oder Skips, einschließlich
+  drei Fällen der physischen Ordnerbereinigung und des Launcher-Tests.
+  Synthetische echte SAF-Dateien decken Inhaltsänderung, letzte Kopie, verlorene
+  Schreibrechte, ungültige IDs, Teilausfall, Abbruch und Ordnerauswahl ab.
+  Browserprüfungen nachgebildeter Brücken bleiben davon getrennt.
+- Release [40142276521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142276521) vollständig erfolgreich: Build `121016317530`,
+  signiertes Update .33 → .34 `121017970092`, Veröffentlichung `121018455762`.
+  Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.655.798 Bytes**, SHA-256 `0c71eb60fd5a5a607189df2adeb7fdde1c616617a19315b6da3c1e164cfda0b6`.
+  Prüfsumme, API-Asset-Digest, exakter Tag/Quellstand und ursprüngliche
+  Zertifikatskennung im veröffentlichten Signaturbericht stimmen.
+  Der lokale Prüfer kontrolliert den Bericht samt Asset-Digest; die
+  kryptographische Signatur- und installierte Updateprüfung lief in der Pipeline.
+- 38 native Dateien, drei Mail-/Explorerressourcen, 39 OCR-Dateien,
+  29 OCR-Lizenztexte und 22 Kanon-Module gegen Quelle beziehungsweise Pins geprüft.
+  Gepackte Launcher-/Bereinigungs-Symbole und die native Startseite geprüft;
+  deren SHA-256 stimmt mit dem separat browsergeprüften Stand überein:
+  `b2d2611d2d9de34e65b54b0c2b6f59150f070ee704dec102ee64c989731236ce`.
+- Einmaliger Dispatcher [40142261152](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142261152) forderte diesen Release an;
+  er ist vom eigentlichen Release-Lauf getrennt.
+
+[Maschinenlesbarer Download- und Quellnachweis](android-preview34-pruefung.json).
 
 Die zusätzlichen [Werkzeugzugänge und Freischaltgrenzen](WERKZEUGE-34.md) bleiben
 separat dokumentiert. Die lokale OCR für Bilder und Scan-PDFs aus .33 bleibt

@@ -1,48 +1,34 @@
 # Private Brain Pro — Sitzungs-Anker
 
-Neueste .34-Steuerung: echte Einstellungen vor Erklärungen; gewöhnliche Hilfe
-hinter einheitlichem Linien-i, Themenkarte entfällt zugunsten der Palette.
-Gehirn-Emoji entfernen, unsichtbare Tresoraktionen respektieren. Maus/DeX bei
-breitem Querformat 32-Pixel-Steuerungen, Touch/Hochformat 44 Pixel. Suchsprache
-als Codebutton direkt im Suchfeldbereich; alle elf bisherigen Sprachen erhalten.
-Die ergänzten Änderungen brauchen erneut gemeinsame Browser- und CI-Abnahme;
-PR #80 ist noch nicht übernommen, .34 noch nicht veröffentlicht.
-
-**.34 in Arbeit, noch nicht veröffentlicht:** Die native Oberfläche wird nach
-Klaus' Screenshots gestrafft; V3 rechts ist Referenz, die native App steht links.
-Das V3-Repo wird nicht verändert. Ein kleiner einzeiliger Schalter zeigt nur
-„Bedeutung“ mit SVG-Lupe dahinter, ohne weiteres Fragezeichen. Hervorhebung und
-`aria-pressed` zeigen An/Aus; zugänglicher Name bleibt „Bedeutungssuche“.
-„Namenssuche“ entfällt als Bedienwort. Begrüßung und Einführung verschwinden bei
-Suchtext, der Suchkasten wird flacher. Fehlendes Modell ehrlich benennen, keine
-Umleitung beim Schalten. Teilen im Dateikopf nur als Android-Liniensymbol;
-„Öffnen mit…“ behält Text und externes Symbol.
-Sieben Hauptwege direkt: Suche, Hinzufügen, Dateien, Mail, Übersicht, Kategorien,
-Doppelte. Direkte Zahnrad-Einstellungen und separate Palette mit sofortigem
-Themewechsel in der aktuellen Ansicht. Übersicht aus echten Explorerordnern,
-bekannte Bytes und lokale Originalkopien getrennt; keine Gerätespeicheranzeige.
-Direkte Ordner-/Kategoriewege, generische Einführungskästen und zusätzliche
-Überschrift „Dateien hinzufügen“ weg. Importhilfe hinter Info, relevante Ablage-
-und Verschlüsselungszustände sichtbar. Ein Sortieren-Button mit Kriterium und
-Richtung, Schreibhilfe ohne Wortzerstückelung und übergroße Radiogruppen.
-Android-Doppelte: physische Ordnerbereinigung implementiert, noch in Prüfung.
-Frischer SAF-Lese-/Schreibzugriff, SHA-256-Prüfung, konkrete Auswahl/Bestätigung,
-mindestens eine unmittelbar geprüfte Kopie bleibt erhalten. Bestehende Importe
-bleiben nur lesend; Katalogverweise und App-Originalkopien separat. Kein nativer
-Windows-Löschweg. Keine Benutzerdaten in der Entwicklung gelöscht. Ein neuer
-Launcher-Test plus drei Löschtests ergeben 60 erforderliche native Tests;
-CI-Ausführung und gemeinsame Endabnahme stehen noch aus.
-Vier freigeschaltete Originalzugänge: native Workflow PDF Pro mit festem Paket
-und ausdrücklichem Installationsweg sowie Kim-Sync, Datei-Post und BookLedgerPro
-im Browser. [Werkzeugwege und Schutzgrenze](docs/design/umbau-2026-10-24/WERKZEUGE-34.md).
-Menüsperre schützt App-Zugänge, keine externen Programme/Webseiten; keine neue
-AES-Programmnutzlast. Studio-AES/Schnorr unverändert. Öffentlicher Herausgeber-
-Schlüssel fehlt noch; Käufergerätefreischaltung offen. Direkte externe HTTPS-
-Proben waren durch Netzrichtlinie blockiert, keine Erreichbarkeit behaupten.
-[Umfang und Prüfstand](docs/design/umbau-2026-10-24/SUCHE-34.md). Öffentlicher APK-
-Download bleibt .33 bis Prüfung, signiertem Update .33 → .34 und Veröffentlichung.
-Lokale OCR aus .33 erhalten. Bestehender Freibrief für Umsetzung, Merge und
-Veröffentlichung gilt; keine neue Freigabe und .33 nicht erneut veröffentlichen.
+Android .34 ist veröffentlicht (24.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk),
+VersionCode 34, Quelle `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, PR #80 übernommen.
+Kompakte Suche mit einem Bedeutungsschalter, sieben direkte Hauptwege,
+Farbpalette und Sprachcode; echte Einstellungen stehen vor gewöhnlichen
+Erklärungen hinter Linien-i. Flachere Maus-/DeX-Steuerungen, 44-Pixel-Ziele für
+Touch/Hochformat, kompakte Importhilfe und ein gemeinsames Sortiermenü.
+Android ab Version 10 kann nach neuer Ordnerfreigabe, SHA-256-Inhaltsprüfung und
+konkreter Bestätigung Dateikopien bereinigen; mindestens eine unmittelbar erneut
+geprüfte Kopie bleibt erhalten. Katalogverweise und App-Originalkopien bleiben
+getrennt. Der physische Löschweg fehlt unter Windows.
+Vier Werkzeugzugänge hinter der vorhandenen Freigabe: natives Workflow PDF Pro mit festem Paket
+und ausdrücklichem Installationsweg, Kim-Sync, Datei-Post und BookLedgerPro im Browser.
+Menüsperre schützt App-Zugänge, keine externen Programme/Webseiten. Studio-AES/
+Schnorr unverändert; öffentlicher Herausgeber-Schlüssel fehlt weiterhin,
+Käufergerätefreischaltung offen. Externe HTTPS-Proben waren durch Netzrichtlinie
+blockiert; keine aktuelle Erreichbarkeit behaupten. Lokale OCR aus .33 bleibt
+enthalten; V3-Repo und geschützte Module bleiben erhalten.
+Alle elf main-Prüfungen erfolgreich: Android `40141502607`, Windows
+`40141502613`, Signierung `40141502616`, Pages `40141502059`.
+60 native Fälle ohne Fehler/Skips, nativer Job `121014024355`.
+Release `40142276521` erfolgreich; signiertes Update .33 → .34 mit Seed/Baseline/Verify
+bestanden. Öffentlicher Download unabhängig geprüft: 18.655.798 Bytes,
+SHA-256 `0c71eb60fd5a5a607189df2adeb7fdde1c616617a19315b6da3c1e164cfda0b6`.
+[Bedienung](docs/design/umbau-2026-10-24/SUCHE-34.md), [Werkzeuggrenzen](docs/design/umbau-2026-10-24/WERKZEUGE-34.md),
+[Download- und Quellnachweis](docs/design/umbau-2026-10-24/android-preview34-pruefung.json).
+Veröffentlichung erledigt; nicht erneut auslösen. Physisches Samsung DeX/Tab S6
+und reale Reaktionszeiten sind nicht gemessen. Windows-Download bleibt .29.
+Der dokumentierte Freibrief für die beauftragte Umsetzung gilt weiterhin;
+keine neue Merge-/Release-Freigabe verlangen.
 
 **Android .33 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk),
 Quelle `457b20e08193a8383761ab2542dcd145f6f34b56`, PR #79 und Release `40123045873` vollständig erfolgreich.

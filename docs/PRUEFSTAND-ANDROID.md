@@ -1,4 +1,42 @@
-# Aktueller Prüfstand: veröffentlichte .33 — 2026-10-24
+# Aktueller Prüfstand: veröffentlichte .34 — 2026-10-24
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
+PR #80 übernommen; Tag `v1.0.0-preview.34` zeigt exakt auf `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`,
+VersionCode 34, ursprüngliche Paketkennung und Signatur erhalten.
+
+- Alle elf main-Prüfungen desselben Quellstands erfolgreich: Android-/Web-main [40141502607](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502607), Windows-main [40141502613](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502613),
+Signierung [40141502616](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502616) und Pages [40141502059](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502059).
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40141502607/job/121014024355) ohne Fehler oder Skips, einschließlich
+  drei Fällen der physischen Ordnerbereinigung und des Launcher-Tests.
+  Synthetische echte SAF-Dateien decken Inhaltsänderung, letzte Kopie, verlorene
+  Schreibrechte, ungültige IDs, Teilausfall, Abbruch und Ordnerauswahl ab.
+  Browserprüfungen nachgebildeter Brücken bleiben davon getrennt.
+- Release [40142276521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142276521) vollständig erfolgreich: Build `121016317530`,
+  signiertes Update .33 → .34 `121017970092`, Veröffentlichung `121018455762`.
+  Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.655.798 Bytes**, SHA-256 `0c71eb60fd5a5a607189df2adeb7fdde1c616617a19315b6da3c1e164cfda0b6`.
+  Prüfsumme, API-Asset-Digest, exakter Tag/Quellstand und ursprüngliche
+  Zertifikatskennung im veröffentlichten Signaturbericht stimmen.
+  Der lokale Prüfer kontrolliert den Bericht samt Asset-Digest; die
+  kryptographische Signatur- und installierte Updateprüfung lief in der Pipeline.
+- 38 native Dateien, drei Mail-/Explorerressourcen, 39 OCR-Dateien,
+  29 OCR-Lizenztexte und 22 Kanon-Module gegen Quelle beziehungsweise Pins geprüft.
+  Gepackte Launcher-/Bereinigungs-Symbole und die native Startseite geprüft;
+  deren SHA-256 stimmt mit dem separat browsergeprüften Stand überein:
+  `b2d2611d2d9de34e65b54b0c2b6f59150f070ee704dec102ee64c989731236ce`.
+- Einmaliger Dispatcher [40142261152](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142261152) forderte diesen Release an;
+  er ist vom eigentlichen Release-Lauf getrennt.
+
+- Physisches Samsung DeX, Klaus' Tab S6 und reale Reaktionszeiten sind nicht
+  gemessen. Windows bleibt veröffentlicht bei .29; der gemeinsame Quellstand ist geprüft.
+
+[Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview34-pruefung.json),
+[Bedienung und Grenzen](design/umbau-2026-10-24/SUCHE-34.md),
+[Werkzeugzugänge und Freischaltgrenzen](design/umbau-2026-10-24/WERKZEUGE-34.md).
+
+---
+
+# Veröffentlichte .33 — 2026-10-24
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
 PR #79 übernommen; Tag `v1.0.0-preview.33` zeigt exakt auf `457b20e08193a8383761ab2542dcd145f6f34b56`,

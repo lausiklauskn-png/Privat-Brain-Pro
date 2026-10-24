@@ -1,8 +1,15 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android .33 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
+**[Android .34 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
 [Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
+Android .34 schafft mehr Platz für Suchtreffer: direkte Hauptbereiche,
+Farbpalette, Sprachcode, kurze Infohilfen und kompakte Einstellungen.
+Unter Android ab Version 10 lassen sich tatsächliche Dateikopien nach
+Ordnerfreigabe, Inhaltsprüfung und konkreter Bestätigung bereinigen;
+mindestens eine erneut geprüfte Kopie bleibt erhalten.
+[Bedienung und Grenzen](docs/design/umbau-2026-10-24/SUCHE-34.md),
+[Werkzeugzugänge](docs/design/umbau-2026-10-24/WERKZEUGE-34.md).
 Android .33 ergänzt echte lokale Texterkennung für Bilder und gescannte
 PDF-Seiten in Deutsch, Englisch, Russisch und Polnisch. Erkannter Text steht
 Suche und Inhaltsprüfung zur Verfügung; vorhandene Originale lassen sich über
@@ -16,7 +23,7 @@ Automatische lokale Mailübersetzung (DE/EN/RU/PL), unabhängige Eingabesprache,
 Mikrofone und automatisches Telefon-/Tablet-Hochformat aus .31 bleiben erhalten.
 Eine Messung auf einem echten Samsung-DeX-Gerät steht aus.
 [Übersetzung einrichten](docs/NATIVE-LOKALE-UEBERSETZUNG.md).
-Themenwahl: **☰ → Einstellungen → Erscheinungsbild**.
+Themenwahl: **Farbpalette neben dem Einstellungszahnrad**.
 [Umbau, Vorschläge und Prüfnachweise](docs/design/umbau-2026-10-24/README.md).
 Windows-Download, Installation und Übergabe an Claude Code:
 [Geschenkpaket für Windows](docs/GESCHENKPAKET-WINDOWS.md).
@@ -38,7 +45,7 @@ Mailverbindungen laufen direkt vom Gerät. Anbieter und OAuth-Grenzen:
 vollständiger Virenscanner. Das e5-Modell kann ausdrücklich heruntergeladen werden;
 die lokale Offline-Suche ist im installierten Windows-Programm geprüft.
 [Bedienung und Plattformgrenzen](docs/BESCHRIFTUNGEN-UND-ORDNER.md),
-[Prüfstand](docs/PRUEFSTAND-ANDROID.md#veröffentlichte-version-16--2026-10-20),
+[Prüfstand](docs/PRUEFSTAND-ANDROID.md),
 [synthetische Ansichten](docs/design/compact16/README.md).
 
 Hell/Dunkel, DE/EN/RU/PL und die geschützten Prüfmodule bleiben erhalten.

@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .33 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
-Quelle: `457b20e08193a8383761ab2542dcd145f6f34b56`, [übernommener PR #79](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/79).
+**Android .34 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
+Quelle: `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, [übernommener PR #80](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/80).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -77,6 +77,23 @@ Eine tatsächliche Prüfung auf Klaus' Samsung-DeX-Gerät steht noch aus.
   [Release 40123045873](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40123045873).
 
 Die OCR gehört zum Funktionsumfang von .33; historische .32-Nachweise bleiben erhalten.
+
+## Fünfter umgesetzter App-Schritt (.34)
+
+- Kompakte Suche mit einem Bedeutungsschalter, sieben direkte Hauptwege,
+  sofort wirksame Farbpalette und Sprachcode. Einstellungen stehen vor
+  gewöhnlichen Erklärungen hinter Linien-i; Importhilfe und Sortiermenü sind kompakt.
+- Android ab Version 10 kann nach neuer Ordnerfreigabe, Inhaltsprüfung und
+  konkreter Bestätigung Dateikopien bereinigen. Mindestens eine erneut geprüfte
+  Kopie bleibt erhalten; Katalogverweise und App-Originalkopien bleiben getrennt.
+- Originalzugänge zu Workflow PDF Pro, Kim-Sync, Datei-Post und BookLedgerPro.
+  Die Menüsperre schützt die App-Zugänge; Käufergerätefreischaltung bleibt mangels
+  öffentlichem Herausgeber-Schlüssel offen.
+- Android-/Windows-main und Signierung erfolgreich; 60 native Fälle ohne
+  Fehler/Skips. Signiertes Update .33 → .34 und unabhängiger öffentlicher Download bestanden.
+  [Bedienung und Prüfstand](SUCHE-34.md), [Werkzeuggrenzen](WERKZEUGE-34.md),
+  [Download- und Quellnachweis](android-preview34-pruefung.json),
+  [Release 40142276521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142276521).
 
 ## Stand der weiteren Funktionsvorschläge
 
