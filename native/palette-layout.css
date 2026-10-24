@@ -1,0 +1,55 @@
+/* Direct appearance choices stay above the current page, within the viewport. */
+#pb-palette-button {
+  display:inline-flex;
+  flex:none;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  min-height:44px!important;
+  padding:0!important;
+}
+#pb-palette-button>svg { width:20px;height:20px; }
+#pb-palette-button[aria-expanded=true] { color:var(--acc);background:var(--card2); }
+#pb-palette {
+  position:fixed;
+  z-index:64;
+  width:260px;
+  max-width:calc(100vw - 16px);
+  max-height:calc(100dvh - 16px);
+  overflow:auto;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--card);
+  color:var(--ink);
+  box-shadow:var(--shadow);
+}
+#pb-palette[hidden],#pb-palette [hidden] { display:none!important; }
+#pb-palette-heading { margin:0 0 6px;font-size:.9rem;line-height:1.4; }
+#pb-palette .pb-palette-choices { display:grid;gap:3px; }
+#pb-palette [data-pb-palette-choice] {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  min-height:44px;
+  width:100%;
+  margin:0;
+  padding:6px 8px;
+  border:1px solid transparent;
+  font-size:.85rem;
+  line-height:1.4;
+  text-align:left;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+#pb-palette [data-pb-palette-choice][aria-pressed=true] { border-color:var(--acc);background:var(--card2); }
+#pb-palette .pb-palette-swatch { flex:none;width:12px;height:12px;border:1px solid var(--pb-border-control);border-radius:50%;background:var(--pb-palette-accent); }
+#pb-palette .pb-palette-name { flex:1;min-width:0; }
+#pb-palette .pb-palette-tick { flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+#pb-palette [aria-pressed=false] .pb-palette-tick { visibility:hidden; }
+#pb-palette .pb-palette-status { margin:6px 0 0;color:var(--mut);font-size:.8rem;line-height:1.4; }
+#pb-palette-button:focus-visible,#pb-palette button:focus-visible { outline:2px solid var(--pb-focus);outline-offset:2px; }

@@ -30,17 +30,20 @@ try{
  });
  await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
- for(const [lang,labels,extras]of [
-  ['de',['Finden','Hinzufügen','Dateien','Mail'],['Übersicht','Katalog','Doppelte','Einstellungen']],
-  ['en',['Find','Add','Files','Mail'],['Overview','Catalog','Duplicates','Settings']],
-  ['ru',['Поиск','Добавить','Файлы','Почта'],['Обзор','Каталог','Дубликаты','Настройки']],
-  ['pl',['Szukaj','Dodaj','Pliki','Poczta'],['Pulpit','Katalog','Duplikaty','Ustawienia']]
+ for(const [lang,labels,settingsName]of [
+  ['de',['Finden','Hinzufügen','Dateien','Mail','Übersicht','Kategorien','Doppelte'],'Einstellungen'],
+  ['en',['Find','Add','Files','Mail','Overview','Categories','Duplicates'],'Settings'],
+  ['ru',['Поиск','Добавить','Файлы','Почта','Обзор','Категории','Дубликаты'],'Настройки'],
+  ['pl',['Szukaj','Dodaj','Pliki','Poczta','Pulpit','Kategorie','Duplikaty'],'Ustawienia']
  ]){
   await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-  ok(`${lang}: four main paths show their translated names beside symbols, with an accessible search icon`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.length===4&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['search','intake','explorer','mail'][i]&&e.getAttribute('aria-label')===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&(e.dataset.tab==='search'?!caption:caption?.textContent===labels[i])&&r.width>0&&r.height>=28&&r.height<=44;}),labels));
+  ok(`${lang}: seven main paths show their translated names beside symbols, with an accessible search icon`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.length===7&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['search','intake','explorer','mail','dash','order','dupes'][i]&&e.getAttribute('aria-label')===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&(e.dataset.tab==='search'?!caption:caption?.textContent===labels[i])&&r.width>=44&&r.height>=44;}),labels));
+  for(const tab of ['dash','order','dupes']){await navigateTo(page,tab);ok(`${lang}: ${tab} is reached directly through its primary navigation tab`,await page.locator('#panel-'+tab).isVisible()&&await page.locator('.main-pages [data-tab="'+tab+'"]').count()===1&&!await page.locator('.native-options').evaluate(menu=>menu.open));}
   await page.locator('.native-options>summary').click();
-  ok(`${lang}: all additional views have complete translated names and symbols inside the app menu`,await page.locator('.native-menu-views .workspace-tools .tab').evaluateAll((nodes,labels)=>nodes.length===4&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['dash','order','dupes','settings'][i]&&e.getAttribute('aria-label')===labels[i]&&caption?.textContent===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&r.width>0&&r.height>=28&&caption.scrollWidth<=caption.clientWidth+1;}),extras));
-  for(const tab of ['dash','order','dupes','settings']){await navigateTo(page,tab);ok(`${lang}: ${tab} is reached by a real menu click and closes the menu`,await page.locator('#panel-'+tab).isVisible()&&!await page.locator('.native-options').evaluate(menu=>menu.open));}
+  ok(`${lang}: the app menu has no duplicate view tabs`,await page.locator('.native-options-panel .tab').count()===0);
+  await page.keyboard.press('Escape');
+  ok(`${lang}: the pinned gear retains the translated settings name and a 44px symbol target`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"]').evaluate((e,name)=>{const r=e.getBoundingClientRect();return e.getAttribute('aria-label')===name&&e.title===name&&Boolean(e.querySelector('.compact-icon'))&&!e.querySelector('.compact-caption')&&r.width>=44&&r.height>=44&&r.left>=0&&r.right<=innerWidth;},settingsName));
+  await navigateTo(page,'settings');ok(`${lang}: settings is reached by a real pinned-gear click`,await page.locator('#panel-settings').isVisible()&&!await page.locator('.native-options').evaluate(menu=>menu.open));
   const button=page.locator('[data-tab=explorer]');await button.hover();await page.locator('.native-tooltip').waitFor();ok(`${lang}: pointer hover shows an actual visible explanatory tooltip`,(await page.locator('.native-tooltip').textContent())===(await button.getAttribute('aria-label')));await page.mouse.move(1270,890);
   await button.focus();await page.locator('.native-tooltip').waitFor();ok(`${lang}: keyboard focus shows the same tooltip and Escape dismisses it`,await button.getAttribute('aria-describedby')==='native-control-tooltip');await page.keyboard.press('Escape');await page.locator('.native-tooltip').waitFor({state:'hidden'});
  }
@@ -51,7 +54,10 @@ try{
  await page.click('[data-tab=intake]');
  await page.evaluate(()=>renderFsHint());
  ok('Android folder actions remain visible after the browser fallback runs without showDirectoryPicker',await page.locator('#pickDir').isVisible()&&await page.locator('#chooseLibrary').isVisible()&&await page.evaluate(()=>!('showDirectoryPicker' in window)));
- ok('Import reassurance stays below the drop zone instead of three giant cards',await page.locator('#panel-intake .pillars').count()===0&&await page.locator('.native-import-reassurance').textContent().then(t=>t.includes('Liest nur')&&t.includes('Schlägt vor')&&t.includes('Bewegt nichts'))&&await page.locator('.native-import-reassurance').evaluate(e=>e.previousElementSibling.id==='drop'));
+ ok('Import explanations retain their original text behind the closed information button without an extra title row',await page.locator('#panel-intake .pillars').count()===0&&await page.locator('.native-import-reassurance').textContent().then(t=>t.includes('Liest nur')&&t.includes('Schlägt vor')&&t.includes('Bewegt nichts'))&&await page.locator('.native-import-reassurance').evaluate(e=>e.closest('[data-pb-help-content="import-drop"]')?.hidden===true)&&await page.locator('#pb-intake-heading').evaluate(e=>e.hidden&&e.parentElement.getAttribute('aria-labelledby')===e.id));
+ const importInfo=page.locator('[data-pb-help-toggle="import-drop"]');
+ await importInfo.click();ok('The information button reveals the retained explanation while import actions stay available',await importInfo.getAttribute('aria-expanded')==='true'&&await page.locator('.native-import-reassurance').isVisible()&&await page.locator('#pickDir').isVisible()&&await page.locator('#chooseLibrary').isVisible());
+ await importInfo.click();ok('The information button closes its explanation and releases the import space again',await importInfo.getAttribute('aria-expanded')==='false'&&await page.locator('.native-import-reassurance').isHidden());
  await page.click('#pickDir');await page.locator('.native-folder-consent').waitFor();await page.getByRole('button',{name:'Abbrechen',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('#pickDir').disabled);
  ok('Cancelling the explanation leaves both folder actions usable',chooseCalls===0&&await page.locator('#chooseLibrary').isEnabled()&&await page.locator('#pickDir').isEnabled());
  await page.click('#pickDir');await page.check('#fsNoShow');await page.click('#fsGo');await page.waitForFunction(()=>CATALOG.length===1&&!signing&&!document.querySelector('#pickDir').disabled);
@@ -80,7 +86,7 @@ try{
   await page.setViewportSize({width,height:width<650?640:900});
   await page.evaluate(()=>document.fonts.ready);
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-  ok(`${width}px: named navigation uses flat rows and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>e.getBoundingClientRect().height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&document.querySelector('.panel.on').scrollWidth<=document.querySelector('.panel.on').clientWidth+1));
+  ok(`${width}px: named navigation uses flat rows and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>{const tabs=[...e.querySelectorAll('.main-pages .tab')].map(button=>button.getBoundingClientRect()),mids=tabs.map(r=>r.top+r.height/2);return tabs.length===7&&tabs.every(r=>r.width>=44&&r.height>=44)&&Math.max(...mids)-Math.min(...mids)<2&&e.getBoundingClientRect().height<=Math.max(...tabs.map(r=>r.height))+24&&document.querySelector('.panel.on').scrollWidth<=document.querySelector('.panel.on').clientWidth+1;}));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await page.mouse.move(width-2,width<650?638:898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/import-${width}.png`});}
   await navigateTo(page,'dash');
   ok(`${width}px: dashboard tiles stay compact and contain real keyboard buttons`,await page.locator('#panel-dash .tile').evaluateAll(nodes=>nodes.every(e=>e.getBoundingClientRect().height<=140))&&await page.locator('#kpiCats').evaluate(e=>e.closest('button').type==='button'));

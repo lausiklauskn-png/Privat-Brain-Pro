@@ -101,7 +101,7 @@ try{
   ok('Folder, email and sender decorations use the shared SVG line set',await tree.locator('[data-pb-icon=folder]>svg[data-icon-key=folder]').count()>0&&await tree.locator('[data-pb-icon=mail]>svg[data-icon-key=mail]').count()>0&&await tree.locator('[data-pb-icon=person]>svg[data-icon-key=person]').count()>0);
   ok('App emoji fallbacks in the tree and breadcrumb are hidden from rendering and accessibility',await page.locator('#explorerTree [data-pb-icon],#explorerPath [data-pb-icon]').evaluateAll(slots=>slots.every(slot=>{const fallback=slot.querySelector('.pb-icon-fallback'),svg=slot.querySelector('svg');return fallback?.hidden&&getComputedStyle(fallback).display==='none'&&svg?.getAttribute('aria-hidden')==='true';})));
   ok('The visible tree no longer mixes colored app glyphs with line icons',!/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(await tree.innerText()));
-  ok('Content-search and check-status controls have line icons without duplicate captions',await page.locator('.explorer-content [data-pb-icon=search]>svg').count()===1&&(await page.locator('#explorerOrder').innerText()).trim()==='Newest first'&&await page.locator('.explorer-toolbar .pb-check-all-button>svg[data-icon-key=shield]').count()===1);
+  ok('Content-search and check-status controls have line icons without duplicate captions',await page.locator('.explorer-content [data-pb-icon=search]>svg').count()===1&&(await page.locator('#pb-explorer-sort>summary').innerText()).trim()==='Sort'&&await page.locator('#explorerOrder').isHidden()&&await page.locator('.explorer-toolbar .pb-check-all-button>svg[data-icon-key=shield]').count()===1);
   await page.evaluate(async()=>{
     const add=async(name,path,extra={})=>{const toks=tokens(name);const r={hash:await sha256(new TextEncoder().encode(path).buffer),name,path,type:'',ext:name.split('.').pop(),date:Date.now(),size:1000,snippet:'',via:'icon-test',vector:buildVector(toks),tf:termFreq(toks),summary:'',category:'',dirId:null,nameTokens:tokens(name),dupes:[],tags:[],...extra};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);return r;};
     const unusual=await add('👤 Keep this name.weird','📁 Personal/👤 Keep this name.weird',{pruefung:{funde:[{k:'READER_INSTRUCTION'}],ungeprueft:false,zeit:Date.now()}});
@@ -128,7 +128,7 @@ try{
   for(const lang of ['ru','pl','de','en'])await page.evaluate(lang=>{document.documentElement.lang=lang;},lang);
   await page.waitForFunction(()=>document.querySelector('#explorerTree [data-pb-icon=person]>svg[data-icon-key=person]'));
   ok('Locale changes preserve catalog content and keep one SVG per explicit icon slot',await page.evaluate(before=>JSON.stringify(CATALOG)===before.catalog&&[...document.querySelectorAll('[data-pb-icon]')].every(slot=>slot.querySelectorAll(':scope>svg').length===1),beforeIconState));
-  for(const [view,key]of [['explorer','folder'],['intake','intake']]){
+  for(const [view,key]of [['explorer','folder']]){
     await page.locator(`[data-tab=${view}]`).click();
     const selector=view==='explorer'?'#panel-explorer>h2':'#panel-intake>.pb-help-heading>h2,#panel-intake>h2',heading=page.locator(selector);
     const originalHeading=await heading.textContent();

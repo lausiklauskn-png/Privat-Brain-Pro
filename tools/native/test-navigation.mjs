@@ -21,35 +21,18 @@ try{
   const page=await browser.newPage(),url=`http://127.0.0.1:${server.address().port}/`,errors=[];
   let popups=0;page.on('popup',()=>popups++);page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
-  await page.addInitScript(()=>{window.openedFiles=[];window.Capacitor={Plugins:{ProFiles:{async open(args){window.openedFiles.push(args);}}}};});
+  await page.addInitScript(()=>{window.openedFiles=[];window.sharedFiles=[];window.Capacitor={Plugins:{ProFiles:{async open(args){window.openedFiles.push(args);},async share(args){window.sharedFiles.push(args);}}}};});
   await page.goto(url);await page.waitForFunction(()=>window.PBNavigation&&typeof db!=='undefined'&&db);
   await page.waitForFunction(()=>window.PBIcons);
-  await page.evaluate(()=>{
-    const fixture=document.createElement('div');fixture.dataset.toolbarFocusFixture='true';
-    const disabled=document.createElement('button');disabled.disabled=true;disabled.textContent='Disabled test control';
-    const hidden=document.createElement('button');hidden.hidden=true;hidden.textContent='Hidden test control';
-    fixture.append(disabled,hidden);document.getElementById('panel-dash').prepend(fixture);
-  });
+  const settings=page.locator('.native-toolbar-quick [data-tab="settings"]');
   const appMenu=page.locator('.native-options>summary');
   await appMenu.focus();await page.keyboard.press('Enter');
-  await page.locator('.native-options-panel .workspace-tools').waitFor({state:'visible'});
-  ok('Each menu view paints one caption while its translation source stays visually hidden',await page.locator('.native-options-panel .workspace-tools .tab').evaluateAll(buttons=>buttons.length===4&&buttons.every(button=>{
-    const labels=[...button.querySelectorAll(':scope>.compact-label,:scope>.compact-caption')].filter(label=>{
-      const style=getComputedStyle(label),rect=label.getBoundingClientRect();
-      return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>1&&rect.height>1;
-    });
-    return labels.length===1&&labels[0].classList.contains('compact-caption')&&Boolean(labels[0].textContent.trim());
-  })));
-  let reachedView=false;
-  for(let step=0;step<12&&!reachedView;step++){
-    await page.keyboard.press('Tab');
-    reachedView=await page.locator('.native-options-panel [data-tab="dash"]').evaluate(button=>button===document.activeElement);
-  }
-  ok('Keyboard navigation reaches the named view among the existing app-menu controls',reachedView);
-  await page.keyboard.press('Enter');
-  await page.waitForFunction(()=>{const panel=document.getElementById('panel-dash'),active=document.activeElement;return panel.classList.contains('on')&&panel.contains(active)&&active.getClientRects().length&&!active.disabled;});
-  ok('Selecting a menu view with Enter focuses visible content and skips disabled or hidden controls',!await page.locator('.native-options').evaluate(menu=>menu.open)&&await page.evaluate(()=>{const active=document.activeElement;return !active.closest('[hidden],[inert],[data-toolbar-focus-fixture]')&&getComputedStyle(active).visibility!=='hidden';}));
-  await page.evaluate(()=>document.querySelector('[data-toolbar-focus-fixture]').remove());
+  ok('All view routes are directly reachable and no duplicate view remains in the app menu',await page.locator('.main-pages>.tab').count()===7&&await page.locator('.native-options-panel .tab').count()===0&&await settings.count()===1);
+  await page.keyboard.press('Escape');
+  ok('Escape closes the app menu and returns focus to its summary',!await page.locator('.native-options').evaluate(menu=>menu.open)&&await appMenu.evaluate(button=>button===document.activeElement));
+  await settings.focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>document.getElementById('panel-settings').classList.contains('on'));
+  ok('The direct gear opens Settings with keyboard and records the correct route',await settings.evaluate(button=>button===document.activeElement&&button.classList.contains('on'))&&await page.evaluate(()=>history.state?.pbPage==='settings'));
   await page.locator('.main-pages [data-tab="search"]').click();
   ok('The shared icon source has explicit check and envelope-send symbols; unknown keys stay unknown',await page.evaluate(()=>PBIcons.has('check')&&PBIcons.has('send')&&PBIcons.create('send').dataset.iconKey==='send'&&PBIcons.create('future-action')===null));
   await page.evaluate(()=>{
@@ -127,8 +110,9 @@ try{
     await clickControl(page,`[data-lang=${lang}]`);ok(lang+': navigation follows app language',await page.locator('.native-navigation button').first().textContent()===word);
   }
   for(const width of [320,768,1920]){
-    await page.setViewportSize({width,height:900});await page.evaluate(()=>showBlob(new File(['width'],'width.txt',{type:'text/plain'})));await page.locator('.native-file-text').waitFor();
+    await page.setViewportSize({width,height:900});await page.evaluate(width=>{document.documentElement.style.fontSize=width===320?'20px':'';showBlob(new File(['width'],'Design-Prüfung.txt',{type:'text/plain'}));},width);await page.locator('.native-file-text').waitFor();
     ok(width+'px: Back remains visible with no page overflow',await page.locator('.native-file-head button').first().isVisible()&&await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    if(width===320)ok('A long filename at larger phone font stays on one header line beside reachable share/open controls',await page.evaluate(()=>{const h=document.querySelector('.native-file-head'),t=h.querySelector('.native-file-title'),b=h.querySelector('[data-native-action=share]'),r=t.getBoundingClientRect(),s=b.getBoundingClientRect();return h.getBoundingClientRect().height<=160&&getComputedStyle(t).whiteSpace==='nowrap'&&r.width>=60&&r.height<=32&&s.width>=44&&s.height>=44&&s.right<=innerWidth;}));
     await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});
   }
   ok('No popup, reload, private network call or runtime error',popups===0&&errors.length===0&&await page.evaluate(()=>CATALOG.length===2));

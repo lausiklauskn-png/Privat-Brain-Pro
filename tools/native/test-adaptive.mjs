@@ -80,7 +80,7 @@ try{
  check('Explorer ArrowLeft collapses an ancestor while retaining the selected folder and filter',!await project.isVisible()&&await page.evaluate(()=>PBWorkspace.explorerState().path==='dir:note:DeX/Projects'&&PBWorkspace.explorerState().filter==='DeXnot'));
  await page.keyboard.press('ArrowRight');await project.waitFor({state:'visible'});
  check('Explorer ArrowRight reopens the selected folder ancestor',await project.isVisible());
- await navigateTo(page,'search');await page.locator('[data-m="name"]').click();await page.locator('#q').fill('DeXnote');await page.keyboard.press('Backspace');
+ await navigateTo(page,'search');if(await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed')==='true')await page.locator('#mode [data-m="mean"]').click();await page.locator('#q').fill('DeXnote');await page.keyboard.press('Backspace');
  check('Search Backspace changes query without navigating',(await page.locator('#q').inputValue())==='DeXnot'&&await page.locator('#panel-search').isVisible());
  for(const [width,height]of sizes){
    await page.setViewportSize({width,height});await page.waitForTimeout(35);
@@ -93,14 +93,14 @@ try{
    if(height>width)check(`${width}x${height}: portrait hides the tree while retaining a visible working path`,await page.locator('#explorerTree').isHidden()&&await page.locator('#explorerTreeToggle').isHidden()&&await page.locator('#explorerPath').isVisible()&&(await page.locator('#explorerPath').textContent()).includes('Projects'));
    await navigateTo(page,'search');
  }
- // Keyboard-operated app menu and destination focus, using genuine key events.
+ // Keyboard-operated menu and pinned gear, using genuine key events.
  await page.setViewportSize({width:1280,height:720});
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const menu=page.locator('.native-options>summary');await menu.focus();await page.keyboard.press('Enter');
- await page.locator('.native-options-panel .workspace-tools').waitFor({state:'visible'});
- const reached=await tabTo(page,'.native-options-panel [data-tab=settings]');
- check('Tab reaches Settings in the real app menu',reached);
- if(reached){await page.keyboard.press('Enter');await page.locator('#panel-settings').waitFor({state:'visible'});check('Enter activates Settings and moves focus into visible content',await page.evaluate(()=>document.getElementById('panel-settings').contains(document.activeElement)&&document.activeElement.getClientRects().length>0));}
+ await page.keyboard.press('Escape');
+ const reached=await tabTo(page,'.native-toolbar-quick [data-tab=settings]');
+ check('Tab reaches the direct Settings gear outside the scrolling strip',reached);
+ if(reached){await page.keyboard.press('Enter');await page.locator('#panel-settings').waitFor({state:'visible'});check('Enter activates Settings and keeps the visible gear focused',await page.evaluate(()=>document.activeElement.matches('.native-toolbar-quick [data-tab=settings]')&&document.activeElement.getClientRects().length>0&&history.state?.pbPage==='settings'));}
  await navigateTo(page,'mail');await page.locator('#mailWorkspace [data-live-text=connect]').click();
  await page.locator('.live-mail [data-live-uid="1"]').waitFor();
  for(const [width,height]of sizes){

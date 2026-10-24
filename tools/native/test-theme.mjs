@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {resolve, extname} from 'node:path';
 import {chromium} from 'playwright-core';
 import {navigateTo} from './test-navigation-helper.mjs';
-const root = resolve('www'), origin = 'https://localhost/';
+const root = resolve(process.env.PB_THEME_TEST_ROOT || 'www'), origin = 'https://localhost/';
 const types = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.woff2':'font/woff2'};
 let browser, count = 0;
 const ok = (name, value) => { assert.ok(value, name); console.log('✓ ' + name); count++; };
@@ -98,6 +98,72 @@ try {
   await page.locator('[data-pb-theme-choice="klarblau"]').focus();
   await page.keyboard.press('Tab');
   ok('Theme choice retains a visible keyboard focus ring', await page.locator('[data-pb-theme-choice="graphit"]').evaluate(button => document.activeElement === button && getComputedStyle(button).outlineStyle !== 'none'));
+  await navigateTo(page, 'search');
+  await page.locator('#q').fill('Synthetic theme preview');
+  const paletteButton=page.locator('#pb-palette-button'),palette=page.locator('#pb-palette');
+  await paletteButton.waitFor();
+  ok('The direct palette is an icon-only 44px control beside the original Settings tab',await paletteButton.evaluate(button=>{
+    const rect=button.getBoundingClientRect();return button.parentElement.classList.contains('native-toolbar-quick')&&!button.closest('.main-pages')&&
+      button.parentElement.querySelectorAll('.tab[data-tab=settings]').length===1&&rect.width>=44&&rect.height>=44&&
+      button.querySelector('svg[data-icon-key=palette]')&&!button.textContent.trim()&&button.getAttribute('aria-label')==='Farbthema wählen';
+  }));
+  for(const [name] of profiles){
+    await paletteButton.click();await palette.waitFor();
+    ok(name+': the direct palette focuses the current choice and offers four existing profiles',await page.evaluate(()=>{
+      const popup=document.getElementById('pb-palette');return popup.querySelectorAll('[data-pb-palette-choice]').length===4&&
+        document.activeElement===popup.querySelector('[aria-pressed=true]')&&document.querySelectorAll('#pb-theme-settings [data-pb-theme-choice]').length===4;
+    }));
+    await page.locator('[data-pb-palette-choice="'+name+'"]').click();
+    ok(name+': choosing a swatch applies immediately without losing the page or query',await page.evaluate(name=>
+      PBTheme.current()===name&&document.documentElement.dataset.pbTheme===name&&document.querySelector('.panel.on').id==='panel-search'&&
+      document.getElementById('q').value==='Synthetic theme preview'&&document.getElementById('pb-palette').hidden&&
+      document.activeElement===document.getElementById('pb-palette-button')&&document.querySelectorAll('#pb-palette [aria-pressed=true]').length===1&&
+      document.querySelector('#pb-palette [aria-pressed=true]').dataset.pbPaletteChoice===name,name));
+  }
+  await paletteButton.click();await page.locator('[data-pb-palette-choice=graphit]').click();
+  await page.reload();await page.waitForFunction(()=>window.PBTheme?.current()==='graphit'&&document.getElementById('pb-palette-button'));
+  ok('A profile chosen through the quick palette survives restart',await page.locator('html').getAttribute('data-pb-theme')==='graphit');
+  await navigateTo(page,'search');await paletteButton.click();await page.keyboard.press('Escape');
+  ok('Escape closes the palette and returns focus to its trigger',await palette.isHidden()&&await paletteButton.getAttribute('aria-expanded')==='false'&&await paletteButton.evaluate(button=>document.activeElement===button));
+  await paletteButton.click();await page.locator('#q').click();
+  ok('An outside click closes the palette without stealing the clicked field focus',await palette.isHidden()&&await page.locator('#q').evaluate(field=>document.activeElement===field));
+  await paletteButton.click();await page.locator('#q').focus();
+  ok('Keyboard focus leaving the nonmodal palette closes it',await palette.isHidden());
+  await paletteButton.click();await page.keyboard.press('ArrowDown');
+  ok('Arrow keys move between swatches without applying a theme',await page.locator('[data-pb-palette-choice=petrol]').evaluate(button=>document.activeElement===button)&&await page.evaluate(()=>PBTheme.current()==='graphit'));
+  await page.keyboard.press('End');
+  ok('End focuses the last profile',await page.locator('[data-pb-palette-choice=nachtblau]').evaluate(button=>document.activeElement===button));
+  await page.keyboard.press('Home');
+  ok('Home focuses the first profile',await page.locator('[data-pb-palette-choice=klarblau]').evaluate(button=>document.activeElement===button));
+  await page.keyboard.press('ArrowUp');await page.keyboard.press('Enter');
+  ok('Keyboard activation applies the focused profile and returns focus',await page.evaluate(()=>PBTheme.current()==='nachtblau')&&await palette.isHidden()&&await paletteButton.evaluate(button=>document.activeElement===button));
+  const paletteWords={de:['Farbthema wählen',['Klarblau','Graphit','Petrol','Nachtblau']],en:['Choose a colour theme',['Clear blue','Graphite','Petrol','Night blue']],ru:['Выбрать цветовую тему',['Чистый синий','Графит','Петроль','Ночной синий']],pl:['Wybierz motyw kolorystyczny',['Czysty błękit','Grafit','Petrol','Nocny błękit']]};
+  for(const [language,[label,names]] of Object.entries(paletteWords)){
+    await page.evaluate(()=>document.documentElement.style.fontSize='16px');
+    await clickMenuControl(page,'[data-lang="'+language+'"]');
+    await page.waitForFunction(label=>document.getElementById('pb-palette-button')?.getAttribute('aria-label')===label,label);
+    await paletteButton.click();
+    ok(language+': the quick palette uses the translated existing theme names',JSON.stringify(await palette.locator('.pb-palette-name').allTextContents())===JSON.stringify(names)&&await paletteButton.getAttribute('title')===label);
+    for(const width of [320,390,768,1280,1920])for(const font of [16,24]){
+      await page.setViewportSize({width,height:900});await page.evaluate(font=>document.documentElement.style.fontSize=font+'px',font);
+      ok(language+'/'+width+'px/'+font+'px: the palette and all four 44px choices fit the viewport',await palette.evaluate(popup=>{
+        const rect=popup.getBoundingClientRect(),trigger=document.getElementById('pb-palette-button').getBoundingClientRect();
+        const quick=document.querySelector('.native-toolbar-quick').getBoundingClientRect(),tabs=document.querySelector('.main-pages').getBoundingClientRect();
+        return !popup.hidden&&rect.left>=7&&rect.right<=innerWidth-7&&rect.top>=7&&rect.bottom<=innerHeight-7&&popup.scrollWidth<=popup.clientWidth+1&&
+          trigger.left>=0&&trigger.right<=innerWidth&&trigger.width>=44&&trigger.height>=44&&quick.left>=tabs.right-1&&
+          [...popup.querySelectorAll('[data-pb-palette-choice]')].every(button=>{const box=button.getBoundingClientRect(),name=button.querySelector('.pb-palette-name');return box.height>=44&&box.left>=rect.left&&box.right<=rect.right&&name.scrollWidth<=name.clientWidth+1;});
+      }));
+    }
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewportSize({width:320,height:240});
+  await page.evaluate(()=>document.documentElement.style.fontSize='16px');await paletteButton.click();
+  ok('A short window constrains the palette height and keeps its overflow scrollable',await palette.evaluate(popup=>{const rect=popup.getBoundingClientRect();return rect.top>=7&&rect.bottom<=innerHeight-7&&getComputedStyle(popup).overflowY==='auto';}));
+  await page.keyboard.press('Escape');await page.setViewportSize({width:1280,height:900});
+  await page.evaluate(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='pb_pro_theme_v1'||key==='pb_pro_light_theme_v1')throw new DOMException('Synthetic storage failure','QuotaExceededError');return original.call(this,key,value);};});
+  await paletteButton.click();await page.locator('[data-pb-palette-choice=petrol]').click();
+  ok('A failed preference save leaves an honest visible notice in the quick palette',await page.evaluate(()=>PBTheme.current()==='petrol')&&await palette.isVisible()&&await palette.locator('.pb-palette-status').isVisible()&&(await palette.locator('.pb-palette-status').textContent()).length>25);
+  await page.keyboard.press('Escape');
   ok('Appearance changes do not raise unhandled app errors', errors.length === 0);
   await context.close();
   ({context, page, errors} = await fixture('dunkel'));

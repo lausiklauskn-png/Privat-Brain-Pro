@@ -2,18 +2,25 @@
    herunterladen und auch einfügen können bei Private Brain Pro"). Bundled tools open in a full window inside the app
    (same local origin, so they work without the PWA address); each one is locked until an unlock code allows it
    (native/native-license.js). A file a tool "downloads" is caught here and offered to Private Brain Pro: it then goes
-   through the same import and check as "Dateien hinzufügen". Links (FP-Videos, Workflow PDF) open in the browser. */
+   through the same import and check as "Dateien hinzufügen". Licensed links open the original hosted tools;
+   Workflow PDF Pro launches its installed native app. Private tool sources are not copied into this APK. */
 (() => {
   'use strict';
   const license = window.PBLicense;
   if (!license) return;
   const windows = window.Capacitor?.getPlatform?.() === 'windows';
-  // Bundled tool pages (tools/native/apps.json → www/<dir>/); the others follow in later steps.
+  // Bundled tool pages (tools/native/apps.json → www/<dir>/).
   const PAGES = { pinnwand: 'kimboard/index.html', suche: 'kimseek/index.html' };
   const LINKS = {
     fpvideo: 'https://lausiklauskn-png.github.io/Family-Projekt.de-Video/',
-    workflowpdf: 'https://lausiklauskn-png.github.io/Workflow-PDF/'
+    kimsync: 'https://lausiklauskn-png.github.io/Kim-sync/',
+    dateipost: 'https://dateien.family-projekt.de/',
+    bookledgerpro: 'https://lausiklauskn-png.github.io/BookLedgerPro/'
   };
+  const APPLICATIONS = Object.freeze({workflowpdfpro:Object.freeze({
+    android:'https://github.com/lausiklauskn-png/Workflow-PDF-Pro/releases/download/v1.0.3/Workflow-PDF-Pro-1.0.3.apk',
+    releases:'https://github.com/lausiklauskn-png/Workflow-PDF-Pro/releases'
+  })});
   const L = ['de', 'en', 'ru', 'pl'];
   const li = () => Math.max(0, L.indexOf(String(document.documentElement.lang || 'de').slice(0, 2)));
   const W = {
@@ -28,18 +35,74 @@
     taken: ['✓ Übernommen. Die Prüfung und die Einordnung stehen unter „Dateien hinzufügen“.', '✓ Added. The check and where it went are shown under "Add files".', '✓ Добавлено. Проверка — в «Добавить файлы».', '✓ Dodano. Sprawdzenie w „Dodaj pliki”.'],
     tooBig: ['Zu groß zum Übernehmen (über 80 MB).', 'Too large to add (over 80 MB).', 'Слишком большой (более 80 МБ).', 'Za duży (ponad 80 MB).'],
     link: ['öffnet im Browser', 'opens in the browser', 'откроется в браузере', 'otwiera w przeglądarce'],
-    workflowpdf: ['Workflow PDF', 'Workflow PDF', 'Workflow PDF', 'Workflow PDF']
+    nativeApp: ['öffnet das Originalprogramm', 'opens the original application', 'откроется исходное приложение', 'otwiera oryginalny program'],
+    appMissing: ['Workflow PDF Pro ist auf diesem Gerät noch nicht installiert.', 'Workflow PDF Pro is not installed on this device yet.', 'Workflow PDF Pro ещё не установлено на этом устройстве.', 'Workflow PDF Pro nie jest jeszcze zainstalowany na tym urządzeniu.'],
+    appVersions: ['Die offizielle Downloadseite enthält die verfügbaren Ausgaben von Workflow PDF Pro.', 'The official download page lists the available Workflow PDF Pro editions.', 'На официальной странице загрузки доступны версии Workflow PDF Pro.', 'Oficjalna strona pobierania zawiera dostępne wersje Workflow PDF Pro.'],
+    install: ['Installieren', 'Install', 'Установить', 'Zainstaluj'],
+    downloads: ['Downloadseite öffnen', 'Open download page', 'Открыть страницу загрузки', 'Otwórz stronę pobierania'],
+    close: ['Schließen', 'Close', 'Закрыть', 'Zamknij'],
+    openFailed: ['Das Werkzeug konnte nicht geöffnet werden. Bitte erneut versuchen.', 'The tool could not be opened. Please try again.', 'Не удалось открыть инструмент. Повторите попытку.', 'Nie udało się otworzyć narzędzia. Spróbuj ponownie.']
   };
   const t = k => (W[k] || [k])[li()] || W[k][0];
   const make = (tag, text, cls) => { const e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
 
   // ---------- the tool window ----------
-  let frameBox = null;
+  let frameBox = null, applicationDialog = null, launching = false;
   function close() { frameBox?.remove(); frameBox = null; document.documentElement.classList.remove('pb-tool-open'); }
-  function openTool(id) {
+  function closeMenu() { document.querySelector('.native-options')?.removeAttribute('open'); }
+  async function openLink(id, url) {
+    if (!license.unlocked(id)) return goUnlock();
+    const links = window.Capacitor?.Plugins?.ProLinks;
+    if (typeof links?.open !== 'function') throw new Error('LINK_UNAVAILABLE');
+    await links.open({url});
+    closeMenu();
+  }
+  function applicationNotice(tool, {download, android = false, failed = false} = {}) {
+    applicationDialog?.close();
+    const dialog = make('dialog', null, 'live-dialog pb-tool-application');
+    applicationDialog = dialog; dialog.dataset.tool = tool.id;
+    const title = make('h3', license.toolName(tool)); title.id = 'pb-tool-application-title';
+    dialog.setAttribute('aria-labelledby', title.id);
+    const status = make('p', failed ? t('openFailed') : t(android ? 'appMissing' : 'appVersions'));
+    status.setAttribute('role', 'status'); dialog.append(title, status);
+    if (download) {
+      const install = make('button', t(android ? 'install' : 'downloads')); install.type = 'button'; install.dataset.toolDownload = '';
+      install.onclick = async () => {
+        if (!license.unlocked(tool.id)) { dialog.close(); goUnlock(); return; }
+        install.disabled = true;
+        try { await openLink(tool.id, download); dialog.close(); }
+        catch { status.textContent = t('openFailed'); }
+        finally { install.disabled = false; }
+      };
+      dialog.append(install);
+    }
+    const dismiss = make('button', t('close'), 'ghost'); dismiss.type = 'button'; dismiss.onclick = () => dialog.close();
+    dialog.append(dismiss); dialog.addEventListener('close', () => { dialog.remove(); if (applicationDialog === dialog) applicationDialog = null; });
+    document.body.append(dialog); closeMenu(); dialog.showModal();
+  }
+  async function openApplication(tool) {
+    const application = APPLICATIONS[tool.id], links = window.Capacitor?.Plugins?.ProLinks;
+    const android = window.Capacitor?.getPlatform?.() === 'android';
+    if (android && typeof links?.openApplication === 'function') {
+      const result = await links.openApplication({tool:tool.id});
+      if (!license.unlocked(tool.id)) return;
+      if (result?.installed === true) { closeMenu(); return; }
+      if (result?.installed !== false) throw new Error('TOOL_UNAVAILABLE');
+      applicationNotice(tool, {download:application.android, android:true});
+    } else applicationNotice(tool, {download:application.releases});
+  }
+  async function openTool(id) {
     const tool = license.TOOLS.find(x => x.id === id);
+    if (!tool) return;
     if (!license.unlocked(id)) { alert(t('lockedAsk')); goUnlock(); return; }
-    if (LINKS[id]) { void window.Capacitor?.Plugins?.ProLinks?.open({ url: LINKS[id] }); return; }
+    if (APPLICATIONS[id] || LINKS[id]) {
+      if (launching) return;
+      launching = true;
+      try { if (APPLICATIONS[id]) await openApplication(tool); else await openLink(id, LINKS[id]); }
+      catch { if (license.unlocked(id)) applicationNotice(tool, {failed:true}); }
+      finally { launching = false; }
+      return;
+    }
     if (!PAGES[id]) return;
     close();
     frameBox = make('div', null, 'pb-tool-frame'); frameBox.dataset.tool = id;
@@ -108,20 +171,21 @@
     let box = panel.querySelector(':scope > .pb-tools-menu');
     if (!box) { box = make('div', null, 'pb-tools-menu'); panel.append(box); }
     const rows = [make('p', t('head'), 'pb-tools-head')];
-    // Klaus 2026-10-22: each program shows its own icon (copied from its app), not an emoji.
-    const entries = [...license.TOOLS.map(tool => ({ ...tool, name: license.toolName(tool) })), { id: 'workflowpdf', img: 'tool-icons/workflowpdf.png', icon: '📄', name: t('workflowpdf'), free: true }];
+    // Program icons stay separate from the functional toolbar's line symbols.
+    const entries = license.TOOLS.map(tool => ({ ...tool, name: license.toolName(tool) }));
     for (const e of entries) {
-      const ready = Boolean(PAGES[e.id] || LINKS[e.id]), open = e.free || license.unlocked(e.id);
+      const ready = Boolean(PAGES[e.id] || LINKS[e.id] || APPLICATIONS[e.id]), open = license.unlocked(e.id);
       const b = make('button', null, 'ghost pb-tools-item');
       b.append(make('span', open ? '' : '🔒', 'pb-tools-lock'), license.toolIcon(e), make('span', e.name + (ready ? (LINKS[e.id] ? ' ↗' : '') : ' · ' + t('soon')), 'pb-tools-name'));
       b.type = 'button'; b.dataset.tool = e.id; b.dataset.open = String(open); b.disabled = !ready && open;
       if (LINKS[e.id]) b.title = t('link');
-      b.onclick = () => e.free ? window.Capacitor?.Plugins?.ProLinks?.open({ url: LINKS[e.id] }) : openTool(e.id);
+      else if (APPLICATIONS[e.id]) b.title = t('nativeApp');
+      b.onclick = () => { void openTool(e.id); };
       rows.push(b);
     }
     box.replaceChildren(...rows);
   }
-  addEventListener('pb:license', () => { if (frameBox && !license.unlocked(frameBox.dataset.tool)) close(); paint(); });
+  addEventListener('pb:license', () => { if (frameBox && !license.unlocked(frameBox.dataset.tool)) close(); if (applicationDialog && !license.unlocked(applicationDialog.dataset.tool)) applicationDialog.close(); paint(); });
   // Windows tools have their own origin and cannot access app storage or native
   // adapters. Only the currently open, licensed frame may offer a file.
   addEventListener('message', event => {
@@ -144,5 +208,5 @@
 
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && frameBox) close(); });
 
-  window.PBTools = { open: openTool, close, offer, PAGES, LINKS };
+  window.PBTools = { open: openTool, close, offer, PAGES, LINKS, APPLICATIONS };
 })();
