@@ -26,15 +26,29 @@ html[data-pb-theme] .native-options-panel .workspace-tools .compact-caption { fo
 html[data-pb-theme] .compact-tool-has-caption,html[data-pb-theme] .compact-text-only { width:auto!important; min-width:30px; gap:5px; padding:3px 8px!important; }
 html[data-pb-theme] .compact-tool-has-caption .compact-caption,html[data-pb-theme] .compact-text-only .compact-caption { position:static!important; width:auto!important; height:auto!important; overflow:visible!important; clip-path:none; font-size:.8rem; white-space:nowrap; }
 html[data-pb-theme] .panel>h2 { margin:8px 0 14px; font-size:1.35rem; font-weight:650; }
-html[data-pb-theme] .search-welcome { padding:13px 0 8px; }
-html[data-pb-theme] .search-welcome h2 { font-size:clamp(1.45rem,3vw,2rem); font-weight:650; }
-html[data-pb-theme] .search-totals { gap:8px; margin:8px 0 14px; }
+html[data-pb-theme] .search-welcome { padding:7px 0 3px; }
+html[data-pb-theme] .search-welcome[hidden] { display:none; }
+html[data-pb-theme] .search-welcome h2 { margin:0 0 4px; font-size:1.2rem; line-height:1.3; font-weight:650; }
+html[data-pb-theme] .search-welcome p { margin:4px 0; font-size:.82rem; line-height:1.4; }
+html[data-pb-theme] .search-totals { gap:8px; margin:6px 0 8px; }
 html[data-pb-theme] .search-totals span { padding:5px 9px; border-radius:5px; font-size:.8rem; background:var(--card); }
 html[data-pb-theme] .searchbox,html[data-pb-theme] .note,html[data-pb-theme] .card,html[data-pb-theme] .tile,html[data-pb-theme] .library-setup { background:var(--card); background-image:none; border-color:var(--line); border-radius:9px; box-shadow:none; }
 html[data-pb-theme] .searchbar,html[data-pb-theme] .search-shell { box-shadow:none; background:var(--card); }
 html[data-pb-theme] input,html[data-pb-theme] select,html[data-pb-theme] textarea { background:var(--field); color:var(--ink); border-color:var(--line); border-radius:6px; }
 html[data-pb-theme] #mode { background:var(--card); border-color:var(--line); }
 html[data-pb-theme] #mode button.on { background:var(--acc); color:var(--pb-on-accent,#fff); }
+/* The query is the main control. Keep the optional meaning-search switch on
+   one line; a narrow window gives it another row instead of splitting words. */
+html[data-pb-theme] #panel-search .searchbox { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:2px; }
+html[data-pb-theme] #panel-search .searchbox input[type=search] { flex:1 1 18rem; width:0; min-width:0; max-width:100%; min-height:44px; padding:4px 8px; font-size:.95rem; line-height:1.25; box-sizing:border-box; }
+html[data-pb-theme] #panel-search #mic { flex:none; display:inline-flex; align-items:center; justify-content:center; width:44px; min-width:44px; height:44px; padding:8px!important; box-sizing:border-box; }
+html[data-pb-theme] #panel-search #mode { flex:0 0 auto; display:flex; flex-wrap:wrap; width:auto; min-width:0; max-width:100%; gap:0; padding:0; border:0; border-radius:6px; box-shadow:inset 0 0 0 1px var(--line); }
+html[data-pb-theme] #panel-search #mode button { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:5px; min-width:max-content; min-height:44px; padding:4px 8px; border:0; font-size:.78rem; font-weight:600; line-height:1.25; white-space:nowrap; overflow-wrap:normal; word-break:normal; }
+html[data-pb-theme] #panel-search #mode .pb-search-mode-icon { flex:none; display:block; width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+html[data-pb-theme] .native-file-head .native-file-share { flex:none; width:44px; min-width:44px; min-height:44px!important; height:44px; padding:8px!important; }
+html[data-pb-theme] .native-file-head .native-file-share>.compact-icon { width:20px; height:20px; }
+html[data-pb-theme] .native-file-head>[data-native-action=open] { display:inline-flex; align-items:center; gap:6px; min-height:44px; }
+html[data-pb-theme] .native-file-head>[data-native-action][hidden] { display:none!important; }
 html[data-pb-theme] .explorer-layout { gap:16px; }
 html[data-pb-theme] #explorerTree { padding-right:12px; }
 html[data-pb-theme] #explorerTree button { border-color:transparent; background:transparent; white-space:normal; overflow-wrap:normal; }
@@ -99,8 +113,17 @@ html[data-pb-theme] .pb-mail-index-scope { margin:5px 0 0; color:var(--mut); fon
   html[data-pb-theme] #mailWorkspace .mail-list { padding:7px; }
   html[data-pb-theme] #mailWorkspace .mail-reader { padding:9px; }
   html[data-pb-theme] .mail-compose-actions { gap:4px; }
-  html[data-pb-theme] .searchbox .toggle { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:0; padding:2px; }
-  html[data-pb-theme] .searchbox .toggle button { padding:5px 3px; border-width:0; font-size:.78rem; white-space:nowrap; overflow-wrap:normal; }
+  /* A long filename keeps one readable line instead of collapsing between
+     toolbar actions. The two handoff actions share their own second row. */
+  html[data-pb-theme] .native-file-head { display:grid; grid-template-columns:auto minmax(0,1fr) 44px; gap:6px 8px; padding:6px 8px; }
+  html[data-pb-theme] .native-file-head>button:first-child { grid-column:1; grid-row:1; justify-self:start; min-width:0; padding:6px 8px; font-size:.85rem; white-space:nowrap; }
+  html[data-pb-theme] .native-file-head>.native-file-title { grid-column:2/-1; grid-row:1; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal; font-size:.9rem; }
+  html[data-pb-theme] .native-file-head>[data-native-action=open] { grid-column:1/3; grid-row:2; justify-self:end; min-width:0; max-width:100%; font-size:.85rem; line-height:1.3; }
+  html[data-pb-theme] .native-file-head>.native-file-share { grid-column:3; grid-row:2; align-self:center; justify-self:end; }
+  html[data-pb-theme] .native-file-head>.pb-activity { grid-column:1/-1; grid-row:3; min-width:0; }
+  html[data-pb-theme] #panel-search .searchbox { display:grid; grid-template-columns:minmax(0,1fr) 44px; }
+  html[data-pb-theme] #panel-search .searchbox input[type=search] { width:100%; }
+  html[data-pb-theme] #panel-search #mode { grid-column:1/-1; justify-self:end; width:auto; }
   html[data-pb-theme] .filterbar select { width:100%; max-width:100%; font-size:.78rem; padding:4px 6px; }
 }
 @media(max-width:360px) { html[data-pb-theme] #panel-dash .tiles { grid-template-columns:minmax(0,1fr); } }
@@ -153,7 +176,104 @@ html[data-pb-theme] .pb-mail-translate-icon { width:16px; height:16px; fill:none
 html[data-pb-theme] .pb-mail-translation { margin:14px 0; padding:12px; border:1px solid var(--line); border-radius:7px; background:var(--bg2); overflow-wrap:anywhere; }
 html[data-pb-theme] .pb-mail-translation h4 { margin:0 0 8px; font-size:.95rem; }
 html[data-pb-theme] .pb-mail-translation label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:6px 0; }
+
+/* The main destinations remain in one strip. Small windows scroll the strip
+   instead of hiding Overview/Categories or cutting their names into fragments. */
+html[data-pb-theme] .native-toolbar-row { display:flex!important; flex-wrap:nowrap!important; align-items:center; gap:6px; min-width:0; max-width:100%; }
+html[data-pb-theme] .native-toolbar-row .main-pages { display:flex; order:0; flex:1 1 auto!important; width:100%; min-width:0; max-width:100%; flex-wrap:nowrap!important; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; scrollbar-width:thin; padding:2px 0 5px; }
+html[data-pb-theme] .native-toolbar-row .main-pages .tab { flex:none!important; width:max-content; min-width:44px!important; max-width:100%; height:auto!important; min-height:44px!important; padding:4px 7px!important; flex-direction:row; gap:5px; white-space:nowrap; }
+html[data-pb-theme] .native-toolbar-row .main-pages .compact-caption { flex:none; max-width:none; overflow:visible; text-overflow:clip; white-space:nowrap; }
+html[data-pb-theme] .native-toolbar-quick { display:flex; order:1; flex:0 0 auto; align-items:center; gap:4px; }
+html[data-pb-theme] .native-toolbar-quick>.tab,
+html[data-pb-theme] .native-toolbar-quick>#pb-palette-button { display:inline-flex; flex:none; align-items:center; justify-content:center; width:44px!important; min-width:44px!important; height:44px!important; min-height:44px!important; padding:0!important; }
+html[data-pb-theme] .native-toolbar-quick>.tab>.compact-icon,
+html[data-pb-theme] .native-toolbar-quick>#pb-palette-button>svg { width:20px; height:20px; flex:none; }
+html[data-pb-theme] .native-menu-views[hidden] { display:none!important; }
+html[data-pb-theme] .pb-overview { position:relative; margin:14px 0; }
+html[data-pb-theme] .pb-overview>h2 { margin:0 42px 8px 0; font-size:1.1rem; }
+html[data-pb-theme] .pb-overview-summary { display:flex; flex-wrap:wrap; gap:6px 18px; margin-bottom:6px; }
+html[data-pb-theme] .pb-overview-summary p { margin:0; font-size:.82rem; }
+html[data-pb-theme] .pb-overview-help { margin:0; color:var(--mut); font-size:.8rem; }
+html[data-pb-theme] .pb-overview-help>summary { position:absolute; right:0; top:0; display:inline-flex; align-items:center; justify-content:center; width:32px; min-height:32px; border:1px solid var(--line); border-radius:50%; list-style:none; cursor:pointer; font-weight:600; }
+html[data-pb-theme] .pb-overview-help>summary::-webkit-details-marker { display:none; }
+html[data-pb-theme] .pb-overview-help>summary::marker { content:""; }
+html[data-pb-theme] .pb-overview-help p { max-width:70ch; margin:6px 0; line-height:1.45; }
+html[data-pb-theme] .pb-overview-folder-head,html[data-pb-theme] .pb-overview-folder { display:grid; grid-template-columns:minmax(0,1fr) 60px 150px; align-items:center; gap:10px; }
+html[data-pb-theme] .pb-overview-folder-head { padding:6px 10px; color:var(--mut); font-size:.76rem; }
+html[data-pb-theme] .pb-overview-folder { width:100%; min-height:44px; margin:0; padding:8px 10px; border-radius:0; border-width:0 0 1px; text-align:left; }
+html[data-pb-theme] .pb-overview-folder-label { display:flex; align-items:center; gap:7px; min-width:0; }
+html[data-pb-theme] .pb-overview-folder .pb-overview-folder-label { padding-left:calc(var(--folder-depth,0)*10px); }
+html[data-pb-theme] .pb-overview-folder-label>span { min-width:0; overflow-wrap:anywhere; }
+html[data-pb-theme] .pb-overview-folder .pb-overview-folder-label>span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal; }
+html[data-pb-theme] .pb-overview-folder-icon { flex:none; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+html[data-pb-theme] .pb-overview-count,html[data-pb-theme] .pb-overview-size { text-align:right; font-variant-numeric:tabular-nums; }
+html[data-pb-theme] .pb-overview-size { color:var(--mut); font-size:.8rem; }
+html[data-pb-theme] .pb-overview-more { margin-top:8px; min-height:44px; }
+html[data-pb-theme] .pb-overview-more[hidden],html[data-pb-theme] .pb-overview-topics[hidden] { display:none; }
+html[data-pb-theme] #groups,.pb-overview-topics>.groups { grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); }
+html[data-pb-theme] .pb-overview-category { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 10px; min-height:64px; padding:12px; text-align:left; }
+html[data-pb-theme] .pb-overview-category .pb-overview-size { grid-column:1/-1; }
 html[data-pb-theme] .pb-mail-translation select { width:auto; max-width:100%; min-height:30px; padding:4px 6px; }
 html[data-pb-theme] .pb-mail-translation textarea { min-height:64px; }
 html[data-pb-theme] .pb-mail-translation-text { font:inherit; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.65; margin:16px 0; }
 html[data-pb-theme] .pb-mail-translation .mail-reader-actions { flex-wrap:wrap; }
+
+@media(max-width:650px) { html[data-pb-theme] .pb-overview-folder-head,html[data-pb-theme] .pb-overview-folder { grid-template-columns:minmax(0,1fr) 60px 85px; } }
+
+/* One familiar info line icon for disclosures across the app. */
+html[data-pb-theme] .pb-overview-help>summary { width:44px; min-height:44px; border:0; }
+html[data-pb-theme] .pb-overview-help>summary>svg { width:20px; height:20px; }
+
+/* Keep touch actions easy to hit. A wide mouse workspace has a flatter
+   toolbar; content rows, message text, checkboxes and radios keep their sizing. */
+html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button { min-height:44px!important; }
+html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:44px; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme] .native-toolbar-row .main-pages .tab { min-width:32px!important; min-height:32px!important; padding:3px 7px!important; }
+  html[data-pb-theme] .native-toolbar-row .main-pages .tab.compact-icon-only { width:32px!important; min-width:32px!important; }
+  html[data-pb-theme] .native-toolbar-quick>.tab,
+  html[data-pb-theme] .native-toolbar-quick>#pb-palette-button { width:32px!important; min-width:32px!important; height:32px!important; min-height:32px!important; }
+  html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button,
+  html[data-pb-theme] .native-file-head>button,
+  html[data-pb-theme] .pb-explorer-sort-popup button { min-height:32px!important; height:auto; padding-block:2px!important; line-height:1.2; }
+  html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:32px; height:32px; box-sizing:border-box; padding-block:2px; line-height:1.2; }
+  html[data-pb-theme] #pb-explorer-sort>summary { min-height:32px; padding-block:2px; line-height:1.2; }
+  html[data-pb-theme] #panel-search .searchbox input[type=search] { min-height:32px; height:32px; padding-block:2px; line-height:1.1; }
+  html[data-pb-theme] #panel-search #mode button { min-height:32px; padding-block:2px; }
+  html[data-pb-theme] #panel-search #mic,
+  html[data-pb-theme] .native-file-head .native-file-share { width:32px; min-width:32px; height:32px; min-height:32px!important; padding:4px!important; }
+  html[data-pb-theme] .pb-overview-help>summary,
+  html[data-pb-theme] .pb-dup-help>summary { width:32px; height:32px; min-height:32px; }
+}
+
+/* Dynamic setting actions obey their actual locked/available state. */
+html[data-pb-theme] #panel-settings [hidden] { display:none!important; }
+
+/* Input language belongs next to the query. Only the current code stays in
+   the search row; the complete existing language list opens on demand. */
+html[data-pb-theme] #panel-search #pb-input-language-quick { display:block; flex:none; width:max-content; max-width:100%; margin:0; padding:0; }
+html[data-pb-theme] #pb-search-language { display:inline-flex; align-items:center; justify-content:center; width:44px; min-width:44px; height:44px; min-height:44px!important; margin:0; padding:2px!important; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font-size:.78rem; font-weight:600; line-height:1.2!important; white-space:nowrap; list-style:none; cursor:pointer; }
+html[data-pb-theme] #pb-search-language::-webkit-details-marker { display:none; }
+html[data-pb-theme] #pb-search-language::marker { content:""; }
+html[data-pb-theme] #pb-input-language-quick[open]>summary { color:var(--acc); border-color:var(--acc); background:var(--pb-selected,var(--card2)); }
+html[data-pb-theme] #pb-search-language-menu { position:fixed; z-index:64; width:min(16rem,calc(100vw - 16px)); box-sizing:border-box; padding:6px; border:1px solid var(--line); border-radius:8px; background:var(--card); box-shadow:0 8px 24px #0002; overflow:auto; overscroll-behavior:contain; }
+html[data-pb-theme] #pb-search-language-menu>button { display:block; width:100%; min-height:44px; margin:0; padding:5px 8px; border-color:transparent; font-size:.85rem; line-height:1.2; text-align:start; white-space:normal; overflow-wrap:normal; word-break:normal; }
+html[data-pb-theme] #pb-search-language-menu>button[aria-pressed=true] { border-color:var(--acc); color:var(--acc); background:var(--pb-selected,var(--card2)); font-weight:600; }
+html[data-pb-theme] #pb-search-language-menu>button:active { transform:none!important; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme] #pb-search-language { width:32px; min-width:32px; height:32px; min-height:32px!important; }
+  html[data-pb-theme] #pb-search-language-menu>button { min-height:32px; padding-block:2px; }
+}
+@media(max-width:650px) {
+  html[data-pb-theme] #panel-search .searchbox { grid-template-columns:minmax(0,1fr) 44px 44px; }
+  html[data-pb-theme] #panel-search .searchbox input[type=search] { grid-column:1; grid-row:1; }
+  html[data-pb-theme] #panel-search #mic { grid-column:2; grid-row:1; }
+  html[data-pb-theme] #panel-search #pb-input-language-quick { grid-column:3; grid-row:1; }
+  html[data-pb-theme] #panel-search #mode { grid-column:1/-1; grid-row:2; }
+}
+
+/* Help follows the same mouse/touch target profile as the nearby settings. */
+html[data-pb-theme].pb-help-ready .pb-help-toggle { width:44px; height:44px; min-width:44px; min-height:44px; padding:10px; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme].pb-help-ready .pb-help-toggle { width:32px; height:32px; min-width:32px; min-height:32px; padding:6px; }
+}

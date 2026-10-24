@@ -70,7 +70,7 @@ async function fixture(mode = 'pending') {
     rebuildIndex(); refreshAll();
   }, hashes);
   await navigateTo(page,'search');
-  await page.locator('[data-m="name"]').click();
+  if(await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed')==='true')await page.locator('#mode [data-m="mean"]').click();
   await page.locator('#q').fill('Status');
   await page.waitForFunction(() => document.querySelectorAll('#results .pb-record-availability').length === 7);
   return {context,page,errors,external};

@@ -16,7 +16,7 @@ async function app(browser,keys){
   await page.route('**/*',r=>{const u=r.request().url();
     if(keys&&u.endsWith('/license-keys.json'))return r.fulfill({contentType:'application/json',body:JSON.stringify({publishers:keys.map(key=>({key}))})});
     return u.startsWith(url)?r.continue():r.abort();});
-  await page.addInitScript(()=>{window.opened=[];window.alerts=[];window.alert=m=>alerts.push(String(m));window.Capacitor={Plugins:{ProLinks:{async open({url}){opened.push(url);return{ok:true};}}}};});
+  await page.addInitScript(()=>{window.opened=[];window.nativeToolCalls=[];window.nativeToolInstalled=true;window.toolPlatform='android';window.alerts=[];window.alert=m=>alerts.push(String(m));window.Capacitor={getPlatform:()=>toolPlatform,Plugins:{ProLinks:{async open({url}){opened.push(url);return{ok:true};},async openApplication(args){nativeToolCalls.push(args);return{installed:nativeToolInstalled};}}}};});
   await page.goto(url);await page.waitForFunction(()=>window.PBLicense&&window.PBTools&&document.querySelector('.pb-tools-menu'));
   await page.evaluate(()=>PBLicense.ready);
   return {page,errors,context};
@@ -32,14 +32,19 @@ try{
   ok('Only one pin board entry exists: the licensed tool, with no legacy floating board',await page.evaluate(()=>document.querySelectorAll('.native-options-panel [data-tool="pinnwand"]').length===1&&!document.getElementById('pbPinBtn')&&!document.getElementById('pbPinPanel')&&!document.querySelector('script[src="modules/pinnwand-widget.js"]')));
   // Klaus 2026-10-22: each program shows its own icon, and it really loads (no emoji fallback).
   await page.waitForFunction(()=>[...document.querySelectorAll('.pb-tools-menu img.pb-tool-icon')].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:20000});
-  ok('Every menu entry shows the program\'s own icon',await page.evaluate(()=>{const items=[...document.querySelectorAll('.pb-tools-menu .pb-tools-item')];return items.length===9&&items.every(b=>{const i=b.querySelector('img.pb-tool-icon');return i&&i.naturalWidth>0&&new URL(i.src).pathname==='/tool-icons/'+b.dataset.tool+(b.dataset.tool==='dateipost'?'.svg':'.png');});}));
+  ok('Every menu entry has a complete loaded program icon, including the two new Pro tools',await page.evaluate(()=>{const items=[...document.querySelectorAll('.pb-tools-menu .pb-tools-item')];return items.length===10&&items.every(b=>{const i=b.querySelector('img.pb-tool-icon'),tool=PBLicense.TOOLS.find(t=>t.id===b.dataset.tool);return i&&i.naturalWidth>0&&tool&&new URL(i.src).pathname==='/'+tool.img;});}));
   await menuItem(page,'pinnwand').evaluate(b=>b.click());
   ok('A locked tool says where the code goes and leads to settings',await page.evaluate(()=>alerts.at(-1).includes('Werkzeuge freischalten')&&document.getElementById('panel-settings').classList.contains('on')));
   ok('A locked pin board opens no tool frame or legacy panel',await page.locator('.pb-tool-frame,#pbPinPanel').count()===0);
+  const requestedTools=['workflowpdfpro','kimsync','dateipost','bookledgerpro'];
+  for(const id of requestedTools)await page.evaluate(id=>PBTools.open(id),id);
+  ok('All four requested tools are listed once and locked without a valid code',await page.evaluate(ids=>ids.every(id=>document.querySelectorAll('.pb-tools-menu [data-tool="'+id+'"]').length===1&&document.querySelector('.pb-tools-menu [data-tool="'+id+'"]').dataset.open==='false')&&!document.querySelector('.pb-tools-menu [data-tool="workflowpdf"]'),requestedTools));
+  ok('Locked new tools cannot launch native apps, open a website or offer a download',await page.evaluate(()=>opened.length===0&&nativeToolCalls.length===0)&&await page.locator('dialog.pb-tool-application').count()===0);
+
   // ---------- the publisher on his device ----------
   await settings(page);
   // The visible box is plain: tools, code field, button; no studio, no long explanations (Klaus 2026-10-22).
-  ok('The unlock box shows only the tools, the code field and the button',await page.evaluate(()=>{const b=document.getElementById('pb-license');return b&&!b.querySelector('#pb-studio')&&!/Ehrlich|Mit einem Freischalt-Code/.test(b.textContent)&&b.querySelectorAll('.pb-license-tools li').length===8&&Boolean(b.querySelector('#pbLicenseCode'))&&Boolean(b.querySelector('.pb-license-go'));}));
+  ok('The unlock box shows only the tools, the code field and the button',await page.evaluate(()=>{const b=document.getElementById('pb-license');return b&&!b.querySelector('#pb-studio')&&!/Ehrlich|Mit einem Freischalt-Code/.test(b.textContent)&&b.querySelectorAll('.pb-license-tools li').length===10&&Boolean(b.querySelector('#pbLicenseCode'))&&Boolean(b.querySelector('.pb-license-go'));}));
   ok('Each tool in the box stands on its own line with icon, full name and state',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b'),i=li.querySelector('.pb-tool-icon');const r=li.getBoundingClientRect();return n&&s&&i&&n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=r.right+1&&s.getBoundingClientRect().top<r.bottom;})));
   await page.setViewportSize({width:360,height:740});
   ok('On a phone (360 px) no tool name is cut off',await page.evaluate(()=>[...document.querySelectorAll('.pb-license-tools li')].every(li=>{const n=li.querySelector('.pb-license-name'),s=li.querySelector('b');return n.scrollWidth<=n.clientWidth+1&&s.getBoundingClientRect().right<=li.getBoundingClientRect().right+1;})));
@@ -50,7 +55,7 @@ try{
       await page.waitForTimeout(40);
       ok(`${language} at ${width}px: one tool per row, complete names and an accessible lock without repeated status text`,await page.evaluate(()=>{
         const items=[...document.querySelectorAll('.pb-license-tools li')];
-        return items.length===8&&items.every((li,i)=>{
+        return items.length===10&&items.every((li,i)=>{
           const r=li.getBoundingClientRect(),name=li.querySelector('.pb-license-name'),status=li.querySelector('b');
           const range=document.createRange();range.selectNodeContents(name);
           return (!i||r.top>=items[i-1].getBoundingClientRect().bottom-1)&&name.scrollWidth<=name.clientWidth+1&&range.getClientRects().length===1&&status.textContent==='🔒'&&Boolean(status.getAttribute('aria-label'));
@@ -86,6 +91,23 @@ try{
   const stored=await page.evaluate(()=>localStorage.getItem('pb_studio_v1'));
   ok('The secret key is stored only encrypted (no 64-hex secret in storage)',!/"secret"|"priv"/.test(stored)&&JSON.parse(stored).ct.length>40&&JSON.parse(stored).pub===pub);
   ok('Before the key is in the app, the publisher\'s own device has all tools open',await page.evaluate(()=>PBLicense.unlocked('kimsync')&&PBLicense.isOwner()));
+  const requestedToolCode=await page.evaluate(async password=>(await PBLicense.makeCode(password,'Werkzeugnutzer',['workflowpdfpro','kimsync','dateipost','bookledgerpro'])).code,PW);
+  for(const id of ['kimsync','dateipost','bookledgerpro'])await page.evaluate(id=>PBTools.open(id),id);
+  ok('Licensed hosted tools open their evidenced original addresses without copying private sources',await page.evaluate(()=>JSON.stringify(opened)===JSON.stringify(['https://lausiklauskn-png.github.io/Kim-sync/','https://dateien.family-projekt.de/','https://lausiklauskn-png.github.io/BookLedgerPro/']))&&await page.locator('.pb-tool-frame').count()===0);
+  await page.evaluate(()=>PBTools.open('workflowpdfpro'));
+  ok('Workflow PDF Pro launches the fixed native application instead of a PWA substitute',await page.evaluate(()=>nativeToolCalls.length===1&&JSON.stringify(nativeToolCalls[0])===JSON.stringify({tool:'workflowpdfpro'})&&opened.length===3)&&await page.locator('dialog.pb-tool-application,.pb-tool-frame').count()===0);
+  await page.evaluate(()=>{nativeToolInstalled=false;return PBTools.open('workflowpdfpro');});
+  const install=page.locator('dialog.pb-tool-application');await install.waitFor();
+  ok('Missing native app offers an explicit install action without starting a download',await page.evaluate(()=>nativeToolCalls.length===2&&opened.length===3)&&(await install.textContent()).includes('noch nicht installiert')&&await install.getByRole('button',{name:'Installieren',exact:true}).isVisible());
+  await install.locator('[data-tool-download]').click();await install.waitFor({state:'detached'});
+  ok('Only the explicit install button opens the official Android APK',await page.evaluate(()=>opened.at(-1)==='https://github.com/lausiklauskn-png/Workflow-PDF-Pro/releases/download/v1.0.3/Workflow-PDF-Pro-1.0.3.apk'));
+  await page.evaluate(()=>{toolPlatform='windows';return PBTools.open('workflowpdfpro');});
+  await install.waitFor();
+  ok('Other platforms receive a release-page choice, without attempting an Android app launch',await page.evaluate(()=>nativeToolCalls.length===2&&opened.length===4)&&await install.getByRole('button',{name:'Downloadseite öffnen',exact:true}).isVisible());
+  await install.locator('[data-tool-download]').click();await install.waitFor({state:'detached'});
+  ok('Windows fallback opens available editions rather than an Android APK',await page.evaluate(()=>opened.at(-1)==='https://github.com/lausiklauskn-png/Workflow-PDF-Pro/releases'));
+  await page.evaluate(()=>{toolPlatform='android';nativeToolInstalled=true;});
+
   const s=page.locator('#pb-studio');if(!(await s.evaluate(d=>d.open)))await s.locator(':scope > summary').click();
   await s.locator('[data-studio-buyer]').fill('Max Muster');
   for(const id of ['pinnwand','suche'])await s.locator(`.pb-studio-tools input[value="${id}"]`).check();
@@ -135,6 +157,21 @@ try{
   ok('With the publisher key in the app, a self-made studio key does not open anything',await other.page.evaluate(()=>!PBLicense.unlocked('kimsync')&&!PBLicense.isOwner()));
   ok('Spare keys of another studio key cannot replace this one',await other.page.evaluate(async p=>{try{await PBLicense.restoreFromShares(p,'neu-neu-neu-1');return false;}catch(e){return /other key/.test(e.message);}},parts.slice(1,4)));
   await other.context.close();
+  const proBuyer=await app(browser,[pub]);
+  const admitted=await proBuyer.page.evaluate(code=>PBLicense.addCode(code),requestedToolCode);
+  ok('A buyer code also unlocks exactly the four requested tools under the existing signature scheme',admitted.ok&&await proBuyer.page.evaluate(()=>['workflowpdfpro','kimsync','dateipost','bookledgerpro'].every(PBLicense.unlocked)&&!PBLicense.unlocked('pinnwand')&&!PBLicense.isOwner()));
+  await proBuyer.page.evaluate(()=>PBTools.open('bookledgerpro'));
+  ok('A separately licensed buyer can actually open BookLedger Pro',await proBuyer.page.evaluate(()=>opened.length===1&&opened[0]==='https://lausiklauskn-png.github.io/BookLedgerPro/'));
+  await proBuyer.page.evaluate(()=>{nativeToolInstalled=false;return PBTools.open('workflowpdfpro');});
+  await proBuyer.page.locator('dialog.pb-tool-application').waitFor();
+  await proBuyer.page.evaluate(async()=>{localStorage.removeItem('pb_license_codes');await PBLicense.refresh();});
+  await proBuyer.page.locator('dialog.pb-tool-application').waitFor({state:'detached'});
+  ok('Removing a buyer license closes a pending install choice without a download',await proBuyer.page.evaluate(()=>opened.length===1&&nativeToolCalls.length===1&&!PBLicense.unlocked('workflowpdfpro')));
+  await proBuyer.page.evaluate(()=>PBTools.open('workflowpdfpro'));
+  ok('A revoked tool cannot be launched again through its public action',await proBuyer.page.evaluate(()=>nativeToolCalls.length===1&&opened.length===1));
+
+  await proBuyer.context.close();
+
   // ---------- the buyer's app (publisher key in the app) ----------
   ({page,errors}=await app(browser,[pub]));
   await settings(page);

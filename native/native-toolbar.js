@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const make=(tag,cls)=>{const node=document.createElement(tag);node.className=cls;return node;};
+  const setClass=(node,name,value=true)=>{if(node.classList.contains(name)!==value)node.classList.toggle(name,value);};
   const strings={
     de:['Ansichten','App-Menü','Schließen'],en:['Views','App menu','Close'],
     ru:['Разделы','Меню приложения','Закрыть'],pl:['Widoki','Menu aplikacji','Zamknij']
@@ -12,7 +13,7 @@
   // Lets the WebView show :active (the button grows under the finger) on touch.
   document.addEventListener('touchstart',()=>{},{passive:true});
   const text=i=>(strings[document.documentElement.lang]||strings.de)[i];
-  const captions={de:['Finden','Hinzufügen','Dateien','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Find','Add','Files','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Добавить','Файлы','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Dodaj','Pliki','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
+  const captions={de:['Finden','Hinzufügen','Dateien','Mail','Übersicht','Kategorien','Doppelte','Einstellungen'],en:['Find','Add','Files','Mail','Overview','Categories','Duplicates','Settings'],ru:['Поиск','Добавить','Файлы','Почта','Обзор','Категории','Дубликаты','Настройки'],pl:['Szukaj','Dodaj','Pliki','Poczta','Pulpit','Kategorie','Duplikaty','Ustawienia']};
   const writingWords={de:'Schreibhilfe',en:'Writing help',ru:'Помощь с текстом',pl:'Pomoc w pisaniu'};
   const pages=['search','intake','explorer','mail','dash','order','dupes','settings'];
   const ICON_ONLY=new Set(['search','settings']);
@@ -23,6 +24,7 @@
     dash:'M4 20V10m8 10V4m8 16v-7',order:'M4 4h16v16H4Z M8 4v16m3-11h6m-6 5h6',
     dupes:'m5 19 8-8m-3-1 4 4m-5 1 4 4m-9 2 1-5 4 4-5 1 M15 4l5 5m-5 0 5-5',
     settings:'m9 3-.5 2-2 1-2-.5-2 3 1.5 1.5v3L2.5 15l2 3 2-.5 2 1L9 21h4l.5-2.5 2-1 2 .5 2-3-1.5-1.5v-3L19.5 9l-2-3-2 .5-2-1L13 3Z M14.5 12a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0',
+    palette:'M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.6-3.2l-.3-.4a1.5 1.5 0 0 1 1.2-2.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z M7 9h.1M10 6h.1M15 7h.1M17 11h.1',
     back:'M20 12H4m6-6-6 6 6 6',next:'M4 12h16m-6-6 6 6-6 6',
     refresh:'M20 11a8 8 0 0 0-14.9-3.9M4 4v4h4M4 13a8 8 0 0 0 14.9 3.9M20 20v-4h-4',compose:'M14 5 19 10 M4 20l5-1L21 7l-5-5L4 14Z',
     more:'M4 12h.1m7.9 0h.1m7.9 0h.1',menu:'M4 6h16M4 12h16M4 18h16',reply:'m9 5-7 7 7 7V14c6 0 10 1 13 5-1-8-5-11-13-11Z',
@@ -31,7 +33,7 @@
     all:'M5 5h14v14H5Z m3 7 3 3 5-6',view:'M4 3h16v18H4Z m4-13h8m-8 4h8m-8 4h6',
     images:'M3 3h18v18H3Z m1 14 5-6 4 4 3-3 5 5 M8 7h.1',
     up:'M12 21V3m-6 6 6-6 6 6',home:'m3 10 9-7 9 7 M5 9v12h14V9m-10 12v-8h6v8',
-    close:'m5 5 14 14M5 19 19 5',share:'M12 16V3m-5 5 5-5 5 5 M4 12v9h16v-9',
+    close:'m5 5 14 14M5 19 19 5',share:'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6 M8.6 10.5l6.8-4 M8.6 13.5l6.8 4',
     external:'M14 3h7v7m0-7L10 14 M10 3H3v18h18v-7',moon:'M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11',
     archive:'M3 3h18v5H3Z m2 5v13h14V8m-10 4h6',star:'m12 2 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z',
     read:'M3 6h18v14H3Z m0-14 9 7 9-7',save:'M3 3h15l3 3v15H3Z M7 3v6h10V3M7 21v-8h10v8',
@@ -56,6 +58,7 @@
     unavailable:'M4 20 20 4 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     pending:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 7v5l3 2',
     lock:'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0v3',
+    unlock:'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0',
     link:'m9 15 6-6 M8 16l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0 M16 8l2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0',
     clean:'m15 3 6 6-9 9-6-6Z M6 12l-4 8h12l-2-2 M5 20l2-5m3 5 1-3',
     device:'M3 4h18v13H3Z M8 21h8m-4-4v4',
@@ -100,15 +103,15 @@
     let glyph=node.querySelector(':scope>.compact-icon');
     if(known&&glyph?.dataset.iconKey!==key){const next=icon(key);if(glyph)glyph.replaceWith(next);else node.prepend(next);}
     else if(!known)glyph?.remove();
-    node.classList.add('compact-tool');node.classList.toggle('compact-text-only',!known);
+    setClass(node,'compact-tool');setClass(node,'compact-text-only',!known);
     node.setAttribute('aria-label',label);node.title=label;
     // Klaus 2026-10-21: magnifier and gear are self-explanatory; their words go, the name stays as tooltip.
-    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
+    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();setClass(node,'compact-icon-only');}
     else if(node.dataset.tab||node.hasAttribute('data-mail-caption')||node.dataset.iconCaption==='true'||!known||node.tagName==='SUMMARY'&&key==='more'||node.dataset.mailAi==='open'||['spam','notspam','restore'].includes(node.dataset.nativeSelection)||node.dataset.liveText==='notSpam'){
-      node.classList.remove('compact-icon-only');
+      setClass(node,'compact-icon-only',false);
       let caption=node.querySelector(':scope>.compact-caption');if(!caption){caption=make('span','compact-caption');caption.setAttribute('aria-hidden','true');node.append(caption);}
       if(caption.textContent!==label)caption.textContent=label;
-      if(!node.dataset.tab)node.classList.add('compact-tool-has-caption');
+      if(!node.dataset.tab)setClass(node,'compact-tool-has-caption');
     }
   }
   const folderIcons={inbox:'inbox',draft:'compose',outbox:'send',sent:'read',archive:'archive',spam:'warning',trash:'trash',exported:'external'};
@@ -139,12 +142,12 @@
     if(slot.parentElement?.classList.contains('mail-folder'))glyph.classList.add('native-folder-icon');
     if(!slot.querySelector(':scope>.pb-icon-fallback')){const fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');fallback.append(...slot.childNodes);slot.append(fallback);}
     if(previous)previous.replaceWith(glyph);else slot.append(glyph);
-    slot.classList.add('pb-content-icon');
+    setClass(slot,'pb-content-icon');
   }
-  const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','lock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
+  const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','unlock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
   for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
   prefixKeys.set('★','star');
-  for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','brain'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock']])prefixKeys.set(prefix,key);
+  for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','search'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock'],['🔏','network']])prefixKeys.set(prefix,key);
   const prefixes=[...prefixKeys.keys()].sort((a,b)=>b.length-a.length);
   function decorateKnownPrefix(node,preferred){
     if(!node||node.querySelector(':scope>.compact-icon'))return;
@@ -186,11 +189,16 @@
   addEventListener('resize',hideTip);document.addEventListener('scroll',hideTip,true);
   const main=document.querySelector('.main-pages'), secondary=document.querySelector('.workspace-tools');
   if(!main||!secondary)return;
-  const row=make('div','native-toolbar-row');main.before(row);row.append(main);
+  // Keep the original buttons and their existing navigation handlers.
+  for(const page of ['dash','order','dupes']){const button=secondary.querySelector('[data-tab="'+page+'"]');if(button)main.append(button);}
+  let primaryPage='';
+  const row=make('div','native-toolbar-row'),quick=make('div','native-toolbar-quick');main.before(row);row.append(main,quick);
+  const settings=secondary.querySelector('[data-tab="settings"]');if(settings)quick.append(settings);
   const tools=document.querySelector('header .tools');
   const options=make('details','native-options'),optionsTitle=make('summary','ghost'),optionsPanel=make('div','native-options-panel');
   for(const node of [...tools.children])if(!node.classList.contains('native-navigation'))optionsPanel.append(node);
   const views=make('section','native-menu-views'),viewsTitle=make('p','native-menu-heading');
+  views.hidden=true;
   views.append(viewsTitle,secondary);optionsPanel.prepend(views);
   options.append(optionsTitle,optionsPanel);tools.append(options);
   const offlineButton=make('button','ghost native-offline-switch');offlineButton.type='button';
@@ -217,7 +225,7 @@
   }
   lamp.onclick=()=>toggleNetwork(lamp);
   offlineButton.onclick=()=>toggleNetwork(offlineButton);networkLabel();
-  addEventListener('resize',()=>{options.open=false;});
+  addEventListener('resize',()=>{options.open=false;primaryPage='';enhance();});
   optionsPanel.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
     const page=button.matches('.tab[data-tab]')?button.dataset.tab:null;
@@ -267,7 +275,22 @@
     // Avoid rewriting the label/SVG when no translation has changed.
     decorate(optionsTitle,'menu');networkLabel();
     document.querySelectorAll('.native-toolbar-row .tab,.native-menu-views .tab').forEach(button=>decorate(button,button.dataset.tab));
+    const activePrimary=main.querySelector('.tab.on');
+    if(!activePrimary)primaryPage='';
+    if(activePrimary&&activePrimary.dataset.tab!==primaryPage){
+      primaryPage=activePrimary.dataset.tab;
+      const control=activePrimary.getBoundingClientRect(),viewport=main.getBoundingClientRect();
+      if(control.left<viewport.left||control.right>viewport.right)activePrimary.scrollIntoView({block:'nearest',inline:'nearest'});
+    }
     const navigation=document.querySelectorAll('.native-navigation button');decorate(navigation[0],'back');decorate(navigation[1],'next');
+    // The file viewer is outside .wrap. Keep its existing handoff buttons and
+    // translated labels; only Share becomes a familiar icon without a caption.
+    for(const button of document.querySelectorAll('.native-file-head>[data-native-action=share]')){
+      decorate(button,'share');setClass(button,'native-file-share');setClass(button,'compact-icon-only');
+      setClass(button,'compact-tool-has-caption',false);button.querySelector(':scope>.compact-caption')?.remove();
+    }
+    for(const button of document.querySelectorAll('.native-file-head>[data-native-action=open]'))decorateInline(button,'external','native-content-icon',false);
+    for(const title of document.querySelectorAll('.native-file-head>.native-file-title'))if(title.title!==title.textContent)title.title=title.textContent;
     decorate(document.querySelector('#themeToggle'),'moon');decorate(document.querySelector('#hardReload'),'refresh');
     decorate(document.querySelector('#explorerUp'),'up');decorate(document.querySelector('#explorerHome'),'home');
     document.querySelectorAll('#mailWorkspace .mail-head button,#mailWorkspace .mail-compose-actions button,#mailWorkspace .mail-reader-actions button,#mailWorkspace .mail-list-actions button,#mailWorkspace .mail-back,#mailWorkspace .mail-account-tools>summary,#mailWorkspace .mail-message-tools>summary,#mailWorkspace [data-mail-ai="open"]').forEach(button=>{
@@ -275,6 +298,7 @@
       const key=button.dataset.liveText||button.dataset.mailText||button.dataset.sharedText||button.dataset.nativeSelection||button.dataset.nativeTool||(button.dataset.mailAi==='open'?'writing':'');
       if(key||button.tagName==='SUMMARY')decorate(button,keys[key]||key||'more');
     });
+    const reorgHeading=document.querySelector('#reorgNote h3');if(reorgHeading)decorateInline(reorgHeading,'shuffle','native-heading-icon');
     document.querySelectorAll('[data-pb-icon]').forEach(decorateSlot);
     document.querySelectorAll('#mailWorkspace .mail-folder').forEach(button=>{
       const label=button.querySelector(':scope>.native-mail-all-label');
@@ -304,8 +328,16 @@
     decorateHeading(document.querySelector('#panel-explorer>h2'),'folder');
     decorateHeading(document.querySelector('#panel-intake>h2,#panel-intake>.pb-help-heading>h2'),'intake');
     document.querySelectorAll('#results .fname,#results .origin,#results .relhead,#results .cardbtns button,#results .empty .big,#groups .ic,#searchInfo>b,.native-import-reassurance>.ic').forEach(node=>decorateKnownPrefix(node));
-    document.querySelectorAll('[data-i18n],[data-ws],#panel-settings h3,#panel-order>h3,#pb-mail-all>.mail-head>.mail-primary').forEach(node=>decorateKnownPrefix(node));
-    document.querySelectorAll('.pb-check-all-button,.pb-check-badge,.pb-record-availability,.pb-check-find,.pb-check-summary,.pb-check-entrance-list li[data-check]>span,.pb-check-entrance .delBtn,.pb-schutz-mail>summary,.native-original-reconnect button,.native-vault-row>div>strong,.native-vault-attachment>span,.native-vault-head>span,.native-vault-clear,.native-vault-where button,#vault-lock,#vaultLine>span,#mailWorkspace [data-mail-all=list],#mailWorkspace [data-mail-all=senders],#mailWorkspace [data-mail-all=clean],#mailWorkspace [data-mail-all=order],#mailWorkspace [data-mail-mark],#mailWorkspace [data-mail-clean],#mailWorkspace .mail-undo>span').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('[data-i18n],[data-ws],#panel-settings h3,#pb-semantic>[data-s=title],.pb-studio-probe h3,#panel-order>h3,#pb-mail-all>.mail-head>.mail-primary').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('.pb-check-all-button,.pb-check-badge,.pb-record-availability,.pb-check-find,.pb-check-summary,.pb-check-entrance-list li[data-check]>span,.pb-check-entrance .delBtn,.pb-schutz-mail>summary,.native-original-reconnect button,.native-vault-row>div>strong,.native-vault-attachment>span,.native-vault-head>span,.native-vault-clear,.native-vault-where button,#vault-lock,#vault-unlock,#schutz-key-abuse,#schutz-key-vt,#schutz-get-abuse,#schutz-get-vt,#pb-ai-key-links [data-key-page],#mycelPlace [data-mycel-open],#mycelPlace [data-mycel-seal],#pb-license .pb-license-tools>li>b,#diagCopy,#diagClear,#btnPersist,#btnExport,#btnFullExport,#btnClear,#btnImport,#vaultLine>span,#mailWorkspace [data-mail-all=list],#mailWorkspace [data-mail-all=senders],#mailWorkspace [data-mail-all=clean],#mailWorkspace [data-mail-all=order],#mailWorkspace [data-mail-mark],#mailWorkspace [data-mail-clean],#mailWorkspace .mail-undo>span').forEach(node=>decorateKnownPrefix(node));
+    // This is a fixed app heading, not a user title. Preserve both original
+    // decorative glyphs for translation while painting one neutral line icon.
+    const mycelTitle=document.querySelector('#mycelPlace h3');
+    if(mycelTitle){
+      decorateKnownPrefix(mycelTitle,'network');
+      const textNode=[...mycelTitle.childNodes].find(part=>part.nodeType===Node.TEXT_NODE&&part.nodeValue.includes('🌐'));
+      if(textNode){const at=textNode.nodeValue.indexOf('🌐'),glyph=textNode.splitText(at);glyph.splitText('🌐'.length);const fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');glyph.before(fallback);fallback.append(glyph);}
+    }
     // Siegel (Modul 17) and Mycel (Modul 23-UI) float and snap to the header themselves (native-mycel.js).
     // One shared account/action row instead of a separate account row above the mailbox.
     const account=document.querySelector('.mail-account-bar'),head=document.querySelector('.live-mail>.mail-head');
@@ -321,4 +353,11 @@
   observer.observe(document.body,{subtree:true,childList:true,characterData:true});
   new MutationObserver(()=>{optionsTitle.replaceChildren(document.createTextNode(text(1)));enhance();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   enhance();
+  // A font-size change can resize tabs without firing window.resize. Reveal
+  // the active destination only on real size changes, never on manual scroll.
+  if(typeof ResizeObserver==='function'){
+    let sizeFrame=0;
+    const primarySize=new ResizeObserver(()=>{if(!sizeFrame)sizeFrame=requestAnimationFrame(()=>{sizeFrame=0;primaryPage='';enhance();});});
+    primarySize.observe(main);for(const button of main.querySelectorAll('.tab'))primarySize.observe(button);
+  }
 })();

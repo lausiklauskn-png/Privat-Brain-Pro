@@ -41,24 +41,26 @@ try{
   ok('The round Siegel is mounted at the actual app origin and floats outside the toolbar',await page.locator('#sbkim-widget-slot-siegel').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget').count()===0&&await page.locator('#sbkim-widget').evaluate(w=>getComputedStyle(w).position==='fixed'));
   for(const width of [320,390,768,1280]){
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
-    ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px`,await page.evaluate(()=>{
-      const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect();
-      return row.height<=(innerWidth<340?112:innerWidth<=1000?74:44)&&[...document.querySelectorAll('.native-toolbar-row .tab.compact-icon-only')].every(b=>{const q=b.getBoundingClientRect();return q.width<=32&&Math.abs(q.width-q.height)<=2;})&&[...document.querySelectorAll('.native-toolbar-row .tab:not(.compact-icon-only)')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;})&&head.height<=52&&reader.height>=300&&document.documentElement.scrollWidth<=innerWidth&&document.querySelector('#mailWorkspace').getBoundingClientRect().top<=(innerWidth<=360?170:innerWidth<=1000?140:100);
-    }));
+    const layout=await page.evaluate(()=>{
+      const row=document.querySelector('.native-toolbar-row').getBoundingClientRect(),head=document.querySelector('.live-mail>.mail-head').getBoundingClientRect(),reader=document.querySelector('.live-mail .mail-reader').getBoundingClientRect(),tabs=[...document.querySelectorAll('.main-pages .tab')].map(button=>button.getBoundingClientRect()),mids=tabs.map(r=>r.top+r.height/2),minimum=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;
+      return {oneRow:tabs.length===7&&tabs.every(r=>r.width>=minimum&&r.height>=minimum&&r.height<=minimum+2)&&Math.max(...mids)-Math.min(...mids)<2&&row.height<=Math.max(...tabs.map(r=>r.height))+24,
+        squareSearch:[...document.querySelectorAll('.native-toolbar-row .tab.compact-icon-only')].every(b=>{const q=b.getBoundingClientRect();return q.width>=minimum&&q.width<=minimum+2&&Math.abs(q.width-q.height)<=2;}),
+        fullCaptions:[...document.querySelectorAll('.native-toolbar-row .tab:not(.compact-icon-only)')].every(button=>{const icon=button.querySelector('.compact-icon').getBoundingClientRect(),caption=button.querySelector('.compact-caption').getBoundingClientRect();return caption.left>=icon.right&&caption.width>=button.querySelector('.compact-caption').scrollWidth-1&&Math.abs(caption.top+caption.height/2-icon.top-icon.height/2)<2;}),
+        targetHeight:minimum,rowHeight:row.height,headHeight:head.height,readerHeight:reader.height,noOverflow:document.documentElement.scrollWidth<=innerWidth,contentGap:document.querySelector('#mailWorkspace').getBoundingClientRect().top-document.querySelector('header.top').getBoundingClientRect().bottom-row.height};
+    });
+    ok(`${width}px: navigation stays flat, account actions stay on one row and message has at least 300px; `+JSON.stringify(layout),layout.oneRow&&layout.squareSearch&&layout.fullCaptions&&layout.headHeight<=layout.targetHeight+9&&layout.readerHeight>=300&&layout.noOverflow&&layout.contentGap>=-1&&layout.contentGap<=12);
     if(process.env.PB_CAPTURE_DESIGN==='1'){
       await page.mouse.move(width-2,width<650?638:898);
       await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/mail-${width}.png`});
     }
   }
   await page.setViewportSize({width:320,height:640});
-  ok('Phone keeps one main navigation row; additional views are grouped in the app menu',await page.evaluate(()=>document.querySelectorAll('.native-toolbar-row .tab').length===4&&document.querySelectorAll('.native-options-panel .workspace-tools .tab').length===4));
-  for(const tab of ['dash','order','dupes','settings']){
-    await page.locator('.native-options>summary').click();
-    const button=page.locator(`.native-options-panel [data-tab="${tab}"]`);
-    ok(`${tab}: the menu shows a named, reachable view`,await button.isVisible()&&await button.locator('.compact-caption').textContent().then(t=>Boolean(t.trim())));
-    await button.click();await page.waitForFunction(tab=>document.getElementById('panel-'+tab).classList.contains('on'),tab);
-    ok(`${tab}: selecting the menu entry opens the original view and closes the menu`,!await page.locator('.native-options').evaluate(e=>e.open));
-  }
+  ok('Phone keeps seven main targets in one scrollable row, with pinned settings and palette and no menu view tabs',await page.evaluate(()=>document.querySelectorAll('.main-pages .tab').length===7&&document.querySelectorAll('.native-options-panel .tab').length===0&&document.querySelectorAll('.native-toolbar-quick .tab[data-tab="settings"]').length===1&&Boolean(document.getElementById('pb-palette-button'))));
+  for(const tab of ['dash','order','dupes']){const button=page.locator(`.main-pages [data-tab="${tab}"]`);await button.scrollIntoViewIfNeeded();await button.click();await page.waitForFunction(tab=>document.getElementById('panel-'+tab).classList.contains('on'),tab);ok(`${tab}: the primary navigation directly opens its named original view`,await button.locator('.compact-caption').textContent().then(t=>Boolean(t.trim()))&&!await page.locator('.native-options').evaluate(e=>e.open));}
+  const settings=page.locator('.native-toolbar-quick [data-tab="settings"]');
+  ok('The pinned settings gear remains a named, visible 44px target beside the palette',await settings.isVisible()&&await settings.evaluate(e=>{const r=e.getBoundingClientRect();return r.width>=44&&r.height>=44&&r.left>=0&&r.right<=innerWidth&&e.title==='Einstellungen'&&e.getAttribute('aria-label')===e.title&&Boolean(e.querySelector('svg'));}));
+  await settings.click();await page.locator('#panel-settings').waitFor({state:'visible'});
+  ok('Selecting the pinned gear opens the original settings view',!await page.locator('.native-options').evaluate(e=>e.open));
   await page.click('[data-tab=mail]');
   await page.locator('.native-options>summary').click();await page.keyboard.press('Escape');ok('App menu closes with keyboard Escape and restores focus',await page.locator('.native-options>summary').evaluate(e=>document.activeElement===e)&&!await page.locator('.native-options').evaluate(e=>e.open));
   for(const [lang,word]of [['en','App menu'],['ru','Меню приложения'],['pl','Menu aplikacji'],['de','App-Menü']]){

@@ -88,4 +88,9 @@ ocr=[case for case in cases if case.get('classname')=='de.familyprojekt.privateb
 if len(ocr)!=1:raise SystemExit('Expected exactly one executed native offline OCR test (real WASM, four languages, scanned PDF and search)')
 handoff=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeFileHandoffTest' and case.get('name')=='shareBypassesBusyPdfQueueAndStillRejectsChangedOriginalBytes']
 if len(handoff)!=1:raise SystemExit('Expected exactly one executed independent share-queue and original-integrity test')
+launcher=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeToolLauncherTest' and case.get('name')=='onlyKnownProToolCanBeRequestedAndMissingAppKeepsBrainOpen']
+if len(launcher)!=1:raise SystemExit('Expected exactly one executed allowlisted companion-app launcher test (real bridge, missing app and rejected package/intent input)')
+for name in ('physicalCleanupKeepsVerifiedCopyAndRejectsChangedBytes', 'unknownStaleLastCopyAndLostPermissionNeverDelete', 'partialFailureCancellationAndBoundsRemainHonestWithRealChooser'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeDuplicateCleanupTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed physical SAF duplicate-cleanup test: {name}')
 print(f'Android startup and mail tests passed; {len(cases)} test case(s), no failures/skips.')

@@ -36,12 +36,48 @@ try {
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
   ok('Native bundle starts on search',await page.locator('#q').isVisible() && await page.locator('.brand h1').textContent()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
   ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes('Direkte Mailverbindung')));
+  // Search keeps the introduction for an empty field and releases its space
+  // for actual queries, including the app's saved-search and dictation paths.
+  const introduction=await page.evaluate(()=>{const welcome=document.querySelector('.search-welcome');return {height:welcome.getBoundingClientRect().height,top:document.querySelector('.searchbox').offsetTop};});
+  ok('Empty search has a visible introduction',introduction.height>0);
+  await page.fill('#q','Radstand');
+  ok('Typing a query removes the introduction and releases its full layout height',await page.evaluate(before=>{const welcome=document.querySelector('.search-welcome');return welcome.hidden&&welcome.getBoundingClientRect().height===0&&before.top-document.querySelector('.searchbox').offsetTop>=before.height-1;},introduction));
+  await page.fill('#q','   ');
+  ok('Clearing the actual query restores the introduction',await page.locator('.search-welcome').isVisible());
+  await page.evaluate(async()=>{document.getElementById('q').value='Gespeicherte Suche';await renderResults(document.getElementById('q').value);});
+  ok('Programmatic search text also removes the introduction without an input event',await page.locator('.search-welcome').isHidden());
+  await page.locator('#fSave').click();
+  await page.fill('#q','');
+  await page.locator('#savedRow [data-saved="0"]').click();
+  ok('Restoring a saved query keeps the introduction out of the result area',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').isHidden());
+  await clickControl(page,'.main-pages [data-tab="intake"]');
+  await page.evaluate(()=>PBNavigation.back());
+  await page.locator('#q').waitFor({state:'visible'});
+  ok('Returning to search retains its query and compact result layout',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').isHidden());
+  const enabled=await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed');
+  await page.locator('#mode [data-m="mean"]').click();
+  const toggled=await page.evaluate(()=>({mode:MODE,pressed:document.querySelector('#mode [data-m="mean"]').getAttribute('aria-pressed'),active:document.querySelector('#mode [data-m="mean"]').classList.contains('on')}));
+  await page.locator('#mode [data-m="mean"]').click();
+  const returned=await page.evaluate(()=>({mode:MODE,pressed:document.querySelector('#mode [data-m="mean"]').getAttribute('aria-pressed'),active:document.querySelector('#mode [data-m="mean"]').classList.contains('on')}));
+  ok('The single meaning switch turns its visible active state on and off',await page.locator('#mode button').count()===1&&await page.locator('#mode [data-m="name"]').count()===0&&toggled.pressed!==enabled&&toggled.pressed===String(toggled.mode==='mean')&&toggled.active===(toggled.mode==='mean')&&returned.pressed===enabled&&returned.pressed===String(returned.mode==='mean')&&returned.active===(returned.mode==='mean'));
+  // Restore the fresh default for the existing native layout/import checks.
+  await page.evaluate(()=>{MODE='mean';setToggle();document.getElementById('q').value='';renderResults('');localStorage.removeItem('cb_saved');renderSaved();});
+  const largeSearch=[];
+  for(const [width,height,font]of[[320,720,20],[390,844,24],[800,1280,24],[1280,800,20],[1280,800,24]]){
+    await page.setViewportSize({width,height});await page.evaluate(font=>document.documentElement.style.fontSize=font+'px',font);
+    const fit=await page.evaluate(()=>{const button=document.querySelector('#mode [data-m="mean"]'),caption=button.querySelector('[data-i18n="modeMeaningShort"]'),icon=button.querySelector('svg.pb-search-mode-icon'),r=button.getBoundingClientRect(),range=document.createRange();if(!caption||!icon)return false;range.selectNodeContents(caption);const text=range.getBoundingClientRect(),lines=[...range.getClientRects()].filter(rect=>rect.width>0),ir=icon.getBoundingClientRect(),panel=document.getElementById('panel-search');return caption.textContent==='Bedeutung'&&button.getAttribute('aria-label')==='Bedeutungssuche'&&lines.length>0&&lines.every(rect=>Math.abs(rect.top-lines[0].top)<1)&&text.top>=r.top-1&&text.bottom<=r.bottom+1&&text.width<=button.clientWidth+1&&text.left>=r.left-1&&text.right<=r.right+1&&ir.left>=text.right&&ir.right<=r.right+1&&button.scrollWidth<=button.clientWidth+1&&panel.scrollWidth<=panel.clientWidth+1&&document.documentElement.scrollWidth<=innerWidth+1;});
+    largeSearch.push({width,height,font,fit});
+  }
+  ok('Phone, tablet portrait and DeX keep the short meaning label and trailing magnifier on one line at larger fonts: '+JSON.stringify(largeSearch),largeSearch.every(sample=>sample.fit));
+  await page.evaluate(()=>document.documentElement.style.fontSize='');
+  await page.setViewportSize({width:1280,height:900});
+  ok('The desktop search uses the compact mouse target while touch keeps its larger target',await page.evaluate(()=>{const mouse=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches,minimum=mouse?32:44,height=document.getElementById('q').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=(mouse?40:52)&&height>=minimum&&height<=minimum+2;}));
   for(const width of [280,320,390,650,768,1000,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
       await clickControl(page,`.tab[data-tab="${tab}"]`);
       ok(`${width}px: ${tab} fills available window without clipped panel content`,await page.evaluate(expected=>{const panel=document.querySelector('.panel.on'),r=panel.getBoundingClientRect();return panel.id==='panel-'+expected&&r.width>=innerWidth-40&&r.height>150&&r.bottom<=innerHeight&&panel.scrollWidth<=panel.clientWidth+1&&Math.abs(document.querySelector('.wrap').getBoundingClientRect().top)<2&&document.body.scrollTop===0&&document.documentElement.scrollWidth<=innerWidth;},tab));
-      if(tab==='search')ok(`${width}px: both complete search mode labels and filters fit`,await page.locator('.searchbox,.searchbox .toggle,.searchbox .toggle button,.filterbar,.filterbar select').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;})));
+      if(tab==='search')ok(`${width}px: the complete meaning switch and filters fit`,await page.locator('.searchbox,.searchbox .toggle,.searchbox .toggle button,.filterbar,.filterbar select').evaluateAll(nodes=>nodes.every(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&e.scrollWidth<=e.clientWidth+1;})));
       if(process.env.PB_CAPTURE_DESIGN==='1'&&['search','explorer'].includes(tab)){await page.mouse.move(width-2,898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/${tab}-${width}.png`});}
     }
   }
@@ -70,14 +106,31 @@ try {
     ok(`${lang}: native notice follows existing language selector`,await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes({de:'Direkte Mailverbindung',en:'Direct mail',ru:'Прямая почта',pl:'Bezpośrednia poczta'}[lang])));
     await page.setViewportSize({width:320,height:640});
     await page.evaluate(()=>document.documentElement.style.fontSize='20px');
-    ok(`${lang}: larger fonts keep the four main paths beside their icons inside a narrow window`,await page.locator('.native-toolbar-row .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{if(e.classList.contains('compact-icon-only'))return !e.querySelector('.compact-caption')&&e.title.trim()&&e.dataset.tab==='search';const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption'),cr=c.getBoundingClientRect(),ir=e.querySelector('.compact-icon').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&c.scrollWidth<=c.clientWidth+1;})));
-    await page.locator('.native-options>summary').click();
-    ok(`${lang}: all four additional views retain complete visible names in the app menu`,await page.locator('.native-options-panel .workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect(),c=e.querySelector('.compact-caption');return r.width>0&&r.height>=28&&r.left>=0&&r.right<=innerWidth&&c?.textContent.trim()&&c.scrollWidth<=c.clientWidth+1&&Boolean(e.querySelector('.compact-icon'));})));
-    for(const tab of ['dash','order','dupes','settings']){
-      await clickControl(page,`.native-options-panel .tab[data-tab="${tab}"]`);
+    const mainTargets=['search','intake','explorer','mail','dash','order','dupes'],mainReachability=[];
+    for(const tab of mainTargets){
+      const control=page.locator(`.main-pages .tab[data-tab="${tab}"]`);
+      await control.scrollIntoViewIfNeeded();await control.click();
       await page.waitForFunction(tab=>document.getElementById('panel-'+tab).classList.contains('on'),tab);
-      ok(`${lang}: ${tab} remains reachable through its menu entry`,!await page.locator('.native-options').evaluate(menu=>menu.open));
+      await control.scrollIntoViewIfNeeded();
+      mainReachability.push(await control.evaluate(e=>{
+        const r=e.getBoundingClientRect(),strip=e.parentElement.getBoundingClientRect(),icon=e.querySelector('.compact-icon'),caption=e.querySelector('.compact-caption');
+        const fits=r.left>=Math.max(0,strip.left)-1&&r.right<=Math.min(innerWidth,strip.right)+1&&r.width>=44&&r.height>=44;
+        let readable=Boolean(icon&&e.title.trim());
+        if(e.classList.contains('compact-icon-only'))readable=readable&&!caption&&e.dataset.tab==='search';
+        else if(caption&&icon){const cr=caption.getBoundingClientRect(),ir=icon.getBoundingClientRect();readable=readable&&Boolean(caption.textContent.trim())&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&caption.scrollWidth<=caption.clientWidth+1;}
+        else readable=false;
+        return {tab:e.dataset.tab,fits,readable,active:document.getElementById('panel-'+e.dataset.tab).classList.contains('on'),noPageOverflow:document.documentElement.scrollWidth<=innerWidth+1};
+      }));
     }
+    ok(`${lang}: all seven main views remain readable and directly reachable in the narrow navigation strip: `+JSON.stringify(mainReachability),await page.locator('.main-pages .tab').count()===7&&mainReachability.every(item=>item.fits&&item.readable&&item.active&&item.noPageOverflow));
+    await page.locator('.native-options>summary').click();
+    ok(`${lang}: the app menu has no duplicate view tabs`,await page.locator('.native-options-panel .tab').count()===0);
+    await page.keyboard.press('Escape');
+    const settingsName={en:'Settings',ru:'Настройки',pl:'Ustawienia',de:'Einstellungen'}[lang];
+    ok(`${lang}: the pinned settings gear and palette stay visible with accessible names and 44px targets`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"],#pb-palette-button').evaluateAll((nodes,name)=>nodes.length===2&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>=44&&r.height>=44&&r.left>=0&&r.right<=innerWidth&&Boolean(e.querySelector('svg'))&&Boolean(e.title.trim())&&e.title===e.getAttribute('aria-label')&&(e.dataset.tab!=='settings'||e.getAttribute('aria-label')===name);}),settingsName));
+    await clickControl(page,'.native-toolbar-quick .tab[data-tab="settings"]');
+    await page.locator('#panel-settings').waitFor({state:'visible'});
+    ok(`${lang}: the pinned gear opens the original settings view`,!await page.locator('.native-options').evaluate(menu=>menu.open));
     await page.evaluate(()=>document.documentElement.style.fontSize='');
   }
   // Klaus 2026-10-22: the diagnosis stays in the app but hidden; seven taps on the version line show it.

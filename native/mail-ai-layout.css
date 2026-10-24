@@ -1,0 +1,76 @@
+/* Writing help only: the mail form's full-width input rule must not stretch
+   its radio buttons. Keep the preview and privacy choices in the same order. */
+#pb-mail-ai.mail-ai-panel {
+  grid-template-columns:minmax(0,1fr);
+  min-width:0;
+  max-width:100%;
+  gap:8px;
+  padding:10px;
+}
+#pb-mail-ai>.mail-reader-actions {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 10px;
+  min-width:0;
+  margin:0;
+}
+#pb-mail-ai>.mail-reader-actions:has(>.mail-ai-mode) { gap:2px 16px; }
+#pb-mail-ai .mail-ai-mode {
+  display:inline-flex;
+  flex:0 1 auto;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+  max-width:100%;
+  min-height:44px;
+  margin:0;
+  padding:4px 0;
+  color:var(--ink);
+  font-size:.9rem;
+  line-height:1.4;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  cursor:pointer;
+}
+#pb-mail-ai .mail-ai-mode>input[type=radio] {
+  display:block;
+  flex:0 0 18px;
+  width:18px;
+  min-width:18px;
+  max-width:18px;
+  height:18px;
+  min-height:18px;
+  margin:0;
+  padding:0;
+  accent-color:var(--acc);
+}
+#pb-mail-ai .mail-ai-names {
+  min-width:0;
+  margin:0;
+  gap:6px;
+  font-size:.85rem;
+  line-height:1.4;
+}
+#pb-mail-ai textarea {
+  min-width:0;
+  min-height:4.5em;
+  margin:0;
+  padding:6px 8px;
+  font-size:.9rem;
+  line-height:1.45;
+}
+#pb-mail-ai .mail-ai-answer { min-height:8em; }
+#pb-mail-ai>.mail-muted,#pb-mail-ai-preview { margin:0; }
+#pb-mail-ai-preview { font-size:.9rem;line-height:1.5; }
+#pb-mail-ai>.mail-reader-actions>button {
+  min-height:44px;
+  max-width:100%;
+  padding:6px 9px;
+  font-size:.85rem;
+  line-height:1.4;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+}

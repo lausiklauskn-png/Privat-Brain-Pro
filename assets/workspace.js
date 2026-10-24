@@ -11,6 +11,7 @@
     choose:['Ablageordner wählen','Choose library folder','Выбрать папку','Wybierz folder'],pause:['Kopieren ausschalten','Turn off copying','Отключить копирование','Wyłącz kopiowanie'],
     copyFolder:['📁 Ordner in Ablage kopieren','📁 Copy folder to library','📁 Копировать папку','📁 Kopiuj folder do biblioteki'],linkFolder:['📁 Ordner verbinden','📁 Connect folder','📁 Подключить папку','📁 Połącz folder'],
     up:['↑ Übergeordneter Ordner','↑ Parent folder','↑ На уровень выше','↑ Folder nadrzędny'],all:['Alle Dateien','All files','Все файлы','Wszystkie pliki'],byName:['Name','Name','Имя','Nazwa'],byDate:['Datum','Date','Дата','Data'],bySize:['Größe','Size','Размер','Rozmiar'],orderName:['↕ A → Z','↕ A → Z','↕ А → Я','↕ A → Z'],orderNameR:['↕ Z → A','↕ Z → A','↕ Я → А','↕ Z → A'],orderDate:['↕ Neueste oben','↕ Newest first','↕ Сначала новые','↕ Najnowsze u góry'],orderDateR:['↕ Älteste oben','↕ Oldest first','↕ Сначала старые','↕ Najstarsze u góry'],orderSize:['↕ Größte oben','↕ Largest first','↕ Сначала большие','↕ Największe u góry'],orderSizeR:['↕ Kleinste oben','↕ Smallest first','↕ Сначала маленькие','↕ Najmniejsze u góry'],inContent:['🔎 auch im Inhalt','🔎 also in content','🔎 также в содержимом','🔎 także w treści'],
+    byType:['Typ','Type','Тип','Typ'],orderType:['↕ A → Z','↕ A → Z','↕ А → Я','↕ A → Z'],orderTypeR:['↕ Z → A','↕ Z → A','↕ Я → А','↕ Z → A'],
     find:['Was möchtest du finden?','What would you like to find?','Что вы хотите найти?','Co chcesz znaleźć?'],findHelp:['Durchsuche E-Mails, Dokumente und Bilder gemeinsam nach ihrer Bedeutung.','Search emails, documents and images together by meaning.','Ищите письма, документы и изображения вместе по смыслу.','Szukaj wiadomości, dokumentów i obrazów według znaczenia.'],
     noFolder:['Noch kein Ablageordner gewählt. Einzeln gewählte Dateien sind nur in dieser Sitzung verfügbar. Für dauerhaften Zugriff einen Ordner verbinden oder einen Ablageordner wählen.','No library folder selected. Individually selected files are available for this session only. Connect a folder or choose a library for lasting access.','Папка не выбрана. Отдельно выбранные файлы доступны только в этом сеансе. Подключите папку для постоянного доступа.','Nie wybrano folderu. Wybrane pliki są dostępne tylko w tej sesji. Połącz folder, aby zachować dostęp.'],
     unsupported:['Dieser Browser unterstützt keine direkte Ordnerablage. Dateiimport und Suche funktionieren; Dateien müssen nach einem Neustart erneut ausgewählt werden. Für lokale Ordner Chrome oder Edge auf einem unterstützten Desktop verwenden.','This browser does not support direct folder storage. File import and search work; select files again after restarting. For local folders use Chrome or Edge on a supported desktop.','Браузер не поддерживает прямую запись в папку. Импорт и поиск работают; после перезапуска выберите файлы снова. Для папок используйте Chrome или Edge на поддерживаемом компьютере.','Przeglądarka nie obsługuje zapisu do folderu. Import i wyszukiwanie działają; po ponownym uruchomieniu wybierz pliki jeszcze raz. Dostęp do folderów wymaga obsługiwanej przeglądarki Chrome lub Edge na komputerze.'],
@@ -39,12 +40,22 @@
     accessUnconfirmed:['Zugriff unbestätigt','access unconfirmed','доступ не подтверждён','dostęp niepotwierdzony'],
     collapseAll:['Alle zuklappen','Collapse all','Свернуть всё','Zwiń wszystko'],collapse:['Zuklappen','Collapse','Свернуть','Zwiń'],expand:['Aufklappen','Expand','Развернуть','Rozwiń'],
     hideTree:['Ordnerbaum ausblenden','Hide folder tree','Скрыть дерево папок','Ukryj drzewo folderów'],showTree:['Ordnerbaum zeigen','Show folder tree','Показать дерево папок','Pokaż drzewo folderów'],
-    openFolder:['Ordner öffnen','Open folder','Открыть папку','Otwórz folder'],topicsHead:['Kategorien (Vorschlag)','Categories (suggestion)','Категории (предложение)','Kategorie (propozycja)'],
+    openFolder:['Ordner öffnen','Open folder','Открыть папку','Otwórz folder'],categoriesHead:['Kategorien','Categories','Категории','Kategorie'],uncategorized:['Ohne Kategorie','Uncategorized','Без категории','Bez kategorii'],categoryHelp:['Kategorieansicht. Die Dateien bleiben an ihrem bisherigen Ort.','Category view. Files stay in their existing locations.','Вид по категории. Файлы остаются на своих местах.','Widok kategorii. Pliki pozostają w dotychczasowych miejscach.'],topicsHead:['Kategorien (Vorschlag)','Categories (suggestion)','Категории (предложение)','Kategorie (propozycja)'],
     doneClose:['Hinweis schließen','Close note','Закрыть','Zamknij'],documents:['Dateien','Files','Файлы','Pliki'],stored:['lokal verknüpft','linked locally','локальные ссылки','powiązane lokalnie']
   };
   function text(key) { return (words[key] || [key])[Math.max(0,['de','en','ru','pl'].indexOf(document.documentElement.lang.slice(0,2)))] || key; }
   const pages=new Set([...document.querySelectorAll('.tab[data-tab]')].map(t=>t.dataset.tab));
+  function syncSearchWelcome(){
+    const welcome=document.querySelector('#panel-search .search-welcome');
+    const hidden=Boolean(el('q').value.trim());
+    if(welcome&&welcome.hidden!==hidden)welcome.hidden=hidden;
+  }
+  // Dictation and saved searches also set the query without an input event.
+  // Update the introduction before the existing result renderer starts work.
+  const renderSearch=window.renderResults;
+  if(typeof renderSearch==='function')window.renderResults=function(){syncSearchWelcome();return renderSearch.apply(this,arguments);};
   function syncNavigation(){
+    syncSearchWelcome();
     const searching=el('panel-search').classList.contains('on'), key=searching?'search':'backSearch';
     const tab=document.querySelector('[data-tab="search"]');tab.textContent=text(key);
     document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',el('panel-'+t.dataset.tab)?.classList.contains('on')?'page':'false'));
@@ -163,15 +174,16 @@
   const contentBox=document.createElement('input');contentBox.type='checkbox';contentBox.id='explorerContent';
   const contentText=document.createElement('span');contentLabel.append(contentBox,contentText);orderBox.append(orderButton,contentLabel);
   el('explorerSort').after(orderBox);
+  const typeOption=document.createElement('option');typeOption.value='type';typeOption.dataset.ws='byType';typeOption.textContent=text('byType');el('explorerSort').append(typeOption);
   if(!el('explorerSort').dataset.chosen)el('explorerSort').value='date';
-  function orderLabel(){const k={name:'orderName',date:'orderDate',size:'orderSize'}[el('explorerSort').value]||'orderDate';orderButton.textContent=text(k+(explorerReverse?'R':''));orderButton.setAttribute('aria-pressed',String(explorerReverse));iconText(contentText,'search','🔎',text('inContent').replace(/^🔎\s*/,''));}
+  function orderLabel(){const k={name:'orderName',date:'orderDate',size:'orderSize',type:'orderType'}[el('explorerSort').value]||'orderDate';orderButton.textContent=text(k+(explorerReverse?'R':''));orderButton.setAttribute('aria-pressed',String(explorerReverse));iconText(contentText,'search','🔎',text('inContent').replace(/^🔎\s*/,''));}
   orderButton.onclick=()=>{explorerReverse=!explorerReverse;renderExplorer();};
   contentBox.onchange=()=>renderExplorer();
   function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value,reverse:explorerReverse,content:contentBox.checked};}
   function restoreExplorer(state){
     folderPath=String(state?.path||'');el('explorerFilter').value=String(state?.filter||'');
     revealSelectedPath=true;
-    el('explorerSort').value=['name','date','size'].includes(state?.sort)?state.sort:'date';
+    el('explorerSort').value=['name','date','size','type'].includes(state?.sort)?state.sort:'date';
     explorerReverse=state?.reverse===true;contentBox.checked=state?.content===true;renderExplorer();
   }
   const foldText=s=>String(s||'').toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss');
@@ -308,6 +320,43 @@
     return nodes;
   }
   function allFiles(n){const out={files:[...n.files],vault:[...n.vault]};for(const k of n.kids){const s=allFiles(k);out.files.push(...s.files);out.vault.push(...s.vault);}return out;}
+  // Use the same unique records as the explorer tree, rather than counting
+  // duplicate source locations as additional files in the overview.
+  function categoryViews(all){
+    const groups=new Map(),seen=new Set();
+    for(const entry of all){
+      if(seen.has(entry.r.hash))continue;seen.add(entry.r.hash);
+      const category=String(entry.r.category||'');
+      if(!groups.has(category))groups.set(category,[]);groups.get(category).push(entry);
+    }
+    return [...groups].map(([category,list])=>({key:'category:'+encodeURIComponent(category),label:category||text('uncategorized'),category:true,count:list.length,files:list,match:r=>String(r.category||'')===category})).sort((a,b)=>a.label.localeCompare(b.label));
+  }
+  function overviewSummary(){
+    const nodes=buildModel(entries()),root=nodes.get(''),all=allFiles(root);
+    const sizeOf=value=>Number.isSafeInteger(value)&&value>=0?value:null;
+    function sum(files,vault=[]){
+      let bytes=0,unknownSizes=0,localCount=0,localBytes=0,localUnknownSizes=0;
+      for(const entry of files){
+        const size=sizeOf(entry.r.size);
+        if(size!==null&&Number.isSafeInteger(bytes+size))bytes+=size;else unknownSizes++;
+        const local=window.PBOriginals?.statusFor?.(entry.r.hash)==='local'||(!window.PBOriginals?.statusFor&&window.PBOriginals?.stored?.has(entry.r.hash));
+        if(local){localCount++;if(size!==null&&Number.isSafeInteger(localBytes+size))localBytes+=size;else localUnknownSizes++;}
+      }
+      for(const entry of vault){const size=sizeOf(entry.size);if(size!==null&&Number.isSafeInteger(bytes+size))bytes+=size;else unknownSizes++;}
+      return {count:files.length+vault.length,knownBytes:bytes,unknownSizes,localCount,localBytes,localUnknownSizes};
+    }
+    const cleanLabel=node=>{const prefix=(node.glyph||'')+' ';return node.glyph&&node.label.startsWith(prefix)?node.label.slice(prefix.length):node.label;};
+    const folders=[];
+    const walk=(node,depth)=>{for(const child of node.kids){if(child.tally.n){const contents=allFiles(child);folders.push({path:child.path,parent:child.parent,label:cleanLabel(child),icon:child.iconKey||'folder',depth,...sum(contents.files,contents.vault)});walk(child,depth+1);}}};
+    walk(root,0);
+    const categories=categoryViews(all.files).map(view=>({path:view.key,label:view.label,...sum(view.files)}));
+    const topics=(window.PBExplorerTopics?.views?.()||[]).map(view=>{
+      const definition=window.PBExplorerTopics.DEFS?.find(item=>item.key===view.key),prefix=definition?.icon+' ';
+      return {path:'topic:'+view.key,label:prefix&&view.label.startsWith(prefix)?view.label.slice(prefix.length):view.label,...sum(all.files.filter(entry=>view.match(entry.r)))};
+    });
+    const snapshot=window.PBOriginals?.snapshot?.();
+    return {total:sum(all.files,all.vault),folders,categories,topics,originalsReady:snapshot?.ready===true,originalsError:snapshot?.error===true};
+  }
   function tallyText(t){
     const P=window.PBCheck?.words||(k=>k);
     const parts=[t.n+' '+text(t.n===1?'oneFile':'files')];
@@ -385,7 +434,7 @@
     const where=window.PBRecordStatus?'':window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog');
     const from=kind==='attach'?'📎 '+text('fromMail')+' '+senderLabel(sender).slice(3):kind==='mail'?text('from')+' '+tidy(e.r.mail?.from||e.path.split('/')[1]||'?'):'';
     meta.textContent=[from,kind==='mail'||kind==='attach'?'':e.path.split('/').slice(0,-1).join('/'),fmtKB(e.r.size||0),date,where].filter(Boolean).join(' · ');
-    info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
+    info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view&&!view.category)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
     return row;
   }
   let lastModel=null;
@@ -393,13 +442,16 @@
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
     const nodes=buildModel(all);lastModel=nodes;
-    const topics=window.PBExplorerTopics, views=topics?.views()||[];
-    const view=folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):null;
+    const topics=window.PBExplorerTopics, views=topics?.views()||[], categories=categoryViews(all);
+    const view=folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):categories.find(v=>v.key===folderPath)||null;
     if(!view){const real=resolvePath(nodes,folderPath);if(real!==folderPath){folderPath=real;revealSelectedPath=true;}}
     const here=view?null:nodes.get(folderPath);
     if(here&&revealSelectedPath)for(const n of chain(nodes,folderPath))openNodes.add(n.path);
     revealSelectedPath=false;
     treeView(nodes,tree);
+    // The existing catalog categories are direct explorer views as well.
+    if(categories.length)tree.append(heading(text('categoriesHead')));
+    for(const category of categories){const b=button('',()=>openFolder(category.key));iconText(b,'folder','📁',category.label+' ('+category.count+')');b.dataset.category=category.key;b.setAttribute('aria-current',folderPath===category.key?'location':'false');tree.append(b);}
     // Categories (native): views over the catalog, nothing is moved. Path "topic:<key>".
     if(views.length)tree.append(heading(text('topicsHead')));
     for(const v of views){const b=button(v.label+' ('+v.count+')',()=>openFolder('topic:'+v.key));b.dataset.topic=v.key;b.setAttribute('aria-current',folderPath==='topic:'+v.key?'location':'false');tree.append(b);}
@@ -411,10 +463,12 @@
     el('explorerUp').disabled=!folderPath;
     orderLabel();
     if(!folderPath)topics?.notice(files);
-    if(view)topics.head(files,view.key);
+    if(view&&!view.category)topics.head(files,view.key);
+    else if(view){const help=document.createElement('p');help.className='hint';help.textContent=text('categoryHelp');files.append(help);}
     const words=foldText(el('explorerFilter').value).split(/\s+/).filter(Boolean);
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
-    const order=(a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):a.r.name.localeCompare(b.r.name));
+    const typeKey=r=>String(r.ext||String(r.name||'').match(/\.([^./]+)$/)?.[1]||r.type||'').replace(/^\./,'').trim().toLocaleLowerCase();
+    const order=(a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):sort==='type'?(typeKey(a.r).localeCompare(typeKey(b.r))||a.r.name.localeCompare(b.r.name)):a.r.name.localeCompare(b.r.name));
     const extra=window.PBExplorerExtra;
     if(here?.kind==='mail')extra?.head?.(files);
     // "Alle Dateien" holds everything; a search looks through the whole folder below; otherwise one level.
@@ -447,6 +501,7 @@
     el('searchLocalCount').textContent=entries().filter(e=>e.dirId || SESSION_FILES.has(e.r.hash) || window.PBOriginals?.stored.has(e.r.hash)).length+' '+text('stored');
     renderExplorer();
     window.PBOriginals?.notice();
+    window.dispatchEvent(new Event('pb-workspace-refresh'));
   }
   el('chooseLibrary').onclick=chooseLibrary;
   el('pauseLibrary').onclick=()=>{if(signing)return;library=null;localStorage.setItem('pb_library_enabled','0');refresh();};
@@ -458,7 +513,7 @@
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('pb-originals-change',refresh);
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind};
+  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,overview:overviewSummary};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();

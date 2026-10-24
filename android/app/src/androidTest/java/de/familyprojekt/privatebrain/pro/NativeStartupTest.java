@@ -162,7 +162,7 @@ public class NativeStartupTest {
 
     @Test public void bundledSearchAndNativeBridgeWork() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q') && document.querySelectorAll('.main-pages .tab').length === 4)");
+            awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q') && document.querySelectorAll('.main-pages .tab').length === 7 && document.querySelector('.native-toolbar-quick [data-tab=settings]') && document.querySelector('#pb-palette-button'))");
             scenario.onActivity(activity -> assertEquals("Private Brain Pro",
                 activity.getApplicationInfo().loadLabel(activity.getPackageManager()).toString()));
             // Since .28 a small version tag (v1.0.28) stands next to the name (Klaus 2026-10-22).

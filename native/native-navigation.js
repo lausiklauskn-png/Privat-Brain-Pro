@@ -26,7 +26,7 @@
   const body=make('div','native-file-body');head.append(close,title,external,share);viewer.append(head,body);document.body.append(viewer);
   const files=new Map(), snapshots=new Map();
   let sequence=0, current=0, maximum=0, active=null, applying=false, pending=false, generation=0, objectURL='', focusBefore=null,pdfCleanup=null,handoffJob=null;
-  const page=()=>document.querySelector('.main-pages .tab.on,.workspace-tools .tab.on')?.dataset.tab||'search';
+  const page=()=>document.querySelector('.main-pages .tab.on,.native-toolbar-quick .tab.on,.workspace-tools .tab.on')?.dataset.tab||'search';
   let route={page:page(),explorer:workspace.explorerState(),viewer:null,lightbox:null};
   const originalLightbox=window.openLightbox,originalClose=window.closeLightbox;
   const urlFor=r=>location.pathname+location.search+(r.page==='search'?'':'#'+r.page);

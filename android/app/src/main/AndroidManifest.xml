@@ -5,6 +5,11 @@
     <!-- Large list downloads wait for Wi-Fi (unmetered) unless the user starts them. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Only this companion app is visible for the explicit tool-menu launch. -->
+    <queries>
+        <package android:name="de.familyprojekt.workflowpdf.pro" />
+    </queries>
+
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"

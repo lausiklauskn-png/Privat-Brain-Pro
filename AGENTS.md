@@ -1,5 +1,56 @@
 # Private Brain Pro — laufender Auftrag
 
+Neueste .34-Steuerung: echte Einstellungen vor Erklärungen; gewöhnliche Hilfe
+hinter einheitlichem Linien-i, Themenkarte entfällt zugunsten der Palette.
+Gehirn-Emoji entfernen, unsichtbare Tresoraktionen respektieren. Maus/DeX bei
+breitem Querformat 32-Pixel-Steuerungen, Touch/Hochformat 44 Pixel. Suchsprache
+als Codebutton direkt im Suchfeldbereich; alle elf bisherigen Sprachen erhalten.
+Die ergänzten Änderungen brauchen erneut gemeinsame Browser- und CI-Abnahme;
+PR #80 ist noch nicht übernommen, .34 noch nicht veröffentlicht.
+
+- Fortsetzung für Android .34 (24.10.2026): Die native Oberfläche wird anhand
+  von Klaus' Screenshots gestrafft; rechts ist die V3-Referenz, links die native
+  App. Das V3-Repo bleibt unangetastet. Ein einzelner kleiner Schalter zeigt
+  „Bedeutung“ und dahinter eine SVG-Lupe, ohne zusätzliches Fragezeichen;
+  Hervorhebung und `aria-pressed` zeigen An/Aus, zugänglicher Name bleibt
+  „Bedeutungssuche“. „Namenssuche“ als Bedienwort entfällt. Begrüßung und
+  Einführung verschwinden bei Suchtext; der Suchkasten wird flacher. Kein
+  automatischer Wechsel zu Einstellungen bei fehlendem Bedeutungsmodell.
+  Teilen im Dateikopf als bekanntes Android-Liniensymbol; Öffnen mit Text und
+  schlichtem externen Symbol. Sieben Hauptwege direkt: Suche, Hinzufügen,
+  Dateien, Mail, Übersicht, Kategorien und Doppelte. Einstellungen als direktes
+  Zahnrad und Farbpalette separat erreichbar; Themewechsel sofort in der
+  aktuellen Ansicht. Ordner-/Kategorieübersicht mit echten Explorerzahlen und
+  bekannten Bytes; lokale Originalkopien getrennt, keine Gerätespeicheranalyse
+  behaupten. Generische Einführungskästen und die zusätzliche Überschrift
+  „Dateien hinzufügen“ entfallen; Importhilfe hinter Info, tatsächliche
+  Ablage-/Verschlüsselungszustände und Aktionen bleiben sichtbar. Explorer hat
+  einen Sortieren-Button für Name, Datum, Größe, Typ und Richtung. Schreibhilfe
+  ohne zerstückelte Wörter oder übergroße Radiogruppen.
+  Echte Android-Ordnerbereinigung für Doppelte ist implementiert und noch in
+  Prüfung: neuer SAF-Ordnerzugriff mit Lese-/Schreibrecht, tatsächliche SHA-256-
+  Prüfung, konkrete Auswahl und Bestätigung, mindestens eine unmittelbar
+  geprüfte Kopie bleibt erhalten. Bestehende Leseimporte erhalten keine neuen
+  Rechte; Katalogverweise und App-Originalkopien bleiben separat. Keine Löschung
+  von Benutzerdaten während der Entwicklung. Unter Windows fehlt dieser native
+  Löschweg. Drei neue native Löschtests und ein Launcher-Test ergeben insgesamt
+  60 erforderliche native Tests; deren CI-Ausführung steht noch aus.
+  Vier freigeschaltete Originalzugänge: native Workflow PDF Pro (feste Paket-ID,
+  fehlend → ausdrücklicher offizieller Installationsweg), Kim-Sync, Datei-Post,
+  BookLedgerPro im Browser. Die Menüsperre schützt diese App-Zugänge, keine
+  externen Quellen/Webseiten; keine AES-Programmnutzlast behaupten. Studio-AES/
+  Schnorr unverändert, zehn Werkzeug-IDs. Öffentlicher Herausgeber-Schlüssel
+  noch nicht konfiguriert; Käufergerätefreischaltung deshalb noch offen.
+  [Werkzeugwege und Nachweise](docs/design/umbau-2026-10-24/WERKZEUGE-34.md).
+  Fokusprüfungen sind teilweise bestanden; die abschließende gemeinsame
+  Browser-/Android-/Windows-Abnahme und signierte Updateprobe stehen noch aus.
+  Direkte externe Webproben waren per Netzrichtlinie blockiert; keine aktuelle
+  Erreichbarkeit behaupten. [Umfang](docs/design/umbau-2026-10-24/SUCHE-34.md).
+  .34 ist in Arbeit, noch nicht veröffentlicht; öffentlicher APK-Download bleibt
+  .33. Lokale OCR aus .33 erhalten. Der Freibrief gilt für Umsetzung, Prüfungen,
+  Merge und signiertes Update .33 → .34; keine neue Freigabe verlangen und die
+  erledigte .33-Veröffentlichung nicht erneut auslösen.
+
 - Android .33 ist veröffentlicht (24.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk),
   VersionCode 33, Quelle `457b20e08193a8383761ab2542dcd145f6f34b56`, PR #79 übernommen.
   Echte lokale OCR mit Tesseract.js 7.0.0 und DE/EN/RU/PL für Bilder/Scan-PDFs,

@@ -83,7 +83,7 @@ async function accessibleSeparators(page,selector,count){
 try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   const context=await browser.newContext({viewport:{width:1920,height:1080},hasTouch:true}),{errors,external}=await installFixture(context),page=await context.newPage();
-  await ready(page);await seed(page);await navigateTo(page,'search');await page.locator('[data-m=name]').click();await page.locator('#q').fill('pane query survives');
+  await ready(page);await seed(page);await navigateTo(page,'search');if(await page.locator('#mode [data-m=mean]').getAttribute('aria-pressed')==='true')await page.locator('#mode [data-m=mean]').click();await page.locator('#q').fill('pane query survives');
   await navigateTo(page,'explorer');await page.locator(selector.explorer).waitFor({state:'visible'});await settle(page);
   const explorer=page.locator(selector.explorer),initialTree=await width(page,'#explorerTree'),initialFiles=await width(page,'#explorerFiles'),state=await page.evaluate(()=>PBWorkspace.explorerState());
   ok('Explorer has an accessible keyboard-operated separator',await accessibleSeparators(page,selector.explorer,1));

@@ -17,8 +17,8 @@ async function menuControl(page,selector){
   }
   await target.click();
 }
-async function fixture(ui='de',preference=null){
-  const context=await browser.newContext({viewport:{width:1280,height:900},locale:'en-US'}),page=await context.newPage(),errors=[];
+async function fixture(ui='de',preference=null,options={}){
+  const context=await browser.newContext({viewport:{width:1280,height:900},locale:'en-US',...options}),page=await context.newPage(),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',async route=>{
     const url=route.request().url();if(!url.startsWith(origin))return route.fulfill({status:404,body:''});
@@ -46,28 +46,41 @@ async function fixture(ui='de',preference=null){
   await page.locator('#pb-search-language').waitFor();
   return{context,page,errors};
 }
+async function chooseQuick(page,code){
+  const menu=page.locator('#pb-input-language-quick');if(!await menu.evaluate(element=>element.open))await page.locator('#pb-search-language').click();
+  await page.locator(`#pb-search-language-menu [data-input-language="${code}"]`).click();
+}
 try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   let{context,page,errors}=await fixture('pl');
   ok('First use takes the chosen interface language once, instead of the English browser locale',await page.evaluate(()=>PBInputLanguage.current()==='pl'&&PBInputLanguage.locale()==='pl-PL'&&navigator.language==='en-US'));
   ok('The initial independent preference is saved',await page.evaluate(()=>localStorage.getItem('pb_input_language_v1')==='pl'));
   const quick=page.locator('#pb-search-language');
-  await quick.selectOption('tr');
+  ok('Only the current code appears inside the search row before the meaning switch',await quick.innerText()==='PL'&&await page.evaluate(()=>{const menu=document.getElementById('pb-input-language-quick');return menu.parentElement.classList.contains('searchbox')&&menu.nextElementSibling?.id==='mode'&&!menu.querySelector('label,select');}));
+  ok('The compact code still names the actual selected language accessibly',(await quick.getAttribute('aria-label')).includes('Polski')&&(await quick.getAttribute('title')).includes('Polski'));
+  await chooseQuick(page,'tr');
   ok('The quick selector changes actual recognition and input language',await page.evaluate(()=>PBInputLanguage.locale()==='tr-TR'&&document.getElementById('q').lang==='tr'&&document.getElementById('q').spellcheck));
   ok('The settings selector stays in sync with the quick selector',await page.locator('#pb-input-language-setting').inputValue()==='tr');
+  ok('Choosing a language closes the menu and updates its visible code',await quick.innerText()==='TR'&&!await page.locator('#pb-input-language-quick').evaluate(element=>element.open));
+  await quick.click();
+  await page.waitForFunction(()=>document.getElementById('pb-input-language-quick').open&&document.getElementById('pb-search-language').getAttribute('aria-expanded')==='true');
+  ok('The menu identifies the selected language',await page.locator('#pb-search-language-menu [data-input-language="tr"]').getAttribute('aria-pressed')==='true'&&await quick.getAttribute('aria-expanded')==='true');
+  await page.keyboard.press('Escape');
+  ok('Escape closes the language menu and returns focus to its code',!await page.locator('#pb-input-language-quick').evaluate(element=>element.open)&&await quick.evaluate(element=>element===document.activeElement));
   await page.locator('#q').fill('');await page.locator('#mic').click();
   await page.waitForFunction(()=>fixtureSpeechCalls.length===1&&document.getElementById('q').value.includes('Türkçe arama'));
   ok('The search microphone actually requests the selected Turkish locale',await page.evaluate(()=>fixtureSpeechCalls[0].language==='tr-TR'));
   await menuControl(page,'[data-lang="en"]');
-  await page.waitForFunction(()=>document.documentElement.lang==='en'&&document.querySelector('#pb-input-language-quick label')?.textContent==='I speak');
+  await page.waitForFunction(()=>document.documentElement.lang==='en'&&document.getElementById('pb-search-language')?.getAttribute('aria-label')==='Search and dictation language: Türkçe');
   ok('Changing interface language does not replace the spoken/input preference',await page.evaluate(()=>PBInputLanguage.current()==='tr'&&document.getElementById('q').lang==='tr'&&localStorage.getItem('pb_input_language_v1')==='tr'));
   await page.reload();await page.waitForFunction(()=>window.PBInputLanguage&&PBInputLanguage.current()==='tr');
   ok('The independent preference survives restarting in a different interface language',await page.evaluate(()=>document.documentElement.lang==='en'&&PBInputLanguage.locale()==='tr-TR'));
   await navigateTo(page,'settings');
   await page.locator('#pb-input-language-setting').selectOption('fr');
-  ok('The settings control changes the search selector and exact native locale',await quick.inputValue()==='fr'&&await page.evaluate(()=>PBInputLanguage.locale()==='fr-FR'));
-  const choices=await quick.locator('option').evaluateAll(options=>options.map(o=>o.value));
+  ok('The settings control changes the search code and exact native locale',await quick.innerText()==='FR'&&await page.evaluate(()=>PBInputLanguage.locale()==='fr-FR'));
+  const choices=await page.locator('#pb-search-language-menu [data-input-language]').evaluateAll(options=>options.map(option=>option.dataset.inputLanguage));
   ok('All eleven offered input languages are available without changing the interface',JSON.stringify(choices)===JSON.stringify(['de','en','ru','pl','tr','ar','uk','es','fr','it','pt']));
+  ok('The menu and Settings share the complete existing language list',JSON.stringify(choices)===JSON.stringify(await page.locator('#pb-input-language-setting option').evaluateAll(options=>options.map(option=>option.value))));
   ok('An unsupported preference is rejected without replacing the current choice',await page.evaluate(()=>PBInputLanguage.choose('invalid')===false&&PBInputLanguage.current()==='fr'&&localStorage.getItem('pb_input_language_v1')==='fr'));
   for(const[ui,title]of[['de','Welche Sprache sprichst du?'],['en','Which language do you speak?'],['ru','На каком языке вы говорите?'],['pl','W jakim języku mówisz?']]){
     await menuControl(page,'[data-lang="'+ui+'"]');
@@ -76,10 +89,16 @@ try{
   }
   await navigateTo(page,'search');
   for(const width of[320,412,768,1024,1280,1920,2560]){
-    await page.setViewportSize({width,height:width<1100?Math.round(width*1.5):900});
-    ok(width+'px: the quick language selector stays inside the search window',await quick.evaluate(select=>{const r=select.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=innerWidth+1&&select.closest('.pb-input-language-quick').scrollWidth<=select.closest('.pb-input-language-quick').clientWidth+1;}));
+    let fits=true;
+    for(const size of[20,24]){
+      await page.setViewportSize({width,height:width<1100?Math.round(width*1.5):900});await page.evaluate(size=>document.documentElement.style.fontSize=size+'px',size);
+      await quick.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      fits&&=await quick.evaluate(button=>{const rect=button.getBoundingClientRect(),popup=document.getElementById('pb-search-language-menu'),bounds=popup.getBoundingClientRect(),box=button.closest('.searchbox'),target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+2&&rect.width>=target&&rect.left>=0&&rect.right<=innerWidth+1&&bounds.left>=0&&bounds.right<=innerWidth+1&&bounds.top>=0&&bounds.bottom<=innerHeight+1&&popup.scrollWidth<=popup.clientWidth+1&&box.scrollWidth<=box.clientWidth+1&&(innerWidth>650||box.getBoundingClientRect().height<=100);});
+      await quick.click();
+    }
+    ok(width+'px: the code and complete language menu fit at 20/24 px without a separate explanation row',fits);
   }
-  await page.setViewportSize({width:1280,height:900});
+  await page.setViewportSize({width:1280,height:900});await page.evaluate(()=>document.documentElement.style.fontSize='20px');
   const rawQuery='командировка в Турцию';
   await page.evaluate(async()=>{
     const content='Reiseunterlagen und Besprechung in Istanbul',t=tokens(content),hash='8'.repeat(64);
@@ -95,7 +114,7 @@ try{
     const secret=document.createElement('input');secret.type='password';secret.id='language-secret';document.getElementById('panel-search').append(secret);PBInputLanguage.applyField(secret);
   });
   ok('New text fields receive the selected input language without rewriting their contents',await page.locator('#language-fixture').getAttribute('lang')==='fr'&&await page.locator('#language-fixture').inputValue()==='Preserved text');
-  await quick.selectOption('ar');
+  await chooseQuick(page,'ar');
   ok('Changing to Arabic updates registered fields and permits natural text direction',await page.locator('#language-fixture').getAttribute('lang')==='ar'&&await page.locator('#language-fixture').getAttribute('dir')==='auto'&&await page.evaluate(()=>PBInputLanguage.locale()==='ar-SA'));
   ok('Language changes preserve the current query and secret fields stay untouched',await page.locator('#q').inputValue()===rawQuery&&await page.locator('#language-secret').getAttribute('lang')===null);
   ok('Secret ancestors and autocomplete token lists cannot opt a child field into language processing',await page.evaluate(()=>{
@@ -106,10 +125,19 @@ try{
   }));
   await page.locator('#language-fixture').evaluate(field=>field.dataset.pbInputLanguage='uk');
   ok('An explicit field language can request its own native locale',await page.locator('#language-fixture').evaluate(field=>PBInputLanguage.locale(field))==='uk-UA');
+  await quick.focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('End');await page.keyboard.press('Enter');
+  ok('Keyboard navigation can select a language through the same preference API',await quick.innerText()==='PT'&&await page.evaluate(()=>PBInputLanguage.current()==='pt'&&PBInputLanguage.locale()==='pt-PT'));
+  await quick.click();await page.locator('#q').click();
+  ok('Clicking the query closes the language menu without changing its text',!await page.locator('#pb-input-language-quick').evaluate(element=>element.open)&&await page.locator('#q').inputValue()===rawQuery);
   ok('Preference, query and language changes produce no unhandled app errors',errors.length===0);
   await context.close();
   ({context,page,errors}=await fixture('ru','invalid'));
   ok('An invalid saved preference falls back to the chosen interface language once',await page.evaluate(()=>PBInputLanguage.current()==='ru'&&PBInputLanguage.locale()==='ru-RU'&&localStorage.getItem('pb_input_language_v1')==='ru'));
+  await context.close();
+  ({context,page,errors}=await fixture('de','en',{viewport:{width:1280,height:800},hasTouch:true}));
+  ok('A wide touch-only device retains a 44 px language code target',await page.locator('#pb-search-language').evaluate(button=>!matchMedia('(any-pointer:fine)').matches&&button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44));
+  await chooseQuick(page,'ru');
+  ok('Touch menu selection uses the same saved locale and field language',await page.evaluate(()=>PBInputLanguage.current()==='ru'&&PBInputLanguage.locale()==='ru-RU'&&document.getElementById('q').lang==='ru'&&localStorage.getItem('pb_input_language_v1')==='ru')&&errors.length===0);
   await context.close();
   console.log(`${count} input-language checks passed (native speech and embedding adapter simulated; no model-quality or device-recognizer claim).`);
 }finally{await browser?.close();}

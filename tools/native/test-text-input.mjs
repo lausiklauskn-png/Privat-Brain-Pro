@@ -52,7 +52,7 @@ try{
     await idbPut('catalog',r);CATALOG.push(r);HASHSET.add(r.hash);rebuildIndex();refreshAll();
     window.abortNextTagPut=()=>{const original=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){const request=original.apply(this,args);if(this.name==='catalog'){IDBObjectStore.prototype.put=original;request.addEventListener('success',()=>this.transaction.abort(),{once:true});}return request;};};
   });
-  await page.locator('[data-m="name"]').click();await page.locator('#q').fill('Tagprobe');
+  if(await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed')==='true')await page.locator('#mode [data-m="mean"]').click();await page.locator('#q').fill('Tagprobe');
   const card=page.locator('#results .card[data-hash="'+'a'.repeat(64)+'"]');
   await card.locator('[data-tagadd]').click();await dialog.locator('.pb-dictate').waitFor();
   await dialog.locator('.pb-dictate').click();await page.waitForFunction(()=>document.getElementById('pb-text-input-value')?.value==='GesprochenesTag');

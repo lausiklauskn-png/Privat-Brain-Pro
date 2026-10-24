@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProVaultPlugin.class);
         registerPlugin(ProProtectPlugin.class);
         registerPlugin(ProLinksPlugin.class);
+        registerPlugin(ProDuplicatesPlugin.class);
         registerPlugin(ProSpeechPlugin.class);
         registerPlugin(ProSharePlugin.class);
         registerPlugin(ProSemanticPlugin.class);
