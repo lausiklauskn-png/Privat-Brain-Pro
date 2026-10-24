@@ -1,13 +1,16 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android .31 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
+**[Android .32 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
 [Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
-Android .31 ergänzt automatische lokale Mailübersetzung unter dem Original
-(DE/EN/RU/PL), unabhängig wählbare Eingabesprache, Mikrofone an Texteingaben und
-automatisches Telefon-/Tablet-Hochformat. DeX-Fenster sind berücksichtigt; eine
-Messung auf einem echten Samsung-DeX-Gerät steht aus. Vier Farbthemen und die
-kompakte Mailbedienung bleiben erhalten. [Übersetzung einrichten](docs/NATIVE-LOKALE-UEBERSETZUNG.md).
+Android .32 ergänzt einheitliche Liniensymbole, verstellbare Datei-/Mailbereiche,
+Erklärungen hinter Info-Buttons und sofortige Wartepunkte. Öffnen und Teilen
+wartet nicht mehr hinter PDF-Seitenberechnungen; gespeicherte PDFs vermeiden eine
+unnötige vollständige Bridgekopie. [Bedienung und Nachweise](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
+Automatische lokale Mailübersetzung (DE/EN/RU/PL), unabhängige Eingabesprache,
+Mikrofone und automatisches Telefon-/Tablet-Hochformat aus .31 bleiben erhalten.
+Eine Messung auf einem echten Samsung-DeX-Gerät steht aus.
+[Übersetzung einrichten](docs/NATIVE-LOKALE-UEBERSETZUNG.md).
 Themenwahl: **☰ → Einstellungen → Erscheinungsbild**.
 [Umbau, Vorschläge und Prüfnachweise](docs/design/umbau-2026-10-24/README.md).
 Windows-Download, Installation und Übergabe an Claude Code:

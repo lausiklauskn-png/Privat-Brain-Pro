@@ -1,16 +1,29 @@
 # Private Brain Pro — laufender Auftrag
 
-- Fortsetzung für Android .32 (24.10.2026): Klaus zeigt .31 auf Samsung DeX.
-  Verbliebene System-Emojis durch konsequente Liniensymbole ersetzen, Mailicon
-  neben Titel/Betreff statt eigener Zeile. Datei-/Mailbereiche per Maus/Touch
-  und Tastatur verstellbar, Breiten merken, kleine Fenster einspaltig halten.
-  Lange Erklärungen hinter Info-Buttons; Fortschritt und Fehler offen lassen.
-  Auf langsame Reaktion besonders beim Teilen mit sofortigen drehenden Punkten
-  und tatsächlicher Optimierung reagieren. Keine Tab-S6-Zeitmessung behaupten.
-  Native Originalintegrität/Readonly-Provider bleiben Pflicht. [Umfang und Stand](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
-  .32 ist in Arbeit; .31 bleibt bis zum geprüften Release der aktuelle Download.
-  Freibrief gilt weiterhin: vollständige Prüfungen, Übernahme und signiertes
-  Update .31 → .32 eigenständig abschließen; keine neue Freigabe verlangen.
+- Fortsetzung für Android .33 (24.10.2026): Klaus meldet fehlende Texterkennung
+  in Bildern und eingescannten Seiten. Echte lokale OCR mitliefern und in
+  Suche und Prüfung einbinden; DE/EN/RU/PL einschließlich kyrillischer Suche.
+  Keine Cloudübertragung als stillen Ersatz. Originalbytes erhalten, unlesbare
+  oder nur teilweise gelesene Seiten ehrlich kennzeichnen, langsame Geräte und
+  Abbruch berücksichtigen. Umsetzung und echte Offlineprüfungen sind in Arbeit;
+  .32 ist der aktuelle veröffentlichte Download. Bestehender Freibrief gilt für
+  vollständige Prüfung, Merge und signiertes Update .32 → .33.
+
+- Android .32 ist veröffentlicht: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk), VersionCode 32,
+  Quelle `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, übernommener PR #78.
+  Einheitliche sichtbare Liniensymbole, Briefsymbol neben Betreff, verstellbare
+  Datei-/Mailbereiche, Info-Erklärungen, sofortige Wartepunkte und getrennte
+  native Warteschlange für Öffnen/Teilen. [Bedienung](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
+  Main Android `40116256712`, Windows `40116256687`, Signierung `40116256695`
+  und Release `40117059939` vollständig grün. 55 native Tests ohne Fehler/Skips,
+  einschließlich unabhängiger Teilen-Warteschlange mit echter Dateiprüfung.
+  Signiertes Update .31 → .32 bestanden; öffentliche APK unabhängig geladen:
+  7.529.379 Bytes, SHA-256 `632aada11ed73f61618e737c3743768b2d4884c762ab1ea7f384c5e305c747b5`.
+  24 gepackte UI-/Worker-/Lizenzdateien und zwei Explorer-/Mailressourcen bytegleich,
+  Modulverdrahtung, Modellpins und native Warteschlange geprüft.
+  [Nachweis](docs/design/umbau-2026-10-24/android-preview32-pruefung.json).
+  Nicht dieselbe Version erneut veröffentlichen. Physisches Samsung DeX/Tab S6
+  ist weiterhin nicht geprüft; Windows bleibt als Download bei .29.
 
 - Android .31 ist veröffentlicht: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk), VersionCode 31,
   Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, übernommener PR #77.
@@ -86,7 +99,7 @@
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
-- Android ist bei `1.0.0-preview.31`, Code 31 veröffentlicht; die Windows-Ausgabe
+- Android ist bei `1.0.0-preview.32`, Code 32 veröffentlicht; die Windows-Ausgabe
   bleibt bei `.29`. Originale Android-Identität unverändert. Der finale
   Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss

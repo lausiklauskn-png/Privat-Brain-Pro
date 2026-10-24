@@ -6,8 +6,12 @@ Bildaufnahmen; keine neue Prüfung an echten Geräten oder Mailkonten.
 **Fortschritt danach:** Der erste native Designumbau wurde mit Klaus' Freibrief
 umgesetzt und als signierte Android-Version .30 veröffentlicht. Die veröffentlichte
 .31 ergänzt getrennte Original-/Prüfanzeigen, automatische lokale Mailübersetzung,
-unabhängige Eingabesprache, Mikrofone und Tablet-/DeX-Hochformat. Der fachliche
-Abgleich unten beschreibt den Ausgangsstand. [Umsetzung und Release-Nachweise](design/umbau-2026-10-24/README.md).
+unabhängige Eingabesprache, Mikrofone und Tablet-/DeX-Hochformat. Die veröffentlichte
+.32 ergänzt konsequente Liniensymbole, verstellbare Datei-/Mailbereiche, kurze
+Erklärungen hinter Info-Buttons und sofortige Wartepunkte. Öffnen/Teilen läuft
+unabhängig von PDF-Seitenberechnungen; unnötige vollständige Bridgekopien
+verfügbarer PDFs entfallen. Echte lokale OCR für Bilder und Scans ist anschließend
+beauftragt und als .33 in Arbeit. Der fachliche Abgleich unten beschreibt den Ausgangsstand. [Umsetzung und Release-Nachweise](design/umbau-2026-10-24/README.md).
 
 ## Wofür die App gebaut wurde
 

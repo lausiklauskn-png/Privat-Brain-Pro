@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .31 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
-Quelle: `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, [übernommener PR #77](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/77).
+**Android .32 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
+Quelle: `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, [übernommener PR #78](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/78).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -41,6 +41,26 @@ signierten Android-Update-APK ausdrücklich freigegeben.
 
 [Ergänzter Auftrag, Befunde und Prüfgrenzen](ERWEITERUNGEN-NATIVE-BEDIENUNG.md).
 Eine tatsächliche Prüfung auf Klaus' Samsung-DeX-Gerät steht noch aus.
+
+## Dritter umgesetzter App-Schritt (.32)
+
+- Einheitliche Liniensymbole auch in Dateibaum, Pfadnavigation, Gruppen und
+  Mailansichten; Briefsymbol und Betreff stehen in derselben Zeile.
+- Datei-/Mailbereiche per Maus, Touch oder Tastatur verbreitern oder verkleinern;
+  Breiten werden gespeichert. Kleine Fenster und Hochformat bleiben einspaltig.
+- Längere Erklärungen über Info-Buttons öffnen; Fortschritt und Fehler bleiben
+  sichtbar. Drehende Punkte zeigen die laufende Vorbereitung sofort an.
+- Gespeicherte PDFs vermeiden eine vollständige Bridgekopie. Öffnen und Teilen
+  laufen unabhängig von der nativen PDF-Seitenberechnung; Originalintegrität
+  und nur lesbare Dateifreigabe bleiben geprüft.
+- Android-/Windows-main und Signierung vollständig erfolgreich, 55 native Tests
+  ohne Fehler oder Skips. Signiertes Update .31 → .32 und unabhängiger Download
+  bestanden. [Bedienung und Prüfstand](NACHBESSERUNGEN-32.md),
+  [Download- und Quellnachweis](android-preview32-pruefung.json),
+  [Release 40117059939](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40117059939).
+
+Klaus' anschließender OCR-Auftrag für Bilder und Scans ist als .33 in Arbeit;
+Texterkennung gehört noch nicht zum veröffentlichten Funktionsumfang von .32.
 
 ## Stand der weiteren Funktionsvorschläge
 

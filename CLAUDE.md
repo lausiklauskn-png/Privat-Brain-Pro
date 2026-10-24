@@ -1,12 +1,24 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**.32 in Arbeit:** Konsequent sichtbare SVG-Liniensymbole auch im Explorer,
-Mailicon in der Titelzeile, verschiebbare Datei-/Mailbereiche, einklappbare
-Info-Erklärungen und sofort drehende Wartepunkte. Klaus meldet 10–30 Sekunden
-beim Teilen auf dem Tab S6; unnötige PDF-Bridgekopien und die gemeinsame native
-PDF-/Teilen-Warteschlange werden gezielt korrigiert. [Umfang und Nachweise](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
-Keine echte Tab-S6-/DeX-Messung behaupten. Freibrief gilt für Prüfung, Merge und
-signiertes Update .31 → .32. Bis zum abgeschlossenen Release bleibt .31 aktuell.
+**.33 in Arbeit:** Klaus beauftragt echte lokale Texterkennung für Bilder und
+Scans. OCR-Laufzeit und DE/EN/RU/PL mitliefern, sicher gelesenen Text für Suche
+und Prüfung nutzen, kyrillische Stichwortsuche erhalten. Unlesbare/teilweise
+geprüfte Seiten ehrlich benennen; keine stille Cloudübertragung, Originale
+unverändert. Echte Offlineprüfungen und signiertes Update .32 → .33 folgen.
+Freibrief für eigenständige Umsetzung, Merge und Veröffentlichung gilt weiterhin.
+
+**Android .32 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk),
+Quelle `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, PR #78 und Release `40117059939` vollständig erfolgreich.
+Konsistente Liniensymbole und Mailtitelzeile, verschiebbare Datei-/Mailbereiche,
+Info-Erklärungen und sofortige Wartepunkte. PDF-Bridgekopien entfallen für
+verfügbare Originale; Öffnen/Teilen besitzt eine unabhängige native Warteschlange.
+Android-/Windows-main und Signierung grün, 55 native Tests ohne Fehler/Skips,
+signiertes Update .31 → .32 bestanden. Öffentliche APK unabhängig geprüft:
+7.529.379 Bytes, SHA-256 `632aada11ed73f61618e737c3743768b2d4884c762ab1ea7f384c5e305c747b5`.
+[Bedienung](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md),
+[Prüfnachweis](docs/design/umbau-2026-10-24/android-preview32-pruefung.json).
+Nicht erneut veröffentlichen. Keine physische Tab-S6-/DeX-Messung behaupten;
+Windows-Download bleibt .29, gemeinsamer Quellstand ist geprüft.
 
 **Android .31 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk),
 Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, Release `40107514450` vollständig grün.

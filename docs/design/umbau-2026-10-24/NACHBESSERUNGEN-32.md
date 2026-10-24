@@ -1,6 +1,7 @@
 # Nachbesserungen nach Klaus' Test von .31
 
-Stand: .32 in Arbeit, noch kein neuer veröffentlichter APK-Download.
+Stand: .32 veröffentlicht am 24.10.2026. [Signierte Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk)
+über die vorhandene App installieren; nicht deinstallieren.
 
 Klaus zeigt am 24.10.2026 die native .31 in Samsung DeX. In Dateibaum,
 Pfadnavigation und Datei-/Mailgruppen sind bunte System-Emojis stehen geblieben.
@@ -30,6 +31,18 @@ Gerätetest; sie wird nicht als hier selbst gemessener Benchmark ausgegeben.
   Die Punkte drehen per CSS; es gibt keine zusätzliche permanente JavaScript-
   Animationsschleife. Messbarer Fortschritt und Abbrechen bleiben erreichbar.
 
+## Bedienung
+
+Die schmale Trennlinie zwischen zwei Bereichen mit der Maus oder dem Finger
+ziehen. Doppelklick stellt die Standardbreite wieder her. Mit Tab lässt sich
+die Trennlinie fokussieren; Pfeiltasten verstellen die Breite, Umschalt macht
+größere Schritte. Escape bricht ein laufendes Ziehen ab.
+
+Das Info-Symbol öffnet die Erklärung des jeweiligen Kastens; erneutes Anklicken
+oder Escape schließt sie. Drehende Punkte bedeuten laufende Vorbereitung,
+beispielsweise vor dem Android-Dialog zum Teilen. Sie melden keinen Versand-
+oder Speichererfolg vor dessen tatsächlicher Bestätigung.
+
 ## Tatsächliche Ansatzpunkte für die Wartezeit
 
 Gespeicherte PDFs wurden zuerst vollständig in 256-KiB-Stücken zur Oberfläche
@@ -45,7 +58,7 @@ Systemdialog unabhängig davon. Schnelleres Abgeben bleibt an unveränderte
 Originalbytes und einen nur lesbaren Provider gebunden. Verspätete Antworten
 dürfen keinen inzwischen geschlossenen oder gewechselten Betrachter verändern.
 
-## Prüfstand während der Arbeit
+## Abgeschlossener Prüfstand
 
 - Verschiebbare Bereiche: 55 Browserfälle bestanden, echte Maus-/Touch-/
   Tastatureingaben, gespeicherte Breiten und erhaltene Entwürfe/Filter.
@@ -59,8 +72,22 @@ dürfen keinen inzwischen geschlossenen oder gewechselten Betrachter verändern.
   Bedienelemente ohne Bridge-Vollkopie und Abbruch vor verspäteten Aufrufen.
 - Vollständige bestehende Websuite und native Browsersuite bestanden;
   Ordnerbedienung abschließend 57 Fälle, Hilfen 48 Fälle erneut grün.
-- Android-/Windows-Bau und der echte Android-Test für die unabhängige
-  Teilen-Warteschlange müssen vor Veröffentlichung vollständig bestehen.
+- PR #78 übernommen; Quelle `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`.
+  Android-main [40116256712](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40116256712),
+  Windows-main [40116256687](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40116256687)
+  und Signierung `40116256695` vollständig erfolgreich.
+- 55 native Android-Tests ohne Fehler oder Skips. Der neue Test blockiert die
+  echte PDF-Warteschlange und prüft trotzdem erfolgreichen Teilen-Dialog und
+  schreibgeschützte Originalbytes; ein verändertes Original wird abgewiesen.
+- [Release 40117059939](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40117059939)
+  vollständig erfolgreich: Build `120940415828`, signiertes Update .31 → .32
+  `120942701808` und Veröffentlichung `120943212130`. Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **7.529.379 Bytes**, SHA-256
+  `632aada11ed73f61618e737c3743768b2d4884c762ab1ea7f384c5e305c747b5`. Prüfsummen, Asset-Digest,
+  ursprüngliche Signatur und Release-Quelle stimmen. 24 gepackte native
+  Dateien und zwei Explorer-/Mailressourcen bytegleich zur Release-Quelle;
+  neue Modulverdrahtung und native Warteschlange geprüft.
+  [Maschinenlesbarer Nachweis](android-preview32-pruefung.json).
 
 Die Browser nutzen nachgebildete Gerätebrücken. Ein eigener physischer Test auf
 Klaus' Tab S6 beziehungsweise in Samsung DeX wird damit nicht behauptet.

@@ -1,4 +1,37 @@
-# Aktueller Prüfstand: veröffentlichte .31 — 2026-10-24
+# Aktueller Prüfstand: veröffentlichte .32 — 2026-10-24
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
+PR #78 übernommen; Tag `v1.0.0-preview.32` zeigt exakt auf `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`,
+VersionCode 32, ursprüngliche Paketkennung und Signatur erhalten.
+
+- Android-/Web-main [40116256712](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40116256712),
+  Windows-main [40116256687](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40116256687)
+  und Signierung `40116256695` vollständig erfolgreich.
+- 55 native Tests ohne Fehler/Skips. Neu: echter Teilen-Dialog und unveränderte
+  schreibgeschützt freigegebene Datei trotz blockierter PDF-Warteschlange;
+  manipulierte Originalbytes werden abgewiesen.
+- Vollständige Web-/Native-Browsersuiten bestanden; verschiebbare Bereiche (55),
+  Info-Erklärungen (48), Aktivitätsanzeige (33), Inhaltssymbole (46) und PDF-/
+  Teilen-Oberfläche (23) geprüft. Sichtprüfung synthetischer Ansichten ergänzt
+  die Funktionsproben; kein Hardwarebenchmark daraus abgeleitet.
+- Release [40117059939](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40117059939)
+  vollständig erfolgreich: Build `120940415828`, signiertes Update .31 → .32
+  `120942701808`, Veröffentlichung `120943212130`. Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **7.529.379 Bytes**, SHA-256
+  `632aada11ed73f61618e737c3743768b2d4884c762ab1ea7f384c5e305c747b5`. Prüfsumme, GitHub-Asset-Digest,
+  Signaturbericht und Release-Quellstand stimmen. 24 gepackte native Dateien
+  und zwei Explorer-/Mailressourcen bytegleich zur Release-Quelle, Modellpins,
+  neue Modulverdrahtung und native Warteschlange bestätigt.
+- Physisches Samsung DeX, Klaus' Tab S6 und dessen Reaktionszeiten sind damit
+  nicht als getestet behauptet. Windows bleibt veröffentlicht bei .29.
+
+[Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview32-pruefung.json),
+[Bedienung der Nachbesserungen](design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
+Der neue OCR-Auftrag ist als .33 in Arbeit und nicht Inhalt dieses Releases.
+
+---
+
+# Veröffentlichte .31 — 2026-10-24
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
 PR #77 übernommen; Tag `v1.0.0-preview.31` zeigt exakt auf `5c3cd2115a5abbf3d5daa50b126182f4d360001d`,
