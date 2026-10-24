@@ -43,7 +43,7 @@ Es gibt keine PDF-Verschmelzung. Outlook liefert Anregungen, keine Kopiervorlage
   [Token-Referenz](design-kit/tokens.css), [Referenzblatt](design-kit/kit.html).
 - [Vorschauprüfung](vorschau-qa.json): 81 Layoutprüfungen, sieben Szenarien,
   keine JavaScript-Fehler oder externen Anfragen.
-- Für die echte App: neue Themenprobe (29 Fälle), bestehende Web-/Mail-/Native-
+- Für die echte App: neue Themenprobe (33 Fälle), bestehende Web-/Mail-/Native-
   Prüfungen sowie Android- und Windows-CI. Signierte Veröffentlichung erst nach
   erfolgreicher main-Abnahme und Signatur-/Updateprobe .28 → .30.
 

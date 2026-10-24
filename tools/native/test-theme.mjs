@@ -46,6 +46,7 @@ try {
     }, {legacy, preference});
     await page.goto(origin);
     await page.waitForFunction(() => window.PBTheme?.current() && window.PBWorkspace && typeof db !== 'undefined' && db);
+    await page.locator('#mailWorkspace .mail-app .mail-button.mail-primary').first().waitFor({state:'attached'});
     await navigateTo(page, 'settings');
     await page.locator('#pb-theme-settings').waitFor();
     return {context, page, errors};
@@ -63,11 +64,19 @@ try {
       sample.style.color = 'var(--pb-on-accent)'; sample.style.backgroundColor = 'var(--acc)'; const primary = getComputedStyle(sample).color, primaryBg = getComputedStyle(sample).backgroundColor; sample.remove();
       const control = document.createElement('button'); control.className = 'primary'; control.textContent = 'Theme contrast probe'; document.body.append(control);
       const actualPrimary = getComputedStyle(control).color, actualPrimaryBg = getComputedStyle(control).backgroundColor; control.remove();
-      return {name:document.documentElement.dataset.pbTheme,dark:document.documentElement.dataset.theme === 'dunkel',accent:style.getPropertyValue('--acc').trim(),text,background,muted,primary,primaryBg,actualPrimary,actualPrimaryBg};
+      // Read the real mail controls inside the existing mount: the mail-specific
+      // cascade can override the generic primary styles, especially in dark mode.
+      const mailPrimaries = [...document.querySelectorAll('#mailWorkspace .mail-app .mail-button.mail-primary')].map(button => {
+        const paint = getComputedStyle(button);
+        const labels = [...button.querySelectorAll('.compact-caption,.compact-label')].filter(label => label.textContent.trim());
+        return {background:paint.backgroundColor,image:paint.backgroundImage,colors:[paint.color,...labels.map(label => getComputedStyle(label).color)]};
+      });
+      return {name:document.documentElement.dataset.pbTheme,dark:document.documentElement.dataset.theme === 'dunkel',accent:style.getPropertyValue('--acc').trim(),text,background,muted,primary,primaryBg,actualPrimary,actualPrimaryBg,mailPrimaries};
     });
     ok(`${name}: selected profile changes actual colours and keeps legacy mode compatible`, state.name === name && state.accent === accent && state.dark === (name === 'nachtblau') && await page.locator('[data-pb-theme-choice][aria-pressed="true"]').count() === 1);
     ok(`${name}: normal, secondary and primary button text meet 4.5:1`, contrast(state.text,state.background) >= 4.5 && contrast(state.muted,state.background) >= 4.5 && contrast(state.primary,state.primaryBg) >= 4.5);
     ok(`${name}: an actual primary button consumes the accessible theme colours`, contrast(state.actualPrimary,state.actualPrimaryBg) >= 4.5);
+    ok(`${name}: real mail primary controls and captions use the theme accent with 4.5:1 contrast`, state.mailPrimaries.length > 0 && state.mailPrimaries.every(control => control.background === state.primaryBg && control.image === 'none' && control.colors.every(color => contrast(color,control.background) >= 4.5)));
   }
   await page.locator('[data-pb-theme-choice="petrol"]').click();
   await page.reload(); await page.waitForFunction(() => window.PBTheme?.current() === 'petrol');
