@@ -72,6 +72,11 @@ for (const [source,target,id,base,prefix] of definitions) {
 }
 await mkdir(dirname(output),{recursive:true});
 await writeFile(output,JSON.stringify(manifest,null,2)+'\n');
+// The same public manifest is API-readable without an artifact-storage redirect.
+// It contains model metadata only, never mail, account data or credentials.
+const notice=JSON.stringify(manifest);
+if(Buffer.byteLength(notice)>60000)throw new Error('Public manifest exceeds annotation limit');
+console.log('::notice title=Public translation model pins::'+notice.replace(/%/g,'%25').replace(/\r/g,'%0D').replace(/\n/g,'%0A'));
 const summary=['# Public local-translation model pin audit','',
   'No model weights, mail, account data or secrets were downloaded. JSON/tokenizer bytes were hashed; ONNX hashes and sizes come from the pinned Hugging Face LFS metadata. Review this artifact before integrating it.','',
   '| Direction | Model | Immutable revision | Total bytes | Base-model license |',
