@@ -92,8 +92,10 @@ try{
   const mail=page.locator('#mailWorkspace'), panel=mail.locator('#pb-mail-all');
   await mail.locator('[data-live-text=connect]').click();
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hidden&&document.querySelector('.live-mail [data-mail-all=open]'));
-  ok('"Alle Konten" is the first entry of the folder bar',await mail.locator('.live-mail .mail-folders > :first-child').getAttribute('data-mail-all')==='open'&&(await mail.locator('[data-mail-all=open]').textContent()).startsWith('👥 Alle Konten'));
-  await mail.locator('[data-mail-all=open]').click();
+  const allAccountsEntry=mail.locator('.live-mail .mail-folders > :first-child');
+  await allAccountsEntry.locator('svg.native-folder-icon[data-icon-key="accounts"]').waitFor();
+  ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&[...button.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join('').trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
+  await mail.getByRole('button',{name:/^Alle Konten\s*\d*$/}).click();
   await capture(page,'1-erster-abruf');
   ok('First view explains reading only, 12 months and no attachments',(await panel.textContent()).includes('12 Monate')&&(await panel.textContent()).includes('Anhänge werden nicht geladen'));
   ok('Other mailbox parts are hidden while the overview is open',await mail.locator('.live-mail').isHidden()&&await mail.locator('.mail-account-bar').isHidden());

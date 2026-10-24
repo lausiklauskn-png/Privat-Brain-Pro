@@ -24,6 +24,33 @@ try{
   await page.addInitScript(()=>{window.openedFiles=[];window.Capacitor={Plugins:{ProFiles:{async open(args){window.openedFiles.push(args);}}}};});
   await page.goto(url);await page.waitForFunction(()=>window.PBNavigation&&typeof db!=='undefined'&&db);
   await page.waitForFunction(()=>window.PBIcons);
+  await page.evaluate(()=>{
+    const fixture=document.createElement('div');fixture.dataset.toolbarFocusFixture='true';
+    const disabled=document.createElement('button');disabled.disabled=true;disabled.textContent='Disabled test control';
+    const hidden=document.createElement('button');hidden.hidden=true;hidden.textContent='Hidden test control';
+    fixture.append(disabled,hidden);document.getElementById('panel-dash').prepend(fixture);
+  });
+  const appMenu=page.locator('.native-options>summary');
+  await appMenu.focus();await page.keyboard.press('Enter');
+  await page.locator('.native-options-panel .workspace-tools').waitFor({state:'visible'});
+  ok('Each menu view paints one caption while its translation source stays visually hidden',await page.locator('.native-options-panel .workspace-tools .tab').evaluateAll(buttons=>buttons.length===4&&buttons.every(button=>{
+    const labels=[...button.querySelectorAll(':scope>.compact-label,:scope>.compact-caption')].filter(label=>{
+      const style=getComputedStyle(label),rect=label.getBoundingClientRect();
+      return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>1&&rect.height>1;
+    });
+    return labels.length===1&&labels[0].classList.contains('compact-caption')&&Boolean(labels[0].textContent.trim());
+  })));
+  let reachedView=false;
+  for(let step=0;step<12&&!reachedView;step++){
+    await page.keyboard.press('Tab');
+    reachedView=await page.locator('.native-options-panel [data-tab="dash"]').evaluate(button=>button===document.activeElement);
+  }
+  ok('Keyboard navigation reaches the named view among the existing app-menu controls',reachedView);
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>{const panel=document.getElementById('panel-dash'),active=document.activeElement;return panel.classList.contains('on')&&panel.contains(active)&&active.getClientRects().length&&!active.disabled;});
+  ok('Selecting a menu view with Enter focuses visible content and skips disabled or hidden controls',!await page.locator('.native-options').evaluate(menu=>menu.open)&&await page.evaluate(()=>{const active=document.activeElement;return !active.closest('[hidden],[inert],[data-toolbar-focus-fixture]')&&getComputedStyle(active).visibility!=='hidden';}));
+  await page.evaluate(()=>document.querySelector('[data-toolbar-focus-fixture]').remove());
+  await page.locator('.main-pages [data-tab="search"]').click();
   ok('The shared icon source has explicit check and envelope-send symbols; unknown keys stay unknown',await page.evaluate(()=>PBIcons.has('check')&&PBIcons.has('send')&&PBIcons.create('send').dataset.iconKey==='send'&&PBIcons.create('future-action')===null));
   await page.evaluate(()=>{
     const host=document.querySelector('#mailWorkspace .mail-head');

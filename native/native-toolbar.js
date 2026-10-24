@@ -153,7 +153,30 @@
   lamp.onclick=()=>toggleNetwork(lamp);
   offlineButton.onclick=()=>toggleNetwork(offlineButton);networkLabel();
   addEventListener('resize',()=>{options.open=false;});
-  optionsPanel.addEventListener('click',event=>{if(event.target.closest('button'))options.open=false;});
+  optionsPanel.addEventListener('click',event=>{
+    const button=event.target.closest('button');if(!button)return;
+    const page=button.matches('.tab[data-tab]')?button.dataset.tab:null;
+    options.open=false;
+    if(!page)return;
+    // The selected menu item is now hidden. Move keyboard focus into the view
+    // after the existing navigation handlers have completed, without changing
+    // their history or unsaved-draft decisions.
+    requestAnimationFrame(()=>{
+      const panel=document.getElementById('panel-'+page);
+      const visible=node=>{
+        if(!node||node.closest('[hidden],[inert]'))return false;
+        const style=getComputedStyle(node),rect=node.getBoundingClientRect();
+        return node.getClientRects().length&&rect.width>1&&rect.height>1&&style.display!=='none'&&style.visibility==='visible'&&Number(style.opacity)!==0;
+      };
+      if(!panel?.classList.contains('on')||!visible(panel)){optionsTitle.focus();return;}
+      const target=[...panel.querySelectorAll('input:not([type="hidden"]),textarea,select,button,a[href],summary,[tabindex]')].find(node=>!node.matches(':disabled')&&node.tabIndex>=0&&visible(node))
+        ||[...panel.querySelectorAll('h1,h2,h3')].find(visible)||panel;
+      if(!target.hasAttribute('tabindex')&&!target.matches('input,textarea,select,button,a[href],summary')){
+        target.tabIndex=-1;target.addEventListener('blur',()=>target.removeAttribute('tabindex'),{once:true});
+      }
+      target.focus();
+    });
+  });
   document.addEventListener('click',event=>{
     if(options.open&&!options.contains(event.target))options.open=false;
   });
