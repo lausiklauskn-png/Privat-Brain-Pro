@@ -17,3 +17,9 @@ Alle Daten sind erfunden. Keine echten Adressen.
 
 Schriften (Google Fonts) sind nur Vorschläge für die Entwürfe; die App bleibt offline und müsste eine gewählte Schrift mitbringen
 oder die Systemschrift nutzen. Symbole sind Strichsymbole (24×24) und bauen auf `native/native-toolbar.js` auf.
+
+## Weiter (2026-10-24)
+
+Klaus: alle vier Entwürfe sind gut, als wechselbare Themen mit Knopf. Gebaut wird das **in Privat-Brain-Pro-V3**
+(Claude), nicht hier; Pro bleibt Codex' Repo. Plan, Codex-Abgleich, Kontakte/WhatsApp:
+[BRIEF_NACHFOLGE_2026-10-24_THEMEN-KONTAKTE-V3.md](../../../BRIEF_NACHFOLGE_2026-10-24_THEMEN-KONTAKTE-V3.md).
