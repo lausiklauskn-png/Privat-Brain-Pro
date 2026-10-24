@@ -53,3 +53,7 @@
 #pb-palette [aria-pressed=false] .pb-palette-tick { visibility:hidden; }
 #pb-palette .pb-palette-status { margin:6px 0 0;color:var(--mut);font-size:.8rem;line-height:1.4; }
 #pb-palette-button:focus-visible,#pb-palette button:focus-visible { outline:2px solid var(--pb-focus);outline-offset:2px; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  #pb-palette-button { width:32px;min-width:32px;height:32px;min-height:32px!important; }
+  #pb-palette [data-pb-palette-choice] { min-height:32px;padding:4px 6px; }
+}

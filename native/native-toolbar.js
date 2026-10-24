@@ -57,6 +57,7 @@
     unavailable:'M4 20 20 4 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     pending:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 7v5l3 2',
     lock:'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0v3',
+    unlock:'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0',
     link:'m9 15 6-6 M8 16l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0 M16 8l2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0',
     clean:'m15 3 6 6-9 9-6-6Z M6 12l-4 8h12l-2-2 M5 20l2-5m3 5 1-3',
     device:'M3 4h18v13H3Z M8 21h8m-4-4v4',
@@ -142,10 +143,10 @@
     if(previous)previous.replaceWith(glyph);else slot.append(glyph);
     slot.classList.add('pb-content-icon');
   }
-  const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','lock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
+  const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','unlock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
   for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
   prefixKeys.set('★','star');
-  for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','brain'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock']])prefixKeys.set(prefix,key);
+  for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','search'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock'],['🔏','network']])prefixKeys.set(prefix,key);
   const prefixes=[...prefixKeys.keys()].sort((a,b)=>b.length-a.length);
   function decorateKnownPrefix(node,preferred){
     if(!node||node.querySelector(':scope>.compact-icon'))return;
@@ -326,8 +327,16 @@
     decorateHeading(document.querySelector('#panel-explorer>h2'),'folder');
     decorateHeading(document.querySelector('#panel-intake>h2,#panel-intake>.pb-help-heading>h2'),'intake');
     document.querySelectorAll('#results .fname,#results .origin,#results .relhead,#results .cardbtns button,#results .empty .big,#groups .ic,#searchInfo>b,.native-import-reassurance>.ic').forEach(node=>decorateKnownPrefix(node));
-    document.querySelectorAll('[data-i18n],[data-ws],#panel-settings h3,#panel-order>h3,#pb-mail-all>.mail-head>.mail-primary').forEach(node=>decorateKnownPrefix(node));
-    document.querySelectorAll('.pb-check-all-button,.pb-check-badge,.pb-record-availability,.pb-check-find,.pb-check-summary,.pb-check-entrance-list li[data-check]>span,.pb-check-entrance .delBtn,.pb-schutz-mail>summary,.native-original-reconnect button,.native-vault-row>div>strong,.native-vault-attachment>span,.native-vault-head>span,.native-vault-clear,.native-vault-where button,#vault-lock,#vaultLine>span,#mailWorkspace [data-mail-all=list],#mailWorkspace [data-mail-all=senders],#mailWorkspace [data-mail-all=clean],#mailWorkspace [data-mail-all=order],#mailWorkspace [data-mail-mark],#mailWorkspace [data-mail-clean],#mailWorkspace .mail-undo>span').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('[data-i18n],[data-ws],#panel-settings h3,#pb-semantic>[data-s=title],.pb-studio-probe h3,#panel-order>h3,#pb-mail-all>.mail-head>.mail-primary').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('.pb-check-all-button,.pb-check-badge,.pb-record-availability,.pb-check-find,.pb-check-summary,.pb-check-entrance-list li[data-check]>span,.pb-check-entrance .delBtn,.pb-schutz-mail>summary,.native-original-reconnect button,.native-vault-row>div>strong,.native-vault-attachment>span,.native-vault-head>span,.native-vault-clear,.native-vault-where button,#vault-lock,#vault-unlock,#schutz-key-abuse,#schutz-key-vt,#schutz-get-abuse,#schutz-get-vt,#pb-ai-key-links [data-key-page],#mycelPlace [data-mycel-open],#mycelPlace [data-mycel-seal],#pb-license .pb-license-tools>li>b,#diagCopy,#diagClear,#btnPersist,#btnExport,#btnFullExport,#btnClear,#btnImport,#vaultLine>span,#mailWorkspace [data-mail-all=list],#mailWorkspace [data-mail-all=senders],#mailWorkspace [data-mail-all=clean],#mailWorkspace [data-mail-all=order],#mailWorkspace [data-mail-mark],#mailWorkspace [data-mail-clean],#mailWorkspace .mail-undo>span').forEach(node=>decorateKnownPrefix(node));
+    // This is a fixed app heading, not a user title. Preserve both original
+    // decorative glyphs for translation while painting one neutral line icon.
+    const mycelTitle=document.querySelector('#mycelPlace h3');
+    if(mycelTitle){
+      decorateKnownPrefix(mycelTitle,'network');
+      const textNode=[...mycelTitle.childNodes].find(part=>part.nodeType===Node.TEXT_NODE&&part.nodeValue.includes('🌐'));
+      if(textNode){const at=textNode.nodeValue.indexOf('🌐'),glyph=textNode.splitText(at);glyph.splitText('🌐'.length);const fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');glyph.before(fallback);fallback.append(glyph);}
+    }
     // Siegel (Modul 17) and Mycel (Modul 23-UI) float and snap to the header themselves (native-mycel.js).
     // One shared account/action row instead of a separate account row above the mailbox.
     const account=document.querySelector('.mail-account-bar'),head=document.querySelector('.live-mail>.mail-head');

@@ -183,7 +183,7 @@ html[data-pb-theme] .native-toolbar-row { display:flex!important; flex-wrap:nowr
 html[data-pb-theme] .native-toolbar-row .main-pages { display:flex; order:0; flex:1 1 auto!important; width:100%; min-width:0; max-width:100%; flex-wrap:nowrap!important; justify-content:flex-start; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; scrollbar-width:thin; padding:2px 0 5px; }
 html[data-pb-theme] .native-toolbar-row .main-pages .tab { flex:none!important; width:max-content; min-width:44px!important; max-width:100%; height:auto!important; min-height:44px!important; padding:4px 7px!important; flex-direction:row; gap:5px; white-space:nowrap; }
 html[data-pb-theme] .native-toolbar-row .main-pages .compact-caption { flex:none; max-width:none; overflow:visible; text-overflow:clip; white-space:nowrap; }
-html[data-pb-theme] .native-toolbar-quick { display:flex; flex:0 0 auto; align-items:center; gap:4px; }
+html[data-pb-theme] .native-toolbar-quick { display:flex; order:1; flex:0 0 auto; align-items:center; gap:4px; }
 html[data-pb-theme] .native-toolbar-quick>.tab,
 html[data-pb-theme] .native-toolbar-quick>#pb-palette-button { display:inline-flex; flex:none; align-items:center; justify-content:center; width:44px!important; min-width:44px!important; height:44px!important; min-height:44px!important; padding:0!important; }
 html[data-pb-theme] .native-toolbar-quick>.tab>.compact-icon,
@@ -219,3 +219,61 @@ html[data-pb-theme] .pb-mail-translation-text { font:inherit; white-space:pre-wr
 html[data-pb-theme] .pb-mail-translation .mail-reader-actions { flex-wrap:wrap; }
 
 @media(max-width:650px) { html[data-pb-theme] .pb-overview-folder-head,html[data-pb-theme] .pb-overview-folder { grid-template-columns:minmax(0,1fr) 60px 85px; } }
+
+/* One familiar info line icon for disclosures across the app. */
+html[data-pb-theme] .pb-overview-help>summary { width:44px; min-height:44px; border:0; }
+html[data-pb-theme] .pb-overview-help>summary>svg { width:20px; height:20px; }
+
+/* Keep touch actions easy to hit. A wide mouse workspace has a flatter
+   toolbar; content rows, message text, checkboxes and radios keep their sizing. */
+html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button { min-height:44px!important; }
+html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:44px; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme] .native-toolbar-row .main-pages .tab { min-width:32px!important; min-height:32px!important; padding:3px 7px!important; }
+  html[data-pb-theme] .native-toolbar-row .main-pages .tab.compact-icon-only { width:32px!important; min-width:32px!important; }
+  html[data-pb-theme] .native-toolbar-quick>.tab,
+  html[data-pb-theme] .native-toolbar-quick>#pb-palette-button { width:32px!important; min-width:32px!important; height:32px!important; min-height:32px!important; }
+  html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button,
+  html[data-pb-theme] .native-file-head>button,
+  html[data-pb-theme] .pb-explorer-sort-popup button { min-height:32px!important; height:auto; padding-block:2px!important; line-height:1.2; }
+  html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:32px; height:32px; box-sizing:border-box; padding-block:2px; line-height:1.2; }
+  html[data-pb-theme] #pb-explorer-sort>summary { min-height:32px; padding-block:2px; line-height:1.2; }
+  html[data-pb-theme] #panel-search .searchbox input[type=search] { min-height:32px; height:32px; padding-block:2px; line-height:1.1; }
+  html[data-pb-theme] #panel-search #mode button { min-height:32px; padding-block:2px; }
+  html[data-pb-theme] #panel-search #mic,
+  html[data-pb-theme] .native-file-head .native-file-share { width:32px; min-width:32px; height:32px; min-height:32px!important; padding:4px!important; }
+  html[data-pb-theme] .pb-overview-help>summary,
+  html[data-pb-theme] .pb-dup-help>summary { width:32px; height:32px; min-height:32px; }
+}
+
+/* Dynamic setting actions obey their actual locked/available state. */
+html[data-pb-theme] #panel-settings [hidden] { display:none!important; }
+
+/* Input language belongs next to the query. Only the current code stays in
+   the search row; the complete existing language list opens on demand. */
+html[data-pb-theme] #panel-search #pb-input-language-quick { display:block; flex:none; width:max-content; max-width:100%; margin:0; padding:0; }
+html[data-pb-theme] #pb-search-language { display:inline-flex; align-items:center; justify-content:center; width:44px; min-width:44px; height:44px; min-height:44px!important; margin:0; padding:2px!important; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font-size:.78rem; font-weight:600; line-height:1.2!important; white-space:nowrap; list-style:none; cursor:pointer; }
+html[data-pb-theme] #pb-search-language::-webkit-details-marker { display:none; }
+html[data-pb-theme] #pb-search-language::marker { content:""; }
+html[data-pb-theme] #pb-input-language-quick[open]>summary { color:var(--acc); border-color:var(--acc); background:var(--pb-selected,var(--card2)); }
+html[data-pb-theme] #pb-search-language-menu { position:fixed; z-index:64; width:min(16rem,calc(100vw - 16px)); box-sizing:border-box; padding:6px; border:1px solid var(--line); border-radius:8px; background:var(--card); box-shadow:0 8px 24px #0002; overflow:auto; overscroll-behavior:contain; }
+html[data-pb-theme] #pb-search-language-menu>button { display:block; width:100%; min-height:44px; margin:0; padding:5px 8px; border-color:transparent; font-size:.85rem; line-height:1.2; text-align:start; white-space:normal; overflow-wrap:normal; word-break:normal; }
+html[data-pb-theme] #pb-search-language-menu>button[aria-pressed=true] { border-color:var(--acc); color:var(--acc); background:var(--pb-selected,var(--card2)); font-weight:600; }
+html[data-pb-theme] #pb-search-language-menu>button:active { transform:none!important; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme] #pb-search-language { width:32px; min-width:32px; height:32px; min-height:32px!important; }
+  html[data-pb-theme] #pb-search-language-menu>button { min-height:32px; padding-block:2px; }
+}
+@media(max-width:650px) {
+  html[data-pb-theme] #panel-search .searchbox { grid-template-columns:minmax(0,1fr) 44px 44px; }
+  html[data-pb-theme] #panel-search .searchbox input[type=search] { grid-column:1; grid-row:1; }
+  html[data-pb-theme] #panel-search #mic { grid-column:2; grid-row:1; }
+  html[data-pb-theme] #panel-search #pb-input-language-quick { grid-column:3; grid-row:1; }
+  html[data-pb-theme] #panel-search #mode { grid-column:1/-1; grid-row:2; }
+}
+
+/* Help follows the same mouse/touch target profile as the nearby settings. */
+html[data-pb-theme].pb-help-ready .pb-help-toggle { width:44px; height:44px; min-width:44px; min-height:44px; padding:10px; }
+@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+  html[data-pb-theme].pb-help-ready .pb-help-toggle { width:32px; height:32px; min-width:32px; min-height:32px; padding:6px; }
+}

@@ -6,12 +6,17 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.content.res.XmlResourceParser;
+import android.content.res.loader.ResourcesLoader;
+import android.content.res.loader.ResourcesProvider;
+import android.os.ParcelFileDescriptor;
 import android.webkit.WebView;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +32,7 @@ import org.xmlpull.v1.XmlPullParser;
 
 /** Real bridge requests; no counterfeit companion app or claimed native Pro launch. */
 @RunWith(AndroidJUnit4.class)
+@android.annotation.TargetApi(30)
 public class NativeToolLauncherTest {
     private static final String WORKFLOW_PACKAGE = "de.familyprojekt.workflowpdf.pro";
 
@@ -65,22 +71,48 @@ public class NativeToolLauncherTest {
             packageInfo.requestedPermissions != null
                 && Arrays.asList(packageInfo.requestedPermissions).contains("android.permission.QUERY_ALL_PACKAGES"));
         List<String> visiblePackages = new ArrayList<>();
-        try (XmlResourceParser manifest = context.getAssets().openXmlResourceParser("AndroidManifest.xml")) {
-            int queriesDepth = -1;
-            while (manifest.next() != XmlPullParser.END_DOCUMENT) {
-                if (manifest.getEventType() == XmlPullParser.START_TAG) {
-                    if ("queries".equals(manifest.getName())) queriesDepth = manifest.getDepth();
-                    else if (queriesDepth >= 0 && manifest.getDepth() == queriesDepth + 1
-                        && "package".equals(manifest.getName())) {
-                        visiblePackages.add(manifest.getAttributeValue("http://schemas.android.com/apk/res/android", "name"));
+        // Instrumentation combines the test APK's assets with the application's.
+        // An unqualified AndroidManifest.xml lookup can therefore open the test
+        // manifest. Load the installed application's exact base APK explicitly
+        // using the public API 30 resource-loader API (the smoke emulator is API 35).
+        var resources = context.createConfigurationContext(new Configuration()).getResources();
+        var loader = new ResourcesLoader();
+        try (ParcelFileDescriptor apk = ParcelFileDescriptor.open(
+                new File(context.getApplicationInfo().sourceDir), ParcelFileDescriptor.MODE_READ_ONLY);
+             ResourcesProvider provider = ResourcesProvider.loadFromApk(apk)) {
+            try {
+                instrumentation.runOnMainSync(() -> {
+                    loader.addProvider(provider);
+                    resources.addLoaders(loader);
+                });
+                try (XmlResourceParser manifest = resources.getAssets().openXmlResourceParser("AndroidManifest.xml")) {
+                    int queriesDepth = -1;
+                    String manifestPackage = null;
+                    while (manifest.next() != XmlPullParser.END_DOCUMENT) {
+                        if (manifest.getEventType() == XmlPullParser.START_TAG) {
+                            if ("manifest".equals(manifest.getName()) && manifest.getDepth() == 1) {
+                                manifestPackage = manifest.getAttributeValue(null, "package");
+                            } else if ("queries".equals(manifest.getName())) queriesDepth = manifest.getDepth();
+                            else if (queriesDepth >= 0 && manifest.getDepth() == queriesDepth + 1
+                                && "package".equals(manifest.getName())) {
+                                visiblePackages.add(manifest.getAttributeValue("http://schemas.android.com/apk/res/android", "name"));
+                            }
+                        } else if (manifest.getEventType() == XmlPullParser.END_TAG
+                            && manifest.getDepth() == queriesDepth && "queries".equals(manifest.getName())) {
+                            queriesDepth = -1;
+                        }
                     }
-                } else if (manifest.getEventType() == XmlPullParser.END_TAG
-                    && manifest.getDepth() == queriesDepth && "queries".equals(manifest.getName())) {
-                    queriesDepth = -1;
+                    assertEquals("The inspected manifest belongs to the installed target APK",
+                        context.getPackageName(), manifestPackage);
                 }
+            } finally {
+                instrumentation.runOnMainSync(() -> {
+                    resources.removeLoaders(loader);
+                    loader.clearProviders();
+                });
             }
         }
-        assertTrue("The installed manifest declares the specific companion package query",
+        assertTrue("The installed manifest declares the specific companion package query: " + visiblePackages,
             visiblePackages.contains(WORKFLOW_PACKAGE));
 
         List<Intent> externalStarts = new CopyOnWriteArrayList<>();

@@ -23,10 +23,18 @@ async function clickMenuControl(page, selector) {
   }
   await target.click();
 }
+async function chooseProfile(page,name){
+  await page.locator('#pb-palette-button').click();
+  await page.locator('[data-pb-palette-choice="'+name+'"]').click();
+}
+// Resize events and ResizeObservers finish on a rendering frame, after the
+// viewport command itself can resolve. Measure the settled layout, not a stale
+// popup position from the preceding desktop width.
+async function layoutReady(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
 try {
   browser = await chromium.launch({executablePath:process.env.CB_CHROMIUM || '/usr/bin/chromium', args:['--no-sandbox']});
-  async function fixture(legacy = 'tag', preference = null) {
-    const context = await browser.newContext({viewport:{width:1280,height:900}}), errors = [];
+  async function fixture(legacy = 'tag', preference = null, device = {}) {
+    const context = await browser.newContext({viewport:{width:1280,height:900},...device}), errors = [];
     const page = await context.newPage(); page.on('pageerror', error => errors.push(error.message));
     await page.route('**/*', async route => {
       const url = route.request().url();
@@ -48,14 +56,16 @@ try {
     await page.waitForFunction(() => window.PBTheme?.current() && window.PBWorkspace && typeof db !== 'undefined' && db);
     await page.locator('#mailWorkspace .mail-app .mail-button.mail-primary').first().waitFor({state:'attached'});
     await navigateTo(page, 'settings');
-    await page.locator('#pb-theme-settings').waitFor();
+    await page.locator('#pb-theme-settings').waitFor({state:'attached'});
+    await page.locator('#pb-palette-button').waitFor();await layoutReady(page);
     return {context, page, errors};
   }
   let {context, page, errors} = await fixture();
   ok('Existing light preference becomes the modern light profile', await page.locator('html').getAttribute('data-pb-theme') === 'klarblau');
+  ok('Settings has no duplicate appearance card while its original source remains available',await page.locator('#pb-theme-settings').evaluate(card=>card.hidden&&card.getBoundingClientRect().height===0&&card.querySelectorAll('[data-pb-theme-choice]').length===4));
   const profiles = [['klarblau','#2563eb'],['graphit','#475569'],['petrol','#0f766e'],['nachtblau','#7ca7ff']];
   for (const [name, accent] of profiles) {
-    await page.locator(`[data-pb-theme-choice="${name}"]`).click();
+    await chooseProfile(page,name);
     const state = await page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
       const sample = document.createElement('span'); sample.style.color = 'var(--ink)'; sample.style.backgroundColor = 'var(--card)'; document.body.append(sample);
@@ -78,7 +88,7 @@ try {
     ok(`${name}: an actual primary button consumes the accessible theme colours`, contrast(state.actualPrimary,state.actualPrimaryBg) >= 4.5);
     ok(`${name}: real mail primary controls and captions use the theme accent with 4.5:1 contrast`, state.mailPrimaries.length > 0 && state.mailPrimaries.every(control => control.background === state.primaryBg && control.image === 'none' && control.colors.every(color => contrast(color,control.background) >= 4.5)));
   }
-  await page.locator('[data-pb-theme-choice="petrol"]').click();
+  await chooseProfile(page,'petrol');
   await page.reload(); await page.waitForFunction(() => window.PBTheme?.current() === 'petrol');
   ok('Explicit light profile survives an app restart', await page.locator('html').getAttribute('data-pb-theme') === 'petrol');
   await clickMenuControl(page, '#themeToggle'); await page.waitForFunction(() => document.documentElement.dataset.pbTheme === 'nachtblau');
@@ -93,18 +103,22 @@ try {
   }
   for (const width of [320,412,768,1280,1920]) {
     await page.setViewportSize({width,height:900});
-    ok(`${width}px: all theme names remain readable with 44px targets`, await page.locator('#pb-theme-settings .pb-theme-choice').evaluateAll(buttons => buttons.length === 4 && buttons.every(button => {const rect=button.getBoundingClientRect(),name=button.querySelector('.pb-theme-name');return rect.height >= 44 && rect.left >= 0 && rect.right <= innerWidth && name.scrollWidth <= name.getBoundingClientRect().width + 1;})));
+    await layoutReady(page);
+    ok(`${width}px: the appearance source never becomes a second visible settings card`,await page.locator('#pb-theme-settings').evaluate(card=>card.hidden&&card.getBoundingClientRect().height===0&&card.getBoundingClientRect().width===0));
   }
-  await page.locator('[data-pb-theme-choice="klarblau"]').focus();
+  await page.locator('#pb-palette-button').click();
+  await page.locator('[data-pb-palette-choice="klarblau"]').focus();
   await page.keyboard.press('Tab');
-  ok('Theme choice retains a visible keyboard focus ring', await page.locator('[data-pb-theme-choice="graphit"]').evaluate(button => document.activeElement === button && getComputedStyle(button).outlineStyle !== 'none'));
+  ok('Theme choice retains a visible keyboard focus ring', await page.locator('[data-pb-palette-choice="graphit"]').evaluate(button => document.activeElement === button && getComputedStyle(button).outlineStyle !== 'none'));
+  await page.keyboard.press('Escape');
   await navigateTo(page, 'search');
   await page.locator('#q').fill('Synthetic theme preview');
   const paletteButton=page.locator('#pb-palette-button'),palette=page.locator('#pb-palette');
   await paletteButton.waitFor();
-  ok('The direct palette is an icon-only 44px control beside the original Settings tab',await paletteButton.evaluate(button=>{
-    const rect=button.getBoundingClientRect();return button.parentElement.classList.contains('native-toolbar-quick')&&!button.closest('.main-pages')&&
-      button.parentElement.querySelectorAll('.tab[data-tab=settings]').length===1&&rect.width>=44&&rect.height>=44&&
+  ok('The direct palette is an icon-only control beside the original Settings tab',await paletteButton.evaluate(button=>{
+    const rect=button.getBoundingClientRect(),target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;
+    return button.parentElement.classList.contains('native-toolbar-quick')&&!button.closest('.main-pages')&&
+      button.parentElement.querySelectorAll('.tab[data-tab=settings]').length===1&&rect.width>=target&&rect.height>=target&&
       button.querySelector('svg[data-icon-key=palette]')&&!button.textContent.trim()&&button.getAttribute('aria-label')==='Farbthema wählen';
   }));
   for(const [name] of profiles){
@@ -146,18 +160,25 @@ try {
     ok(language+': the quick palette uses the translated existing theme names',JSON.stringify(await palette.locator('.pb-palette-name').allTextContents())===JSON.stringify(names)&&await paletteButton.getAttribute('title')===label);
     for(const width of [320,390,768,1280,1920])for(const font of [16,24]){
       await page.setViewportSize({width,height:900});await page.evaluate(font=>document.documentElement.style.fontSize=font+'px',font);
-      ok(language+'/'+width+'px/'+font+'px: the palette and all four 44px choices fit the viewport',await palette.evaluate(popup=>{
+      await layoutReady(page);
+      const geometry=await palette.evaluate(popup=>{
         const rect=popup.getBoundingClientRect(),trigger=document.getElementById('pb-palette-button').getBoundingClientRect();
         const quick=document.querySelector('.native-toolbar-quick').getBoundingClientRect(),tabs=document.querySelector('.main-pages').getBoundingClientRect();
-        return !popup.hidden&&rect.left>=7&&rect.right<=innerWidth-7&&rect.top>=7&&rect.bottom<=innerHeight-7&&popup.scrollWidth<=popup.clientWidth+1&&
-          trigger.left>=0&&trigger.right<=innerWidth&&trigger.width>=44&&trigger.height>=44&&quick.left>=tabs.right-1&&
-          [...popup.querySelectorAll('[data-pb-palette-choice]')].every(button=>{const box=button.getBoundingClientRect(),name=button.querySelector('.pb-palette-name');return box.height>=44&&box.left>=rect.left&&box.right<=rect.right&&name.scrollWidth<=name.clientWidth+1;});
-      }));
+        const compact=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches,target=compact?32:44;
+        const choices=[...popup.querySelectorAll('[data-pb-palette-choice]')].map(button=>{const box=button.getBoundingClientRect(),name=button.querySelector('.pb-palette-name');return{rect:box.toJSON(),name:name.textContent,nameScroll:name.scrollWidth,nameWidth:name.clientWidth};});
+        const checks={visible:!popup.hidden,inset:rect.left>=7&&rect.right<=innerWidth-7&&rect.top>=7&&rect.bottom<=innerHeight-7,
+          noOverflow:popup.scrollWidth<=popup.clientWidth+1,trigger:trigger.left>=0&&trigger.right<=innerWidth&&trigger.width>=target&&trigger.height>=target,
+          quickRight:quick.left>=tabs.right-1,choices:choices.length===4&&choices.every(choice=>choice.rect.height>=target&&choice.rect.left>=rect.left&&choice.rect.right<=rect.right&&choice.nameScroll<=choice.nameWidth+1),
+          desktopDensity:!compact||parseFloat(getComputedStyle(document.documentElement).fontSize)>16||trigger.height<=34&&choices.every(choice=>choice.rect.height<=34)};
+        return{ok:Object.values(checks).every(Boolean),checks,target,viewport:{width:innerWidth,height:innerHeight},popup:rect.toJSON(),trigger:trigger.toJSON(),quick:quick.toJSON(),tabs:tabs.toJSON(),choices};
+      });
+      if(!geometry.ok)console.error('Palette geometry: '+JSON.stringify(geometry));
+      ok(language+'/'+width+'px/'+font+'px: the palette and all four choices fit the viewport with the appropriate targets',geometry.ok);
     }
     await page.keyboard.press('Escape');
   }
   await page.setViewportSize({width:320,height:240});
-  await page.evaluate(()=>document.documentElement.style.fontSize='16px');await paletteButton.click();
+  await page.evaluate(()=>document.documentElement.style.fontSize='16px');await layoutReady(page);await paletteButton.click();
   ok('A short window constrains the palette height and keeps its overflow scrollable',await palette.evaluate(popup=>{const rect=popup.getBoundingClientRect();return rect.top>=7&&rect.bottom<=innerHeight-7&&getComputedStyle(popup).overflowY==='auto';}));
   await page.keyboard.press('Escape');await page.setViewportSize({width:1280,height:900});
   await page.evaluate(()=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key==='pb_pro_theme_v1'||key==='pb_pro_light_theme_v1')throw new DOMException('Synthetic storage failure','QuotaExceededError');return original.call(this,key,value);};});
@@ -172,5 +193,13 @@ try {
   ({context, page, errors} = await fixture('dunkel', 'invalid-theme'));
   ok('Invalid stored profile falls back to the existing installation mode', await page.locator('html').getAttribute('data-pb-theme') === 'nachtblau');
   await context.close();
+  for(const [name,device] of [['Touch tablet',{hasTouch:true}],['Portrait tablet',{viewport:{width:1280,height:1366}}]]){
+    ({context,page,errors}=await fixture('tag',null,device));await page.locator('#pb-palette-button').click();
+    ok(name+': palette trigger and choices retain 44px targets',await page.locator('#pb-palette').evaluate(popup=>{
+      const trigger=document.getElementById('pb-palette-button').getBoundingClientRect();return trigger.width>=44&&trigger.height>=44&&
+        [...popup.querySelectorAll('[data-pb-palette-choice]')].every(button=>button.getBoundingClientRect().height>=44);
+    }));
+    ok(name+': no appearance runtime errors',errors.length===0);await context.close();
+  }
   console.log(`${count} appearance checks passed (browser UI; no device appearance test claimed).`);
 } finally { await browser?.close(); }

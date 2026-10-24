@@ -71,7 +71,7 @@ try {
   ok('Phone, tablet portrait and DeX keep the short meaning label and trailing magnifier on one line at larger fonts: '+JSON.stringify(largeSearch),largeSearch.every(sample=>sample.fit));
   await page.evaluate(()=>document.documentElement.style.fontSize='');
   await page.setViewportSize({width:1280,height:900});
-  ok('The desktop search container is compact while its input remains easy to target',await page.evaluate(()=>document.querySelector('.searchbox').getBoundingClientRect().height<=52&&document.getElementById('q').getBoundingClientRect().height>=44));
+  ok('The desktop search uses the compact mouse target while touch keeps its larger target',await page.evaluate(()=>{const mouse=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches,minimum=mouse?32:44,height=document.getElementById('q').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=(mouse?40:52)&&height>=minimum&&height<=minimum+2;}));
   for(const width of [280,320,390,650,768,1000,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
@@ -114,7 +114,7 @@ try {
       await control.scrollIntoViewIfNeeded();
       mainReachability.push(await control.evaluate(e=>{
         const r=e.getBoundingClientRect(),strip=e.parentElement.getBoundingClientRect(),icon=e.querySelector('.compact-icon'),caption=e.querySelector('.compact-caption');
-        const fits=r.left>=Math.max(0,strip.left)-1&&r.right<=Math.min(innerWidth,strip.right)+1&&r.height>=28;
+        const fits=r.left>=Math.max(0,strip.left)-1&&r.right<=Math.min(innerWidth,strip.right)+1&&r.width>=44&&r.height>=44;
         let readable=Boolean(icon&&e.title.trim());
         if(e.classList.contains('compact-icon-only'))readable=readable&&!caption&&e.dataset.tab==='search';
         else if(caption&&icon){const cr=caption.getBoundingClientRect(),ir=icon.getBoundingClientRect();readable=readable&&Boolean(caption.textContent.trim())&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&caption.scrollWidth<=caption.clientWidth+1;}

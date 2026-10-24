@@ -17,7 +17,7 @@
   const catalog=make('details','pb-dup-catalog'),catalogTitle=make('summary');catalog.id='pbDuplicateCatalog';catalog.append(catalogTitle);
   const catalogBody=make('div','pb-dup-catalog-body');while(panel.firstChild)catalogBody.append(panel.firstChild);catalog.append(catalogBody);
   const card=make('section','pb-dup-physical');card.id='pbDuplicateCleanup';
-  const heading=make('div','pb-dup-heading'),title=make('h2'),help=make('details','pb-dup-help'),helpTitle=make('summary'),info=make('p'),limits=make('p');helpTitle.textContent='?';help.append(helpTitle,info,limits);heading.append(title,help);
+  const heading=make('div','pb-dup-heading'),title=make('h2'),help=make('details','pb-dup-help'),helpTitle=make('summary'),info=make('p'),limits=make('p');helpTitle.append(window.PBIcons?.create('info')||document.createTextNode('i'));help.append(helpTitle,info,limits);heading.append(title,help);
   const actions=make('div','pb-dup-actions'),choose=make('button','primary'),cancel=make('button','ghost');choose.id='pbDupChoose';cancel.id='pbDupCancel';choose.type=cancel.type='button';actions.append(choose,cancel);
   const status=make('p','pb-dup-status');status.id='pbDupStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   const list=make('div','pb-dup-groups');list.id='pbDupGroups';

@@ -36,6 +36,19 @@ der Wechsel wirkt sofort in der aktuellen Ansicht. Dafür ist kein Wechsel zur
 Einstellungsseite nötig. Die Auswahl wird über die bestehende Theme-Funktion
 gespeichert.
 
+Die Suchsprache steht direkt in der Suchleiste als anklickbarer Code (z. B.
+DE, EN oder RU). Die frühere zusätzliche „Ich spreche“-Zeile entfällt; alle elf
+bisherigen Sprachen bleiben auswählbar und von der Oberflächensprache getrennt.
+Breite Querformatfenster mit Maus erhalten ein flacheres 32-Pixel-Profil;
+Touch- und Hochformatansichten behalten 44-Pixel-Ziele.
+
+In Einstellungen stehen veränderbare Optionen zuerst. Gewöhnliche Erklärungen
+liegen hinter einem einheitlichen Linien-i, auch nach Neuzeichnen der Schutzkarte.
+Aktuelle Zustände, Warnungen und erforderliche Entscheidungen bleiben sichtbar.
+Der große Themenwähler entfällt zugunsten der oberen Palette. Unverfügbare
+Tresoraktionen bleiben tatsächlich verborgen; Gehirn-Emojis und weitere feste
+App-Glyphen werden durch neutrale Liniengrafiken ersetzt.
+
 Die zusätzliche große Überschrift „Dateien hinzufügen“ mit Symbol und der
 zweite Importtitel entfallen; Info steht direkt bei den Importaktionen.
 Der aktive Tab nennt bereits „Hinzufügen“. Allgemeine und doppelte
@@ -43,7 +56,7 @@ Importerklärungen liegen hinter Info und bleiben zunächst geschlossen.
 Ordnerwahl, Importknöpfe, tatsächlicher Ablage- und Verschlüsselungszustand sowie
 Fehler und Fortschritt bleiben sichtbar. In Übersicht und Kategorien entfallen
 der Kasten „Dein privater Raum“ und die allgemeine Einführung. Hilfe zu Zahlen
-steht hinter „?“; notwendige Hinweise für konkrete Aktionen werden nicht
+steht hinter „i“; notwendige Hinweise für konkrete Aktionen werden nicht
 versteckt.
 
 Im Explorer gibt es einen Button **„Sortieren“**. Das zugehörige Menü vereint
@@ -117,8 +130,8 @@ Dateikopf und Öffnen-/Teilen-Handler, direkte Navigation, Übersichtswerte und
 Ordnerlinks, Sortierung, Palette sowie kompakte Import-/Mailhilfe ab. Vier
 Oberflächensprachen und schmale, breite sowie kurze DeX-Fenster mit großer
 Schrift gehören zur Darstellungsprüfung. Der gemeinsame Browserstand ist grün:
-126 Web-, 37 Kompakt-/Netz-, 63 Ordnerlayout-, 96 Theme-, 90 Hilfe-,
-128 Mail-Schreibhilfe-, 24 Übersicht-, 37 Sortier-, 24 Duplikatdialog- und
+126 Web-, 37 Kompakt-/Netz-, 63 Ordnerlayout-, 101 Theme-, 116 Hilfe-,
+128 Mail-Schreibhilfe-, 27 Übersicht-, 40 Sortier-, 40 Sprachwahl-, 24 Duplikatdialog- und
 74 Werkzeugprüfungen. Zusätzlich bestanden Navigation, Anpassung an Hochformat,
 Bedeutungsmodell-Schalter, Explorerarten, Originalstatus und Texteingaben sowie
 52 gemeinsame Workspace-Prüfungen. Die Startseite ist für den späteren Vergleich
@@ -129,7 +142,10 @@ Ein neuer nativer Launcher-Test sowie drei Tests der physischen Bereinigung
 sind für insgesamt **60 native Tests** vorgesehen. Die neuen Fälle verwenden
 synthetische echte SAF-Dateien, darunter geänderte Inhalte, letzte Kopie,
 verlorene Schreibrechte, ungültige IDs, Teilausfall, Abbruch und Ordnerauswahl.
-Die CI-Ausführung steht noch aus. Browserprüfungen nachgebildeter Brücken
+Im ersten CI-Stand liefen 60 native Fälle; 59 bestanden, einschließlich aller
+drei Bereinigungsfälle. Die Manifestquellenprüfung des Launcher-Tests wurde
+auf die explizit installierte Ziel-APK umgestellt. Die vollständige Abnahme
+des ergänzten Abschlussstands steht noch aus. Browserprüfungen nachgebildeter Brücken
 ersetzen diese native Ausführung nicht.
 
 Vor Veröffentlichung müssen die relevanten Android-/Windows- und

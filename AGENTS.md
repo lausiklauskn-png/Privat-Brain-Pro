@@ -1,5 +1,13 @@
 # Private Brain Pro — laufender Auftrag
 
+Neueste .34-Steuerung: echte Einstellungen vor Erklärungen; gewöhnliche Hilfe
+hinter einheitlichem Linien-i, Themenkarte entfällt zugunsten der Palette.
+Gehirn-Emoji entfernen, unsichtbare Tresoraktionen respektieren. Maus/DeX bei
+breitem Querformat 32-Pixel-Steuerungen, Touch/Hochformat 44 Pixel. Suchsprache
+als Codebutton direkt im Suchfeldbereich; alle elf bisherigen Sprachen erhalten.
+Die ergänzten Änderungen brauchen erneut gemeinsame Browser- und CI-Abnahme;
+PR #80 ist noch nicht übernommen, .34 noch nicht veröffentlicht.
+
 - Fortsetzung für Android .34 (24.10.2026): Die native Oberfläche wird anhand
   von Klaus' Screenshots gestrafft; rechts ist die V3-Referenz, links die native
   App. Das V3-Repo bleibt unangetastet. Ein einzelner kleiner Schalter zeigt

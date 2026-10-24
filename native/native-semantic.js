@@ -14,7 +14,7 @@
   // asynchronous app-asset responder cannot replace it with index.html.
   window.SBKIM_MODEL_ROOT = window.Capacitor?.getPlatform?.()==='windows'?'https://pbmodel.localhost/models/':location.origin + '/models/';
   const W = {
-    de: { title: '🧠 Modell für die Bedeutungssuche', load: 'Modell laden', cancel: 'Abbrechen', remove: 'Modell entfernen', retry: 'Erneut starten',
+    de: { title: 'Modell für die Bedeutungssuche', load: 'Modell laden', cancel: 'Abbrechen', remove: 'Modell entfernen', retry: 'Erneut starten',
       none: 'Noch nicht geladen. Einmal etwa {mb} MB, am besten im WLAN. Danach ohne Internet.',
       partial: 'Teilweise geladen ({done} von {mb} MB). „Modell laden“ macht dort weiter.',
       loading: 'Wird geladen: {done} von {mb} MB · {source}', checking: 'Wird geprüft …',
@@ -25,7 +25,7 @@
       space: 'Zu wenig freier Speicher auf dem Gerät.', failed: 'Laden hat nicht geklappt: {why}. Nochmal „Modell laden“ tippen, es geht dort weiter.',
       confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.',
       goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.' },
-    en: { title: '🧠 Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
+    en: { title: 'Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
       none: 'Not loaded yet. About {mb} MB once, ideally on Wi-Fi. Works without internet afterwards.',
       partial: 'Partly loaded ({done} of {mb} MB). “Load model” continues there.',
       loading: 'Loading: {done} of {mb} MB · {source}', checking: 'Checking …',
@@ -36,7 +36,7 @@
       space: 'Not enough free storage on the device.', failed: 'Loading failed: {why}. Tap “Load model” again, it continues there.',
       confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.',
       goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.' },
-    ru: { title: '🧠 Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
+    ru: { title: 'Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
       none: 'Ещё не загружена. Один раз около {mb} МБ, лучше по Wi-Fi. Потом работает без интернета.',
       partial: 'Загружено частично ({done} из {mb} МБ). «Загрузить модель» продолжит.',
       loading: 'Загрузка: {done} из {mb} МБ · {source}', checking: 'Проверка …',
@@ -47,7 +47,7 @@
       space: 'Недостаточно свободной памяти.', failed: 'Загрузка не удалась: {why}. Нажмите «Загрузить модель» ещё раз.',
       confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.',
       goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.' },
-    pl: { title: '🧠 Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
+    pl: { title: 'Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
       none: 'Jeszcze nie pobrany. Jednorazowo około {mb} MB, najlepiej przez Wi-Fi. Potem działa bez internetu.',
       partial: 'Pobrano częściowo ({done} z {mb} MB). „Pobierz model” kontynuuje.',
       loading: 'Pobieranie: {done} z {mb} MB · {source}', checking: 'Sprawdzanie …',

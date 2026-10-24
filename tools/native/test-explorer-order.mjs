@@ -44,6 +44,7 @@ try{
   ok('The single Sort button describes the actual initial order',(await summary.innerText()).trim()==='Sortieren'&&(await summary.getAttribute('title'))==='Sortieren: Datum · Neueste oben');
   ok('Legacy select and direction remain in the DOM but are hidden',await page.locator('#explorerSort').count()===1&&await page.locator('#explorerOrder').count()===1&&!await page.locator('#explorerSort').isVisible()&&!await page.locator('#explorerOrder').isVisible());
   ok('The new button uses the shared line sort icon',await summary.locator('svg[data-icon-key="sort"]').count()===1);
+  ok('A wide mouse workspace uses a flat Sort target',await summary.evaluate(e=>{const rect=e.getBoundingClientRect();return matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches&&rect.height>=32&&rect.height<=34;}));
   await chooseDirection(true);
   ok('The direction choice puts the oldest on top',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf','Gehaltsabrechnung-September.pdf','Rechnung-Stadtwerke.pdf'])&&(await summary.getAttribute('title')).endsWith('Älteste oben'));
   ok('Choosing a direction closes its menu',!await menu.evaluate(e=>e.open));
@@ -95,7 +96,8 @@ try{
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       fits&&=await page.evaluate(()=>{
         const control=document.querySelector('#pb-explorer-sort>summary'),popup=document.querySelector('#pb-explorer-sort-popup'),rect=popup.getBoundingClientRect();
-        return document.documentElement.scrollWidth<=innerWidth+1&&control.scrollWidth<=control.clientWidth+1&&rect.left>=-1&&rect.right<=innerWidth+1&&popup.scrollWidth<=popup.clientWidth+1&&[...popup.querySelectorAll('button')].every(button=>button.getBoundingClientRect().height>=44);
+        const target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;
+        return document.documentElement.scrollWidth<=innerWidth+1&&control.scrollWidth<=control.clientWidth+1&&control.getBoundingClientRect().height>=target&&rect.left>=-1&&rect.right<=innerWidth+1&&popup.scrollWidth<=popup.clientWidth+1&&[...popup.querySelectorAll('button')].every(button=>button.getBoundingClientRect().height>=target);
       });
       await summary.click();
     }
@@ -132,6 +134,15 @@ try{
   ok('Extensionless files use their recorded MIME type',JSON.stringify(await names())===JSON.stringify(['Z-mimeonly','A-mimeonly']));
   await summary.click();await page.locator('#explorerFilter').click();
   ok('A click outside closes the menu',!await menu.evaluate(e=>e.open));
+  const touch=await browser.newContext({viewport:{width:1280,height:800},hasTouch:true}),touchPage=await touch.newPage();
+  try{
+    await touchPage.route('**/*',route=>route.request().url().startsWith(url)?route.continue():route.abort());
+    await touchPage.goto(url);await touchPage.waitForSelector('#pb-explorer-sort>summary',{state:'attached'});await touchPage.locator('[data-tab="explorer"]').click();
+    await touchPage.locator('#pb-explorer-sort>summary').click();
+    ok('A wide touch-only device retains 44 px Sort and choice targets',await touchPage.evaluate(()=>!matchMedia('(any-pointer:fine)').matches&&[document.querySelector('#pb-explorer-sort>summary'),...document.querySelectorAll('#pb-explorer-sort-popup button')].every(e=>e.getBoundingClientRect().height>=44)));
+  }finally{await touch.close();}
+  await page.setViewportSize({width:1280,height:1600});
+  ok('Portrait keeps the large Sort target even with a mouse',await summary.evaluate(e=>!matchMedia('(orientation:landscape)').matches&&e.getBoundingClientRect().height>=44));
   ok('No runtime errors',errors.length===0);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} explorer order checks passed (seeded catalog; no files written).`);

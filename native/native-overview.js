@@ -32,7 +32,7 @@
   }
   const section=make('section','pb-overview'),title=make('h2'),summary=make('div','pb-overview-summary'),known=make('p'),local=make('p');
   known.id='pb-overview-known';local.id='pb-overview-local';summary.append(known,local);
-  const info=make('details','pb-overview-help'),infoTitle=make('summary'),infoBody=make('p');info.append(infoTitle,infoBody);
+  const info=make('details','pb-overview-help'),infoTitle=make('summary'),infoBody=make('p');infoTitle.append(window.PBIcons?.create('info')||document.createTextNode('i'));info.append(infoTitle,infoBody);
   const heading=make('div','pb-overview-folder-head'),folderHeading=make('strong'),countHeading=make('span'),sizeHeading=make('span');heading.append(folderHeading,countHeading,sizeHeading);
   const list=make('div','pb-overview-folders'),more=make('button','ghost pb-overview-more');more.type='button';
   section.append(title,summary,info,heading,list,more);dashboard.querySelector('.tiles').after(section);
@@ -56,7 +56,7 @@
     const categoryCount=document.getElementById('kpiCats');
     if(categoryCount){setText(categoryCount,String(data.categories.length+data.topics.length));const scope=categoryCount.parentElement.querySelector('.u');if(scope)setText(scope,w.categoryScope);}
     if(onDash){
-      setText(title,w.folders);setText(infoTitle,'?');infoTitle.setAttribute('aria-label',w.details);infoTitle.title=w.details;setText(infoBody,w.help);
+      setText(title,w.folders);infoTitle.setAttribute('aria-label',w.details);infoTitle.title=w.details;setText(infoBody,w.help);
       setText(folderHeading,w.folder);setText(countHeading,w.count);setText(sizeHeading,w.bytes);setText(more,w.all);
       setText(known,w.files+': '+data.total.count+' · '+w.size+': '+bytes(data.total.knownBytes)+(data.total.unknownSizes?' · '+data.total.unknownSizes+' '+w.unknown:''));
       setText(local,w.copies+': '+(data.originalsError?w.unavailable:!data.originalsReady?w.waiting:data.total.localCount+' · '+bytes(data.total.localBytes)));

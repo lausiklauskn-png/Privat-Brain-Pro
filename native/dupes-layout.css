@@ -14,3 +14,6 @@
 .pb-dup-review{max-width:650px;width:calc(100% - 32px);max-height:calc(100dvh - 40px);overflow:auto;box-sizing:border-box}.pb-dup-review h2{font-size:1.12rem;margin-top:0}.pb-dup-review p{font-size:.9rem;line-height:1.5}.pb-dup-review ul{max-height:35dvh;overflow:auto;padding-left:22px;overflow-wrap:anywhere}.pb-dup-review li{padding:5px 0;font-size:.87rem}
 @keyframes pbDupPulse{0%,100%{opacity:.35}50%{opacity:1}}@media(prefers-reduced-motion:reduce){.pb-dup-waiting:before{animation:none}}
 @media(max-width:600px){#panel-dupes .pb-dup-physical{padding:12px}.pb-dup-actions{gap:8px}.pb-dup-selection .pb-dup-danger{width:100%;margin-left:0}.pb-dup-copy-text span{font-size:.78rem}}
+
+.pb-dup-help>summary{width:44px;height:44px;border:0}
+.pb-dup-help>summary>svg{width:20px;height:20px}

@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+Neueste .34-Steuerung: echte Einstellungen vor Erklärungen; gewöhnliche Hilfe
+hinter einheitlichem Linien-i, Themenkarte entfällt zugunsten der Palette.
+Gehirn-Emoji entfernen, unsichtbare Tresoraktionen respektieren. Maus/DeX bei
+breitem Querformat 32-Pixel-Steuerungen, Touch/Hochformat 44 Pixel. Suchsprache
+als Codebutton direkt im Suchfeldbereich; alle elf bisherigen Sprachen erhalten.
+Die ergänzten Änderungen brauchen erneut gemeinsame Browser- und CI-Abnahme;
+PR #80 ist noch nicht übernommen, .34 noch nicht veröffentlicht.
+
 **.34 in Arbeit, noch nicht veröffentlicht:** Die native Oberfläche wird nach
 Klaus' Screenshots gestrafft; V3 rechts ist Referenz, die native App steht links.
 Das V3-Repo wird nicht verändert. Ein kleiner einzeiliger Schalter zeigt nur
