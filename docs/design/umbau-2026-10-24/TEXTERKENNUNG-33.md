@@ -56,6 +56,16 @@ unterbrochenen Lauf wird keine automatische Wiederholung gestartet.
   einem E-Mail-Anhang, unveränderte Originalbytes, Abbruch und erneuter Start.
   Ein gezielt ausgelöster Workerfehler und ein simulierter Prozessabbruch
   löschen keine früheren Befunde; unsichere oder begrenzte Bereiche bleiben offen.
+- 56 echte native Android-Tests auf dem ersten .33-Stand ohne Fehler oder Skips
+  bestanden, einschließlich mehrsprachiger Rastertexte, Scan-PDF und Suche bei
+  gesperrten Dokument- und Worker-Netzwerkladewegen.
+- Die CI zeigte zusätzlich einen sporadischen Mail-Kopfzeilenbefund. Ein zweiter
+  Startabruf nach einer bereits abgeschlossenen Aktualisierung konnte die
+  Bedienelemente während der Prüfung austauschen. Dieser unnötige Doppelabruf
+  wird unterdrückt; alte gespeicherte Daten und die regelmäßige Aktualisierung
+  behalten ihren vorgesehenen Abruf. Zehn Gegenproben mit virtueller Uhr
+  bestanden, einschließlich rückwärts verstellter Gerätezeit sowie alter und
+  zukünftiger gespeicherter Abrufzeitpunkte.
 - Vollständige bisherige Websuite und übrige native Browsersuite bestanden.
   Die abschließende Android-/Windows-CI und die signierte Updateprobe sind
   **noch in Prüfung**. Hier wird noch kein veröffentlichter .33-Download behauptet.

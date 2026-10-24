@@ -17,7 +17,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url=`http://127.0.0.1:${server.address().port}/`;
 let browser,count=0;
-const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
+const ok=(name,value,details)=>{assert.ok(value,details?name+'; '+JSON.stringify(details):name);console.log('✓ '+name);count++;};
 // PB_CAPTURE_DESIGN=1 stores phone pictures for the preview page; never part of CI.
 async function capture(page,name){if(process.env.PB_CAPTURE_DESIGN!=='1')return;const size=page.viewportSize();await mkdir('docs/design/alle-konten',{recursive:true});await page.setViewportSize({width:390,height:844});await page.waitForTimeout(150);await page.screenshot({path:`docs/design/alle-konten/${name}.png`});await page.setViewportSize(size);}
 try{
@@ -276,8 +276,8 @@ try{
   // One header row: Zurück, account choice, ⟳ (no text), ⋯
   await mail.locator('.live-mail [data-mail-all=open]').click();
   await panel.locator('[data-mail-all=list]').click();
-  const head=await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head'),kids=[...h.children].filter(x=>!x.hidden);const mids=kids.map(x=>{const r=x.getBoundingClientRect();return r.top+r.height/2;});return {rows:Math.max(...mids)-Math.min(...mids)<6?1:2,back:h.querySelector('.mail-back').textContent,refresh:h.querySelector('[data-mail-all=refresh]')?.textContent.trim(),label:h.querySelector('[data-mail-all=refresh]')?.getAttribute('aria-label'),options:[...h.querySelector('[data-mail-all=account]').options].map(o=>o.textContent)};});
-  ok('Header is one row: "← Zurück", account choice, refresh symbol without text',head.rows===1&&head.back==='← Zurück'&&head.refresh===''&&head.label==='Jetzt aktualisieren'&&JSON.stringify(head.options)===JSON.stringify(['Alle Konten','klaus@example.invalid','zweit@example.invalid']));
+  const head=await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head'),kids=[...h.children].filter(x=>!x.hidden);const children=kids.map(x=>{const r=x.getBoundingClientRect(),s=getComputedStyle(x);return {tag:x.tagName,class:x.className,top:r.top,height:r.height,width:r.width,display:s.display,transform:s.transform,open:x.open};});const mids=children.map(r=>r.top+r.height/2);return {rows:Math.max(...mids)-Math.min(...mids)<6?1:2,back:h.querySelector('.mail-back').textContent,refresh:h.querySelector('[data-mail-all=refresh]')?.textContent.trim(),label:h.querySelector('[data-mail-all=refresh]')?.getAttribute('aria-label'),options:[...h.querySelector('[data-mail-all=account]').options].map(o=>o.textContent),viewport:{width:innerWidth,height:innerHeight},fontStatus:document.fonts.status,running:PBMailIndex.running(),children};});
+  ok('Header is one row: "← Zurück", account choice, refresh symbol without text',head.rows===1&&head.back==='← Zurück'&&head.refresh===''&&head.label==='Jetzt aktualisieren'&&JSON.stringify(head.options)===JSON.stringify(['Alle Konten','klaus@example.invalid','zweit@example.invalid']),head);
   await panel.locator('[data-mail-all=account]').selectOption('22222222-2222-4222-8222-222222222222');
   const only=await page.evaluate(()=>[...document.querySelectorAll('#pb-mail-all [data-mail-all-id]')].map(b=>CATALOG.find(r=>r.hash===b.dataset.mailAllId)).every(r=>r.mailRemotes.some(l=>l.account==='22222222-2222-4222-8222-222222222222'))&&document.querySelectorAll('#pb-mail-all [data-mail-all-id]').length>0);
   ok('Choosing one account shows only its mails, the header names it',only&&await panel.locator('[data-mail-all=account] option:checked').textContent()==='zweit@example.invalid');

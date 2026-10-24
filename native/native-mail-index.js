@@ -230,7 +230,7 @@
   function addTwin(map, rec) { const key = twinKey(rec.mail.from, rec.mail.subject || rec.name), list = map.get(key) || []; list.push(rec); map.set(key, list); }
 
   // ---------- sync ----------
-  let running = null, stopRequested = false, lastProblem = '', progressText = '';
+  let running = null, stopRequested = false, lastProblem = '', progressText = '', syncedSinceStart = false;
   async function folderState() { return load(KEYS.state, {}); }
   async function stateKey(account, path) { return (await hashText('state\n' + account + '\n' + path)).slice(0, 32); }
   function chooseFolders(folders) {
@@ -312,7 +312,10 @@
         }
       }
       if (failed.length) lastProblem = t('failed') + ' ' + failed.join(', ');
-      if (!stopRequested && accounts.length) store(KEYS.last, { at: Date.now(), accounts: accounts.length });
+      if (!stopRequested && accounts.length) {
+        store(KEYS.last, { at: Date.now(), accounts: accounts.length });
+        syncedSinceStart = true;
+      }
       if (!accounts.length && !auto) lastProblem = t('noAccounts');
       if (!stopRequested && accounts.length) {
         const due = sorted().expired.filter(r => r.mailSenderRule === 'auto');
@@ -733,7 +736,11 @@
   new MutationObserver(() => { draw(); drawDupes(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   document.addEventListener('visibilitychange', () => { const last = load(KEYS.last, null); if (last && Date.now() - last.at > INTERVAL) autoRun(); });
   setInterval(autoRun, INTERVAL);
-  setTimeout(autoRun, 5000);
+  setTimeout(() => {
+    // A manual fetch can finish before this delayed startup refresh. It already
+    // satisfies the opening fetch, independently of device-clock adjustments.
+    if (!syncedSinceStart) autoRun();
+  }, 5000);
   drawDupes();
   window.PBMailIndex = { entry, sync, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
 })();
