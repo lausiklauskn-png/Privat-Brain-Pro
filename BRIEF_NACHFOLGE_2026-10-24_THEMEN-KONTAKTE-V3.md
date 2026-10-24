@@ -91,11 +91,13 @@ vier Sprachen, hell und dunkel, alle vier Themen, Breiten 320–1280 ohne Querla
 
 Reihenfolge: T1 → T2 → K1/K2 (eigener Bauabschnitt nach der Musterseite) → T3 → T4 → T5. K3a erst nach Klaus' Wahl.
 
-## Offene Fragen an Klaus
+## Klaus' Antworten (2026-10-24)
 
-1. Welches Thema wird **Standard** (oder bleibt „Bisher“ Standard)?
-2. Kontaktfotos: welche Wege aus K3a (a/b/c)?
-3. V3 als eigene App: eigene Paketkennung und eigenes Signieren (damit sie neben Pro installiert werden kann), oder nur Web?
+1. Standard-Thema: **Klar**.
+2. Kontaktfotos: **a (Adressbuch) und b (von Hand)**, nicht c.
+3. V3 wird eine **eigene App**.
+
+Umsetzung in V3: `BRIEF_NACHFOLGE_2026-10-24_V3-START.md` im Repo Privat-Brain-Pro-V3.
 
 ## Privat-Brain-Pro-V3: Stand und nächste Schritte
 
