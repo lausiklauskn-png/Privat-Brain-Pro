@@ -84,7 +84,8 @@
     }
     if(raw)entry.name=raw==='?'?heading?.textContent.trim()||summary.getAttribute('aria-label')||raw:raw;
     else if(key==='ocr')entry.name=heading?.textContent.trim()||entry.name;
-    summary.classList.add('pb-help-toggle');summary.dataset.pbHelpDetails=key;
+    if(!summary.classList.contains('pb-help-toggle'))summary.classList.add('pb-help-toggle');
+    if(summary.dataset.pbHelpDetails!==key)summary.dataset.pbHelpDetails=key;
     if(!summary.querySelector(':scope>svg'))summary.replaceChildren(symbol());
     summary.setAttribute('aria-label',entry.name);entry.paint();
   }
@@ -104,9 +105,9 @@
     // for translation and the panel's accessible name, without another title row.
     const intakeTitle=one(intake,':scope > h2[data-ws="add"]');
     if (intakeTitle) {
-      intakeTitle.hidden=true;
+      if(!intakeTitle.hidden)intakeTitle.hidden=true;
       if (!intakeTitle.id) intakeTitle.id='pb-intake-heading';
-      intake.setAttribute('aria-labelledby',intakeTitle.id);
+      if(intake.getAttribute('aria-labelledby')!==intakeTitle.id)intake.setAttribute('aria-labelledby',intakeTitle.id);
     }
     card('import-library',one(intake,'.library-setup'),['[data-ws="libraryHelp"]'],true);
     const drop=document.getElementById('drop'),principles=one(intake,'.native-import-reassurance');
@@ -117,7 +118,7 @@
     const settings=document.getElementById('panel-settings'),theme=document.getElementById('pb-theme-settings');
     // The direct palette reuses these translated labels, colors and status.
     // Keep its source intact without offering a second large theme chooser.
-    if(theme)theme.hidden=true;
+    if(theme&&!theme.hidden)theme.hidden=true;
     card('input-language',document.getElementById('pb-input-language-settings'),['[data-input-language-copy="help"]'],true);
     const vault=document.getElementById('vaultPlace'),protection=document.getElementById('schutzPlace'),tresor=document.getElementById('tresorNote');
     staticCard('vault',vault,':scope>p.hint');
@@ -146,7 +147,7 @@
     information('protection-limits',one(protection,':scope>.native-vault-limits'),one(protection,'h3'));
     settingsOrder(settings,[document.getElementById('pb-input-language-settings'),vault,protection,offline,ocr,tresor,provider,image,attachments,folders,catalog,merge,mycel,document.getElementById('pb-license'),one(settings,':scope>.native-updates')],[document.getElementById('stFiles')?.closest('.note'),document.getElementById('vaultNote')]);
     for(const entry of entries.values())label(entry);
-    root.classList.add('pb-help-ready');
+    if(!root.classList.contains('pb-help-ready'))root.classList.add('pb-help-ready');
   }
   let pending=false;
   function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;refresh();});}

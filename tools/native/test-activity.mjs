@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright-core';
-const root=resolve('www'),origin='https://localhost/';
+const root=resolve(process.env.PB_ACTIVITY_TEST_ROOT||'www'),origin='https://localhost/';
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.woff2':'font/woff2','.svg':'image/svg+xml'};
 let browser,count=0;
 const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
@@ -20,8 +20,8 @@ try{
   });
   await page.addInitScript(()=>{
     const nativeFrame=window.requestAnimationFrame.bind(window);
-    window.fixtureActivityFrames=0;
-    window.requestAnimationFrame=callback=>{if(new Error().stack.includes('/native-activity.js'))fixtureActivityFrames++;return nativeFrame(callback);};
+    window.fixtureActivityFrames=0;window.fixtureIdleCallers=[];
+    window.requestAnimationFrame=callback=>{const stack=new Error().stack;if(stack.includes('/native-activity.js')){fixtureActivityFrames++;if(window.fixtureMeasureIdle&&fixtureIdleCallers.length<20)fixtureIdleCallers.push(stack);}return nativeFrame(callback);};
     let progress;
     window.Capacitor={Plugins:{ProDevice:{async getInfo(){return{versionName:'activity-fixture'};}},ProSemantic:{
       async getState(){return{installed:false,running:false,present:0,total:100*1048576,crashes:0};},
@@ -112,11 +112,36 @@ try{
   await page.evaluate(()=>{document.querySelector('#activity-progress-fixtures .native-mail-progress').hidden=true;document.querySelector('#activity-progress-fixtures select').disabled=false;});
   await page.locator('#activity-progress-fixtures .pb-mail-translation > .pb-progress-busy').waitFor({state:'hidden'});
   ok('Finishing mail actions removes their activity indicators',await page.locator('#activity-progress-fixtures .native-mail-progress > .pb-progress-busy').isHidden());
-  const idleFrames=await page.evaluate(async()=>{
+  const idle=await page.evaluate(async()=>{
     const frames=count=>new Promise(resolve=>{const next=()=>{if(--count<=0)resolve();else requestAnimationFrame(next);};requestAnimationFrame(next);});
-    await frames(2);const before=fixtureActivityFrames;await frames(5);return fixtureActivityFrames-before;
+    await frames(2);const before=fixtureActivityFrames,mutations=[];
+    const observer=new MutationObserver(records=>{for(const item of records)if(mutations.length<40)mutations.push({type:item.type,id:item.target.id||'',attribute:item.attributeName,old:item.oldValue,value:item.attributeName?item.target.getAttribute(item.attributeName):null});});
+    observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeOldValue:true,attributeFilter:['class','hidden','data-state','disabled']});
+    fixtureIdleCallers=[];window.fixtureMeasureIdle=true;await frames(5);window.fixtureMeasureIdle=false;observer.disconnect();
+    return{frames:fixtureActivityFrames-before,callers:fixtureIdleCallers,mutations};
   });
+  const idleFrames=idle.frames;
+  if(idleFrames>1)console.error('Idle activity diagnostic: '+JSON.stringify(idle));
   ok('Idle feedback has no continuously scheduled JavaScript animation loop',idleFrames<=1);
+  const redundantHelpWrites=await page.evaluate(async()=>{
+    const records=[],observer=new MutationObserver(mutations=>{for(const item of mutations)if(
+      item.attributeName==='hidden'&&['pb-intake-heading','pb-theme-settings'].includes(item.target.id)||
+      item.attributeName==='class'&&item.target.matches('summary[data-pb-help-details]'))records.push({id:item.target.id||'',attribute:item.attributeName,old:item.oldValue,value:item.target.getAttribute(item.attributeName)});});
+    observer.observe(document.body,{subtree:true,attributes:true,attributeOldValue:true,attributeFilter:['class','hidden']});
+    PBHelp.refresh();PBHelp.refresh();PBHelp.refresh();await Promise.resolve();observer.disconnect();return records;
+  });
+  ok('Unchanged help refreshes do not wake activity through redundant hidden or class writes',redundantHelpWrites.length===0||console.error(redundantHelpWrites));
+  const diagnosticWrites=await page.evaluate(async()=>{
+    const records=[],observer=new MutationObserver(mutations=>{for(const item of mutations)records.push({id:item.target.id||'',attribute:item.attributeName,old:item.oldValue,value:item.target.getAttribute(item.attributeName)});});
+    observer.observe(document.body,{subtree:true,attributes:true,attributeOldValue:true,attributeFilter:['class','hidden']});
+    // renderDiag periodically updates these real nodes, even while hidden.
+    // Its observers must not rewrite unchanged chrome and schedule another wave.
+    document.getElementById('diagLog').textContent+='\nSynthetic late diagnostic entry';
+    document.getElementById('diagMem').textContent='Synthetic memory update';
+    await new Promise(resolve=>{let left=5;const frame=()=>{if(--left)requestAnimationFrame(frame);else resolve();};requestAnimationFrame(frame);});
+    observer.disconnect();return records;
+  });
+  ok('A late diagnostic update does not rewrite unchanged toolbar or help classes and visibility',diagnosticWrites.length===0||console.error(diagnosticWrites));
   ok('No unhandled app errors occur across overlap, failures and progress changes',errors.length===0||console.log(errors));
   console.log(`${count} activity feedback checks passed (real DOM/CSS; synthetic asynchronous work, not a physical-device speed claim).`);
 }finally{await browser?.close();}

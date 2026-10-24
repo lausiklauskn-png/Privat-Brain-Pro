@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const make=(tag,cls)=>{const node=document.createElement(tag);node.className=cls;return node;};
+  const setClass=(node,name,value=true)=>{if(node.classList.contains(name)!==value)node.classList.toggle(name,value);};
   const strings={
     de:['Ansichten','App-Menü','Schließen'],en:['Views','App menu','Close'],
     ru:['Разделы','Меню приложения','Закрыть'],pl:['Widoki','Menu aplikacji','Zamknij']
@@ -102,15 +103,15 @@
     let glyph=node.querySelector(':scope>.compact-icon');
     if(known&&glyph?.dataset.iconKey!==key){const next=icon(key);if(glyph)glyph.replaceWith(next);else node.prepend(next);}
     else if(!known)glyph?.remove();
-    node.classList.add('compact-tool');node.classList.toggle('compact-text-only',!known);
+    setClass(node,'compact-tool');setClass(node,'compact-text-only',!known);
     node.setAttribute('aria-label',label);node.title=label;
     // Klaus 2026-10-21: magnifier and gear are self-explanatory; their words go, the name stays as tooltip.
-    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
+    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();setClass(node,'compact-icon-only');}
     else if(node.dataset.tab||node.hasAttribute('data-mail-caption')||node.dataset.iconCaption==='true'||!known||node.tagName==='SUMMARY'&&key==='more'||node.dataset.mailAi==='open'||['spam','notspam','restore'].includes(node.dataset.nativeSelection)||node.dataset.liveText==='notSpam'){
-      node.classList.remove('compact-icon-only');
+      setClass(node,'compact-icon-only',false);
       let caption=node.querySelector(':scope>.compact-caption');if(!caption){caption=make('span','compact-caption');caption.setAttribute('aria-hidden','true');node.append(caption);}
       if(caption.textContent!==label)caption.textContent=label;
-      if(!node.dataset.tab)node.classList.add('compact-tool-has-caption');
+      if(!node.dataset.tab)setClass(node,'compact-tool-has-caption');
     }
   }
   const folderIcons={inbox:'inbox',draft:'compose',outbox:'send',sent:'read',archive:'archive',spam:'warning',trash:'trash',exported:'external'};
@@ -141,7 +142,7 @@
     if(slot.parentElement?.classList.contains('mail-folder'))glyph.classList.add('native-folder-icon');
     if(!slot.querySelector(':scope>.pb-icon-fallback')){const fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');fallback.append(...slot.childNodes);slot.append(fallback);}
     if(previous)previous.replaceWith(glyph);else slot.append(glyph);
-    slot.classList.add('pb-content-icon');
+    setClass(slot,'pb-content-icon');
   }
   const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','unlock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
   for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
@@ -285,8 +286,8 @@
     // The file viewer is outside .wrap. Keep its existing handoff buttons and
     // translated labels; only Share becomes a familiar icon without a caption.
     for(const button of document.querySelectorAll('.native-file-head>[data-native-action=share]')){
-      decorate(button,'share');button.classList.add('native-file-share','compact-icon-only');
-      button.classList.remove('compact-tool-has-caption');button.querySelector(':scope>.compact-caption')?.remove();
+      decorate(button,'share');setClass(button,'native-file-share');setClass(button,'compact-icon-only');
+      setClass(button,'compact-tool-has-caption',false);button.querySelector(':scope>.compact-caption')?.remove();
     }
     for(const button of document.querySelectorAll('.native-file-head>[data-native-action=open]'))decorateInline(button,'external','native-content-icon',false);
     for(const title of document.querySelectorAll('.native-file-head>.native-file-title'))if(title.title!==title.textContent)title.title=title.textContent;
