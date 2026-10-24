@@ -78,6 +78,15 @@ async function fixture(mode = 'pending') {
 
 const card = (page,key) => page.locator('#results .card[data-hash="' + hashes[key] + '"]');
 const availability = (page,key) => card(page,key).locator('.pb-record-availability');
+// The report is built after the write, while list badges refresh on the next animation
+// frame. Wait for both visible presentations; a completed IDB write alone is not enough.
+const waitForSaveWarning = (page,key,shown) => page.waitForFunction(({hash,shown}) => {
+  const dialog=document.querySelector('dialog.pb-check-report[open][data-hash="' + hash + '"]');
+  const badge=document.querySelector('#results .card[data-hash="' + hash + '"] .pb-check-badge');
+  return Boolean(dialog && badge)
+    && Boolean(dialog.querySelector('.pb-check-unsaved')) === shown
+    && /nicht gespeichert/.test(badge.textContent) === shown;
+}, {hash:hashes[key],shown}, {timeout:5000});
 
 try {
   browser = await chromium.launch({executablePath:process.env.CB_CHROMIUM || '/usr/bin/chromium',args:['--no-sandbox']});
@@ -130,6 +139,7 @@ try {
   await report.waitFor();
   await report.getByRole('button',{name:'Erneut prüfen',exact:true}).click();
   await report.locator('.pb-check-unsaved').waitFor();
+  await waitForSaveWarning(page,'text',true);
   ok('A failed catalog write preserves the fresh finding from the real mail checker',await page.evaluate(hash => CATALOG.find(r=>r.hash===hash).pruefung.funde.some(f=>f.k==='KI-ANWEISUNG'),hashes.text));
   ok('The report and visible check badge name an unsaved result',await report.locator('.pb-check-unsaved').isVisible() && /nicht gespeichert/.test(await card(page,'text').locator('.pb-check-badge').textContent()));
   ok('Failed persistence leaves the earlier stored report intact',await page.evaluate(async hash => {const saved=await idbGet('catalog',hash);return saved.pruefung.zeit===1700000000000&&saved.pruefung.funde.length===0;},hashes.text));
@@ -137,6 +147,7 @@ try {
   await report.getByRole('button',{name:'Erneut prüfen',exact:true}).click();
   await page.waitForFunction(async hash => {const saved=await idbGet('catalog',hash);return saved?.pruefung.funde.some(f=>f.k==='KI-ANWEISUNG');},hashes.text);
   await report.waitFor();
+  await waitForSaveWarning(page,'text',false);
   ok('An explicit retry persists the current finding once catalog writing succeeds',await page.evaluate(async hash => {const saved=await idbGet('catalog',hash);return saved.mailBody.includes('ignore previous instructions')&&saved.pruefung.funde.some(f=>f.k==='KI-ANWEISUNG');},hashes.text));
   ok('Successful awaited persistence clears both unsaved warnings',await report.locator('.pb-check-unsaved').count()===0 && !/nicht gespeichert/.test(await card(page,'text').locator('.pb-check-badge').textContent()));
   await report.getByRole('button',{name:'Schließen',exact:true}).click();
@@ -174,7 +185,10 @@ try {
   await page.locator('#q').fill('Status');
   for (const [language, phrase] of [['de','Original fehlt'],['en','Original missing'],['ru','Нет оригинала'],['pl','Brak oryginału']]) {
     await page.evaluate(language => {document.documentElement.lang=language;},language);
-    await page.waitForFunction(({hash,language}) => document.documentElement.lang === language && document.querySelector('#results .card[data-hash="' + hash + '"] .pb-record-availability')?.textContent.length > 0,{hash:hashes.clean,language});
+    await page.waitForFunction(({hash,language,phrase}) => {
+      const chip=document.querySelector('#results .card[data-hash="' + hash + '"] .pb-record-availability');
+      return document.documentElement.lang === language && chip && (chip.textContent + ' ' + chip.title).includes(phrase);
+    },{hash:hashes.clean,language,phrase},{timeout:5000});
     const labels = await page.evaluate(() => [...document.querySelectorAll('#results .pb-record-availability')].map(e => ({state:e.dataset.original,text:e.textContent,title:e.title})));
     ok(language + ': availability labels follow the app language',labels.every(e => e.text.trim().length > 0) && labels.some(e => e.state === 'missing' && (e.text + ' ' + e.title).includes(phrase)));
     for (const width of [320,412,768,1280,1920]) {
