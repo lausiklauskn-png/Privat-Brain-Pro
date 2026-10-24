@@ -64,6 +64,17 @@ html[data-pb-theme] .mail-copy-fields>summary { font-weight:600; padding:7px 0; 
 html[data-pb-theme] .mail-report { border-radius:7px; }
 html[data-pb-theme] .mail-all-head,html[data-pb-theme] .mail-all-switch { background:var(--card); }
 html[data-pb-theme] .topic-suggest { background:var(--card); border-radius:6px; }
+/* Availability describes the original; the neighbouring button describes its saved check. */
+html[data-pb-theme] .pb-record-availability { display:inline-block; max-width:100%; margin:4px 8px 0 0; color:var(--mut); font-size:.78rem; line-height:1.5; overflow-wrap:anywhere; vertical-align:middle; }
+html[data-pb-theme] .pb-record-availability[data-original=missing],
+html[data-pb-theme] .pb-record-availability[data-original=unavailable] { color:var(--warn); }
+html[data-pb-theme] .pb-check-badge { max-width:100%; border-radius:5px; border-color:var(--line); color:var(--mut); white-space:normal; text-align:left; overflow-wrap:anywhere; line-height:1.4; }
+html[data-pb-theme] .pb-check-badge[data-check=clean] { color:var(--good); border-color:var(--line); }
+html[data-pb-theme] .pb-check-badge[data-check=found],
+html[data-pb-theme] .pb-check-report .pb-check-found li { color:var(--bad); border-color:var(--line); }
+html[data-pb-theme] .pb-check-badge[data-check=partly] { color:var(--warn); border-color:var(--line); }
+html[data-pb-theme] .pb-mail-index-status { padding:5px 0 8px; margin:5px 0 9px; border-bottom:1px solid var(--line); }
+html[data-pb-theme] .pb-mail-index-scope { margin:5px 0 0; color:var(--mut); font-size:.78rem; line-height:1.5; }
 @media(min-width:1051px) {
   html[data-pb-theme] .mail-layout { grid-template-columns:180px minmax(230px,300px) minmax(0,1fr); }
 }
@@ -103,3 +114,46 @@ html[data-pb-theme] .topic-suggest { background:var(--card); border-radius:6px; 
   html[data-pb-theme] header .brand h1 { font-size:.72rem; }
 }
 @media(prefers-reduced-motion:reduce) { html[data-pb-theme] button { transition:none; } }
+
+/* Phone and tablet portrait, including a tall DeX window, use one working pane.
+   This changes layout only; active folder, reader and draft nodes stay mounted. */
+@media(orientation:portrait) {
+  html[data-pb-theme] #mailWorkspace .mail-layout { display:flex; flex-direction:column; }
+  html[data-pb-theme] #mailWorkspace .mail-folders { flex:none; display:flex; align-items:center; gap:4px; max-height:48px; min-height:40px; padding:2px; border-right:0; overflow:auto; }
+  html[data-pb-theme] #mailWorkspace .mail-folder { flex:none; width:auto; white-space:nowrap; }
+  html[data-pb-theme] #mailWorkspace .mail-list { flex:1; border-right:0; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=list] .mail-reader { display:none; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-layout { display:block; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-reader { height:100%; width:100%; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-folders,
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-list { display:none; }
+  html[data-pb-theme] #mailWorkspace .mail-back { display:inline-flex!important; }
+  html[data-pb-theme] .explorer-layout { display:flex; flex-direction:column; }
+  html[data-pb-theme] #explorerTree,html[data-pb-theme] #explorerTreeToggle { display:none!important; }
+  html[data-pb-theme] #explorerFiles { flex:1; width:100%; }
+}
+
+/* A microphone belongs to its field; it is not another column in the form. */
+html[data-pb-theme] .pb-dictate-wrap { display:flex; align-items:flex-start; gap:5px; width:100%; min-width:0; }
+html[data-pb-theme] .pb-dictate-wrap>input,html[data-pb-theme] .pb-dictate-wrap>textarea,html[data-pb-theme] .pb-dictate-wrap>[contenteditable] { flex:1; width:0; min-width:0; max-width:100%; }
+html[data-pb-theme] .pb-dictate-wrap>.pb-dictate { flex:none; align-self:flex-start; width:28px; min-width:28px; height:28px; margin:3px 0 0; padding:4px; border:1px solid var(--line); border-radius:5px; background:var(--card); color:var(--mut); }
+html[data-pb-theme] .pb-dictate-wrap>.pb-dictate svg { display:block; width:18px; height:18px; }
+html[data-pb-theme] .pb-dictate-wrap>.pb-dictate[aria-pressed=true] { color:var(--acc); border-color:var(--acc); }
+html[data-pb-theme] .explorer-toolbar>.pb-dictate-wrap { flex:1 1 160px; width:auto; }
+html[data-pb-theme] .pb-input-language-quick { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:7px 0 12px; color:var(--mut); font-size:.8rem; }
+html[data-pb-theme] .pb-input-language-select { width:auto; max-width:100%; min-height:30px; padding:4px 7px; font:inherit; }
+html[data-pb-theme] .pb-input-language-settings h3 { margin:0 0 6px; font-size:1rem; }
+html[data-pb-theme] .pb-input-language-settings .hint { line-height:1.5; }
+html[data-pb-theme] .pb-input-language-settings>label { display:block; margin:7px 0 4px; font-size:.8rem; }
+html[data-pb-theme] .pb-text-input-dialog { width:min(480px,calc(100vw - 32px)); max-width:calc(100vw - 32px); border:1px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink); }
+html[data-pb-theme] .pb-text-input-dialog input { min-height:32px; }
+html[data-pb-theme] .pb-text-input-dialog .btnrow { flex-wrap:wrap; justify-content:flex-end; }
+html[data-pb-theme] .pb-mail-translate-action { display:inline-flex; align-items:center; gap:5px; }
+html[data-pb-theme] .pb-mail-translate-icon { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+html[data-pb-theme] .pb-mail-translation { margin:14px 0; padding:12px; border:1px solid var(--line); border-radius:7px; background:var(--bg2); overflow-wrap:anywhere; }
+html[data-pb-theme] .pb-mail-translation h4 { margin:0 0 8px; font-size:.95rem; }
+html[data-pb-theme] .pb-mail-translation label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:6px 0; }
+html[data-pb-theme] .pb-mail-translation select { width:auto; max-width:100%; min-height:30px; padding:4px 6px; }
+html[data-pb-theme] .pb-mail-translation textarea { min-height:64px; }
+html[data-pb-theme] .pb-mail-translation-text { font:inherit; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.65; margin:16px 0; }
+html[data-pb-theme] .pb-mail-translation .mail-reader-actions { flex-wrap:wrap; }

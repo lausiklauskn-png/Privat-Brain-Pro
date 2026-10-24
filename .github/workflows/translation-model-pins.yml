@@ -1,0 +1,29 @@
+name: Lokale Übersetzungsmodelle – öffentliche Pins prüfen
+on:
+  push:
+    paths:
+      - tools/native/learn-translation-pins.mjs
+      - .github/workflows/translation-model-pins.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: translation-model-pins-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-model-pins:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+      - name: Nur öffentliche Metadaten und kleine JSON-Dateien lesen
+        run: node tools/native/learn-translation-pins.mjs
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: translation-model-pins-public-audit
+          path: translation-pin-audit/
+          if-no-files-found: error
+          retention-days: 14

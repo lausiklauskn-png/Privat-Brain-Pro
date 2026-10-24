@@ -1,0 +1,322 @@
+{
+  "version": 1,
+  "languages": [
+    "de",
+    "en",
+    "ru",
+    "pl"
+  ],
+  "note": "Pinned public OPUS-MT/Marian ONNX exports. Inference stays on the device. Non-English pairs pivot through English.",
+  "library": {
+    "package": "@xenova/transformers",
+    "version": "2.17.2",
+    "tarball": "https://registry.npmjs.org/@xenova/transformers/-/transformers-2.17.2.tgz",
+    "integrity": "sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==",
+    "files": {
+      "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+      "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
+      "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    },
+    "sizes": {
+      "lib/transformers.min.js": 897938,
+      "lib/ort-wasm-simd.wasm": 10014674,
+      "lib/ort-wasm.wasm": 9223228,
+      "model/tokenizer.json": 17082730,
+      "model/onnx/model_quantized.onnx": 118308185
+    },
+    "sources": [
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@{version}/dist/{file}",
+      "https://unpkg.com/@xenova/transformers@{version}/dist/{file}"
+    ]
+  },
+  "models": {
+    "de-en": {
+      "source": "de",
+      "target": "en",
+      "id": "Xenova/opus-mt-de-en",
+      "revision": "399dfd68706739fffd503f876093e455ae268a06",
+      "prefix": "",
+      "license": "apache-2.0",
+      "base": "Helsinki-NLP/opus-mt-de-en",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-de-en); ONNX conversion by Xenova. apache-2.0.",
+      "files": {
+        "config.json": {
+          "sha256": "6754743ec4754957d8552dad869d1314f3af6626b67446ec4cebe5e2fbaa0fc4",
+          "size": 1376,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "8e0fcf45621ea87fa680c7f9969c37a7f819c1f4c7658a2e6e0879b866a14b17",
+          "size": 5498450,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "e3687c40400600366d9b073a3fd9f75dc8b40d5a9d6e5c92544cf2e9592abe6c",
+          "size": 280,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "4cedda8f8c89b72a42b3c6cd1e7a27f2de24457093e3bf80cb3e46829641fcd8",
+          "size": 49366942,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "4712800584b2d77c2f9e620bf29523e2b20b62f65ade5011ee01780e2b0ea5d3",
+          "size": 56652404,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "cd16a899388283889c6e87b903c689ce73430aaa18335415f9d9ea770606538e",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-de-en/resolve/399dfd68706739fffd503f876093e455ae268a06/special_tokens_map.json"
+        }
+      },
+      "size": 111519819
+    },
+    "en-de": {
+      "source": "en",
+      "target": "de",
+      "id": "Xenova/opus-mt-en-de",
+      "revision": "1ca130c44c4c5441ef16d48aae521a424ab644f7",
+      "prefix": "",
+      "license": "cc-by-4.0",
+      "base": "Helsinki-NLP/opus-mt-en-de",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-en-de); ONNX conversion by Xenova. cc-by-4.0.",
+      "files": {
+        "config.json": {
+          "sha256": "517955ebf66cd6523f9982851dd41771b74fb2d9c00b4933ba2922ac7a63336f",
+          "size": 1411,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "8e0fcf45621ea87fa680c7f9969c37a7f819c1f4c7658a2e6e0879b866a14b17",
+          "size": 5498450,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "4500a1295197174119cf17f9b2e6eab2d5c3a9c64009fb1e37ebd2868bf1161c",
+          "size": 280,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "15834b45fabd2dfb8c6c029b3ca3e7289aeefd90ece798ce42bcf548d1bd3b8d",
+          "size": 49366942,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "8b46a825964cdd182fe47cc780f0fb87d357eae1f47cf20aa63c1c09be5b510c",
+          "size": 56652404,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "cd16a899388283889c6e87b903c689ce73430aaa18335415f9d9ea770606538e",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-de/resolve/1ca130c44c4c5441ef16d48aae521a424ab644f7/special_tokens_map.json"
+        }
+      },
+      "size": 111519854
+    },
+    "ru-en": {
+      "source": "ru",
+      "target": "en",
+      "id": "Xenova/opus-mt-ru-en",
+      "revision": "afe8c6c738ec81b6d033fd8f44f9678a639a7c67",
+      "prefix": "",
+      "license": "cc-by-4.0",
+      "base": "Helsinki-NLP/opus-mt-ru-en",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-ru-en); ONNX conversion by Xenova. cc-by-4.0.",
+      "files": {
+        "config.json": {
+          "sha256": "60dc7d0906dbe42a1d740cdd7e84ce1534685b81fbe16005a0301adac69086ce",
+          "size": 1376,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "981cd3d9fef6bb4dda8082afda716b65deb6717cb3ef35ac0b57002c09dec2bb",
+          "size": 7205388,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "c0710ba5ee70ccb2d0e6b0092139d00f370b9c4783c4b077584cb3cc8f7ac4e0",
+          "size": 280,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "c10df0466540534bb70c4402d539c349b8bfa9968184cad89f51408cf13e7eb7",
+          "size": 51628446,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "25e7ff97b201bce64ab9c39749761d657b70b8602bcbc1ce01c67f713e90ffdf",
+          "size": 58931576,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "9bcb507fa6117b07870df6627294b878b0710a55bc3abc9cf0db980e0c48fe2c",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-ru-en/resolve/afe8c6c738ec81b6d033fd8f44f9678a639a7c67/special_tokens_map.json"
+        }
+      },
+      "size": 117767433
+    },
+    "en-ru": {
+      "source": "en",
+      "target": "ru",
+      "id": "Xenova/opus-mt-en-ru",
+      "revision": "e050376e960175e8ddc5cff85025dc8436cddd68",
+      "prefix": "",
+      "license": "apache-2.0",
+      "base": "Helsinki-NLP/opus-mt-en-ru",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-en-ru); ONNX conversion by Xenova. apache-2.0.",
+      "files": {
+        "config.json": {
+          "sha256": "db16bf0ea7bac239273214c3b9ab44577884227371a9a25e0191b7baf8d6f167",
+          "size": 1376,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "981cd3d9fef6bb4dda8082afda716b65deb6717cb3ef35ac0b57002c09dec2bb",
+          "size": 7205388,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "cafb5494f14bc8d395cc02ddaeeb0f8d85b0d9e20fd48371b5edc104cc2020ba",
+          "size": 280,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "97f28d8295d231b7da721ded06fa8c034787df2122cd8f85b904abdc4d15bd53",
+          "size": 51628446,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "7efefcd793a5663bc204224a92a123524f3dfe2ffad59e5f73d6734d1b11ad04",
+          "size": 58931576,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "885345001ac4f978b5e295a04eb6bd6c346ebc7381e30d5b3dd927b178d8a5ef",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-ru/resolve/e050376e960175e8ddc5cff85025dc8436cddd68/special_tokens_map.json"
+        }
+      },
+      "size": 117767433
+    },
+    "pl-en": {
+      "source": "pl",
+      "target": "en",
+      "id": "Xenova/opus-mt-pl-en",
+      "revision": "aeaf0e003b045248c28a559a5ce6027b54ebdaba",
+      "prefix": "",
+      "license": "apache-2.0",
+      "base": "Helsinki-NLP/opus-mt-pl-en",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-pl-en); ONNX conversion by Xenova. apache-2.0.",
+      "files": {
+        "config.json": {
+          "sha256": "98ccffdad4d25169e4621b05b70824b93855fcc1ac9e917a6faef0ead4d6c799",
+          "size": 1376,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "788e7e69a1dcb862ced197e440581bfcb672b37173dd0c5ff55649c7c8394f74",
+          "size": 6118576,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "d29a00bce5fa370984ef9bd8c612625b90d9a4843cffd27c067fde320080dfe0",
+          "size": 280,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "2416eb3c6db52a2d116539bf673b596e6a3d1453153b17778e85c9f55249c832",
+          "size": 52095390,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "9ad9da5bce473ca06a9b0a3dbf0793675827e5668ab501e5dc65dac8cecd93ba",
+          "size": 59402168,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "58d0f9d875ca857930d2e8425c7dd093eef4799d56e6ca94bc067650d001248d",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-pl-en/resolve/aeaf0e003b045248c28a559a5ce6027b54ebdaba/special_tokens_map.json"
+        }
+      },
+      "size": 117618157
+    },
+    "en-pl": {
+      "source": "en",
+      "target": "pl",
+      "id": "Xenova/opus-mt-en-mul",
+      "revision": "e57f9759f8e1e9ed97067bfc11e53e1eab63e57e",
+      "prefix": ">>pol<< ",
+      "license": "apache-2.0",
+      "base": "Helsinki-NLP/opus-mt-en-mul",
+      "attribution": "Helsinki-NLP OPUS-MT (Helsinki-NLP/opus-mt-en-mul); ONNX conversion by Xenova. apache-2.0.",
+      "files": {
+        "config.json": {
+          "sha256": "fc12f9f431b4fb8dae1f7776c7ad3f9a5cf0fd6321231e11b45e35a2b11730f3",
+          "size": 1390,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/config.json"
+        },
+        "tokenizer.json": {
+          "sha256": "988af0af5cab7758c7548320a8b76c6a264d1ddfeac61e3f08d38d04d7202d6e",
+          "size": 6081943,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/tokenizer.json"
+        },
+        "tokenizer_config.json": {
+          "sha256": "2f651940d4cd828071a9c099392b49d31de6608aa328e885821f65b745d7ceb8",
+          "size": 282,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/tokenizer_config.json"
+        },
+        "onnx/encoder_model_quantized.onnx": {
+          "sha256": "f10f49c2691043ba7cfd2a85d86f84dddda428d4209cf9b495f6e114b313737a",
+          "size": 52443550,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/onnx/encoder_model_quantized.onnx"
+        },
+        "onnx/decoder_model_merged_quantized.onnx": {
+          "sha256": "35c4c88823c8fbe44aa57bbe8543abc0c0269f321cbf8075965fd697c9569caa",
+          "size": 59753048,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/onnx/decoder_model_merged_quantized.onnx"
+        },
+        "generation_config.json": {
+          "sha256": "af75f05c2e4c9fc38166d3061f435b3aeb2abf288576090676ce8e3ee4595e46",
+          "size": 293,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/generation_config.json"
+        },
+        "special_tokens_map.json": {
+          "sha256": "5e4d1f5e759d74cb1c2fe1d165cfc62b5237aa904de759380cd6f43042eec723",
+          "size": 74,
+          "url": "https://huggingface.co/Xenova/opus-mt-en-mul/resolve/e57f9759f8e1e9ed97067bfc11e53e1eab63e57e/special_tokens_map.json"
+        }
+      },
+      "size": 118280580
+    }
+  }
+}

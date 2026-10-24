@@ -150,6 +150,36 @@ try{
   ok('Fetching again creates no second version',again.total===total);
   ok('Own marks stay, server flags are overwritten',again.star===true&&again.tags[0]==='behalten'&&again.flagged&&again.seen);
   ok('A complete folder only needs its newest page next time',await page.evaluate(async()=>{const n=window.mailCalls.length;await PBMailIndex.sync();return window.mailCalls.slice(n).filter(c=>c.method==='index'&&c.args.before>0).length===0;}));
+  // A check applies to the text and reconstructed headers that were actually checked.
+  // An equal-length subject edit must invalidate the current check and rebuild searchable text.
+  const checkedHash=await page.evaluate(()=>CATALOG.find(r=>r.mailMessageId==='<m1000@example.invalid>').hash);
+  await panel.locator('[data-mail-all=search]').fill('Notiz 0');
+  await panel.locator(`[data-mail-all-id="${checkedHash}"]`).click();
+  const textStatus=panel.locator('.pb-mail-index-status'),checkReport=page.locator('dialog.pb-check-report');
+  ok('Indexed reader names stored text and the absence of locally confirmed attachment originals',(await textStatus.textContent()).includes('8.000')&&(await textStatus.textContent()).includes('Anhänge'));
+  await textStatus.locator('.pb-check-badge').click();
+  await checkReport.waitFor();
+  ok('Explicit index-mail check reports only stored text, not attachment inspection',(await checkReport.locator('.pb-check-scope').textContent()).includes('Anhänge wurden in dieser Textprüfung nicht geprüft'));
+  await checkReport.getByRole('button',{name:'Schließen',exact:true}).click();
+  const checkBefore=await page.evaluate(hash=>CATALOG.find(r=>r.hash===hash).pruefung.zeit,checkedHash);
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  await page.evaluate(()=>{window.server['11111111-1111-4111-8111-111111111111'].INBOX.find(x=>x.uid===1000).subject='Bericht';});
+  await page.evaluate(()=>PBMailIndex.sync());
+  ok('Equal-length server header refresh preserves the historical result but marks it stale',await page.evaluate(({hash,when})=>{const r=CATALOG.find(r=>r.hash===hash);return r.name==='Bericht'&&r.pruefung.mailStale===true&&r.pruefung.zeit===when;},{hash:checkedHash,when:checkBefore}));
+  ok('The same-length header edit rebuilds and persists current searchable text',await page.evaluate(async hash=>{const r=CATALOG.find(r=>r.hash===hash),saved=await idbGet('catalog',hash);return r.snippet.startsWith('Bericht\n')&&saved.snippet.startsWith('Bericht\n')&&saved.pruefung.mailStale===true&&saved.name==='Bericht';},checkedHash));
+  await panel.locator('[data-mail-all=search]').fill('Bericht');
+  await panel.locator(`[data-mail-all-id="${checkedHash}"]`).click();
+  ok('The reader visibly identifies the prior mailtext check',(await textStatus.locator('.pb-check-badge').textContent()).includes('Früherer Mailtext-Prüfstand'));
+  await textStatus.locator('.pb-check-badge').click();
+  await checkReport.waitFor();
+  ok('The historical report explicitly warns that the stored version changed',(await checkReport.locator('.pb-check-error').textContent()).includes('frühere Fassung'));
+  await checkReport.getByRole('button',{name:'Erneut prüfen',exact:true}).click();
+  await page.waitForFunction(hash=>!CATALOG.find(r=>r.hash===hash).pruefung.mailStale,checkedHash);
+  await checkReport.waitFor();
+  ok('Only explicit recheck replaces the stale result with a check of the current text',await page.evaluate(({hash,when})=>{const r=CATALOG.find(r=>r.hash===hash);return r.pruefung.mail===true&&!r.pruefung.mailStale&&r.pruefung.zeit>when;},{hash:checkedHash,when:checkBefore}));
+  await checkReport.getByRole('button',{name:'Schließen',exact:true}).click();
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  await panel.locator('[data-mail-all=search]').fill('');
   // Uncertain twins wait in "Doppelte"
   await navigateTo(page,'dupes');
   const dupes=page.locator('#pb-mail-dupes');
@@ -255,7 +285,8 @@ try{
   // Slim buttons, larger touch area, grow under the finger
   const touch=await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all [data-mail-all=refresh]'),after=getComputedStyle(b,'::after');return {h:b.getBoundingClientRect().height,top:parseFloat(after.top),bottom:parseFloat(after.bottom)};});
   ok('Touch area reaches beyond the slim button ('+touch.h+' px visible, +7 px above and below)',touch.h<=32&&touch.top<=-7&&touch.bottom<=-7);
-  await panel.locator('[data-mail-all=refresh]').hover();await page.mouse.down();await page.waitForTimeout(250);
+  await panel.locator('[data-mail-all=refresh]').hover();await page.mouse.down();
+  await page.waitForFunction(()=>{const transform=getComputedStyle(document.querySelector('#pb-mail-all [data-mail-all=refresh]')).transform;return /^matrix\(/.test(transform)&&parseFloat(transform.slice(7))>=1.10;},null,{timeout:3000});
   const grow=await page.evaluate(()=>getComputedStyle(document.querySelector('#pb-mail-all [data-mail-all=refresh]')).transform);
   await page.mouse.up();
   ok('Button grows while pressed ('+grow+')',/matrix\((1\.1[0-9]*|1\.12)/.test(grow));

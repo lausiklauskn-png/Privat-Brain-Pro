@@ -23,6 +23,8 @@ public class ProNetworkPlugin extends Plugin {
                     // Local Capacitor assets continue through the WebView request interceptor.
                     if(value)getBridge().getWebView().stopLoading();
                     getBridge().getWebView().getSettings().setBlockNetworkLoads(value);
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N)
+                        android.webkit.ServiceWorkerController.getInstance().getServiceWorkerWebSettings().setBlockNetworkLoads(value);
                     getBridge().getWebView().setNetworkAvailable(!value);
                     result(call);
                 });

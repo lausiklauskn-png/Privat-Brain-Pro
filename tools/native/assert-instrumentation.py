@@ -28,6 +28,11 @@ navigation = [case for case in cases
               and case.get('name') == 'fileViewerAndTwelveAndroidBackStepsKeepAppAlive']
 if len(navigation) != 1:
     raise SystemExit('Expected exactly one executed native file/back-navigation test')
+rotation = [case for case in cases
+            if case.get('classname') == 'de.familyprojekt.privatebrain.pro.NativeStartupTest'
+            and case.get('name') == 'portraitAndLandscapeKeepTheSameWebViewAndSearch']
+if len(rotation) != 1:
+    raise SystemExit('Expected exactly one executed adaptive orientation test')
 for name in ('mailLinkGestureOpensExternalBrowserWithoutLeavingMail', 'googleChoiceUsesConsentAndHidesPasswordFields', 'googleAccountPickerCancellationCanRetryWithoutChangingAccounts', 'providerChoicesClearPasswordsUseFixedServersAndKeepMicrosoftOutOfPasswordLogin', 'pdfPagesAndAndroidBackUseRealNativeBridge', 'nativeFolderChooserCanBeCancelledAndRetriedWithHiddenExplanation', 'recoveryKeysRequireACompletedDocumentSaveAndCanRecoverTheVault'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeStartupTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native link/OAuth form test: {name}')
@@ -76,4 +81,7 @@ for name in mail_tests:
         raise SystemExit(f'Expected exactly one executed native mail test: {name}')
 semantic=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeSemanticTest' and case.get('name')=='modelLoadedWithTheSwitchRunsOfflineFromAppStorage']
 if len(semantic)!=1:raise SystemExit('Expected exactly one executed meaning-model test (download with the switch, offline start)')
+for name in ('selectedPublicModelTranslatesBelowOriginalWithoutNetworkOrAiKey', 'staleCompletionAndDownloadCannotClearTheInferenceCrashGuard'):
+    matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeTranslationTest' and case.get('name')==name]
+    if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native local translation test: {name}')
 print(f'Android startup and mail tests passed; {len(cases)} test case(s), no failures/skips.')

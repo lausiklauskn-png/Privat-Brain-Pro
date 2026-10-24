@@ -39,6 +39,59 @@ public class NativeStartupTest {
         fail("Bundled app did not satisfy: " + script);
     }
 
+    @Test public void portraitAndLandscapeKeepTheSameWebViewAndSearch() throws Exception {
+        var context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
+        var declared = context.getPackageManager().getActivityInfo(
+            new android.content.ComponentName(context, MainActivity.class), 0);
+        assertEquals("The app must not lock its declared orientation",
+            android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED, declared.screenOrientation);
+        int requiredChanges = android.content.pm.ActivityInfo.CONFIG_ORIENTATION
+            | android.content.pm.ActivityInfo.CONFIG_SCREEN_SIZE
+            | android.content.pm.ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE
+            | android.content.pm.ActivityInfo.CONFIG_SCREEN_LAYOUT
+            | android.content.pm.ActivityInfo.CONFIG_DENSITY
+            | android.content.pm.ActivityInfo.CONFIG_KEYBOARD
+            | android.content.pm.ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
+        if (android.os.Build.VERSION.SDK_INT >= 26)
+            requiredChanges |= android.content.pm.ActivityInfo.CONFIG_COLOR_MODE;
+        assertEquals("Rotation, keyboard and window configuration changes must stay in the app",
+            requiredChanges, declared.configChanges & requiredChanges);
+        // This exercises Android rotation and lifecycle continuity. It does not
+        // claim a measurement on Samsung DeX hardware or a tablet window manager.
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            AtomicReference<MainActivity> initialActivity = new AtomicReference<>();
+            AtomicReference<android.webkit.WebView> initialWebView = new AtomicReference<>();
+            scenario.onActivity(activity -> {
+                assertEquals(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED,
+                    activity.getRequestedOrientation());
+                initialActivity.set(activity); initialWebView.set(activity.getBridge().getWebView());
+            });
+            try {
+                awaitTrue(scenario, "Boolean(window.PBWorkspace && document.querySelector('#q'))");
+                assertEquals("true", evaluate(scenario, "(()=>{PBWorkspace.navigate('search');window.__rotationSentinel='same-document';const q=document.querySelector('#q');q.value='synthetic rotation query';q.dispatchEvent(new Event('input',{bubbles:true}));return true;})()"));
+                for (int requested : new int[] {android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT}) {
+                    scenario.onActivity(activity -> activity.setRequestedOrientation(requested));
+                    boolean portrait = requested == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    awaitTrue(scenario, portrait ? "innerHeight > innerWidth" : "innerWidth > innerHeight");
+                    scenario.onActivity(activity -> {
+                        assertSame("Rotation recreated the activity", initialActivity.get(), activity);
+                        assertSame("Rotation replaced the WebView", initialWebView.get(), activity.getBridge().getWebView());
+                        assertEquals(portrait ? android.content.res.Configuration.ORIENTATION_PORTRAIT
+                            : android.content.res.Configuration.ORIENTATION_LANDSCAPE,
+                            activity.getResources().getConfiguration().orientation);
+                    });
+                    assertEquals("Rotation must keep the document, search text and active view", "true",
+                        evaluate(scenario, "window.__rotationSentinel==='same-document' && document.querySelector('#q').value==='synthetic rotation query' && document.querySelector('#panel-search').classList.contains('on') && Boolean(window.Capacitor.Plugins.ProFiles)"));
+                }
+            } finally {
+                scenario.onActivity(activity -> activity.setRequestedOrientation(
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
+            }
+        }
+    }
+
     @Test public void recoveryKeysRequireACompletedDocumentSaveAndCanRecoverTheVault() throws Exception {
         var instrumentation=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation();
         var context=instrumentation.getTargetContext();
@@ -259,8 +312,21 @@ public class NativeStartupTest {
             androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo("Google / Gmail")).inRoot(androidx.test.espresso.matcher.RootMatchers.isPlatformPopup()).perform(click());
             for(int attempt=1;attempt<=2;attempt++){
                 onView(withText("Mit Google anmelden")).inRoot(isDialog()).perform(click());
-                instrumentation.waitForIdleSync();
-                onView(withText(org.hamcrest.Matchers.containsString("(CANCELLED)"))).inRoot(isDialog()).check(matches(isDisplayed()));
+                // An idle UI queue does not mean the ActivityResult callback has
+                // arrived. Wait for this attempt's actual cancellation and the
+                // retry control restored by GmailAuthorization.Callback.failure.
+                long cancellationDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
+                while(true){
+                    try{
+                        assertEquals(attempt,picked.size());
+                        onView(withText(org.hamcrest.Matchers.containsString("(CANCELLED)"))).inRoot(isDialog()).check(matches(isDisplayed()));
+                        onView(withText("Mit Google anmelden")).inRoot(isDialog()).check(matches(androidx.test.espresso.matcher.ViewMatchers.isEnabled()));
+                        break;
+                    }catch(androidx.test.espresso.NoMatchingViewException | androidx.test.espresso.NoMatchingRootException | AssertionError pending){
+                        if(System.nanoTime()>=cancellationDeadline)throw pending;
+                        Thread.sleep(50);
+                    }
+                }
                 assertEquals(attempt,picked.size());
                 assertArrayEquals(new String[]{"com.google"},picked.get(attempt-1).getStringArrayExtra("allowableAccountTypes"));
             }

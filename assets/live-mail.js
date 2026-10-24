@@ -658,7 +658,7 @@
         }));
         button.dataset.liveFolder=entry.path;if(view){button.dataset.collection='1';button.title=T('viewHint');}nav.append(button);
       }
-      const button=btn('folder',async()=>{const name=prompt(T('folder'));if(name){await api(prefix()+'/folders',{name});await loadFolders();}});
+      const button=btn('folder',async()=>{const name=window.PBTextPrompt?await PBTextPrompt.ask(T('folder')):prompt(T('folder'));if(name){await api(prefix()+'/folders',{name});await loadFolders();}});
       nav.append(button);return;
     }
     nav.replaceChildren();
@@ -680,7 +680,7 @@
     }
     nav.append(
       btn("folder", async () => {
-        const name = prompt(T("folder"));
+        const name = window.PBTextPrompt ? await PBTextPrompt.ask(T("folder")) : prompt(T("folder"));
         if (name) {
           await api(prefix() + "/folders", { name });
           await loadFolders();
@@ -1035,6 +1035,7 @@
     }
     // Protection hints (rules, lists) stand between the actions and the message itself.
     reader.append(actions, ...(window.PBSchutz ? [PBSchutz.mailPanel(mail)] : []), window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
+    if (window.PBMailTranslation) PBMailTranslation.mount({host:reader,actions,source:async()=>({subject:mail.subject || item.subject || '',from:mail.from,to:mail.to,cc:mail.cc,text:mail.text || ''})});
     for (const [index, a] of mail.attachments.entries()) {
       if (a.inline) continue; // Still present in raw MIME and attachment checks.
       if (!a.data && window.PBVault) {

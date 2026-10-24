@@ -1,5 +1,23 @@
 # Private Brain Pro — laufender Auftrag
 
+- Ergänzung im selben Chat am 24.10.2026: Samsung Galaxy DeX (Android, nicht
+  Windows), automatische Handy-/Tablet-Hochformatansicht, unabhängige Such- und
+  Diktatsprache, Mikrofone an Texteingaben und automatische Mailübersetzung
+  unter dem Original. Lokales kleines Übersetzungsmodell bevorzugt prüfen;
+  DE/EN/RU/PL, vorhandene Anonymisierung und bewusst wählbare KI-Alternativen
+  beibehalten. [Auftrag, Befunde und Prüfstand](docs/design/umbau-2026-10-24/ERWEITERUNGEN-NATIVE-BEDIENUNG.md).
+  Diese Arbeiten erweitern den noch offenen .31-PR; erst den vollständigen
+  Endstand abnehmen und dann übernehmen/veröffentlichen. Keine erneute Freigabe
+  für Umsetzung und signierte Update-APK verlangen.
+
+- Fortsetzung 24.10.2026: Klaus beauftragt die eigenständige Weiterarbeit ohne
+  weitere Rückfragen. Nächster abgegrenzter Schritt für Android .31: Original-
+  verfügbarkeit und historischen Prüfstand getrennt zeigen, Mailtext-Prüfumfang
+  und ungespeicherte Berichte ehrlich benennen. Kein automatisches Laden von
+  Originalen/Anhängen durch die Anzeige. [Umfang](docs/design/umbau-2026-10-24/STATUS-ORIGINALE-PRUEFUNG.md).
+  .31 ist bis zum erfolgreichen Release als in Arbeit zu behandeln; .30 bleibt
+  der veröffentlichte Download. Keine Überschreibung vorhandener Release-Dateien.
+
 - Neuer ausdrücklicher Freibrief von Klaus am 24.10.2026 in diesem Chat:
   den eigenständigen Designumbau umsetzen, nötige PRs und Commits selbstständig
   übernehmen, das Repo aktualisieren und die native Android-App als signierte

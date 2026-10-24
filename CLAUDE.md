@@ -1,5 +1,20 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Erweiterter .31-Auftrag:** Samsung Galaxy DeX unter Android und automatische
+Hochformatansicht auch auf Tablets; Eingabe-/Diktatsprache unabhängig wählen,
+Mikrofone an gewöhnlichen Texteingaben und automatische lokale Mailübersetzung
+unter dem Original (DE/EN/RU/PL). Bestehende Verdeckung für ausdrücklich gewählte
+Cloudwege erhalten. [Auftrag und Nachweise](docs/design/umbau-2026-10-24/ERWEITERUNGEN-NATIVE-BEDIENUNG.md),
+[lokale Übersetzung](docs/NATIVE-LOKALE-UEBERSETZUNG.md). Quellstand ist in Arbeit;
+erst finale CI einschließlich echter Offline-Inferenz abnehmen und dann .31
+mit ursprünglicher Signatur und Updateprobe veröffentlichen. Freibrief gilt.
+
+**Eigenständige Fortsetzung für Android .31 (24.10.2026):** Originalverfügbarkeit
+und Prüfbericht getrennt, ausdrücklich begrenzte Mailtextprüfung, historische
+Befunde bei Lesefehlern erhalten und Speicherfehler sichtbar. Klaus hat die
+Weiterarbeit ohne sein Zutun erneut beauftragt. [Bedienung und Grenzen](docs/design/umbau-2026-10-24/STATUS-ORIGINALE-PRUEFUNG.md).
+Bis zur dokumentierten Veröffentlichung bleibt .30 der aktuelle APK-Download.
+
 **Android .30 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.30/Private-Brain-Pro-1.0.0-preview.30.apk),
 Quelle `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`, Release-Lauf `40094110986` vollständig grün.
 Android-/Windows-main und Signierung grün; signiertes Update .28 → .30 bestanden.

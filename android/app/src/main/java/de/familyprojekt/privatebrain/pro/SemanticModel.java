@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * The meaning model, loaded on request from inside the app (Klaus 2026-10-21: "Schalter … Laden
@@ -46,6 +47,8 @@ final class SemanticModel {
     private final List<Entry> entries;
     private final Opener opener;
     private volatile boolean cancelled;
+    private volatile BooleanSupplier cancelledExternally = () -> false;
+    private volatile long networkEpoch;
     private volatile HttpURLConnection current;
 
     SemanticModel(File dir, List<Entry> entries, Opener opener) {
@@ -108,7 +111,15 @@ final class SemanticModel {
 
     /** Loads every missing file. Returns normally only when all files are present and checked. */
     void install(Progress progress) throws IOException {
+        install(progress, () -> false);
+    }
+
+    /** A multi-model job can cancel the next leg before its first connection opens. */
+    void install(Progress progress, BooleanSupplier stop) throws IOException {
+        cancelledExternally = stop;
+        networkEpoch = AppNetwork.epoch();
         cancelled = false;
+        if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
         if (!dir.isDirectory() && !dir.mkdirs()) throw new Failure("STORAGE", "Model folder unavailable");
         long need = total() - present();
         if (dir.getUsableSpace() > 0 && need > 0 && dir.getUsableSpace() < need + 50L * 1024 * 1024)
@@ -116,6 +127,7 @@ final class SemanticModel {
         new File(dir, MARKER).delete();
         long done = 0;
         for (Entry e : entries) {
+            if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
             File target = new File(dir, e.path);
             if (target.isFile() && verified(target, e)) { done += target.length(); continue; }
             target.delete();
@@ -124,6 +136,8 @@ final class SemanticModel {
         write(new File(dir, MARKER), expectedMarker());
         progress.update(total(), total(), "", "");
     }
+
+    private boolean isCancelled() { return cancelled || cancelledExternally.getAsBoolean(); }
 
     private boolean verified(File f, Entry e) throws IOException {
         if (e.size > 0 && f.length() != e.size) return false;
@@ -139,7 +153,7 @@ final class SemanticModel {
         if (!target.getParentFile().isDirectory() && !target.getParentFile().mkdirs()) throw new Failure("STORAGE", "Model folder unavailable");
         IOException last = null;
         for (String source : e.urls) {
-            if (cancelled) throw new Failure("CANCELLED", "Cancelled");
+            if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
             try {
                 download(e, source, part, before, progress);
                 if (!part.renameTo(target)) throw new Failure("STORAGE", "Could not store " + e.path);
@@ -151,7 +165,9 @@ final class SemanticModel {
                 if ("CANCELLED".equals(f.code) || "APP_OFFLINE".equals(f.code) || "STORAGE".equals(f.code)) throw f;
                 last = f;
             } catch (IOException io) {
-                if (cancelled) throw new Failure("CANCELLED", "Cancelled");
+                if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
+                try { AppNetwork.check(networkEpoch); }
+                catch (AppNetwork.Blocked blocked) { throw new Failure("APP_OFFLINE", "App is offline"); }
                 last = io;
             }
         }
@@ -163,7 +179,8 @@ final class SemanticModel {
         long have = part.isFile() ? part.length() : 0;
         if (e.size > 0 && have > e.size) { part.delete(); have = 0; }
         if (have > 0) digestFile(part, sha);
-        AppNetwork.check();
+        if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
+        AppNetwork.check(networkEpoch);
         HttpURLConnection c = opener.open(new URL(source));
         AutoCloseable tracked = AppNetwork.track(c::disconnect);
         current = c;
@@ -181,7 +198,8 @@ final class SemanticModel {
                 long written = have, nextReport = 0;
                 String host = new URL(source).getHost();
                 for (int n; (n = in.read(buffer)) > 0; ) {
-                    if (cancelled) throw new Failure("CANCELLED", "Cancelled");
+                    if (isCancelled()) throw new Failure("CANCELLED", "Cancelled");
+                    AppNetwork.check(networkEpoch);
                     if (e.size > 0 && written + n > e.size) throw new Failure("SIZE", source + ": larger than expected");
                     out.write(buffer, 0, n); sha.update(buffer, 0, n); written += n;
                     if (written >= nextReport) { progress.update(before + written, total(), e.path, host); nextReport = written + 512 * 1024; }
