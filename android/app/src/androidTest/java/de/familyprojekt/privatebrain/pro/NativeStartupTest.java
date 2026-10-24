@@ -243,15 +243,19 @@ public class NativeStartupTest {
         };
         instrumentation.addMonitor(monitor);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            awaitTrue(scenario,"Boolean(window.PBMailView && window.PBNavigation)");
-            evaluate(scenario,"PBWorkspace.navigate('mail');window.__browserSentinel='kept';const host=document.createElement('div');host.id='browser-link-fixture';host.style='position:fixed;inset:0;padding:20px;background:white;z-index:2147483647';host.append(PBMailView.render({text:'Browserprobe https://example.com/mail-test',html:'<a href=\"https://example.com/mail-test\">Browserprobe</a>',attachments:[]}));document.body.append(host);host.querySelector('iframe').style.height='180px';true");
-            awaitTrue(scenario,"document.querySelector('#browser-link-fixture iframe').dataset.linksReady==='true'");
-            evaluate(scenario,"window.__linkFrameLoaded=false;window.__linkScript=false;const f=document.querySelector('#browser-link-fixture iframe');f.onload=()=>window.__linkFrameLoaded=true;f.srcdoc+='<script>parent.__linkScript=true</script>';true");
-            awaitTrue(scenario,"window.__linkFrameLoaded===true");
+            // Initial language wiring can refresh every mail frame. Do not
+            // mount this fixture while the app document is still starting.
+            awaitTrue(scenario,"document.readyState==='complete' && typeof db!=='undefined' && Boolean(db && window.PBMailView && window.PBNavigation)");
+            evaluate(scenario,"PBWorkspace.navigate('mail');window.__browserSentinel='kept';const host=document.createElement('div');host.id='browser-link-fixture';host.style='position:fixed;inset:0;padding:20px;background:white;z-index:2147483647';host.append(PBMailView.render({text:'Browserprobe https://example.com/mail-test',html:'<a href=\"https://example.com/mail-test\" style=\"display:block;width:240px;height:96px;line-height:96px\">Browserprobe</a>',attachments:[]}));document.body.append(host);host.querySelector('iframe').style.height='180px';true");
+            awaitTrue(scenario,"(()=>{const f=document.querySelector('#browser-link-fixture iframe');return f.dataset.linksReady==='true' && /https:\\/\\/localhost\\/_pb_mail_link\\/[a-f0-9-]+/.test(f.srcdoc);})()");
+            evaluate(scenario,"window.__linkFrameLoaded=false;window.__linkScript=false;const f=document.querySelector('#browser-link-fixture iframe');window.__linkExpectedSrcdoc=f.srcdoc+'<script>parent.__linkScript=true</script>';f.onload=()=>window.__linkFrameLoaded=f.srcdoc===window.__linkExpectedSrcdoc && f.dataset.linksReady==='true';f.srcdoc=window.__linkExpectedSrcdoc;true");
+            awaitTrue(scenario,"(()=>{const f=document.querySelector('#browser-link-fixture iframe');return window.__linkFrameLoaded===true && f.srcdoc===window.__linkExpectedSrcdoc && f.dataset.linksReady==='true' && /https:\\/\\/localhost\\/_pb_mail_link\\/[a-f0-9-]+/.test(f.srcdoc);})()");
             assertEquals("false",evaluate(scenario,"window.__linkScript"));
             assertEquals("true",evaluate(scenario,"(()=>{try{document.querySelector('#browser-link-fixture iframe').contentWindow.document;return false;}catch(e){return e.name==='SecurityError';}})()"));
-            String local = evaluate(scenario,"document.querySelector('#browser-link-fixture iframe').srcdoc.match(/https:\\/\\/localhost\\/_pb_mail_link\\/[a-f0-9-]+/)[0]");
-            final android.net.Uri route=android.net.Uri.parse((String)new org.json.JSONTokener(local).nextValue());
+            String local = evaluate(scenario,"(()=>{const f=document.querySelector('#browser-link-fixture iframe'),match=f.srcdoc===window.__linkExpectedSrcdoc && f.srcdoc.match(/https:\\/\\/localhost\\/_pb_mail_link\\/[a-f0-9-]+/);return match?match[0]:null;})()");
+            Object decodedRoute=new org.json.JSONTokener(local).nextValue();
+            assertTrue("The loaded current mail fixture must contain its prepared native link route: "+local,decodedRoute instanceof String);
+            final android.net.Uri route=android.net.Uri.parse((String)decodedRoute);
             scenario.onActivity(activity -> {
                 android.webkit.WebResourceRequest request = new android.webkit.WebResourceRequest() {
                     public android.net.Uri getUrl(){return route;}public boolean isForMainFrame(){return false;}
@@ -261,8 +265,17 @@ public class NativeStartupTest {
                 assertTrue(activity.getBridge().getWebViewClient().shouldOverrideUrlLoading(activity.getBridge().getWebView(),request));
             });
             assertNull("Mail loaded a browser without a gesture",opened.get());
-            Thread.sleep(300);
-            org.json.JSONArray point=new org.json.JSONArray(evaluate(scenario,"(()=>{const r=document.querySelector('#browser-link-fixture iframe').getBoundingClientRect();return[(r.left+32)*devicePixelRatio,(r.top+25)*devicePixelRatio];})()"));
+            // Espresso's UI-idle state does not cover WebView composition.
+            // Wait for the current document to be drawable before its one tap.
+            CountDownLatch visualReady=new CountDownLatch(1);
+            scenario.onActivity(activity->activity.getBridge().getWebView().postVisualStateCallback(1L,new android.webkit.WebView.VisualStateCallback(){
+                @Override public void onComplete(long requestId){visualReady.countDown();}
+            }));
+            assertTrue("Prepared mail fixture was not visually ready",visualReady.await(10,TimeUnit.SECONDS));
+            assertEquals("true",evaluate(scenario,"document.querySelector('#browser-link-fixture iframe').srcdoc===window.__linkExpectedSrcdoc && document.querySelector('#browser-link-fixture iframe').dataset.linksReady==='true'"));
+            // The sanitized fixture anchor is a 240x96 block after the body's
+            // 12px margin; its centre avoids font-dependent inline text bounds.
+            org.json.JSONArray point=new org.json.JSONArray(evaluate(scenario,"(()=>{const r=document.querySelector('#browser-link-fixture iframe').getBoundingClientRect();return[(r.left+132)*devicePixelRatio,(r.top+60)*devicePixelRatio];})()"));
             final float x=(float)point.getDouble(0),y=(float)point.getDouble(1);
             onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.webkit.WebView.class)).perform(new androidx.test.espresso.action.GeneralClickAction(
                 androidx.test.espresso.action.Tap.SINGLE,view->{int[] position=new int[2];view.getLocationOnScreen(position);return new float[]{position[0]+x,position[1]+y};},androidx.test.espresso.action.Press.FINGER));
