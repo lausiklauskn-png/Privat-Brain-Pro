@@ -7,6 +7,7 @@
   const labels={
     mail:['Postfach','Mailbox','Почта','Poczta'],inbox:['Posteingang','Inbox','Входящие','Odebrane'],draft:['Entwürfe','Drafts','Черновики','Szkice'],outbox:['Postausgang','Outbox','Исходящие','Do wysłania'],sent:['Gesendet','Sent','Отправленные','Wysłane'],archive:['Archiv','Archive','Архив','Archiwum'],spam:['Spam','Spam','Спам','Spam'],trash:['Papierkorb','Trash','Корзина','Kosz'],exported:['Exportiert','Exported','Экспортированные','Wyeksportowane'],
     compose:['Verfassen','Compose','Написать','Napisz'],import:['Mails importieren','Import emails','Импорт писем','Importuj pocztę'],
+    copyRecipients:['Cc / Bcc','Cc / Bcc','Копия / скрытая копия','DW / UDW'],
     local:['Lokal · kein Mailkonto verbunden. Ordneraktionen ändern nur diesen Katalog. Versand ist über den Export an dein Mailprogramm möglich.','Local · no mail account connected. Folder actions change only this catalog. Export a draft to your email app to send it.','Локально · почтовый аккаунт не подключён. Действия с папками меняют только каталог. Для отправки экспортируйте черновик в почтовую программу.','Lokalnie · brak połączonego konta. Działania na folderach zmieniają tylko katalog. Aby wysłać, wyeksportuj szkic do programu pocztowego.'],
     newFolder:['Neuer Ordner','New folder','Новая папка','Nowy folder'],removeFolder:['Ordner entfernen','Remove folder','Удалить папку','Usuń folder'],filter:['Postfach durchsuchen','Search mailbox','Поиск писем','Szukaj poczty'],all:['Alle auswählen','Select all','Выбрать все','Zaznacz wszystkie'],move:['Verschieben nach …','Move to …','Переместить в …','Przenieś do …'],selected:['ausgewählt','selected','выбрано','wybrano'],empty:['Keine Nachrichten in diesem Ordner.','No messages in this folder.','В этой папке нет писем.','Brak wiadomości w folderze.'],choose:['Wähle eine Nachricht oder verfasse eine neue E-Mail.','Choose a message or compose a new email.','Выберите письмо или напишите новое.','Wybierz wiadomość lub napisz nową.'],
     from:['Von','From','От','Od'],to:['An','To','Кому','Do'],cc:['Cc','Cc','Копия','DW'],bcc:['Bcc','Bcc','Скрытая копия','UDW'],subject:['Betreff','Subject','Тема','Temat'],body:['Nachricht','Message','Сообщение','Wiadomość'],save:['Entwurf speichern','Save draft','Сохранить черновик','Zapisz szkic'],saved:['Entwurf gespeichert.','Draft saved.','Черновик сохранён.','Szkic zapisany.'],back:['← Nachrichtenliste','← Message list','← Список писем','← Lista wiadomości'],reply:['Antworten','Reply','Ответить','Odpowiedz'],forward:['Weiterleiten','Forward','Переслать','Przekaż'],edit:['Bearbeiten','Edit','Изменить','Edytuj'],read:['Als ungelesen markieren','Mark unread','Отметить непрочитанным','Oznacz jako nieprzeczytane'],star:['Stern umschalten','Toggle star','Отметить звездой','Przełącz gwiazdkę'],delete:['In Papierkorb','Move to trash','В корзину','Do kosza'],permanent:['Endgültig aus Katalog löschen','Delete from catalog permanently','Удалить из каталога навсегда','Usuń trwale z katalogu'],restore:['Wiederherstellen','Restore','Восстановить','Przywróć'],undo:['Rückgängig','Undo','Отменить','Cofnij'],moved:['Lokal verschoben.','Moved locally.','Перемещено локально.','Przeniesiono lokalnie.'],
@@ -18,7 +19,7 @@
   const T=k=>(labels[k]||[k])[Math.max(0,['de','en','ru','pl'].indexOf(document.documentElement.lang.slice(0,2)))]||k;
   const icons={inbox:'📥',draft:'✏️',outbox:'📤',sent:'✓',archive:'🗄',spam:'🚫',trash:'🗑',exported:'↗'};
   const standard=Object.keys(icons), folderKey='pb_mail_folders';
-  let folder='inbox',current=null,chosen=new Set(),editing=null,dirty=false,filter='',undo=null,readerVersion=0,pseudo=null,busy=false;
+  let folder='inbox',current=null,chosen=new Set(),editing=null,dirty=false,filter='',undo=null,readerVersion=0,pseudo=null,busy=false,copyRecipientsOpen=false;
   function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
   function button(key,fn,primary=false){const b=node('button','mail-button'+(primary?' mail-primary':''),T(key));b.dataset.mailText=key;b.type='button';b.onclick=()=>guard(fn);return b;}
   async function guard(fn){if(busy)return;busy=true;app.inert=true;app.setAttribute('aria-busy','true');try{await fn();}catch(e){toast(T('error')+' '+(e.message||''),6000);}finally{busy=false;app.inert=false;app.removeAttribute('aria-busy');}}
@@ -43,6 +44,7 @@
   function newDraft(source,forward=false,body){
     if(!canLeave())return;
     editing={hash:null,mail:{from:source&&!forward?source.mail.to||'':'',to:source&&!forward?source.mail.from||'':'',cc:'',bcc:''},name:source?(forward?'Fwd: ':'Re: ')+source.name:'',mailBody:body??(source?'\n\n---\n'+fullText(source):''),mailKind:'draft',mailFolder:'draft',mailAttachments:forward?(source.mailAttachments||[]).map(x=>({...x})):[]};
+    copyRecipientsOpen=false;
     current=null;dirty=Boolean(source || body);pseudo=null;app.dataset.view='reader';drawReader();
   }
   async function forwardDraft(source){
@@ -80,7 +82,7 @@
     for(const r of mails){const row=node('div','mail-item'+(!r.mailRead?' unread':'')),check=node('input');check.type='checkbox';check.checked=chosen.has(r.hash);check.setAttribute('aria-label',r.name);check.onchange=()=>{check.checked?chosen.add(r.hash):chosen.delete(r.hash);selectionCount.textContent=chosen.size+' '+T('selected');};const b=node('button');b.type='button';b.dataset.mailId=r.hash;b.setAttribute('aria-current',String(current===r.hash));b.append(node('span','mail-avatar',(r.mail.from||r.name||'?').slice(0,1).toUpperCase()),node('span','mail-subject',(r.mailStar?'★ ':'')+r.name),node('span','mail-preview',(r.mail.from||'')+' · '+r.mailBody.slice(0,90)));b.onclick=()=>guard(()=>select(r));row.append(check,b);listItems.append(row);}
   }
   function drawUndo(){undoBox.replaceChildren();undoBox.hidden=!undo;if(undo)undoBox.append(node('span','',T('moved')),button('undo',undoMove));}
-  function field(key,value,multiline=false){const label=node('label','',T(key)),input=node(multiline?'textarea':'input');label.dataset.mailField=key;input.id='pb-mail-'+key;input.value=value||'';input.oninput=()=>{dirty=true;};if(!multiline)input.type='text';label.append(input);reader.append(label);return input;}
+  function field(key,value,multiline=false,parent=reader){const label=node('label','',T(key)),input=node(multiline?'textarea':'input');label.dataset.mailField=key;input.id='pb-mail-'+key;input.value=value||'';input.oninput=()=>{dirty=true;};if(!multiline)input.type='text';label.append(input);parent.append(label);return input;}
   async function attachmentsFor(r,raw){
     if(r.mailKind==='draft'){
       const out=[];for(const ref of r.mailAttachments||[]){let file=null;try{const c=CATALOG.find(x=>x.hash===ref.hash);if(c)file=await resolveFile(c);}catch{}out.push({name:ref.name,typ:ref.type,bytes:file?new Uint8Array(await file.arrayBuffer()):null});}return out;
@@ -127,15 +129,16 @@
   function drawReader(){
     const version=++readerVersion;reader.replaceChildren();const back=button('back',()=>{capture();app.dataset.view='list';});back.classList.add('mail-back');reader.append(back);
     if(editing){
-      reader.append(node('h3','',T('compose')));for(const k of ['from','to','cc','bcc'])field(k,editing.mail[k]);field('subject',editing.name);field('body',editing.mailBody,true);
-      const actions=node('div','mail-reader-actions');actions.append(button('save',saveDraft,true));const attach=node('input');attach.type='file';attach.multiple=true;attach.hidden=true;attach.onchange=()=>guard(async()=>{const files=[...attach.files];attach.value='';await attachFiles(files);});reader.append(attach);actions.append(button('attach',()=>attach.click()));reader.append(actions);
+      const actions=node('div','mail-reader-actions mail-compose-actions');actions.append(back,button('save',saveDraft,true));const attach=node('input');attach.type='file';attach.multiple=true;attach.hidden=true;attach.onchange=()=>guard(async()=>{const files=[...attach.files];attach.value='';await attachFiles(files);});reader.append(actions,attach);actions.append(button('attach',()=>attach.click()));for(const control of actions.children)if(control!==back)control.dataset.mailCaption='true';
+      reader.append(node('h3','',T('compose')));for(const k of ['from','to'])field(k,editing.mail[k]);
+      const copies=node('details','mail-copy-fields'),summary=node('summary','',T('copyRecipients'));summary.dataset.mailText='copyRecipients';copies.open=copyRecipientsOpen;copies.ontoggle=()=>{copyRecipientsOpen=copies.open;};copies.append(summary);reader.append(copies);for(const k of ['cc','bcc'])field(k,editing.mail[k],false,copies);field('subject',editing.name);field('body',editing.mailBody,true);
       for(const ref of editing.mailAttachments||[]){const row=node('p','mail-muted',ref.name+' · '+fmtKB(ref.size||0));row.append(button('delete',()=>{capture();editing.mailAttachments=editing.mailAttachments.filter(a=>a!==ref);dirty=true;drawReader();}));reader.append(row);}return;
     }
     const r=record();if(!r){reader.append(node('p','mail-muted',T('choose')));return;}
     let sourceBody=r.mailBody;
     reader.append(node('h3','',r.name),node('p','mail-muted',(r.mail.from||'')+' → '+(r.mail.to||'')));
     const actions=node('div','mail-reader-actions');actions.append(button('reply',async()=>{await bodyReady;newDraft({...r,mailBody:sourceBody});}),button('forward',()=>forwardDraft(r)),button(r.mailRead?'read':'markRead',async()=>{r.mailRead=!r.mailRead;await persist(r);refresh();drawReader();}),button('star',async()=>{r.mailStar=!r.mailStar;await persist(r);refresh();}),button(where(r)==='trash'?'permanent':'delete',remove));
-    if(r.mailKind==='draft')actions.append(button('edit',()=>{editing=structuredClone(r);dirty=false;drawReader();}),button('queue',async()=>{r.mailFolder='outbox';await persist(r);go('outbox');update();toast(T('queued'),7000);}));
+    if(r.mailKind==='draft')actions.append(button('edit',()=>{editing=structuredClone(r);copyRecipientsOpen=Boolean(editing.mail.cc||editing.mail.bcc);dirty=false;drawReader();}),button('queue',async()=>{r.mailFolder='outbox';await persist(r);go('outbox');update();toast(T('queued'),7000);}));
     if(where(r)==='trash')actions.append(button('restore',()=>move(r.mailPreviousFolder && r.mailPreviousFolder!=='trash'?r.mailPreviousFolder:'inbox')));
     actions.append(button('export',()=>exportMail(r)));reader.append(actions);
     const switches=node('div','mail-reader-actions'),text=node('pre','mail-text',r.mailBody);reader.append(switches,text);

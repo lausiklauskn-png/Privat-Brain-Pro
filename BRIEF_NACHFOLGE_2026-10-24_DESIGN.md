@@ -1,5 +1,18 @@
 # Nachfolgebrief 2026-10-24: Private Brain Pro modern gestalten
 
+## Aktuelle Klarstellung und erreichter Stand
+
+Klaus hat nach dem Funktionsabgleich ausdrücklich den Freibrief für Umsetzung,
+selbstständige PR-/Commit-Übernahmen und eine signierte Android-Update-APK gegeben.
+[Erster App-Schritt .30 und weitere Vorschläge](docs/design/umbau-2026-10-24/README.md).
+
+Klaus hat die vier ersten Entwürfe (Klarblau, Graphit, Petrol, Nachtblau) positiv
+bewertet und klargestellt: **Outlook ist Anregung und Vergleich, keine Kopiervorlage.**
+Jetzt wird der App-Zweck mit den vorhandenen Funktionen abgeglichen. Maßstab ist
+das Sammeln, gemeinsame Ordnen und Wiederfinden eigener Inhalte.
+[Ergebnis, Grenzen und gesicherter Designstand](docs/ZIEL-FUNKTIONEN-DESIGNSTAND-2026-10-24.md).
+Die folgenden ursprünglichen Vorbildformulierungen sind in diesem Sinn zu lesen.
+
 ## Klaus' Auftrag (2026-10-24, wörtlich)
 
 > „Es geht jetzt um die Verbesserung des Designs und der Funktionsbutton innerhalb von Private Brain. Sieht noch sehr
@@ -10,9 +23,10 @@ Klaus' Vorbild-Bilder (Outlook im Web) stehen unten unter **Vorbilder** und lieg
 
 ## Ziel in einem Satz
 
-Ruhige, moderne Oberfläche wie Outlook: einheitliche **Linien-Symbole statt Emojis**, wenige, klar beschriftete
-Knöpfe, ordentliche Abstände und eine klare Rangordnung. Was die App kann, bleibt gleich: gleiche Funktionen,
-gleiche Daten, gleiche vier Sprachen.
+Eigenständige, ruhige und moderne Oberfläche für Private Brain Pro: einheitliche
+**Linien-Symbole statt Emojis**, wenige klar beschriftete Knöpfe, ordentliche
+Abstände und eine klare Rangordnung nach dem App-Zweck. Die vorhandenen Daten,
+vier Sprachen und geschützten Module bleiben beim späteren Umbau erhalten.
 
 ## Ist-Zustand (gemessen 2026-10-24 auf main `28ed114`)
 

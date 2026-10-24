@@ -1,0 +1,54 @@
+{
+  "klarblau": {
+    "text/surface": 16.27,
+    "text/bg": 15.3,
+    "muted/surface": 6.31,
+    "muted/bg": 5.93,
+    "on-accent/accent": 5.17,
+    "selected-text/selected": 5.91,
+    "success/success-bg": 8.3,
+    "warning/warning-bg": 6.37,
+    "danger/danger-bg": 6.8,
+    "info/info-bg": 7.69
+  },
+  "graphit": {
+    "text/surface": 16.27,
+    "text/bg": 15.31,
+    "muted/surface": 6.31,
+    "muted/bg": 5.93,
+    "on-accent/accent": 7.58,
+    "selected-text/selected": 9.06,
+    "success/success-bg": 8.3,
+    "warning/warning-bg": 6.37,
+    "danger/danger-bg": 6.8,
+    "info/info-bg": 7.69
+  },
+  "petrol": {
+    "text/surface": 16.27,
+    "text/bg": 15.34,
+    "muted/surface": 6.31,
+    "muted/bg": 5.95,
+    "on-accent/accent": 5.47,
+    "selected-text/selected": 6.03,
+    "success/success-bg": 8.3,
+    "warning/warning-bg": 6.37,
+    "danger/danger-bg": 6.8,
+    "info/info-bg": 7.69
+  },
+  "nachtblau": {
+    "text/surface": 14.75,
+    "text/bg": 16.39,
+    "muted/surface": 8.57,
+    "muted/bg": 9.53,
+    "on-accent/accent": 7.46,
+    "selected-text/selected": 6.41,
+    "success/success-bg": 10.57,
+    "warning/warning-bg": 9.66,
+    "danger/danger-bg": 7.79,
+    "info/info-bg": 7.5
+  },
+  "symbol_count": 29,
+  "ids_unique": true,
+  "all_mapped": true,
+  "scope": "Isolierte Vorbereitung; nicht in Produkt eingebaut."
+}

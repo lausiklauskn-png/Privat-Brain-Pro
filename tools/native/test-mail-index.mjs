@@ -5,6 +5,7 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
@@ -91,8 +92,10 @@ try{
   const mail=page.locator('#mailWorkspace'), panel=mail.locator('#pb-mail-all');
   await mail.locator('[data-live-text=connect]').click();
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hidden&&document.querySelector('.live-mail [data-mail-all=open]'));
-  ok('"Alle Konten" is the first entry of the folder bar',await mail.locator('.live-mail .mail-folders > :first-child').getAttribute('data-mail-all')==='open'&&(await mail.locator('[data-mail-all=open]').textContent()).startsWith('👥 Alle Konten'));
-  await mail.locator('[data-mail-all=open]').click();
+  const allAccountsEntry=mail.locator('.live-mail .mail-folders > :first-child');
+  await allAccountsEntry.locator('svg.native-folder-icon[data-icon-key="accounts"]').waitFor();
+  ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&[...button.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join('').trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
+  await mail.getByRole('button',{name:/^Alle Konten\s*\d*$/}).click();
   await capture(page,'1-erster-abruf');
   ok('First view explains reading only, 12 months and no attachments',(await panel.textContent()).includes('12 Monate')&&(await panel.textContent()).includes('Anhänge werden nicht geladen'));
   ok('Other mailbox parts are hidden while the overview is open',await mail.locator('.live-mail').isHidden()&&await mail.locator('.mail-account-bar').isHidden());
@@ -148,7 +151,7 @@ try{
   ok('Own marks stay, server flags are overwritten',again.star===true&&again.tags[0]==='behalten'&&again.flagged&&again.seen);
   ok('A complete folder only needs its newest page next time',await page.evaluate(async()=>{const n=window.mailCalls.length;await PBMailIndex.sync();return window.mailCalls.slice(n).filter(c=>c.method==='index'&&c.args.before>0).length===0;}));
   // Uncertain twins wait in "Doppelte"
-  await page.locator('[data-tab="dupes"]').click();
+  await navigateTo(page,'dupes');
   const dupes=page.locator('#pb-mail-dupes');
   await page.evaluate(()=>document.getElementById('pb-mail-dupes').scrollIntoView());await capture(page,'5-doppelte');
   ok('Twin without identifier and different text waits in "Doppelte"',await dupes.isVisible()&&await dupes.locator('[data-mail-dupe]').count()===1&&(await dupes.textContent()).includes('Nichts wurde überschrieben'));

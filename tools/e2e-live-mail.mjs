@@ -248,6 +248,32 @@ try {
     "Antwort verwendet Reply-To",
     (await page.locator("#pb-live-to").inputValue()) === "reply@example.test",
   );
+  ok(
+    "Senden ist beschriftete Hauptaktion oberhalb der Empfängerfelder",
+    await page.locator('.mail-compose-actions [data-live-text="send"]').evaluate(b =>
+      b.classList.contains('mail-primary') && b.textContent === 'Senden' &&
+      b.getBoundingClientRect().bottom <= document.getElementById('pb-live-to').getBoundingClientRect().top),
+  );
+  ok("Leere Cc-/Bcc-Felder sind zunächst eingeklappt", !await page.locator('#pb-live-cc').isVisible());
+  await page.locator('.mail-copy-fields > summary').click();
+  await page.locator('#pb-live-cc').fill('copy@example.test');
+  await page.locator('#pb-live-bcc').fill('hidden@example.test');
+  await page.locator('.mail-copy-fields > summary').click();
+  const attachmentChooser = page.waitForEvent('filechooser');
+  await page.locator('.mail-compose-actions [data-live-text="attach"]').click();
+  await (await attachmentChooser).setFiles({name:'compose-note.txt',mimeType:'text/plain',buffer:Buffer.from('Notiz zum Entwurf.')});
+  await settled();
+  ok("Cc/Bcc bleiben nach Einklappen und Anhang-Neuzeichnen erhalten",
+    await page.locator('#pb-live-cc').inputValue()==='copy@example.test' &&
+    await page.locator('#pb-live-bcc').inputValue()==='hidden@example.test' &&
+    !await page.locator('#pb-live-cc').isVisible());
+  for (const [lang, caption] of [['en','Cc / Bcc'],['ru','Копия / скрытая копия'],['pl','DW / UDW'],['de','Cc / Bcc']]) {
+    await page.evaluate(lang => { document.documentElement.lang = lang; }, lang);
+    await page.waitForFunction(caption => document.querySelector('.live-mail .mail-copy-fields > summary').textContent === caption, caption);
+    ok(lang + ': aufklappbare Empfängerfelder übersetzen ohne Werteverlust',
+      await page.locator('.mail-copy-fields > summary').textContent() === caption &&
+      await page.locator('#pb-live-bcc').inputValue() === 'hidden@example.test');
+  }
   await page.locator("#pb-live-to").fill("recipient@example.test");
   await page.locator("#pb-live-subject").fill("Antwort");
   await page.locator("#pb-live-text").fill("Antworttext");
@@ -263,8 +289,11 @@ try {
     requests.some((r) => r.path.endsWith("/draft")) &&
       !requests.some((r) => r.path.endsWith("/send")),
   );
+  ok("Eingeklappte Cc/Bcc werden im Entwurf gespeichert",
+    requests.find(r=>r.path.endsWith('/draft')).body.cc==='copy@example.test' &&
+    requests.find(r=>r.path.endsWith('/draft')).body.bcc==='hidden@example.test');
   page.on("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Jetzt senden", exact: true }).click();
+  await page.getByRole("button", { name: "Senden", exact: true }).click();
   await settled();
   await page.waitForFunction(() =>
     document
@@ -277,6 +306,9 @@ try {
     submission.body.submission.length === 36 &&
       submission.body.inReplyTo === "<message@example.test>",
   );
+  ok("Senden übernimmt eingeklappte Cc/Bcc genau einmal",
+    submission.body.cc==='copy@example.test' && submission.body.bcc==='hidden@example.test' &&
+    requests.filter(r=>r.path.endsWith('/send')).length===1);
   ok(
     "Versanderfolg wird erst nach Serverantwort angezeigt",
     (await page.locator("#pb-live-reader").innerText()).includes("angenommen"),
@@ -310,7 +342,7 @@ try {
   await page.locator('[data-live-uid="2"]').click();
   await settled();
   await page
-    .getByRole("button", { name: "Nachricht katalogisieren", exact: true })
+    .getByRole("button", { name: "In Katalog", exact: true })
     .click();
   await settled();
   await page.waitForFunction(() =>

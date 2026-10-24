@@ -1,0 +1,105 @@
+/* Private Brain Pro: quiet native layout. Loaded after the legacy native rules. */
+html[data-pb-theme] body { background:var(--bg); background-image:none; color:var(--ink); font-family:var(--sans); }
+html[data-pb-theme] h1,html[data-pb-theme] h2,html[data-pb-theme] h3,html[data-pb-theme] h4 { font-family:var(--sans); letter-spacing:-.025em; }
+html[data-pb-theme] .wrap { max-width:none; padding:8px 16px max(12px,env(safe-area-inset-bottom)); }
+html[data-pb-theme] header.top { gap:10px; min-height:38px; padding-bottom:7px; }
+html[data-pb-theme] header .brand h1 { font-size:1.08rem; font-weight:650; white-space:nowrap; }
+html[data-pb-theme] header .brand h1 .pb-version { font-size:.65rem; background:var(--card); border:1px solid var(--line); }
+html[data-pb-theme] button,html[data-pb-theme] .btn,html[data-pb-theme] .mail-app .mail-button { background:var(--card); border:1px solid var(--line); color:var(--ink); box-shadow:none; border-radius:6px; }
+html[data-pb-theme] button.primary,html[data-pb-theme] .mail-app .mail-primary { background:var(--acc); border-color:var(--acc); color:var(--pb-on-accent,#fff); box-shadow:none; }
+html[data-pb-theme] button:not(:disabled):hover,html[data-pb-theme] .btn:hover { transform:none; background:var(--pb-hover,var(--card2)); }
+html[data-pb-theme] button.primary:not(:disabled):hover,html[data-pb-theme] .mail-app .mail-primary:not(:disabled):hover { background:var(--acc); filter:brightness(.94); }
+html[data-pb-theme] button:focus-visible,html[data-pb-theme] input:focus-visible,html[data-pb-theme] select:focus-visible,html[data-pb-theme] textarea:focus-visible,html[data-pb-theme] summary:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+html[data-pb-theme] .tab.on { color:var(--acc); background:var(--pb-selected,var(--card2)); border-color:var(--line); box-shadow:none; }
+html[data-pb-theme] .tab.on::after { background:var(--acc); inset:auto 8px 0; height:2px; border-radius:2px; z-index:0; }
+html[data-pb-theme] .native-toolbar-row { margin:0 0 6px; padding:2px 0 4px; border-bottom:1px solid var(--line); }
+html[data-pb-theme] .native-toolbar-row .main-pages { flex-wrap:nowrap!important; gap:5px!important; }
+html[data-pb-theme] .native-toolbar-row .tab { background:transparent; border-color:transparent; }
+html[data-pb-theme] .native-toolbar-row .tab.on { background:var(--pb-selected,var(--card2)); color:var(--acc); }
+html[data-pb-theme] .native-options-panel { border-radius:9px; box-shadow:0 8px 24px #0002; }
+html[data-pb-theme] .native-options-panel .workspace-tools { display:flex!important; flex-direction:column; flex-wrap:nowrap; width:100%; gap:3px; margin:0; padding:0 0 8px; border-bottom:1px solid var(--line); }
+html[data-pb-theme] .native-options-panel .workspace-tools .tab { display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-height:32px; padding:5px 8px!important; text-align:left; }
+html[data-pb-theme] .native-options-panel .workspace-tools .compact-label,
+html[data-pb-theme] .compact-tool-has-caption .compact-label,
+html[data-pb-theme] .compact-text-only .compact-label { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip-path:inset(50%)!important; white-space:nowrap!important; }
+html[data-pb-theme] .native-options-panel .workspace-tools .compact-caption { font-size:.85rem; }
+html[data-pb-theme] .compact-tool-has-caption,html[data-pb-theme] .compact-text-only { width:auto!important; min-width:30px; gap:5px; padding:3px 8px!important; }
+html[data-pb-theme] .compact-tool-has-caption .compact-caption,html[data-pb-theme] .compact-text-only .compact-caption { position:static!important; width:auto!important; height:auto!important; overflow:visible!important; clip-path:none; font-size:.8rem; white-space:nowrap; }
+html[data-pb-theme] .panel>h2 { margin:8px 0 14px; font-size:1.35rem; font-weight:650; }
+html[data-pb-theme] .search-welcome { padding:13px 0 8px; }
+html[data-pb-theme] .search-welcome h2 { font-size:clamp(1.45rem,3vw,2rem); font-weight:650; }
+html[data-pb-theme] .search-totals { gap:8px; margin:8px 0 14px; }
+html[data-pb-theme] .search-totals span { padding:5px 9px; border-radius:5px; font-size:.8rem; background:var(--card); }
+html[data-pb-theme] .searchbox,html[data-pb-theme] .note,html[data-pb-theme] .card,html[data-pb-theme] .tile,html[data-pb-theme] .library-setup { background:var(--card); background-image:none; border-color:var(--line); border-radius:9px; box-shadow:none; }
+html[data-pb-theme] .searchbar,html[data-pb-theme] .search-shell { box-shadow:none; background:var(--card); }
+html[data-pb-theme] input,html[data-pb-theme] select,html[data-pb-theme] textarea { background:var(--field); color:var(--ink); border-color:var(--line); border-radius:6px; }
+html[data-pb-theme] #mode { background:var(--card); border-color:var(--line); }
+html[data-pb-theme] #mode button.on { background:var(--acc); color:var(--pb-on-accent,#fff); }
+html[data-pb-theme] .explorer-layout { gap:16px; }
+html[data-pb-theme] #explorerTree { padding-right:12px; }
+html[data-pb-theme] #explorerTree button { border-color:transparent; background:transparent; white-space:normal; overflow-wrap:normal; }
+html[data-pb-theme] #explorerTree button[aria-current=location] { background:var(--pb-selected,var(--card2)); color:var(--acc); }
+html[data-pb-theme] .explorer-row,html[data-pb-theme] .explorer-dir { border-radius:5px; margin-bottom:2px; padding:9px 12px; background:var(--card); border-width:0 0 1px; }
+html[data-pb-theme] .explorer-row strong,html[data-pb-theme] .explorer-dir strong { font-size:.9rem; font-weight:600; }
+html[data-pb-theme] .explorer-meta { margin-top:3px; color:var(--mut); line-height:1.45; }
+:root[data-pb-theme] .mail-app { --mail-accent:var(--acc); --mail-soft:var(--pb-selected,var(--card2)); --mail-h1:var(--acc); --mail-h2:var(--acc); border-radius:9px; background:var(--card); margin-top:0; }
+:root[data-pb-theme] #mailWorkspace .mail-primary { background:var(--acc); border-color:var(--acc); color:var(--pb-on-accent,#fff); box-shadow:none; }
+html[data-pb-theme] .mail-folders { background:var(--bg2); }
+html[data-pb-theme] .mail-folder { align-items:center; gap:7px; border-radius:5px; border:0; padding:6px 8px; overflow-wrap:normal; word-break:normal; }
+html[data-pb-theme] .mail-folder small { flex:none; min-width:1.5em; text-align:right; }
+html[data-pb-theme] .mail-folder[aria-current=true] { color:var(--acc); background:var(--pb-selected,var(--card2)); }
+html[data-pb-theme] .mail-notice { background:var(--bg2); color:var(--mut); }
+html[data-pb-theme] .mail-avatar { background:var(--bg); color:var(--mut); border:1px solid var(--line); font-weight:600; }
+html[data-pb-theme] .mail-item button { border:0; background:transparent; border-radius:0; }
+html[data-pb-theme] .mail-item button[aria-current=true] { background:var(--pb-selected,var(--card2)); }
+html[data-pb-theme] .mail-reader h3 { font-size:1.2rem; font-weight:650; }
+html[data-pb-theme] .mail-reader-actions { gap:5px; }
+html[data-pb-theme] .mail-message-menu,html[data-pb-theme] .mail-account-menu { background:var(--card); border-radius:8px; }
+html[data-pb-theme] .mail-compose-actions { padding:6px 0 9px; }
+html[data-pb-theme] .mail-compose-actions .mail-primary { padding:4px 12px!important; }
+html[data-pb-theme] .mail-copy-fields { border-bottom:1px solid var(--line); }
+html[data-pb-theme] .native-heading-icon { vertical-align:-.15em; margin-right:5px; }
+html[data-pb-theme] .native-folder-icon { width:17px; height:17px; flex:none; }
+html[data-pb-theme] .mail-copy-fields>summary { font-weight:600; padding:7px 0; }
+html[data-pb-theme] .mail-report { border-radius:7px; }
+html[data-pb-theme] .mail-all-head,html[data-pb-theme] .mail-all-switch { background:var(--card); }
+html[data-pb-theme] .topic-suggest { background:var(--card); border-radius:6px; }
+@media(min-width:1051px) {
+  html[data-pb-theme] .mail-layout { grid-template-columns:180px minmax(230px,300px) minmax(0,1fr); }
+}
+@media(min-width:651px) {
+  /* Keep the canon seal's saved header position clear of the action group. */
+  html[data-pb-theme] header.top .tools { margin-right:-8px; }
+}
+@media(max-width:1000px) {
+  html[data-pb-theme] .native-toolbar-row { flex-wrap:nowrap; }
+  html[data-pb-theme] .native-toolbar-row .main-pages { flex:0 1 auto!important; }
+}
+@media(max-width:650px) {
+  html[data-pb-theme] .wrap { padding:5px 8px max(8px,env(safe-area-inset-bottom)); }
+  html[data-pb-theme] header.top { gap:5px; min-height:34px; }
+  html[data-pb-theme] header .brand h1 { font-size:.95rem; }
+  html[data-pb-theme] .native-toolbar-row { margin-bottom:8px; padding:4px 0 7px; }
+  html[data-pb-theme] .native-toolbar-row .main-pages { gap:3px!important; }
+  html[data-pb-theme] .native-toolbar-row .main-pages .tab { padding:3px 6px!important; }
+  html[data-pb-theme] .native-toolbar-row .compact-caption { font-size:.75rem; }
+  html[data-pb-theme] .mail-layout { min-height:420px; }
+  html[data-pb-theme] .mail-folder { white-space:nowrap; }
+  html[data-pb-theme] #mailWorkspace .mail-list { padding:7px; }
+  html[data-pb-theme] #mailWorkspace .mail-reader { padding:9px; }
+  html[data-pb-theme] .mail-compose-actions { gap:4px; }
+  html[data-pb-theme] .searchbox .toggle { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:0; padding:2px; }
+  html[data-pb-theme] .searchbox .toggle button { padding:5px 3px; border-width:0; font-size:.78rem; white-space:nowrap; overflow-wrap:normal; }
+  html[data-pb-theme] .filterbar select { width:100%; max-width:100%; font-size:.78rem; padding:4px 6px; }
+}
+@media(max-width:360px) { html[data-pb-theme] #panel-dash .tiles { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:380px) {
+  html[data-pb-theme] header .brand h1 { font-size:.78rem; }
+  html[data-pb-theme] header .brand h1 .pb-version { margin-left:2px; padding:0 3px; font-size:.52rem; }
+  html[data-pb-theme] header .logo,html[data-pb-theme] header .logo img { width:20px; height:20px; }
+}
+@media(max-width:340px) {
+  html[data-pb-theme] header .logo { display:none; }
+  html[data-pb-theme] header .brand h1 { font-size:.72rem; }
+}
+@media(prefers-reduced-motion:reduce) { html[data-pb-theme] button { transition:none; } }

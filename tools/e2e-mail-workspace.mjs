@@ -38,13 +38,18 @@ try{
  await page.getByRole('button',{name:'Als Antwortentwurf übernehmen',exact:true}).click();await settled();
  ok('Antwort bekommt echte Angaben lokal zurück',(await page.locator('#pb-mail-body').inputValue()).includes('89,90 EUR'));
  ok('Antwortempfänger ist der ursprüngliche Absender',(await page.locator('#pb-mail-to').inputValue()).includes('erika@example.test'));
+ ok('Lokaler Entwurf zeigt Speichern vor den Empfängerfeldern',await page.locator('.mail-compose-actions [data-mail-text="save"]').evaluate(b=>b.classList.contains('mail-primary')&&b.getBoundingClientRect().bottom<=document.getElementById('pb-mail-to').getBoundingClientRect().top));
+ ok('Leere lokale Cc/Bcc sind eingeklappt',!await page.locator('#pb-mail-cc').isVisible());
+ await page.locator('.mail-copy-fields>summary').click();await page.locator('#pb-mail-cc').fill('copy@example.test');await page.locator('#pb-mail-bcc').fill('hidden@example.test');await page.locator('.mail-copy-fields>summary').click();
  page.once('dialog',d=>d.dismiss());await page.locator('[data-mail-folder="archive"]').click();await settled();
  ok('Nicht gespeicherte KI-Antwort bleibt bei Abbruch erhalten',await page.locator('#pb-mail-body').isVisible() && (await page.locator('#pb-mail-body').inputValue()).includes('89,90 EUR'));
  const chooseAttachment=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Anhänge hinzufügen',exact:true}).click();const chooser=await chooseAttachment;await chooser.setFiles({name:'antwort-notiz.txt',mimeType:'text/plain',buffer:Buffer.from('Eine harmlose Anlage zum Antwortentwurf.')});await settled();
  ok('Anhang-Auswahl funktioniert über den Touch-Knopf',(await page.locator('#pb-mail-reader').innerText()).includes('antwort-notiz.txt'));
+ ok('Lokale Cc/Bcc bleiben nach Anhang-Neuzeichnen erhalten',await page.locator('#pb-mail-cc').inputValue()==='copy@example.test'&&await page.locator('#pb-mail-bcc').inputValue()==='hidden@example.test'&&!await page.locator('#pb-mail-cc').isVisible());
  await page.locator('#pb-mail-subject').fill('Antwort gespeichert');
  await page.getByRole('button',{name:'Entwurf speichern',exact:true}).click();await settled();await page.waitForFunction(()=>CATALOG.some(r=>r.name==='Antwort gespeichert'));
  ok('Entwurf ist im gemeinsamen Katalog gespeichert',await page.evaluate(()=>CATALOG.some(r=>r.name==='Antwort gespeichert'&&r.mailFolder==='draft')));
+ ok('Eingeklappte lokale Empfänger werden gespeichert',await page.evaluate(()=>{const r=CATALOG.find(r=>r.name==='Antwort gespeichert');return r.mail.cc==='copy@example.test'&&r.mail.bcc==='hidden@example.test';}));
  await page.getByRole('button',{name:'Für Versand vormerken',exact:true}).click();await settled();
  await page.waitForFunction(()=>!document.querySelector('.mail-app').hasAttribute('aria-busy'));
  ok('Postausgang ist eine Warteschlange und meldet keinen Versand',await page.evaluate(()=>CATALOG.find(r=>r.name==='Antwort gespeichert').mailFolder==='outbox' && document.querySelector('#toast').textContent.includes('noch nicht versendet')));

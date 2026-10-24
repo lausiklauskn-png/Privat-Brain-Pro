@@ -7,6 +7,7 @@ import {readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www'),origin='https://localhost/',types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 let browser,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -86,7 +87,7 @@ async function openMail(page,uid){
 try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   const A=await device('A');const {page}=A;
-  await page.click('[data-tab=settings]');
+  await navigateTo(page,'settings');
   await page.waitForFunction(()=>document.querySelector('#schutzPlace')?.textContent.includes('Einträge'));
   ok('Settings show the protection card right after the storage card',await page.locator('#vaultPlace + #schutzPlace').isVisible());
   const cardText=await page.locator('#schutzPlace').textContent();
@@ -135,7 +136,7 @@ try{
   await page.locator('.native-vault-row .pb-schutz-file').first().waitFor();
   await page.waitForFunction(()=>document.querySelector('.native-vault-row .pb-schutz-file span').dataset.state!=='checking');
   ok('Explorer shows the list result per mail attachment',await page.locator('.native-vault-row .pb-schutz-file span').first().textContent().then(t=>t.includes('Liste bekannter Schaddateien')));
-  await page.click('[data-tab=settings]');
+  await navigateTo(page,'settings');
   await page.click('#schutz-check-all');
   await page.waitForFunction(()=>document.querySelector('#schutzStatus').textContent.includes('Geprüft'));
   ok('"Alles prüfen" checks folder attachments and names the hits',await page.locator('#schutzStatus').textContent().then(t=>t.includes('Treffer: Rechnung.pdf.exe')));
@@ -146,7 +147,7 @@ try{
   ok('No page errors on device A',A.errors.length===0);
   // ---------- offline and locked ----------
   const B=await device('B',{offline:true,unlocked:false});
-  await B.page.click('[data-tab=settings]');
+  await navigateTo(B.page,'settings');
   await B.page.waitForTimeout(3600);
   ok('Locked folder: no automatic update is started',!B.calls.some(c=>c.plugin==='ProProtect'&&c.method==='update'));
   ok('Locked folder and switched-off internet are named on the card',await B.page.locator('#schutzPlace').textContent().then(t=>t.includes('gesperrt')&&t.includes('Internet der App ist aus')));
@@ -154,7 +155,7 @@ try{
   ok('Locked: rules still give hints, lists say "nicht geprüft" with the reason',await B.page.locator('.pb-schutz-mail li[data-code]').count()>3&&await B.page.locator('.pb-schutz-sources').textContent().then(t=>t.includes('nicht geprüft')&&t.includes('gesperrt')));
   ok('No page errors on device B',B.errors.length===0);
   const C=await device('Windows',{platform:'windows'});
-  await C.page.click('[data-tab=settings]');
+  await navigateTo(C.page,'settings');
   ok('Windows protection card initializes with its own system scanner label',await C.page.locator('#schutzPlace').textContent().then(t=>t.includes('Microsoft Defender')&&!t.includes('auf dem Tablet')));
   for(const language of ['de','en','ru','pl']){
     await C.page.evaluate(lang=>document.documentElement.lang=lang,language);

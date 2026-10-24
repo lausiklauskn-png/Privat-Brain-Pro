@@ -6,6 +6,7 @@ import {readFile} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {readFileSync} from 'node:fs';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
@@ -51,7 +52,7 @@ try{
   const dlg=page.locator('dialog.pb-check-report');
   ok('"Funde ansehen" opens the report with finding and what to do',await dlg.isVisible()&&(await dlg.textContent()).includes('⚠ Gefunden')&&(await dlg.textContent()).includes('beim Absender nachfragen')&&(await dlg.textContent()).includes('keine Virenprüfung'));
   await dlg.locator('button',{hasText:'Schließen'}).click();
-  await page.locator('[data-tab="order"]').click();
+  await navigateTo(page,'order');
   await page.waitForFunction(()=>document.querySelectorAll('.pb-check-badge').length>=3);
   const badges=await page.locator('.pb-check-badge').evaluateAll(bs=>bs.map(b=>({c:b.dataset.check,t:b.textContent,h:b.dataset.hash})));
   const byName=async n=>{const h=await page.evaluate(n=>CATALOG.find(r=>r.name===n).hash,n);return badges.find(b=>b.h===h);};

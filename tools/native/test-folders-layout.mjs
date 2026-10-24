@@ -3,6 +3,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www'),origin='https://localhost/',types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 let browser,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
 const saved=new Map(),pending=new Map(),copies=new Map();let destination='',sourceIndex=0,chooseCalls=0,cancelNext=false,failCopy=false;
@@ -29,16 +30,24 @@ try{
  });
  await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
- for(const [lang,labels]of [['de',['Suchen','Dateien','Explorer','Mail']],['en',['Search','Files','Explorer','Mail']],['ru',['Поиск','Файлы','Проводник','Почта']],['pl',['Szukaj','Pliki','Eksplorator','Poczta']]]){
+ for(const [lang,labels,extras]of [
+  ['de',['Finden','Hinzufügen','Dateien','Mail'],['Übersicht','Katalog','Doppelte','Einstellungen']],
+  ['en',['Find','Add','Files','Mail'],['Overview','Catalog','Duplicates','Settings']],
+  ['ru',['Поиск','Добавить','Файлы','Почта'],['Обзор','Каталог','Дубликаты','Настройки']],
+  ['pl',['Szukaj','Dodaj','Pliki','Poczta'],['Pulpit','Katalog','Duplikaty','Ustawienia']]
+ ]){
   await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-  ok(`${lang}: main navigation shows short translated captions beside its symbols`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.every((e,i)=>(e.dataset.tab==='search'?!e.querySelector('.compact-caption')&&e.getAttribute('aria-label'):e.querySelector('.compact-caption').textContent===labels[i])&&e.getBoundingClientRect().height<=44),labels));
+  ok(`${lang}: four main paths show their translated names beside symbols, with an accessible search icon`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>nodes.length===4&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['search','intake','explorer','mail'][i]&&e.getAttribute('aria-label')===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&(e.dataset.tab==='search'?!caption:caption?.textContent===labels[i])&&r.width>0&&r.height>=28&&r.height<=44;}),labels));
+  await page.locator('.native-options>summary').click();
+  ok(`${lang}: all additional views have complete translated names and symbols inside the app menu`,await page.locator('.native-menu-views .workspace-tools .tab').evaluateAll((nodes,labels)=>nodes.length===4&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['dash','order','dupes','settings'][i]&&e.getAttribute('aria-label')===labels[i]&&caption?.textContent===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&r.width>0&&r.height>=28&&caption.scrollWidth<=caption.clientWidth+1;}),extras));
+  for(const tab of ['dash','order','dupes','settings']){await navigateTo(page,tab);ok(`${lang}: ${tab} is reached by a real menu click and closes the menu`,await page.locator('#panel-'+tab).isVisible()&&!await page.locator('.native-options').evaluate(menu=>menu.open));}
   const button=page.locator('[data-tab=explorer]');await button.hover();await page.locator('.native-tooltip').waitFor();ok(`${lang}: pointer hover shows an actual visible explanatory tooltip`,(await page.locator('.native-tooltip').textContent())===(await button.getAttribute('aria-label')));await page.mouse.move(1270,890);
   await button.focus();await page.locator('.native-tooltip').waitFor();ok(`${lang}: keyboard focus shows the same tooltip and Escape dismisses it`,await button.getAttribute('aria-describedby')==='native-control-tooltip');await page.keyboard.press('Escape');await page.locator('.native-tooltip').waitFor({state:'hidden'});
  }
  await page.locator('.native-options>summary').click();await page.locator('[data-lang=de]').click();
- await page.click('[data-tab=dash]');
+ await navigateTo(page,'dash');
  ok('Compact dashboard buttons open all catalog files, categories and duplicate contents',await page.locator('#panel-dash .native-dashboard-link').count()===3);
- for(const [id,target]of [['kpiFiles','explorer'],['kpiCats','order'],['kpiDupes','dupes']]){await page.click('[data-tab=dash]');await page.locator('#'+id).click();ok(`${id}: metric activates the actual ${target} view`,await page.locator('#panel-'+target).evaluate(e=>e.classList.contains('on')));}
+ for(const [id,target]of [['kpiFiles','explorer'],['kpiCats','order'],['kpiDupes','dupes']]){await navigateTo(page,'dash');await page.locator('#'+id).click();ok(`${id}: metric activates the actual ${target} view`,await page.locator('#panel-'+target).evaluate(e=>e.classList.contains('on')));}
  await page.click('[data-tab=intake]');
  await page.evaluate(()=>renderFsHint());
  ok('Android folder actions remain visible after the browser fallback runs without showDirectoryPicker',await page.locator('#pickDir').isVisible()&&await page.locator('#chooseLibrary').isVisible()&&await page.evaluate(()=>!('showDirectoryPicker' in window)));
@@ -73,7 +82,7 @@ try{
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   ok(`${width}px: named navigation uses flat rows and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>e.getBoundingClientRect().height<=(innerWidth<=360?112:innerWidth<=1000?74:44)&&document.querySelector('.panel.on').scrollWidth<=document.querySelector('.panel.on').clientWidth+1));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await page.mouse.move(width-2,width<650?638:898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/import-${width}.png`});}
-  await page.click('[data-tab=dash]');
+  await navigateTo(page,'dash');
   ok(`${width}px: dashboard tiles stay compact and contain real keyboard buttons`,await page.locator('#panel-dash .tile').evaluateAll(nodes=>nodes.every(e=>e.getBoundingClientRect().height<=140))&&await page.locator('#kpiCats').evaluate(e=>e.closest('button').type==='button'));
   if(process.env.PB_CAPTURE_DESIGN==='1')await page.screenshot({path:`docs/design/compact16/dashboard-${width}.png`});
   await page.click('[data-tab=intake]');
