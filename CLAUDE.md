@@ -1,7 +1,9 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Nächste Sitzung (Klaus 2026-10-24): modernes Design wie Outlook**, Linien-Symbole statt Emojis, flache Knöpfe bleiben.
-[Brief](BRIEF_NACHFOLGE_2026-10-24_DESIGN.md) mit Ist-Bildern (`docs/design/ist-2026-10-24/`), Vorbildern und Ablauf.
+**Aktueller Auftrag (Klaus 2026-10-24): App-Ziel und angebotene Funktionen abgleichen; erreichten Designstand sichern.**
+Vier erste Designrichtungen positiv bewertet, noch kein einzelnes Thema gewählt. **Outlook ist Anregung, keine Kopiervorlage.**
+[Kurzer Ziel-/Funktionsabgleich und Designstand](docs/ZIEL-FUNKTIONEN-DESIGNSTAND-2026-10-24.md).
+[Designbrief](BRIEF_NACHFOLGE_2026-10-24_DESIGN.md) mit Ist-Bildern (`docs/design/ist-2026-10-24/`) und Referenzen.
 
 **Videos 2026-10-23 abends:** Siegel im Kopf korrigiert (★ in der Kugel, kein Wort „SIEGEL“, PR #73), Werbefilm und
 Handbuchvideo neu aufgenommen. FP Video (#23) zeigt nur Full HD: Werbefilm quer + hochkant, Handbuch quer ♪1/♪2, Handbuch
