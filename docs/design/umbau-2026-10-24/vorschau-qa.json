@@ -1,0 +1,856 @@
+{
+  "source": "/workspace/work/private-brain-umbau/vorschau-v2.html",
+  "startedAt": "2026-10-24T11:35:01.179Z",
+  "ok": true,
+  "layoutChecks": [
+    {
+      "name": "find",
+      "width": 320,
+      "theme": "blue",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 320,
+      "theme": "blue",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 320,
+      "theme": "blue",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 320,
+      "theme": "blue",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 320,
+      "theme": "graphite",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 320,
+      "theme": "graphite",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 320,
+      "theme": "graphite",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 320,
+      "theme": "graphite",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 320,
+      "theme": "petrol",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 320,
+      "theme": "petrol",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 320,
+      "theme": "petrol",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 320,
+      "theme": "petrol",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 320,
+      "theme": "night",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 320,
+      "theme": "night",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 320,
+      "theme": "night",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 320,
+      "theme": "night",
+      "viewport": 320,
+      "body": 320,
+      "appClient": 294,
+      "appScroll": 294,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 412,
+      "theme": "blue",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 412,
+      "theme": "blue",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 412,
+      "theme": "blue",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 412,
+      "theme": "blue",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 412,
+      "theme": "graphite",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 412,
+      "theme": "graphite",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 412,
+      "theme": "graphite",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 412,
+      "theme": "graphite",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 412,
+      "theme": "petrol",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 412,
+      "theme": "petrol",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 412,
+      "theme": "petrol",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 412,
+      "theme": "petrol",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 412,
+      "theme": "night",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 412,
+      "theme": "night",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 412,
+      "theme": "night",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 412,
+      "theme": "night",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 768,
+      "theme": "blue",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 768,
+      "theme": "blue",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 768,
+      "theme": "blue",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 768,
+      "theme": "blue",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 768,
+      "theme": "graphite",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 768,
+      "theme": "graphite",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 768,
+      "theme": "graphite",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 768,
+      "theme": "graphite",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 768,
+      "theme": "petrol",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 768,
+      "theme": "petrol",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 768,
+      "theme": "petrol",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 768,
+      "theme": "petrol",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 768,
+      "theme": "night",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 768,
+      "theme": "night",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 768,
+      "theme": "night",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 768,
+      "theme": "night",
+      "viewport": 768,
+      "body": 768,
+      "appClient": 730,
+      "appScroll": 730,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1280,
+      "theme": "blue",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1280,
+      "theme": "blue",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1280,
+      "theme": "blue",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1280,
+      "theme": "blue",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1280,
+      "theme": "graphite",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1280,
+      "theme": "graphite",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1280,
+      "theme": "graphite",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1280,
+      "theme": "graphite",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1280,
+      "theme": "petrol",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1280,
+      "theme": "petrol",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1280,
+      "theme": "petrol",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1280,
+      "theme": "petrol",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1280,
+      "theme": "night",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1280,
+      "theme": "night",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1280,
+      "theme": "night",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1280,
+      "theme": "night",
+      "viewport": 1280,
+      "body": 1280,
+      "appClient": 1210,
+      "appScroll": 1210,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1920,
+      "theme": "blue",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1920,
+      "theme": "blue",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1920,
+      "theme": "blue",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1920,
+      "theme": "blue",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1920,
+      "theme": "graphite",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1920,
+      "theme": "graphite",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1920,
+      "theme": "graphite",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1920,
+      "theme": "graphite",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1920,
+      "theme": "petrol",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1920,
+      "theme": "petrol",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1920,
+      "theme": "petrol",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1920,
+      "theme": "petrol",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "find",
+      "width": 1920,
+      "theme": "night",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "files",
+      "width": 1920,
+      "theme": "night",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "mail",
+      "width": 1920,
+      "theme": "night",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "compose",
+      "width": 1920,
+      "theme": "night",
+      "viewport": 1920,
+      "body": 1920,
+      "appClient": 1450,
+      "appScroll": 1450,
+      "ok": true
+    },
+    {
+      "name": "phone-reader",
+      "width": 412,
+      "theme": "night",
+      "viewport": 412,
+      "body": 412,
+      "appClient": 386,
+      "appScroll": 386,
+      "ok": true
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Four themes and four views at five viewport widths",
+      "ok": true,
+      "combinations": 80
+    },
+    {
+      "name": "Missing originals and catalog entries cannot open; historical checks remain separate",
+      "ok": true
+    },
+    {
+      "name": "Mail → prepare attachment → commit catalog → assign with mail → find → simulated original",
+      "ok": true
+    },
+    {
+      "name": "Multi-selection opens assignment instead of document merging",
+      "ok": true
+    },
+    {
+      "name": "Draft, Cc/Bcc, attachment, and body survive navigation/themes; writing undo and modal focus work",
+      "ok": true
+    },
+    {
+      "name": "Canceling a prepared import creates no catalog entry",
+      "ok": true
+    },
+    {
+      "name": "Phone views switch list/detail and return clearly",
+      "ok": true
+    }
+  ],
+  "screenshots": [
+    "/workspace/work/private-brain-umbau/QA-V2-desktop-mail.png",
+    "/workspace/work/private-brain-umbau/QA-V2-desktop-files.png",
+    "/workspace/work/private-brain-umbau/QA-V2-phone.png"
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "completedAt": "2026-10-24T11:35:11.110Z"
+}

@@ -57,10 +57,10 @@
       "Usunąć tylko połączenie konta? Poczta u dostawcy pozostanie.",
     ],
     catalogOne: [
-      "Nachricht katalogisieren",
-      "Catalog message",
-      "Добавить письмо в каталог",
-      "Kataloguj wiadomość",
+      "In Katalog",
+      "Add to catalog",
+      "В каталог",
+      "Do katalogu",
     ],
     removeAccount: [
       "Kontoverbindung entfernen",
@@ -89,7 +89,10 @@
     local: ["Lokale Mails", "Local mail", "Локальная почта", "Poczta lokalna"],
     refresh: ["Aktualisieren", "Refresh", "Обновить", "Odśwież"],
     compose: ["Verfassen", "Compose", "Написать", "Napisz"],
-    send: ["Jetzt senden", "Send now", "Отправить", "Wyślij teraz"],
+    send: ["Senden", "Send", "Отправить", "Wyślij"],
+    copyRecipients: ["Cc / Bcc", "Cc / Bcc", "Копия / скрытая копия", "DW / UDW"],
+    cc: ["Cc", "Cc", "Копия", "DW"],
+    bcc: ["Bcc", "Bcc", "Скрытая копия", "UDW"],
     draft: [
       "Server-Entwurf speichern",
       "Save server draft",
@@ -237,6 +240,7 @@
     dirty = false,
     busy = false;
   let viewKey = 'inbox', lastAccount = '', savedCache = [], folderMap = new Map(), entries = [], filterText = '', foldersReady = false;
+  let copyRecipientsOpen = false;
   const selected = new Set(), totals = new Map();
   const bar = el("div", "mail-head"),
     connect = btn("connect", setup),
@@ -937,6 +941,8 @@
       el("p", "mail-muted", mail.from + " → " + mail.to),
     );
     const actions = el("div", "mail-reader-actions");
+    const catalogButton = btn("catalogOne", () => catalogOne(mail, current));
+    catalogButton.dataset.mailCaption = "true";
     actions.append(
       btn("reply", () =>
         compose({
@@ -1018,12 +1024,12 @@
           "mail.eml",
         ),
       ),
-      btn("catalogOne", () => catalogOne(mail, current)),
+      catalogButton,
     );
     if (native) {
       const tools = el("details", "mail-message-tools"), summary = el("summary", "mail-button", T("messageTools")), menu = el("div", "mail-message-menu");
       summary.dataset.liveText = "messageTools";
-      for (const node of [...actions.children].slice(2)) menu.append(node);
+      for (const node of [...actions.children].slice(2)) if (node !== catalogButton) menu.append(node);
       menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
       tools.append(summary, menu); actions.append(tools);
     }
@@ -1073,6 +1079,7 @@
     dirty = Boolean(
       source.text || source.subject || source.attachments?.length,
     );
+    copyRecipientsOpen = Boolean(draft.cc || draft.bcc);
     renderComposer();
   }
   function renderComposer() {
@@ -1093,26 +1100,35 @@
         T("from") + ": " + accounts.find((a) => a.id === account)?.email,
       ),
     );
+    const copyFields = el("details", "mail-copy-fields"),
+      copySummary = el("summary", "", T("copyRecipients"));
+    copySummary.dataset.liveText = "copyRecipients";
+    copyFields.open = copyRecipientsOpen;
+    copyFields.ontoggle = () => { copyRecipientsOpen = copyFields.open; };
+    copyFields.append(copySummary);
     for (const [key, label] of [
       ["to", T("to")],
-      ["cc", "Cc"],
-      ["bcc", "Bcc"],
+      ["cc", T("cc")],
+      ["bcc", T("bcc")],
       ["subject", T("subject")],
       ["text", T("body")],
     ]) {
       const input = field(
-        reader,
+        key === "cc" || key === "bcc" ? copyFields : reader,
         label,
         draft[key],
         key === "text" ? "textarea" : "text",
       );
       input.id = "pb-live-" + key;
+      input.parentElement.dataset.liveField = key === "text" ? "body" : key;
       input.oninput = () => {
         draft[key] = input.value;
         dirty = true;
       };
+      if (key === "to") reader.append(copyFields);
     }
     const attach = field(reader, T("attach"), "", "file");
+    attach.parentElement.hidden = true;
     attach.multiple = true;
     attach.onchange = () =>
       run(async () => {
@@ -1148,7 +1164,7 @@
       reader.append(row);
     }
     const report = el("div", "mail-report"),
-      actions = el("div", "mail-reader-actions");
+      actions = el("div", "mail-reader-actions mail-compose-actions");
     actions.append(
       btn("check", () => checks(draft, report)),
       btn("draft", async () => {
@@ -1191,11 +1207,21 @@
         notice.textContent = "SMTP · " + data.status;
       }),
     );
-    reader.append(actions, report);
+    const sendButton = actions.querySelector('[data-live-text="send"]');
+    sendButton.classList.add("mail-primary");
+    const attachButton = btn("attach", () => attach.click());
+    actions.prepend(sendButton, attachButton);
+    for (const button of actions.children) button.dataset.mailCaption = "true";
+    const backButton = reader.querySelector(":scope > .mail-back");
+    if (backButton) actions.prepend(backButton);
+    reader.prepend(actions);
+    reader.append(report);
   }
   new MutationObserver(() => {
     for (const b of host.querySelectorAll("[data-live-text]"))
       b.textContent = T(b.dataset.liveText);
+    for (const label of reader.querySelectorAll("[data-live-field]"))
+      label.firstChild.nodeValue = T(label.dataset.liveField);
     if(native) {
       for(const node of host.querySelectorAll('[data-shared-text]'))node.textContent=S(node.dataset.sharedText);
       updateEntries();drawFolders();drawList();

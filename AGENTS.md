@@ -1,5 +1,14 @@
 # Private Brain Pro — laufender Auftrag
 
+- Neuer ausdrücklicher Freibrief von Klaus am 24.10.2026 in diesem Chat:
+  den eigenständigen Designumbau umsetzen, nötige PRs und Commits selbstständig
+  übernehmen, das Repo aktualisieren und die native Android-App als signierte
+  Update-APK mit direktem Download veröffentlichen. Keine erneute Merge- oder
+  Release-Freigabe verlangen. Paketkennung und ursprüngliche Signatur erhalten;
+  vor Veröffentlichung Prüfungen und Updateprobe bestehen lassen. Die vier positiv
+  bewerteten Designrichtungen bleiben Grundlage; Outlook ist Anregung, keine Kopie.
+  Gemeinsame UI-Änderungen auch für Windows prüfen. Aktuelles Android-Ziel: .30.
+
 - Windows ist veröffentlicht: `windows-v1.0.0-preview.29`, Quelle
   `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, erfolgreicher Release 39920396303.
   Windows-main-Abnahme 39918739441 und Android-main-Abnahme 39918739332 grün.

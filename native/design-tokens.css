@@ -1,0 +1,42 @@
+/* Private Brain Pro appearance profiles. Loaded after the legacy/native styles. */
+:root[data-pb-theme] {
+  --bg: #f6f8fc; --bg2: #eef2f8; --card: #ffffff; --card2: #eaf1ff; --field: #f8fafd;
+  --line: #d5deea; --ink: #172033; --mut: #526176; --mut2: #526176;
+  --acc: #2563eb; --acc2: #2563eb; --gold: #2563eb; --good: #166534; --warn: #92400e; --bad: #991b1b;
+  --pb-on-accent: #ffffff; --pb-focus: #2563eb; --pb-border-control: #64748b;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --head: var(--sans);
+  --radius: 10px; --radius-sm: 6px;
+  --shadow-xs: none; --shadow-sm: 0 2px 8px #1720330d; --shadow: 0 8px 24px #1720331a;
+  --grad: var(--acc); --rainbow: var(--acc);
+  color-scheme: light;
+}
+:root[data-pb-theme="graphit"] {
+  --bg: #f7f8fa; --bg2: #eef0f4; --card2: #edf0f4; --field: #f8f9fb;
+  --acc: #475569; --acc2: #475569; --gold: #475569; --pb-focus: #475569;
+}
+:root[data-pb-theme="petrol"] {
+  --bg: #f5f9f9; --bg2: #edf5f3; --card2: #e7f4f2; --field: #f6fafa; --line: #d4e3e1;
+  --acc: #0f766e; --acc2: #0f766e; --gold: #0f766e; --pb-focus: #0f766e;
+}
+:root[data-pb-theme="nachtblau"] {
+  --bg: #111827; --bg2: #151f2f; --card: #182233; --card2: #223756; --field: #151f2f;
+  --line: #35465e; --ink: #f3f6fc; --mut: #b2bfd2; --mut2: #b2bfd2;
+  --acc: #7ca7ff; --acc2: #7ca7ff; --gold: #7ca7ff; --good: #86efac; --warn: #fcd34d; --bad: #fda4af;
+  --pb-on-accent: #111827; --pb-focus: #9bbeff; --pb-border-control: #7185a2;
+  --shadow-sm: 0 2px 8px #0002; --shadow: 0 8px 24px #0005;
+  color-scheme: dark;
+}
+#pb-theme-settings { margin: 0 0 12px; }
+#pb-theme-settings h3 { margin: 0 0 6px; font-family: var(--sans); font-size: .98rem; }
+#pb-theme-settings .pb-theme-help, #pb-theme-settings .pb-theme-description, #pb-theme-settings .pb-theme-status { margin: 5px 0; font-size: .8rem; line-height: 1.5; color: var(--mut); }
+#pb-theme-settings .pb-theme-status { color: var(--ink); }
+#pb-theme-settings .pb-theme-choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 8px; margin: 7px 0; }
+#pb-theme-settings .pb-theme-choice { display: flex; align-items: center; min-width: 0; min-height: 44px; width: 100%; margin: 0; padding: 8px 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; font-family: var(--sans); color: var(--ink); cursor: pointer; }
+#pb-theme-settings .pb-theme-face { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 28px; padding: 4px 7px; border: 1px solid var(--pb-border-control); border-radius: 6px; background: var(--card); font-size: .78rem; line-height: 1.2; white-space: nowrap; }
+#pb-theme-settings .pb-theme-choice[aria-pressed="true"] .pb-theme-face { background: var(--card2); border-color: var(--acc); }
+#pb-theme-settings .pb-theme-choice:hover .pb-theme-face { border-color: var(--acc); }
+#pb-theme-settings .pb-theme-choice:focus-visible { outline: 3px solid var(--pb-focus); outline-offset: 2px; }
+#pb-theme-settings .pb-theme-swatch { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--pb-choice-accent); }
+#pb-theme-settings .pb-theme-tick { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+#pb-theme-settings .pb-theme-choice[aria-pressed="false"] .pb-theme-tick { visibility: hidden; }
+@media (max-width: 760px) { #pb-theme-settings .pb-theme-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

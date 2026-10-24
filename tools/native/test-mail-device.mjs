@@ -64,7 +64,7 @@ try{
   const mail=page.locator('#mailWorkspace');
   const button=key=>mail.locator(`[data-live-text="${key}"]`);
   const baselineStyle=await mail.locator('.mail-app:not(.live-mail) [data-mail-text=compose]').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,font:s.fontFamily,border:s.borderRadius};});
-  const baseline=await mail.locator('.mail-app:not(.live-mail) .mail-folders [data-mail-folder]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.mailFolder,label:n.firstChild.textContent})));
+  const baseline=await mail.locator('.mail-app:not(.live-mail) .mail-folders [data-mail-folder]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.mailFolder,label:[...n.childNodes].filter(part=>part.nodeType===Node.TEXT_NODE).map(part=>part.textContent).join('').trim(),icon:n.querySelector('.native-folder-icon')?.dataset.iconKey})));
   if(process.env.PB_CAPTURE_DESIGN==='1')await page.screenshot({path:'docs/design/mail-preview6/vorher-konto.png'});
   await button('connect').click();
   await page.waitForFunction(()=>window.mailCalls.some(c=>c.method==='addAccount'));
@@ -80,7 +80,7 @@ try{
   ok('Native account and folder listing opens existing mailbox UI',await mail.locator('.live-mail').isVisible());
   ok('Connected mailbox retains heading and primary compose/import controls',await mail.locator('.live-mail .mail-head h2').textContent()==='Postfach'&&await mail.locator('.live-mail [data-live-text=compose]').getAttribute('class').then(s=>s.includes('mail-primary'))&&await mail.locator('.live-mail [data-shared-text=import]').isVisible());
   ok('Compose uses exactly the same glass/Petrol styles before and after activation',JSON.stringify(baselineStyle)===JSON.stringify(await mail.locator('.live-mail [data-live-text=compose]').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,font:s.fontFamily,border:s.borderRadius};})));
-  const connected=await mail.locator('.live-mail .mail-folders [data-mail-folder]').evaluateAll(nodes=>nodes.slice(0,8).map(n=>({id:n.dataset.mailFolder,label:n.firstChild.textContent})));
+  const connected=await mail.locator('.live-mail .mail-folders [data-mail-folder]').evaluateAll(nodes=>nodes.slice(0,8).map(n=>({id:n.dataset.mailFolder,label:[...n.childNodes].filter(part=>part.nodeType===Node.TEXT_NODE).map(part=>part.textContent).join('').trim(),icon:n.querySelector('.native-folder-icon')?.dataset.iconKey})));
   ok('Same eight folder labels, symbols and order before and after account activation',JSON.stringify(baseline)===JSON.stringify(connected));
   ok('Inbox count comes from provider total, not the 50-message page',await mail.locator('.live-mail [data-mail-folder=inbox] small').textContent()==='125');
   ok('Inbox/Trash/Sent are presented in German',await mail.locator('.live-mail [data-mail-folder=inbox]').textContent().then(s=>s.includes('Posteingang'))&&await mail.locator('.live-mail [data-mail-folder=trash]').textContent().then(s=>s.includes('Papierkorb'))&&await mail.locator('.live-mail [data-mail-folder=sent]').textContent().then(s=>s.includes('Gesendet')));
@@ -109,7 +109,8 @@ try{
   await mail.locator('.live-mail [data-native-selection=restore]').click();
   ok('"Wiederherstellen" puts chosen mails from the trash back into the inbox',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='actions'&&c.args.action==='move'&&c.args.folder==='Trash'&&c.args.target==='INBOX')));
   await mail.locator('.live-mail [data-mail-folder=spam]').click();
-  ok('In spam the selection offers "Kein Spam" back to the inbox',(await mail.locator('.live-mail [data-native-selection=notspam]').textContent())==='✓ Kein Spam');
+  const notSpam=mail.locator('.live-mail [data-native-selection=notspam]');
+  ok('In spam the selection offers a named "Kein Spam" action with its own icon',await notSpam.getAttribute('aria-label')==='Kein Spam'&&await notSpam.locator('.compact-caption').isVisible()&&await notSpam.locator('.compact-caption').textContent()==='Kein Spam'&&await notSpam.locator('.compact-icon').getAttribute('data-icon-key')==='read');
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();
   ok('No provider folders created or renamed to match UI labels',await page.evaluate(()=>!window.mailCalls.some(c=>['createFolder','renameFolder'].includes(c.method))));
   ok('Ambiguous aliases remain custom; explicit server roles win',await page.evaluate(()=>{const a=PBMailFolders.resolve([{path:'a',name:'Sent',specialUse:''},{path:'b',name:'Sent Items',specialUse:''}]);const e=PBMailFolders.resolve([{path:'a',name:'Sent',specialUse:''},{path:'b',name:'Other',specialUse:'\\Sent'}]);return !a.roles.has('sent')&&a.custom.length===2&&e.roles.get('sent').path==='b';}));
@@ -195,7 +196,10 @@ try{
   ok('Outbox shows uncertain attempts without retry',await mail.locator('[data-native-saved="outbox-fixture"]').isVisible()&&await mail.locator('[data-live-text=restore]').count()===0);
   for(const lang of ['en','ru','pl','de']){
     await clickControl(page,`[data-lang="${lang}"]`);
-    ok(`${lang}: connected folders match the local mailbox labels`,await page.evaluate(()=>[...document.querySelectorAll('.live-mail .mail-folders [data-mail-folder]')].slice(0,8).every(b=>b.firstChild.textContent===PBMailUI.icons[b.dataset.mailFolder]+' '+PBMailUI.text(b.dataset.mailFolder))));
+    ok(`${lang}: connected folders keep the translated local labels and explicit line icons`,await page.evaluate(()=>{
+      const icons={inbox:'inbox',draft:'compose',outbox:'send',sent:'read',archive:'archive',spam:'warning',trash:'trash',exported:'external'};
+      return [...document.querySelectorAll('.live-mail .mail-folders [data-mail-folder]')].slice(0,8).every(b=>[...b.childNodes].filter(part=>part.nodeType===Node.TEXT_NODE).map(part=>part.textContent).join('').trim()===PBMailUI.text(b.dataset.mailFolder)&&b.querySelector('.native-folder-icon')?.dataset.iconKey===icons[b.dataset.mailFolder]);
+    }));
     ok(`${lang}: outbox status follows language selector`,await mail.locator('[data-native-status]').textContent()==={de:'Versand unklar – nicht erneut senden',en:'Send result unclear – do not resend',ru:'Отправка не подтверждена — не отправляйте повторно',pl:'Wynik nieznany — nie wysyłaj ponownie'}[lang]);
   }
   for(const width of [320,768,1280]){

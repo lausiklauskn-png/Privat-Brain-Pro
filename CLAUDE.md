@@ -1,6 +1,11 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**Aktueller Auftrag (Klaus 2026-10-24): App-Ziel und angebotene Funktionen abgleichen; erreichten Designstand sichern.**
+**Aktueller Freibrief (Klaus 2026-10-24): Designumbau umsetzen, PRs/Commits selbstständig übernehmen,
+Repo aktualisieren und die native Android-App als signierte Update-APK mit direktem Link veröffentlichen.**
+Erster App-Schritt für .30: vier Themen, ruhige native Oberfläche, vier Hauptwege,
+klare Symbole, Senden oben, Cc/Bcc klappbar, Katalogaktion sichtbar. Paket/Signatur erhalten.
+[Umbau und weitere Vorschläge](docs/design/umbau-2026-10-24/README.md).
+Keine erneute Merge-/Release-Freigabe für diesen Auftrag verlangen; Prüfungen und Updateprobe abschließen.
 Vier erste Designrichtungen positiv bewertet, noch kein einzelnes Thema gewählt. **Outlook ist Anregung, keine Kopiervorlage.**
 [Kurzer Ziel-/Funktionsabgleich und Designstand](docs/ZIEL-FUNKTIONEN-DESIGNSTAND-2026-10-24.md).
 [Designbrief](BRIEF_NACHFOLGE_2026-10-24_DESIGN.md) mit Ist-Bildern (`docs/design/ist-2026-10-24/`) und Referenzen.

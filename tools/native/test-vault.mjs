@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www'),origin='https://localhost/',types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 let browser,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
 // One simulated folder shared by "device A" and "device B" pages.
@@ -78,7 +79,7 @@ try{
   // ---------- device A: first setup ----------
   const A=await device('A',{answers:[true]});
   const {page}=A;
-  await page.click('[data-tab=settings]');
+  await navigateTo(page,'settings');
   ok('Settings start with the storage card and name the old attachment limit',await page.locator('#panel-settings>#vaultPlace').isVisible()&&await page.locator('#vaultStatus').textContent().then(t=>t.includes('5 MB')));
   ok('Intake page shows where copies go, with a way to the settings',await page.locator('#vaultLine').textContent().then(t=>t.includes('Speicherort')));
   ok('The page itself has no password field for the folder',await page.locator('#vaultPlace input').count()===0);
@@ -151,7 +152,7 @@ try{
   await page.locator('.native-vault-attachment',{hasText:'im Anhang-Ordner'}).waitFor();
   ok('"Erneut laden" fetches the attachment into the folder again',folder.calls.some(c=>c.method==='forgetMessage'&&c.args.uid===9));
   // Locking on this device.
-  await page.click('[data-tab=settings]');
+  await navigateTo(page,'settings');
   await page.click('#vault-lock');
   await page.waitForFunction(()=>document.querySelector('#vaultStatus').textContent.includes('gesperrt'));
   ok('Locking keeps the folder configured but closed',!A.local.unlocked&&await page.locator('#vault-unlock').isVisible());
@@ -163,7 +164,7 @@ try{
   // ---------- device C: the catalog transaction cannot be saved ----------
   const C=await device('C');
   await C.page.evaluate(()=>{window.originalIdbPut=window.idbPut;window.idbPut=async()=>{throw new DOMException('Test: Speicher voll','QuotaExceededError');};});
-  await C.page.click('[data-tab=settings]');await C.page.click('#vault-openExisting');
+  await navigateTo(C.page,'settings');await C.page.click('#vault-openExisting');
   await C.page.waitForFunction(()=>!document.querySelector('#vault-openExisting').disabled);
   ok('A failed catalog restore adds no transient entry or dedupe hash',await C.page.evaluate(()=>CATALOG.length===0&&HASHSET.size===0&&(document.querySelector('#vaultStatus').textContent.includes('keine Daten zurückgesetzt'))));
   await C.page.evaluate(()=>{window.idbPut=window.originalIdbPut;});
@@ -173,7 +174,7 @@ try{
   ok('Retry after storage failure is not suppressed by an unsaved hash and survives restart',await C.page.evaluate(()=>HASHSET.size===1));
   // ---------- device B: new tablet, same SD card ----------
   const B=await device('B');
-  await B.page.click('[data-tab=settings]');
+  await navigateTo(B.page,'settings');
   await B.page.click('#vault-openExisting');
   await B.page.waitForFunction(()=>document.querySelector('#vaultStatus').textContent.includes('Wiederhergestellt'));
   ok('Opening the old folder restores accounts, drafts and the catalog',await B.page.locator('#vaultStatus').textContent().then(t=>t.includes('Konten 1')&&t.includes('Katalogeinträge 1')));

@@ -5,6 +5,7 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
@@ -148,7 +149,7 @@ try{
   ok('Own marks stay, server flags are overwritten',again.star===true&&again.tags[0]==='behalten'&&again.flagged&&again.seen);
   ok('A complete folder only needs its newest page next time',await page.evaluate(async()=>{const n=window.mailCalls.length;await PBMailIndex.sync();return window.mailCalls.slice(n).filter(c=>c.method==='index'&&c.args.before>0).length===0;}));
   // Uncertain twins wait in "Doppelte"
-  await page.locator('[data-tab="dupes"]').click();
+  await navigateTo(page,'dupes');
   const dupes=page.locator('#pb-mail-dupes');
   await page.evaluate(()=>document.getElementById('pb-mail-dupes').scrollIntoView());await capture(page,'5-doppelte');
   ok('Twin without identifier and different text waits in "Doppelte"',await dupes.isVisible()&&await dupes.locator('[data-mail-dupe]').count()===1&&(await dupes.textContent()).includes('Nichts wurde überschrieben'));

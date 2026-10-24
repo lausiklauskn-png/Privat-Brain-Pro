@@ -3,6 +3,7 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www'),mime={'.html':'text/html','.js':'text/javascript','.css':'text/css'};
 const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+sep))throw Error();res.setHeader('content-type',mime[extname(path)]||'application/octet-stream');res.end(await readFile(path));}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -16,7 +17,7 @@ try{
   window.Capacitor={Plugins:{ProFiles:{async saveRecoveryKeys(data){window.exports.push(data);if(window.exportMode==='failure')throw Error('synthetic write failure');return window.exportMode==='saved'?{saved:true}:{cancelled:true,saved:false};}}}};
  });
  await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>window.PBTresor&&window.PBRecoveryExport&&window.PBWorkspace);
- await page.click('.tab[data-tab=settings]');await page.click('#tresorSetup');
+ await navigateTo(page,'settings');await page.click('#tresorSetup');
  await page.evaluate(()=>{
   window.originalSplit=JasonLib.splitSecret;
   JasonLib.splitSecret=async pw=>{const result=await originalSplit(pw);return new Promise(resolve=>window.finishGeneration=()=>resolve(result));};

@@ -2,6 +2,8 @@
 
 ## Aktueller Stand vom 24.10.2026
 
+- [Umgesetzter erster App-Schritt und weitere konkrete Vorschläge](umbau-2026-10-24/README.md),
+  [weiterentwickelte klickbare Vorschau](umbau-2026-10-24/vorschau.html).
 - [Ziel, Funktionsabgleich und positiv bewertete Designrichtungen](../ZIEL-FUNKTIONEN-DESIGNSTAND-2026-10-24.md).
 - [Ist-Zustand: zwölf Aufnahmen](ist-2026-10-24/).
 - [15 Outlook-Referenzbilder](vorbild-2026-10-24/): Anregung, keine Kopiervorlage und keine automatische Erweiterung des Funktionsumfangs.

@@ -51,7 +51,15 @@ try{
     }
   }
   await page.setViewportSize({width:320,height:640});
-  ok('Phone keeps Overview, Catalog, Duplicates and Settings directly visible',await page.locator('.workspace-tools .tab').evaluateAll(nodes=>nodes.length===4&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>=28&&r.right<=innerWidth&&r.left>=0;})));
+  ok('Phone keeps one main navigation row; additional views are grouped in the app menu',await page.evaluate(()=>document.querySelectorAll('.native-toolbar-row .tab').length===4&&document.querySelectorAll('.native-options-panel .workspace-tools .tab').length===4));
+  for(const tab of ['dash','order','dupes','settings']){
+    await page.locator('.native-options>summary').click();
+    const button=page.locator(`.native-options-panel [data-tab="${tab}"]`);
+    ok(`${tab}: the menu shows a named, reachable view`,await button.isVisible()&&await button.locator('.compact-caption').textContent().then(t=>Boolean(t.trim())));
+    await button.click();await page.waitForFunction(tab=>document.getElementById('panel-'+tab).classList.contains('on'),tab);
+    ok(`${tab}: selecting the menu entry opens the original view and closes the menu`,!await page.locator('.native-options').evaluate(e=>e.open));
+  }
+  await page.click('[data-tab=mail]');
   await page.locator('.native-options>summary').click();await page.keyboard.press('Escape');ok('App menu closes with keyboard Escape and restores focus',await page.locator('.native-options>summary').evaluate(e=>document.activeElement===e)&&!await page.locator('.native-options').evaluate(e=>e.open));
   for(const [lang,word]of [['en','App menu'],['ru','Меню приложения'],['pl','Menu aplikacji'],['de','App-Menü']]){
     await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();

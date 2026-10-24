@@ -73,8 +73,9 @@ dokumentierte Wunsch nach Kontaktfotos bleibt ein eigener, noch zu prüfender Ab
 - **Danach:** die gemeinsame Zuordnung über Tags/Kategorien beziehungsweise eine
   gemischte Sammlung konkret entwerfen; vorhandene Abläufe dabei berücksichtigen.
 - **Dann:** die positiv bewertete Gestaltung Seite für Seite auf diese Abläufe
-  anwenden. Die Zustimmung zur Designrichtung ersetzt keine Prüfung einzelner
-  neuer Funktionen und ist kein Auftrag für einen Release.
+  anwenden. Anschließend hat Klaus ausdrücklich den Freibrief für die Umsetzung,
+  selbstständige Übernahme der PRs und Veröffentlichung einer signierten
+  Android-Update-APK gegeben. [Umsetzung und weitere Vorschläge](design/umbau-2026-10-24/README.md).
 
 Quellen: [aktuelle Pro-README](../README.md), [Konzept](../KONZEPT.md),
 [Mailindex und Grenzen](ALLE-KONTEN-UND-ABSENDER.md),

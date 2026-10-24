@@ -23,6 +23,18 @@ try{
   await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
   await page.addInitScript(()=>{window.openedFiles=[];window.Capacitor={Plugins:{ProFiles:{async open(args){window.openedFiles.push(args);}}}};});
   await page.goto(url);await page.waitForFunction(()=>window.PBNavigation&&typeof db!=='undefined'&&db);
+  await page.waitForFunction(()=>window.PBIcons);
+  ok('The shared icon source has explicit check and envelope-send symbols; unknown keys stay unknown',await page.evaluate(()=>PBIcons.has('check')&&PBIcons.has('send')&&PBIcons.create('send').dataset.iconKey==='send'&&PBIcons.create('future-action')===null));
+  await page.evaluate(()=>{
+    const host=document.querySelector('#mailWorkspace .mail-head');
+    for(const [key,label]of [['check','Prüfen'],['future-action','Besondere Aktion']]){
+      const button=document.createElement('button');button.dataset.liveText=key;button.dataset.toolbarFixture=key;button.textContent=label;host.append(button);
+    }
+  });
+  await page.waitForFunction(()=>document.querySelector('[data-toolbar-fixture="future-action"] .compact-caption'));
+  ok('A missing icon retains a visible action name instead of a misleading three-dot fallback',await page.locator('[data-toolbar-fixture="future-action"]').evaluate(b=>!b.querySelector('.compact-icon')&&b.querySelector('.compact-caption').textContent==='Besondere Aktion'&&b.classList.contains('compact-text-only')));
+  ok('The check action uses its own check icon',await page.locator('[data-toolbar-fixture="check"] .compact-icon').getAttribute('data-icon-key')==='check');
+  await page.evaluate(()=>document.querySelectorAll('[data-toolbar-fixture]').forEach(b=>b.remove()));
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6r9sAAAAASUVORK5CYII=','base64');
   await page.setInputFiles('#fileInput',[{name:'navigation-image.png',mimeType:'image/png',buffer:png},{name:'navigation-note.txt',mimeType:'text/plain',buffer:Buffer.from('Original local text <script>window.injection=true</script>')}]);
   await page.waitForFunction(()=>CATALOG.length===2);

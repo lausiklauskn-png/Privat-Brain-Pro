@@ -3,8 +3,8 @@
   'use strict';
   const make=(tag,cls)=>{const node=document.createElement(tag);node.className=cls;return node;};
   const strings={
-    de:['Weitere Ansichten','App-Menü','Schließen'],en:['More views','App menu','Close'],
-    ru:['Другие разделы','Меню приложения','Закрыть'],pl:['Więcej widoków','Menu aplikacji','Zamknij']
+    de:['Ansichten','App-Menü','Schließen'],en:['Views','App menu','Close'],
+    ru:['Разделы','Меню приложения','Закрыть'],pl:['Widoki','Menu aplikacji','Zamknij']
   };
   const offlineWords={de:['App vom Internet trennen','Internetzugriff wieder erlauben','Netzwerkeinstellung konnte nicht geändert werden.'],en:['Disconnect app from internet','Allow internet access again','Unable to change the network setting.'],ru:['Отключить приложение от интернета','Снова разрешить интернет','Не удалось изменить настройку сети.'],pl:['Odłącz aplikację od internetu','Ponownie zezwól na internet','Nie można zmienić ustawienia sieci.']};
   const offText=i=>(offlineWords[document.documentElement.lang]||offlineWords.de)[i];
@@ -12,7 +12,8 @@
   // Lets the WebView show :active (the button grows under the finger) on touch.
   document.addEventListener('touchstart',()=>{},{passive:true});
   const text=i=>(strings[document.documentElement.lang]||strings.de)[i];
-  const captions={de:['Suchen','Dateien','Explorer','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Search','Files','Explorer','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Файлы','Проводник','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Pliki','Eksplorator','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
+  const captions={de:['Finden','Hinzufügen','Dateien','Mail','Übersicht','Katalog','Doppelte','Einstellungen'],en:['Find','Add','Files','Mail','Overview','Catalog','Duplicates','Settings'],ru:['Поиск','Добавить','Файлы','Почта','Обзор','Каталог','Дубликаты','Настройки'],pl:['Szukaj','Dodaj','Pliki','Poczta','Pulpit','Katalog','Duplikaty','Ustawienia']};
+  const writingWords={de:'Schreibhilfe',en:'Writing help',ru:'Помощь с текстом',pl:'Pomoc w pisaniu'};
   const pages=['search','intake','explorer','mail','dash','order','dupes','settings'];
   const ICON_ONLY=new Set(['search','settings']);
   const paths={
@@ -33,29 +34,69 @@
     close:'m5 5 14 14M5 19 19 5',share:'M12 16V3m-5 5 5-5 5 5 M4 12v9h16v-9',
     external:'M14 3h7v7m0-7L10 14 M10 3H3v18h18v-7',moon:'M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11',
     archive:'M3 3h18v5H3Z m2 5v13h14V8m-10 4h6',star:'m12 2 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z',
-    read:'M3 6h18v14H3Z m0-14 9 7 9-7',save:'M3 3h15l3 3v15H3Z M7 3v6h10V3M7 21v-8h10v8'
+    read:'M3 6h18v14H3Z m0-14 9 7 9-7',save:'M3 3h15l3 3v15H3Z M7 3v6h10V3M7 21v-8h10v8',
+    check:'M20 12v8H4V4h11 M8 11l4 4L21 5',
+    send:'M3 5h16v11H3Z M3 5l8 6 8-6 M13 20h9m-3-3 3 3-3 3',
+    attach:'m8 12 7-7a4 4 0 0 1 6 6L11 21a6 6 0 0 1-8-8L13 3m-7 12 9-9a1.5 1.5 0 0 1 2 2l-9 9',
+    download:'M12 3v12m-4-4 4 4 4-4 M4 18v3h16v-3',
+    inbox:'M4 4h16v16H4Z M4 14h5l1 3h4l1-3h5',
+    warning:'M12 3 2 21h20Z M12 9v5m0 3h.1',
+    accounts:'M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M13 4a4 4 0 0 1 0 8m5 3a4 4 0 0 1 4 4v2 M12 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+    writing:'M4 5h16M4 10h12M4 15h8 M16 15l5 5m-5 0 5-5',
+    undo:'M4 4v6h6 M4 10a8 8 0 1 1 1 9',
+    folder:'M3 7V4h6l2 3h10v13H3Z'
   };
   function icon(key){
+    if(!Object.hasOwn(paths,key))return null;
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.classList.add('compact-icon');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
-    const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',paths[key]||paths.more);svg.append(path);return svg;
+    svg.classList.add('compact-icon');svg.dataset.iconKey=key;svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
+    const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',paths[key]);svg.append(path);return svg;
+  }
+  // App-owned callers share this offline source. An unknown action keeps its name;
+  // it must never acquire an unrelated three-dot symbol.
+  window.PBIcons=Object.freeze({create:icon,has:key=>Object.hasOwn(paths,key)});
+  const cleanLabel=value=>value.trim().replace(/^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\uFE0E\u200D]|[↗←→↑↓✓☑☐])+\s*/u,'').trim();
+  function sourceLabel(node){return(node.dataset.i18nTitle?node.title:(node.querySelector(':scope>.compact-label')||node).textContent).trim().replace(/\s+/g,' ');}
+  function setControlText(node,label){
+    const content=node.querySelector(':scope>.compact-label')||node;
+    if(content.textContent!==label)content.textContent=label;
   }
   function decorate(node,key){
     if(!node)return;
-    const label=(node.dataset.i18nTitle?node.title:(node.querySelector(':scope>.compact-label')||node).textContent).trim().replace(/\s+/g,' ');
+    const raw=sourceLabel(node),known=Object.hasOwn(paths,key),page=pages.indexOf(node.dataset.tab);
+    const label=page>=0?(captions[document.documentElement.lang]||captions.de)[page]:node.dataset.mailAi==='open'?(writingWords[document.documentElement.lang]||writingWords.de):cleanLabel(raw)||raw;
     if(!label)return;
-    if(!node.querySelector(':scope>.compact-icon')){
+    if(!node.querySelector(':scope>.compact-label')){
       const content=make('span','compact-label');content.append(...node.childNodes);
-      node.append(icon(key),content);node.classList.add('compact-tool');
+      node.append(content);
     }
+    let glyph=node.querySelector(':scope>.compact-icon');
+    if(known&&glyph?.dataset.iconKey!==key){const next=icon(key);if(glyph)glyph.replaceWith(next);else node.prepend(next);}
+    else if(!known)glyph?.remove();
+    node.classList.add('compact-tool');node.classList.toggle('compact-text-only',!known);
     node.setAttribute('aria-label',label);node.title=label;
     // Klaus 2026-10-21: magnifier and gear are self-explanatory; their words go, the name stays as tooltip.
-    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
-    else if(node.dataset.tab){
-      const value=(captions[document.documentElement.lang]||captions.de)[pages.indexOf(node.dataset.tab)];
+    if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
+    else if(node.dataset.tab||node.hasAttribute('data-mail-caption')||!known||node.tagName==='SUMMARY'&&key==='more'||node.dataset.mailAi==='open'||['spam','notspam','restore'].includes(node.dataset.nativeSelection)||node.dataset.liveText==='notSpam'){
+      node.classList.remove('compact-icon-only');
       let caption=node.querySelector(':scope>.compact-caption');if(!caption){caption=make('span','compact-caption');caption.setAttribute('aria-hidden','true');node.append(caption);}
-      if(caption.textContent!==value)caption.textContent=value;
+      if(caption.textContent!==label)caption.textContent=label;
+      if(!node.dataset.tab)node.classList.add('compact-tool-has-caption');
     }
+  }
+  const folderIcons={inbox:'inbox',draft:'compose',outbox:'send',sent:'read',archive:'archive',spam:'warning',trash:'trash',exported:'external'};
+  function folderIcon(button){
+    if(button.dataset.mailAll)return'accounts';
+    const key=button.dataset.mailFolder||'';
+    return folderIcons[key]||'folder';
+  }
+  function decorateInline(node,key,cls,stripLabel=true){
+    if(!node)return;
+    if(stripLabel)for(const part of node.childNodes)if(part.nodeType===Node.TEXT_NODE){const value=cleanLabel(part.nodeValue);if(value!==part.nodeValue.trim())part.nodeValue=value?value+' ':'';}
+    const previous=node.querySelector(':scope>.'+cls);
+    if(previous?.dataset.iconKey===key)return;
+    const glyph=icon(key);if(!glyph)return;glyph.classList.add(cls);
+    if(previous)previous.replaceWith(glyph);else node.prepend(glyph);
   }
   // WebView does not reliably display the browser's title popup. Render our own,
   // shared by pointer hover and keyboard focus, outside clipped/scrolling panes.
@@ -80,11 +121,12 @@
   addEventListener('resize',hideTip);document.addEventListener('scroll',hideTip,true);
   const main=document.querySelector('.main-pages'), secondary=document.querySelector('.workspace-tools');
   if(!main||!secondary)return;
-  const row=make('div','native-toolbar-row'),more=make('details','native-more'),moreTitle=make('summary','ghost');
-  main.before(row);row.append(main,more);more.append(moreTitle,secondary);
+  const row=make('div','native-toolbar-row');main.before(row);row.append(main);
   const tools=document.querySelector('header .tools');
   const options=make('details','native-options'),optionsTitle=make('summary','ghost'),optionsPanel=make('div','native-options-panel');
   for(const node of [...tools.children])if(!node.classList.contains('native-navigation'))optionsPanel.append(node);
+  const views=make('section','native-menu-views'),viewsTitle=make('p','native-menu-heading');
+  views.append(viewsTitle,secondary);optionsPanel.prepend(views);
   options.append(optionsTitle,optionsPanel);tools.append(options);
   const offlineButton=make('button','ghost native-offline-switch');offlineButton.type='button';
   offlineButton.setAttribute('role','switch');
@@ -110,9 +152,7 @@
   }
   lamp.onclick=()=>toggleNetwork(lamp);
   offlineButton.onclick=()=>toggleNetwork(offlineButton);networkLabel();
-  const phone=matchMedia('(max-width:650px)');
-  function resize(){more.open=true;options.open=false;}
-  phone.addEventListener('change',resize);resize();
+  addEventListener('resize',()=>{options.open=false;});
   optionsPanel.addEventListener('click',event=>{if(event.target.closest('button'))options.open=false;});
   document.addEventListener('click',event=>{
     if(options.open&&!options.contains(event.target))options.open=false;
@@ -123,7 +163,7 @@
     if(opened){event.preventDefault();opened.open=false;opened.querySelector('summary').focus();}
   });
   const keys={refresh:'refresh',compose:'compose',import:'intake',reply:'reply',forward:'forward',back:'back',tools:'more',messageTools:'more',
-    trash:'trash',delete:'trash',permanent:'trash',selectAll:'all',all:'all',read:'read',star:'star',archive:'archive',save:'save',draft:'save',connect:'mail',account:'mail',saved:'save',disconnect:'close',removeAccount:'trash',local:'mail',remote:'mail',catalog:'order',catalogOne:'order',download:'share',send:'external',cancel:'close'};
+    trash:'trash',delete:'trash',permanent:'trash',selectAll:'all',all:'all',read:'read',star:'star',archive:'archive',save:'save',draft:'save',connect:'mail',account:'mail',saved:'save',disconnect:'close',removeAccount:'trash',local:'mail',remote:'mail',catalog:'order',catalogOne:'order',download:'download',send:'send',cancel:'close',check:'check',attach:'attach',attachments:'attach',folder:'folder',newFolder:'folder',restore:'undo',undo:'undo',edit:'compose',queue:'send',export:'external',copy:'share',notSpam:'read',notspam:'read',spam:'warning'};
   for(const [id,page] of [['kpiFiles','explorer'],['kpiCats','order'],['kpiDupes','dupes']]){
     const tile=document.getElementById(id)?.closest('.tile');if(!tile)continue;
     const button=make('button',tile.className+' native-dashboard-link');button.type='button';button.append(...tile.childNodes);tile.replaceWith(button);
@@ -134,19 +174,22 @@
   let queued=false;
   function enhance(){
     queued=false;
-    if(moreTitle.textContent!==text(0))moreTitle.textContent=text(0);
-    if(optionsTitle.textContent!==text(1))optionsTitle.textContent=text(1);
+    if(viewsTitle.textContent!==text(0))viewsTitle.textContent=text(0);
+    setControlText(optionsTitle,text(1));
     // Avoid rewriting the label/SVG when no translation has changed.
-    decorate(moreTitle,'more');decorate(optionsTitle,'menu');networkLabel();
-    document.querySelectorAll('.native-toolbar-row .tab').forEach(button=>decorate(button,button.dataset.tab));
+    decorate(optionsTitle,'menu');networkLabel();
+    document.querySelectorAll('.native-toolbar-row .tab,.native-menu-views .tab').forEach(button=>decorate(button,button.dataset.tab));
     const navigation=document.querySelectorAll('.native-navigation button');decorate(navigation[0],'back');decorate(navigation[1],'next');
     decorate(document.querySelector('#themeToggle'),'moon');decorate(document.querySelector('#hardReload'),'refresh');
     decorate(document.querySelector('#explorerUp'),'up');decorate(document.querySelector('#explorerHome'),'home');
-    document.querySelectorAll('#mailWorkspace .mail-head button,#mailWorkspace .mail-reader-actions button,#mailWorkspace .mail-list-actions button,#mailWorkspace .mail-back,#mailWorkspace .mail-account-tools>summary,#mailWorkspace .mail-message-tools>summary').forEach(button=>{
+    document.querySelectorAll('#mailWorkspace .mail-head button,#mailWorkspace .mail-compose-actions button,#mailWorkspace .mail-reader-actions button,#mailWorkspace .mail-list-actions button,#mailWorkspace .mail-back,#mailWorkspace .mail-account-tools>summary,#mailWorkspace .mail-message-tools>summary,#mailWorkspace [data-mail-ai="open"]').forEach(button=>{
       // Filenames and folder names stay readable; only fixed toolbar actions become icons.
-      const key=button.dataset.liveText||button.dataset.mailText||button.dataset.sharedText||button.dataset.nativeSelection||button.dataset.nativeTool;
+      const key=button.dataset.liveText||button.dataset.mailText||button.dataset.sharedText||button.dataset.nativeSelection||button.dataset.nativeTool||(button.dataset.mailAi==='open'?'writing':'');
       if(key||button.tagName==='SUMMARY')decorate(button,keys[key]||key||'more');
     });
+    document.querySelectorAll('#mailWorkspace .mail-folder').forEach(button=>decorateInline(button,folderIcon(button),'native-folder-icon',Boolean(button.dataset.mailAll)||Object.hasOwn(folderIcons,button.dataset.mailFolder)));
+    decorateInline(document.querySelector('#panel-explorer>h2'),'folder','native-heading-icon');
+    decorateInline(document.querySelector('#panel-intake>h2'),'intake','native-heading-icon');
     // Siegel (Modul 17) and Mycel (Modul 23-UI) float and snap to the header themselves (native-mycel.js).
     // One shared account/action row instead of a separate account row above the mailbox.
     const account=document.querySelector('.mail-account-bar'),head=document.querySelector('.live-mail>.mail-head');
@@ -160,6 +203,6 @@
   }
   const observer=new MutationObserver(()=>{if(!queued){queued=true;queueMicrotask(enhance);}});
   observer.observe(document.body,{subtree:true,childList:true,characterData:true});
-  new MutationObserver(()=>{optionsTitle.replaceChildren(document.createTextNode(text(1)));moreTitle.replaceChildren(document.createTextNode(text(0)));enhance();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  new MutationObserver(()=>{optionsTitle.replaceChildren(document.createTextNode(text(1)));enhance();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   enhance();
 })();

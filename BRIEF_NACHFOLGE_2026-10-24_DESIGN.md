@@ -2,6 +2,10 @@
 
 ## Aktuelle Klarstellung und erreichter Stand
 
+Klaus hat nach dem Funktionsabgleich ausdrücklich den Freibrief für Umsetzung,
+selbstständige PR-/Commit-Übernahmen und eine signierte Android-Update-APK gegeben.
+[Erster App-Schritt .30 und weitere Vorschläge](docs/design/umbau-2026-10-24/README.md).
+
 Klaus hat die vier ersten Entwürfe (Klarblau, Graphit, Petrol, Nachtblau) positiv
 bewertet und klargestellt: **Outlook ist Anregung und Vergleich, keine Kopiervorlage.**
 Jetzt wird der App-Zweck mit den vorhandenen Funktionen abgeglichen. Maßstab ist

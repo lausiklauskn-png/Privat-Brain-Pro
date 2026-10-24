@@ -1,0 +1,102 @@
+/* Private Brain Pro · Umbauvorbereitung · 24.10.2026
+   Eigener Namespace; enthält ausschließlich Variablen. Noch nicht in die App eingebaut.
+   Neue Oberfläche mit .pb-design einschließen und data-pb-theme setzen.
+   Die vorhandenen globalen App-Variablen werden nicht überschrieben. */
+.pb-design {
+  --pb-bg: #f6f8fc;
+  --pb-surface: #ffffff;
+  --pb-surface-subtle: #f8fafd;
+  --pb-text: #172033;
+  --pb-muted: #526176;
+  --pb-border: #d5deea;
+  --pb-border-control: #64748b;
+  --pb-accent: #2563eb;
+  --pb-on-accent: #ffffff;
+  --pb-selected: #eaf1ff;
+  --pb-selected-text: #1d4ed8;
+  --pb-hover: #edf1f7;
+  --pb-focus: #2563eb;
+  --pb-success: #14532d;
+  --pb-success-bg: #dcfce7;
+  --pb-warning: #92400e;
+  --pb-warning-bg: #fef3c7;
+  --pb-danger: #991b1b;
+  --pb-danger-bg: #fee2e2;
+  --pb-info: #1e40af;
+  --pb-info-bg: #eaf1ff;
+  --pb-font: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --pb-font-body: 14px;
+  --pb-font-small: 12px;
+  --pb-font-title: 22px;
+  --pb-line-height: 1.5;
+  --pb-weight-normal: 400;
+  --pb-weight-label: 600;
+  --pb-space-1: 4px;
+  --pb-space-2: 8px;
+  --pb-space-3: 12px;
+  --pb-space-4: 16px;
+  --pb-space-5: 24px;
+  --pb-space-6: 32px;
+  --pb-radius-control: 6px;
+  --pb-radius-panel: 10px;
+  --pb-radius-status: 4px;
+  --pb-control-visual-height: 28px;
+  --pb-control-touch-target: 44px;
+  --pb-control-touch-halo: 8px;
+  --pb-icon-size: 20px;
+  --pb-icon-stroke: 1.75;
+  --pb-focus-width: 3px;
+  --pb-focus-offset: 3px;
+  --pb-duration: 120ms;
+}
+.pb-design[data-pb-theme="klarblau"] {
+  --pb-bg: #f6f8fc;
+  --pb-accent: #2563eb;
+  --pb-on-accent: #ffffff;
+  --pb-selected: #eaf1ff;
+  --pb-selected-text: #1d4ed8;
+  --pb-focus: #2563eb;
+}
+.pb-design[data-pb-theme="graphit"] {
+  --pb-bg: #f7f8fa;
+  --pb-surface-subtle: #f8f9fb;
+  --pb-accent: #475569;
+  --pb-on-accent: #ffffff;
+  --pb-selected: #edf0f4;
+  --pb-selected-text: #334155;
+  --pb-focus: #475569;
+}
+.pb-design[data-pb-theme="petrol"] {
+  --pb-bg: #f5f9f9;
+  --pb-surface-subtle: #f6fafa;
+  --pb-border: #d4e3e1;
+  --pb-accent: #0f766e;
+  --pb-on-accent: #ffffff;
+  --pb-selected: #e7f4f2;
+  --pb-selected-text: #0f665f;
+  --pb-hover: #edf5f3;
+  --pb-focus: #0f766e;
+}
+.pb-design[data-pb-theme="nachtblau"] {
+  --pb-bg: #111827;
+  --pb-surface: #182233;
+  --pb-surface-subtle: #151f2f;
+  --pb-text: #f3f6fc;
+  --pb-muted: #b2bfd2;
+  --pb-border: #35465e;
+  --pb-border-control: #7185a2;
+  --pb-accent: #7ca7ff;
+  --pb-on-accent: #111827;
+  --pb-selected: #223756;
+  --pb-selected-text: #9bbeff;
+  --pb-hover: #223047;
+  --pb-focus: #9bbeff;
+  --pb-success: #86efac;
+  --pb-success-bg: #132c25;
+  --pb-warning: #fcd34d;
+  --pb-warning-bg: #342b1c;
+  --pb-danger: #fda4af;
+  --pb-danger-bg: #3b202a;
+  --pb-info: #b4cdff;
+  --pb-info-bg: #223756;
+}

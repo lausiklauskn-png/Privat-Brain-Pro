@@ -6,6 +6,7 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {chromium} from 'playwright-core';
+import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 const server=createServer(async(req,res)=>{
@@ -117,7 +118,7 @@ try{
   await page.reload();
   await page.waitForFunction(()=>document.querySelector('#sbkim-widget')&&window.PBMycel);await stable('#sbkim-widget');
   ok('After a restart it is still in the top bar',(await widget()).oben==='links'&&(await rect('#sbkim-widget')).y<head.y+head.h);
-  await page.locator('[data-tab="settings"]').click();
+  await navigateTo(page,'settings');
   ok('Settings has the Siegel/Mycel box; "Siegel wieder zeigen" only while it is hidden',await page.locator('#mycelPlace').isVisible()&&!(await page.locator('[data-mycel-seal]').isVisible()));
   await page.locator('#sbkim-widget .sbkim-widget-close').click();
   await pause(150);
@@ -125,7 +126,7 @@ try{
   await page.reload();
   await page.waitForFunction(()=>document.querySelector('#sbkim-widget')&&window.PBMycel);
   ok('Hidden stays hidden after a restart',await page.evaluate(()=>!SbkimWidget.isVisible()));
-  await page.locator('[data-tab="settings"]').click();
+  await navigateTo(page,'settings');
   ok('Now Settings offers "🔏 Siegel wieder zeigen"',await page.locator('[data-mycel-seal]').isVisible()&&(await page.locator('[data-mycel-seal]').textContent())==='🔏 Siegel wieder zeigen');
   await page.locator('[data-mycel-seal]').click();
   ok('… and it brings the Siegel back',await page.evaluate(()=>SbkimWidget.isVisible())&&!(await page.locator('[data-mycel-seal]').isVisible()));
@@ -137,7 +138,7 @@ try{
   await page.evaluate(()=>SbkimRendezvousUI.show());await page.waitForFunction(()=>SbkimRendezvousUI.isOpen());
   ok('English: the Mycel window speaks English',await page.evaluate(()=>/Connect to the node network/.test(document.querySelector('#sbkim-rdv-panel').textContent)&&!/Wer ist im Raum/.test(document.querySelector('#sbkim-rdv-panel').textContent)));
   await page.evaluate(()=>SbkimRendezvousUI.hide());
-  await page.locator('[data-tab="settings"]').click();
+  await navigateTo(page,'settings');
   ok('English: the Settings box too',(await page.locator('#mycelPlace h3').textContent())==='🔏 Seal and 🌐 Mycel');
   await page.evaluate(()=>localStorage.setItem('pb_lang','de'));
   ok('No sideways scrolling on the phone',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
