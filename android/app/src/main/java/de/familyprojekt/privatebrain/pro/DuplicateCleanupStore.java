@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Process;
 import android.provider.DocumentsContract;
 import java.io.IOException;
@@ -124,6 +125,7 @@ final class DuplicateCleanupStore {
     }
     private void checkCancelled() throws Cancelled { if (cancelled.get()) throw new Cancelled(); }
     private void permission(Uri tree) throws IOException {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) throw new IOException("ANDROID_VERSION_UNSUPPORTED");
         if (tree == null || !"content".equals(tree.getScheme()) || !DocumentsContract.isTreeUri(tree)
             || context.checkUriPermission(tree, Process.myPid(), Process.myUid(),
                 Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
@@ -141,6 +143,7 @@ final class DuplicateCleanupStore {
         return name;
     }
     private void inside(Session selected, Uri document) throws Exception {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) throw new IOException("ANDROID_VERSION_UNSUPPORTED");
         if (!DocumentsContract.isChildDocument(resolver, selected.root, document))
             throw new IOException("DOCUMENT_OUTSIDE_SELECTED_FOLDER");
     }

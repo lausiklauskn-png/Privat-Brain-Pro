@@ -15,7 +15,7 @@ async function app(native=true){
     const scan=()=>({session:'current-folder-session',scannedFiles:4,scannedBytes:12288,skippedFiles:0,partial:false,errors:[],groups:[{hash:'a'.repeat(64),size:4096,copies:[{id:'keep',name:'Behalten.txt',path:'Ordner/Behalten.txt',size:4096,deletable:true},{id:'delete-a',name:'<img src=x onerror=alert(1)>.txt',path:'Ordner/Kopie A.txt',size:4096,deletable:true},{id:'delete-b',name:'Kopie B.txt',path:'Ordner/Kopie B.txt',size:4096,deletable:true}]}]});
     window.dupFixture={mode:'normal',chooses:0,deletes:[],cancels:0,scan};
     window.Capacitor={getPlatform:()=>native?'android':'windows',Plugins:native?{ProDuplicates:{
-      async chooseFolder(){dupFixture.chooses++;if(dupFixture.mode==='slow')return new Promise(resolve=>dupFixture.resolve=resolve);if(dupFixture.mode==='partial')return {...scan(),partial:true,skippedFiles:2,errors:[{path:'restricted',message:'READ_FAILED'}]};if(dupFixture.mode==='pickerCancel')return {cancelled:true};return scan();},
+      async chooseFolder(){dupFixture.chooses++;if(dupFixture.mode==='oldAndroid')throw Object.assign(new Error('Android 10 required'),{code:'DUPLICATES_ANDROID_VERSION'});if(dupFixture.mode==='slow')return new Promise(resolve=>dupFixture.resolve=resolve);if(dupFixture.mode==='partial')return {...scan(),partial:true,skippedFiles:2,errors:[{path:'restricted',message:'READ_FAILED'}]};if(dupFixture.mode==='pickerCancel')return {cancelled:true};return scan();},
       async progress(){return {running:true,phase:'scan',scannedFiles:2,scannedBytes:8192};},
       async cancel(){dupFixture.cancels++;dupFixture.resolve?.({...scan(),groups:[],cancelled:true,partial:true});return {ok:true};},
       async deleteSelected(value){dupFixture.deletes.push(value);if(dupFixture.mode==='deleteError')throw new Error('changed');return {deleted:[{id:value.ids[0]}],deletedBytes:4096,failures:value.ids.slice(1).map(id=>({id,message:'CHANGED'})),cancelled:false};}
@@ -60,6 +60,13 @@ try{
     await page.evaluate(lang=>document.documentElement.lang=lang,lang);await page.waitForFunction(label=>document.querySelector('#pbDuplicateCleanup h2').textContent===label,label);
     ok(`${lang}: physical and catalog cleanup labels follow the app language`,await page.locator('#pbDuplicateCleanup h2').textContent()===label);
   }
+  await page.evaluate(()=>dupFixture.mode='oldAndroid');await page.locator('#pbDupChoose').click();await page.locator('#pbDupChoose').waitFor({state:'hidden'});
+  const oldVersionCalls=await page.evaluate(()=>dupFixture.chooses);
+  for(const [lang,message]of [['de','Die Ordnerbereinigung benötigt Android 10 oder neuer.'],['en','Folder cleanup requires Android 10 or newer.'],['ru','Для очистки папки требуется Android 10 или новее.'],['pl','Oczyszczanie folderu wymaga Androida 10 lub nowszego.']]){
+    await page.evaluate(lang=>document.documentElement.lang=lang,lang);await page.waitForFunction(message=>document.getElementById('pbDupStatus').textContent===message,message);
+    assert.ok(await page.locator('#pbDupChoose').isHidden(),lang+': unsupported Android never offers another folder choice');
+  }
+  ok('Android-version rejection names Android 10+ in four languages and stops further folder choices while keeping catalog cleanup',await page.evaluate(()=>{PBDuplicates.refresh();document.getElementById('pbDupChoose').click();return dupFixture.chooses;})===oldVersionCalls&&await page.locator('#pbDuplicateCatalog summary').isVisible());
   ok('Cleanup runtime has no browser errors',errors.length===0||console.log(errors));await page.close();
   const fallback=await app(false);await fallback.page.locator('#pbDuplicateCatalog summary').click();
   ok('Unsupported hosts explain availability while retaining the catalog-only action',await fallback.page.locator('#pbDupChoose').isHidden()&&(await fallback.page.locator('#pbDupStatus').textContent()).includes('nicht verfügbar')&&await fallback.page.locator('#dupRemove').isVisible()&&(await fallback.page.locator('#pbDuplicateCatalog').textContent()).includes('keine Dateien'));

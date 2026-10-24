@@ -123,6 +123,11 @@ bleibt gesondert als **„Verweise entfernen“** erhalten und löscht keine Dat
 vom Gerät. Während der Entwicklung werden ausschließlich synthetische
 Testdateien bereinigt, keine Benutzerdaten.
 
+Die physische Ordnerbereinigung benötigt Android 10 oder neuer, damit die
+Zugehörigkeit jeder Datei zum freigegebenen Ordner erneut geprüft werden kann.
+Ältere Android-Versionen erhalten vor Ordnerdialog und Dateizugriff einen
+entsprechenden Hinweis; die Katalogbereinigung bleibt verfügbar.
+
 ## Prüfung und Veröffentlichung
 
 Die Fokusprüfungen decken den tatsächlichen An-/Aus-Schalter, Suchhöhe,

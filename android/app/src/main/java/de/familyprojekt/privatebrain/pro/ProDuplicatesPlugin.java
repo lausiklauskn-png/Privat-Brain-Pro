@@ -3,6 +3,7 @@ package de.familyprojekt.privatebrain.pro;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -40,6 +41,7 @@ public class ProDuplicatesPlugin extends Plugin {
         });}catch(RuntimeException error){store.abandonWork();busy.set(false);call.reject("Duplicate cleanup unavailable","DUPLICATES_UNAVAILABLE");}
     }
     @PluginMethod public void chooseFolder(PluginCall call){
+        if(Build.VERSION.SDK_INT<Build.VERSION_CODES.Q){call.reject("Folder cleanup requires Android 10 or newer","DUPLICATES_ANDROID_VERSION");return;}
         if(!reserve(call))return;
         Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
