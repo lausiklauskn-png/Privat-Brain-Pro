@@ -1,9 +1,11 @@
 # Lokale Texterkennung in Private Brain Pro
 
-Stand 24.10.2026: für Android .33 vorbereitet, noch in Prüfung. Die Freigabe
-als Update erfolgt erst nach den vollständigen Browser-, Android- und
-Release-Prüfungen. Ein physischer Test auf dem Samsung Galaxy Tab S6 oder in
-Samsung DeX ist damit noch nicht nachgewiesen.
+Stand 24.10.2026: als Android .33 veröffentlicht. [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk)
+über die vorhandene App installieren; nicht deinstallieren. Vollständige Browser-,
+Android-/Windows- und Release-Prüfungen einschließlich signiertem Update .32 → .33
+bestanden. [Download- und Quellnachweis](design/umbau-2026-10-24/android-preview33-pruefung.json).
+Ein physischer Test auf dem Samsung Galaxy Tab S6 oder in Samsung DeX und dessen
+Reaktionszeiten sind damit nicht nachgewiesen.
 
 Beim Hinzufügen liest die native App Text in Bildern und gescannten PDF-Seiten.
 Der erkannte Text steht der Suche und der vorhandenen Inhaltsprüfung zur

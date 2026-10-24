@@ -1,11 +1,19 @@
 # Private Brain Pro — Sitzungs-Anker
 
-**.33 in Arbeit:** Klaus beauftragt echte lokale Texterkennung für Bilder und
-Scans. OCR-Laufzeit und DE/EN/RU/PL mitliefern, sicher gelesenen Text für Suche
-und Prüfung nutzen, kyrillische Stichwortsuche erhalten. Unlesbare/teilweise
-geprüfte Seiten ehrlich benennen; keine stille Cloudübertragung, Originale
-unverändert. Echte Offlineprüfungen und signiertes Update .32 → .33 folgen.
-Freibrief für eigenständige Umsetzung, Merge und Veröffentlichung gilt weiterhin.
+**Android .33 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk),
+Quelle `457b20e08193a8383761ab2542dcd145f6f34b56`, PR #79 und Release `40123045873` vollständig erfolgreich.
+Echte lokale OCR für Bilder und Scan-PDFs, DE/EN/RU/PL für Suche und Prüfung;
+kyrillische Stichwortsuche und bewusstes „Erneut prüfen“ vorhandener Originale.
+Keine Cloudübertragung, kein Pflicht-Erstdownload der OCR und keine automatische
+Massenverarbeitung. Unsichere/ungelesene Bereiche bleiben ehrlich gekennzeichnet.
+Android-/Windows-main, Signierung und Pages grün; 56 native Tests ohne Fehler/Skips,
+einschließlich tatsächlicher OCR bei gesperrten Netzwerkladewegen. Signiertes
+Update .32 → .33 bestanden. Öffentliche APK unabhängig geprüft: 18.618.467 Bytes,
+SHA-256 `56020cf2e362d1b575ebd7472b9d9d10af5a1330b03b8390c3378e1534e3e5ab`. 39 OCR-Dateien,
+29 Lizenztexte und 22 geschützte Module geprüft; Lizenz-/Quellnachweis enthalten.
+[Bedienung](docs/NATIVE-TEXTERKENNUNG.md), [Prüfnachweis](docs/design/umbau-2026-10-24/android-preview33-pruefung.json).
+Nicht erneut veröffentlichen. Physisches Tab S6/DeX und reale Reaktionszeiten
+sind nicht gemessen; Windows-Download bleibt .29. Freibrief gilt weiterhin.
 
 **Android .32 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk),
 Quelle `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, PR #78 und Release `40117059939` vollständig erfolgreich.

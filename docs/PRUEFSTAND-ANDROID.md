@@ -1,4 +1,42 @@
-# Aktueller Prüfstand: veröffentlichte .32 — 2026-10-24
+# Aktueller Prüfstand: veröffentlichte .33 — 2026-10-24
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
+PR #79 übernommen; Tag `v1.0.0-preview.33` zeigt exakt auf `457b20e08193a8383761ab2542dcd145f6f34b56`,
+VersionCode 33, ursprüngliche Paketkennung und Signatur erhalten.
+
+- Alle elf main-Prüfungen erfolgreich: Android-/Web-main
+  [40121619660](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40121619660)
+  (Versuch 2), Windows-main [40121619637](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40121619637),
+  Signierung `40121619642` und Pages `40121619198`.
+  Ein langsamer Firefox-Paketdownload benötigte einen einzelnen Job-Neustart;
+  der native Testjob `120954221526` bestand bereits in Versuch 1.
+- 56 native Android-Tests ohne Fehler/Skips, darunter tatsächliche Tesseract-
+  Texterkennung aus DE/EN/RU/PL-Bildern, Scan-PDF und Suche mit beiden gesperrten
+  Dokument-/Worker-Netzwerkladewegen. Originalbytes bleiben unverändert.
+- Vollständige Web-/Native-Browsersuiten, 44 echte OCR-Fälle, 29 Dateiprüfungen,
+  69 Postfachfälle und zehn Zeitplanfälle bestanden. Ungelesene, unsichere und
+  abgebrochene Erkennung bleibt teilweise/ungeprüft; alte Befunde bleiben erhalten.
+- Release [40123045873](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40123045873)
+  vollständig erfolgreich: Build `120958544681`, signiertes Update .32 → .33
+  `120962044067`, Veröffentlichung `120962607507`. Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.618.467 Bytes**, SHA-256
+  `56020cf2e362d1b575ebd7472b9d9d10af5a1330b03b8390c3378e1534e3e5ab`. SHA256SUMS, GitHub-Asset-Digest,
+  Tag/Quelle und ursprüngliche Zertifikatskennung im veröffentlichten Signaturbericht
+  stimmen. Der lokale Prüfer kontrolliert den Bericht und dessen Asset-Digest;
+  die kryptographische Signatur- und installierte Updateprüfung lief in der Pipeline.
+- 39 OCR-Dateien (26.315.914 Bytes) gegen Größen-/SHA-256-Pins geprüft; 29 Lizenztexte,
+  27 native Dateien, drei Mail-/Explorerressourcen und 22 Kanon-Module bytegleich
+  zur Quelle. OCR vor dem Prüfadapter, Stylesheet und Unicode-Suchaufteilung bestätigt.
+- Physisches Samsung DeX, Klaus' Tab S6 und reale Reaktionszeiten sind nicht
+  gemessen. Windows bleibt veröffentlicht bei .29; sein gemeinsamer Quellstand ist geprüft.
+
+[Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview33-pruefung.json),
+[Bedienung und Grenzen](NATIVE-TEXTERKENNUNG.md),
+[technischer Umfang](design/umbau-2026-10-24/TEXTERKENNUNG-33.md).
+
+---
+
+# Veröffentlichte .32 — 2026-10-24
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
 PR #78 übernommen; Tag `v1.0.0-preview.32` zeigt exakt auf `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`,
@@ -27,7 +65,7 @@ VersionCode 32, ursprüngliche Paketkennung und Signatur erhalten.
 
 [Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview32-pruefung.json),
 [Bedienung der Nachbesserungen](design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
-Der neue OCR-Auftrag ist als .33 in Arbeit und nicht Inhalt dieses Releases.
+OCR war nicht Inhalt von .32; sie ist anschließend als .33 veröffentlicht (oben).
 
 ---
 

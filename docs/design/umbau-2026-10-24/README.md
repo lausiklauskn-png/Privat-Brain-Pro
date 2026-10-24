@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .32 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
-Quelle: `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, [übernommener PR #78](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/78).
+**Android .33 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
+Quelle: `457b20e08193a8383761ab2542dcd145f6f34b56`, [übernommener PR #79](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/79).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -59,8 +59,24 @@ Eine tatsächliche Prüfung auf Klaus' Samsung-DeX-Gerät steht noch aus.
   [Download- und Quellnachweis](android-preview32-pruefung.json),
   [Release 40117059939](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40117059939).
 
-Klaus' anschließender OCR-Auftrag für Bilder und Scans ist als .33 in Arbeit;
-Texterkennung gehört noch nicht zum veröffentlichten Funktionsumfang von .32.
+## Vierter umgesetzter App-Schritt (.33)
+
+- Echte lokale Texterkennung für Bilder und gescannte PDF-Seiten in DE/EN/RU/PL;
+  gelesener Text steht der Suche und der vorhandenen Inhaltsprüfung zur Verfügung.
+  OCR-Laufzeit und Sprachdaten sind enthalten, ohne KI-Schlüssel oder Übertragung.
+- „Erneut prüfen“ ergänzt den Suchtext bereits gespeicherter verfügbarer Originale;
+  keine ungefragte Verarbeitung des gesamten Bestands. Kyrillische Stichwortsuche
+  funktioniert auch ohne Bedeutungsmodell. Originalbytes bleiben unverändert.
+- Fortschritt, Abbruch und Grenzen sichtbar; maximal zehn Scan-Seiten je PDF.
+  Ungelesene, unsichere oder abgebrochene Bereiche bleiben teilweise/ungeprüft.
+- Vollständige Web-/Native-Browsersuiten, 44 echte OCR-Fälle und 56 native Android-
+  Tests ohne Fehler/Skips bestanden; Android-/Windows-main und Signierung grün.
+  Signiertes Update .32 → .33 und unabhängiger öffentlicher Download bestanden.
+  [Bedienung](../../NATIVE-TEXTERKENNUNG.md), [Umfang und Prüfstand](TEXTERKENNUNG-33.md),
+  [Download- und Quellnachweis](android-preview33-pruefung.json),
+  [Release 40123045873](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40123045873).
+
+Die OCR gehört zum Funktionsumfang von .33; historische .32-Nachweise bleiben erhalten.
 
 ## Stand der weiteren Funktionsvorschläge
 

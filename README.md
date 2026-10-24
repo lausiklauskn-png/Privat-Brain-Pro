@@ -1,8 +1,13 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android .32 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk).
+**[Android .33 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk).
 [Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
+Android .33 ergänzt echte lokale Texterkennung für Bilder und gescannte
+PDF-Seiten in Deutsch, Englisch, Russisch und Polnisch. Erkannter Text steht
+Suche und Inhaltsprüfung zur Verfügung; vorhandene Originale lassen sich über
+„Erneut prüfen“ ergänzen. OCR-Laufzeit und Sprachdaten sind enthalten, ohne
+KI-Schlüssel oder Dokumentübertragung. [Bedienung und Grenzen](docs/NATIVE-TEXTERKENNUNG.md).
 Android .32 ergänzt einheitliche Liniensymbole, verstellbare Datei-/Mailbereiche,
 Erklärungen hinter Info-Buttons und sofortige Wartepunkte. Öffnen und Teilen
 wartet nicht mehr hinter PDF-Seitenberechnungen; gespeicherte PDFs vermeiden eine

@@ -10,8 +10,10 @@ unabhängige Eingabesprache, Mikrofone und Tablet-/DeX-Hochformat. Die veröffen
 .32 ergänzt konsequente Liniensymbole, verstellbare Datei-/Mailbereiche, kurze
 Erklärungen hinter Info-Buttons und sofortige Wartepunkte. Öffnen/Teilen läuft
 unabhängig von PDF-Seitenberechnungen; unnötige vollständige Bridgekopien
-verfügbarer PDFs entfallen. Echte lokale OCR für Bilder und Scans ist anschließend
-beauftragt und als .33 in Arbeit. Der fachliche Abgleich unten beschreibt den Ausgangsstand. [Umsetzung und Release-Nachweise](design/umbau-2026-10-24/README.md).
+verfügbarer PDFs entfallen. Die veröffentlichte .33 ergänzt lokale Texterkennung
+für Bilder und Scans in DE/EN/RU/PL; gelesener Text ergänzt Suche und Prüfung,
+vorhandene Originale lassen sich bewusst neu prüfen. OCR-Laufzeit und Sprachdaten
+sind mitgeliefert; Originale bleiben unverändert und unlesbare Teile ausgewiesen. Der fachliche Abgleich unten beschreibt den Ausgangsstand. [Umsetzung und Release-Nachweise](design/umbau-2026-10-24/README.md).
 
 ## Wofür die App gebaut wurde
 

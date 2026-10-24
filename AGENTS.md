@@ -1,13 +1,28 @@
 # Private Brain Pro — laufender Auftrag
 
-- Fortsetzung für Android .33 (24.10.2026): Klaus meldet fehlende Texterkennung
-  in Bildern und eingescannten Seiten. Echte lokale OCR mitliefern und in
-  Suche und Prüfung einbinden; DE/EN/RU/PL einschließlich kyrillischer Suche.
-  Keine Cloudübertragung als stillen Ersatz. Originalbytes erhalten, unlesbare
-  oder nur teilweise gelesene Seiten ehrlich kennzeichnen, langsame Geräte und
-  Abbruch berücksichtigen. Umsetzung und echte Offlineprüfungen sind in Arbeit;
-  .32 ist der aktuelle veröffentlichte Download. Bestehender Freibrief gilt für
-  vollständige Prüfung, Merge und signiertes Update .32 → .33.
+- Android .33 ist veröffentlicht (24.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.33/Private-Brain-Pro-1.0.0-preview.33.apk),
+  VersionCode 33, Quelle `457b20e08193a8383761ab2542dcd145f6f34b56`, PR #79 übernommen.
+  Echte lokale OCR mit Tesseract.js 7.0.0 und DE/EN/RU/PL für Bilder/Scan-PDFs,
+  Suche und Prüfung; kyrillische Stichwortsuche und bewusstes „Erneut prüfen“
+  vorhandener Originale. Keine stille Cloudübertragung oder Massen-Neuindizierung.
+  Unsichere, ungelesene oder abgebrochene Bereiche bleiben teilweise/ungeprüft.
+  [Bedienung](docs/NATIVE-TEXTERKENNUNG.md), [Umfang](docs/design/umbau-2026-10-24/TEXTERKENNUNG-33.md).
+  Android-main `40121619660` (Versuch 2), Windows `40121619637`, Signierung
+  `40121619642` und Pages `40121619198` erfolgreich; alle elf main-Prüfungen grün.
+  56 native Tests ohne Fehler/Skips auf main, darunter echte OCR mit beiden
+  gesperrten Netzwerkladewegen. Firefox-Paketinstallation benötigte einen
+  einzelnen Job-Neustart; der native Testjob `120954221526` bestand in Versuch 1.
+  Release `40123045873` vollständig erfolgreich, signiertes Update .32 → .33
+  mit Seed/Baseline/Verify bestanden. Öffentlicher Download unabhängig geprüft:
+  18.618.467 Bytes, SHA-256 `56020cf2e362d1b575ebd7472b9d9d10af5a1330b03b8390c3378e1534e3e5ab`.
+  39 OCR-Dateien (26.315.914 Bytes) gegen Pins, 29 Lizenztexte, 27 native Dateien,
+  drei Mail-/Explorerressourcen und 22 Kanon-Module gegen Quelle geprüft;
+  OCR-Verdrahtung und Unicode-Suchaufteilung bestätigt.
+  [Nachweis](docs/design/umbau-2026-10-24/android-preview33-pruefung.json).
+  Veröffentlichung erledigt; nicht erneut auslösen. Physisches Samsung DeX/Tab S6
+  und dessen Reaktionszeiten sind nicht gemessen. Windows-Download bleibt .29.
+  Der dokumentierte Freibrief gilt; keine erneute Merge-/Release-Freigabe für
+  bereits beauftragte Umsetzung verlangen.
 
 - Android .32 ist veröffentlicht: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.32/Private-Brain-Pro-1.0.0-preview.32.apk), VersionCode 32,
   Quelle `a4a2cd69a3caa7ad3c1a9eb332c7137504eb4608`, übernommener PR #78.
@@ -99,7 +114,7 @@
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
-- Android ist bei `1.0.0-preview.32`, Code 32 veröffentlicht; die Windows-Ausgabe
+- Android ist bei `1.0.0-preview.33`, Code 33 veröffentlicht; die Windows-Ausgabe
   bleibt bei `.29`. Originale Android-Identität unverändert. Der finale
   Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
