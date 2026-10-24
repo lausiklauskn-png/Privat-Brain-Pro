@@ -97,7 +97,7 @@
     let raw=null;try{raw=await PBMail.getRaw(r.hash);}catch{}
     const text=raw||fullText(r);const report=window.PrueferMail?PrueferMail.pruefeMail(text):null;
     const attachments=await attachmentsFor(r,raw),checked=[];
-    for(const a of attachments){try{checked.push({a,result:a.bytes && window.PrueferAnhang?await PrueferAnhang.pruefe(a.name,a.bytes):null});}catch{checked.push({a,result:null});}}
+    for(const a of attachments){try{checked.push({a,result:a.bytes && (window.PBOCR||window.PrueferAnhang)?await (window.PBOCR?PBOCR.analyze(a.name,a.bytes):PrueferAnhang.pruefe(a.name,a.bytes)):null});}catch{checked.push({a,result:null});}}
     return {report,checked,body:raw?PBMail.bodyFromRaw(raw):r.mailBody,partial:r.mailKind!=='draft'&&!raw};
   }
   function reportNode(data){

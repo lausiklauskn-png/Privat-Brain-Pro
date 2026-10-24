@@ -885,7 +885,10 @@
       }
       let result;
       try {
-        result = await PrueferAnhang.pruefe(a.name, attachmentBytes(a));
+        const bytes = attachmentBytes(a);
+        result = await (window.PBOCR
+          ? PBOCR.analyze(a.name, bytes)
+          : PrueferAnhang.pruefe(a.name, bytes));
       } catch {
         risky = true;
       }

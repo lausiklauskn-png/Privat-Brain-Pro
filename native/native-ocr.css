@@ -1,0 +1,10 @@
+.pb-ocr-status[hidden] { display:none; }
+.pb-ocr-status { display:flex; align-items:center; gap:.7rem; padding:.35rem .6rem; color:var(--muted,#526070); font-size:.88rem; }
+.pb-ocr-status > span { flex:1; min-width:0; }
+.pb-ocr-status button { flex:none; }
+.pb-ocr-settings { position:relative; }
+.pb-ocr-settings h2 { font-size:1.1rem; margin:0 2rem .45rem 0; }
+.pb-ocr-settings > p { margin:.4rem 0; }
+.pb-ocr-settings details > summary { cursor:pointer; }
+.pb-ocr-settings details:not([open]) { position:absolute; right:1rem; top:1rem; }
+.pb-ocr-settings details > p { max-width:65ch; color:var(--muted,#526070); }

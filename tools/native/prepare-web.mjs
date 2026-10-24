@@ -1,5 +1,6 @@
 import { adaptRecovery } from './adapt-recovery.mjs';
 import { bundleSemanticModel } from './fetch-semantic-model.mjs';
+import { bundleOcrAssets } from './fetch-ocr-assets.mjs';
 import { cp, mkdir, readFile, rm, writeFile, lstat, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -50,9 +51,9 @@ if (!html.includes(start)) throw new Error('Review native model start after sour
 // The model starts only through the switch (native-semantic.js): when loaded, checked and not after a crash.
 html = html.replace(start, '(window.PBSemantic ? PBSemantic.start(initEmbedding) : initEmbedding());  // Bedeutungs-Modell über den Schalter');
 html = html.replace('</head>', '<link rel="stylesheet" href="native.css">\n<link rel="stylesheet" href="design-tokens.css">\n<link rel="stylesheet" href="design-layout.css">\n</head>');
-html = html.replace('</head>', '<link rel="stylesheet" href="native-content-icons.css">\n<link rel="stylesheet" href="help-layout.css">\n<link rel="stylesheet" href="activity-layout.css">\n<link rel="stylesheet" href="panes-layout.css">\n</head>');
+html = html.replace('</head>', '<link rel="stylesheet" href="native-content-icons.css">\n<link rel="stylesheet" href="help-layout.css">\n<link rel="stylesheet" href="activity-layout.css">\n<link rel="stylesheet" href="panes-layout.css">\n<link rel="stylesheet" href="native-ocr.css">\n</head>');
 html = adaptRecovery(html);
-html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-record-status.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-keys.js"></script>\n<script src="native-check.js"></script>\n<script src="native-license.js"></script>\n<script src="native-tools.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-theme.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
+html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-record-status.js"></script>\n<script src="native-folders.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-keys.js"></script>\n<script src="native-ocr.js"></script>\n<script src="native-check.js"></script>\n<script src="native-license.js"></script>\n<script src="native-tools.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-theme.js"></script>\n<script src="native-toolbar.js"></script>\n</body>');
 html = html.replace('<script src="native-keys.js"></script>', '<script src="native-keys.js"></script>\n<script src="native-input-language.js"></script>\n<script src="native-text-input.js"></script>\n<script src="native-translation-device.js"></script>\n<script src="native-mail-translation.js"></script>');
 html = html.replace('<script src="native-originals.js"></script>', '<script src="native-activity.js"></script>\n<script src="native-originals.js"></script>');
 html = html.replace('</body>', '<script src="native-help.js"></script>\n<script src="native-panes.js"></script>\n</body>');
@@ -101,6 +102,10 @@ await cp(join(root, 'tools/native/translation-models.json'), join(out, 'translat
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
 await bundleSemanticModel(out);
+// Required local OCR: engine, language data and licenses ship with every native app.
+await bundleOcrAssets(out);
+for (const name of ['native-ocr.js', 'native-ocr.css', 'ocr-notices.html']) await cp(join(root, 'native', name), join(out, name));
+await cp(join(root, 'native/ocr-licenses'), join(out, 'ocr-licenses'), { recursive: true });
 // The same fixed hashes and sources for loading the model with the switch in the app.
 await cp(join(root, 'native/tool-icons'), join(out, 'tool-icons'), { recursive: true });   // own icons of the tools (☰)
 await cp(join(root, 'tools/native/semantic-model.json'), join(out, 'semantic-model.json'));

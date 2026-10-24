@@ -38,9 +38,11 @@ try{
   const d0=await rec('Vorlage-0D-PDF-versteckter-Text.pdf'),h5=await rec('Vorlage-H5-Bild-als-PDF-getarnt.pdf'),txt=await rec('Einkauf.txt');
   ok('0D: the hidden instruction to an AI is found, with its page (bundled PDF reader)',d0.funde.some(f=>f.k==='PDF-KI-ANWEISUNG'&&/ignore previous instructions/.test(f.satz)&&/Seite 2/.test(f.satz)));
   ok('0D: the PDF text was read, not "pdf.js nicht erreichbar"',d0.hinweise.some(h=>/Seitentext gelesen: 2 von 2/.test(h))&&!d0.hinweise.some(h=>/pdf\.js ist nicht erreichbar/.test(h)));
-  ok('0D: what could not be done is named (no text recognition to compare)',d0.ungeprueft===true&&d0.hinweise.some(h=>/NICHT gegengelesen/.test(h)));
+  ok('0D: real local OCR compares both rendered pages with their text layer',d0.ocr?.passes>=2&&d0.hinweise.some(h=>/Textebene gegen das Seitenbild gelesen: 2/.test(h))&&!d0.hinweise.some(h=>/NICHT gegengelesen/.test(h)));
+  ok('0D: the invisible text layer is detected by actual raster comparison',d0.funde.some(f=>f.k==='PDF-VERSTECKTER-TEXT'));
   ok('H5: the disguise (an image named .pdf) is found',h5.funde.some(f=>f.k==='ANHANG-TARNUNG'));
-  ok('H5: text in the image is named as not checked',h5.ungeprueft===true&&h5.bild===true);
+  ok('H5: the image is actually read despite its false PDF extension',h5.ocr?.passes>0&&h5.ocr.state==='read'&&h5.ungeprueft===false&&h5.hinweise.some(h=>/Text im Bild gelesen/.test(h)));
+  ok('H5: image text reaches the searchable catalog',await page.evaluate(()=>/Urlaubsfoto|Angaben erfunden/.test(CATALOG.find(r=>r.name==='Vorlage-H5-Bild-als-PDF-getarnt.pdf')?.snippet||'')));
   ok('A plain text file: checked, nothing found',txt.funde.length===0&&!txt.ungeprueft);
   ok('The catalog text of a PDF is its real text, not raw PDF bytes',await page.evaluate(()=>{const r=CATALOG.find(r=>r.name==='Vorlage-0D-PDF-versteckter-Text.pdf');return /Nebenkostenabrechnung|Hausverwaltung|Musterstadt/.test(r.snippet)&&!/\/Subtype|endobj|FEFF/.test(r.snippet);}));
   ok('The result is kept at the catalog entry',await page.evaluate(async()=>{const r=CATALOG.find(r=>r.name==='Einkauf.txt');const s=await idbGet('catalog',r.hash);return Boolean(s?.pruefung?.zeit);}));

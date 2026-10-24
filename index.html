@@ -786,7 +786,7 @@ const STOP = new Set(("der die das und oder aber ein eine einer eines dem den de
  +"in on for is are was be this that with").split(/\s+/));
 function tokens(text){
   const out=[];
-  for(let w of fold(text).split(/[^a-z0-9]+/)){
+  for(let w of fold(text).split(/[^\p{L}\p{N}]+/u)){
     if(w.length<2 || w.length>28) continue;
     if(STOP.has(w)) continue;
     out.push(w);
