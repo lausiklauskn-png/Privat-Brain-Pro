@@ -4,7 +4,7 @@
    app, checks each file while it is added, keeps the result at the catalog entry and shows it:
    a mark at every file (search, catalog, explorer) and a report on tap.
    Nothing is removed or changed; a finding is marked, not deleted. Never "virenfrei": this is no virus scan.
-   Text inside images needs the text recognition, which is not in the app yet: that part says "not checked". */
+   Local text recognition is shared with the search import. Missing, uncertain and limited parts stay unchecked. */
 (() => {
   'use strict';
   const PDFJS = 'vendor/pdfjs/';
@@ -44,7 +44,7 @@
     whatNow: ['Was jetzt tun: die Datei nicht an eine KI geben und beim Absender nachfragen, ob sie so gemeint ist. Die Datei bleibt unverändert.', 'What to do: do not give the file to an AI and ask the sender whether it is meant this way. The file stays unchanged.', 'Что делать: не передавать файл ИИ и спросить отправителя. Файл не изменён.', 'Co zrobić: nie dawać pliku AI i zapytać nadawcę. Plik pozostaje bez zmian.'],
     info: ['Was sonst in der Datei steht (keine Gefahr)', 'What else is in the file (no danger)', 'Что ещё в файле (не опасно)', 'Co jeszcze jest w pliku (bez zagrożenia)'],
     notes: ['Was nicht geprüft werden konnte', 'What could not be checked', 'Что не удалось проверить', 'Czego nie dało się sprawdzić'],
-    imageText: ['Text in Bildern wird noch nicht gelesen: die Texterkennung fehlt in der App (kommt per Schalter).', 'Text in images is not read yet: the text recognition is not in the app (coming as a switch).', 'Текст на изображениях пока не читается: нет распознавания текста.', 'Tekst na obrazach nie jest jeszcze czytany: brak rozpoznawania tekstu.'],
+    imageText: ['Ein Teil des Inhalts konnte nicht zuverlässig geprüft werden. Die Einzelheiten nennen die Grenze.', 'Part of the content could not be checked reliably. Details explain the limit.', 'Часть содержимого не удалось надёжно проверить. Ограничение указано в подробностях.', 'Części zawartości nie udało się wiarygodnie sprawdzić. Szczegóły wyjaśniają ograniczenie.'],
     when: ['Geprüft am ', 'Checked on ', 'Проверено ', 'Sprawdzono '],
     noVirus: ['Das ist keine Virenprüfung.', 'This is not a virus scan.', 'Это не проверка на вирусы.', 'To nie jest skanowanie antywirusowe.'],
     again: ['Erneut prüfen', 'Check again', 'Проверить снова', 'Sprawdź ponownie'],
@@ -89,7 +89,9 @@
     partlyOk: ['Im geprüften Teil wurde nichts gefunden, was täuschen soll.', 'Nothing meant to deceive was found in the part that was checked.', 'В проверенной части ничего обманного не найдено.', 'W sprawdzonej części nie znaleziono niczego zwodniczego.'],
     whyPages: ['Nur die ersten {n} Seiten wurden gelesen.', 'Only the first {n} pages were read.', 'Прочитаны только первые {n} страниц.', 'Przeczytano tylko pierwsze {n} stron.'],
     whyHidden: ['Auf unsichtbaren Text wurden nur die ersten {n} Seiten geprüft.', 'Only the first {n} pages were checked for invisible text.', 'Невидимый текст проверен только на первых {n} страницах.', 'Niewidoczny tekst sprawdzono tylko na pierwszych {n} stronach.'],
-    whyOcr: ['Text in Bildern und auf eingescannten Seiten wurde nicht gelesen: die Texterkennung fehlt in der App noch.', 'Text in images and on scanned pages was not read: the text recognition is not in the app yet.', 'Текст на изображениях не читался: нет распознавания текста.', 'Tekst na obrazach nie był czytany: brak rozpoznawania tekstu.'],
+    whyOcr: ['Die lokale Texterkennung konnte nicht alle Stellen sicher lesen oder prüfen. Ungelesene Seiten und unsichere Zeilen bleiben ungeprüft.', 'Local text recognition could not read or check every part reliably. Unread pages and uncertain lines remain unchecked.', 'Локальное распознавание не смогло надёжно прочитать или проверить всё. Непрочитанные страницы и неуверенные строки остаются непроверенными.', 'Lokalne rozpoznawanie nie odczytało lub nie sprawdziło wszystkiego pewnie. Nieodczytane strony i niepewne wiersze pozostają niesprawdzone.'],
+    whyOcrEarlier: ['Dieser frühere Prüfbericht hat Bild- und Scantext noch nicht gelesen. Mit „Erneut prüfen“ wird die integrierte lokale Texterkennung verwendet.', 'This earlier report did not read image or scanned text. “Check again” uses the built-in local text recognition.', 'В этом прежнем отчёте текст изображений и сканов не прочитан. «Проверить снова» использует встроенное локальное распознавание.', 'W tym wcześniejszym raporcie tekst obrazów i skanów nie został odczytany. „Sprawdź ponownie” użyje wbudowanego lokalnego rozpoznawania.'],
+    ocrRead: ['Bild- und Scantext lokal gelesen', 'Image and scanned text read locally', 'Текст изображений и сканов прочитан локально', 'Tekst obrazów i skanów odczytany lokalnie'],
     whyPacked: ['Ein Teil des Dateiinhalts ist gepackt und wurde nicht ausgepackt.', 'Part of the file content is packed and was not unpacked.', 'Часть содержимого упакована и не распакована.', 'Część zawartości jest spakowana i nie została rozpakowana.'],
     details: ['Einzelheiten (technisch)', 'Details (technical)', 'Подробности (технические)', 'Szczegóły (techniczne)'],
     germanOnly: ['Die Einzelheiten der Funde stehen auf Deutsch.', 'Details of the findings are in German.', 'Подробности находок — на немецком.', 'Szczegóły znalezisk są po niemiecku.']
@@ -102,7 +104,7 @@
     ready = (async () => {
       const A = window.PrueferAnhang;
       if (!A) throw new Error('checker missing');
-      A.pfade({ pdfjs: PDFJS });
+      A.pfade({ pdfjs: PDFJS, tesseract: 'vendor/tesseract/' });
       return A;
     })();
     ready.catch(() => { ready = null; });
@@ -130,25 +132,43 @@
     }
     return canCheck(rec) ? 'open' : 'missing';
   }
-  async function checkBytes(name, bytes) {
+  async function analyzeBytes(name, bytes, options = {}) {
+    if (window.PBOCR) return window.PBOCR.analyze(name, bytes, options);
     const A = await core();
-    const r = await A.pruefe(name, bytes);
+    return A.pruefe(name, bytes);
+  }
+  function checkResult(r) {
     const funde = [], angaben = [];
     for (const b of r.befunde || []) (WARN.includes(b.kennung) ? funde : angaben).push({ k: b.kennung, satz: String(b.satz || '').slice(0, 400) });
-    const hinweise = (r.hinweise || []).map(h => String(h).slice(0, 300));
-    return { zeit: Date.now(), funde, angaben: angaben.slice(0, 30), hinweise: hinweise.slice(0, 12),
-      ungeprueft: Boolean(r.textUngeprueft || r.bildUngeprueft), bild: Boolean(r.bildUngeprueft) };
+    const allNotes = (r.hinweise || []).map(h => String(h).slice(0, 300));
+    const gap = h => /ungeprüft|NICHT|nicht geprüft|Speichergrenze|überschreitet/i.test(h);
+    const hinweise = [...allNotes.filter(gap), ...allNotes.filter(h => !gap(h))];
+    return { zeit: Date.now(), funde, angaben: angaben.slice(0, 30), hinweise: hinweise.slice(0, 24),
+      ungeprueft: Boolean(r.textUngeprueft || r.bildUngeprueft), bild: Boolean(r.bildUngeprueft), ...(r.ocr ? {ocr:r.ocr} : {}) };
+  }
+  async function checkBytes(name, bytes, options = {}) {
+    return checkResult(await analyzeBytes(name, bytes, options));
   }
   const running = new Set(), lastFailures = new Map(), unsaved = new Set();
-  async function checkFile(file, rec) {
+  async function checkFile(file, rec, options = {}) {
     if (!rec || running.has(rec.hash)) return rec?.pruefung;
     const previous = rec.pruefung;
+    let searchChanged = false;
     running.add(rec.hash); paint();
     try {
       if (file.size > LIMIT && previous) { rec.pruefung = previous; lastFailures.set(rec.hash, true); }
       else {
         if (file.size > LIMIT) rec.pruefung = { zeit: Date.now(), funde: [], angaben: [], hinweise: [t('tooBig')], ungeprueft: true };
-        else rec.pruefung = await checkBytes(rec.name || file.name, new Uint8Array(await file.arrayBuffer()));
+        else {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const result = await analyzeBytes(rec.name || file.name, bytes, options);
+          // The immutable core returns a partial result for OCR engine errors.
+          // Such a failed re-check must never erase an earlier actual finding.
+          if (previous && (result.ocr?.errors?.length || result.ocr?.resourceLimited))
+            throw new Error(result.ocr.errors?.[0] || t('imageText'));
+          rec.pruefung = checkResult(result);
+          if (options.reindex !== false) searchChanged = Boolean(window.PBOCR?.reindex(rec, result, bytes));
+        }
         lastFailures.delete(rec.hash);
       }
     } catch (error) {
@@ -156,6 +176,12 @@
       else rec.pruefung = { zeit: Date.now(), funde: [], angaben: [], hinweise: [t('failed') + String(error?.message || error).slice(0, 120)], ungeprueft: true };
     } finally { running.delete(rec.hash); }
     try { await idbPut('catalog', rec); unsaved.delete(rec.hash); } catch { unsaved.add(rec.hash); }
+    if (searchChanged) {
+      window.rebuildIndex?.();
+      const refresh = window.renderResults?.(document.getElementById('q')?.value || '');
+      refresh?.catch?.(() => {});
+    }
+    if (!unsaved.has(rec.hash) && rec.ocrIndexed && !rec.evec && typeof window.embedBackfill === 'function') void window.embedBackfill();
     paint();
     return rec.pruefung;
   }
@@ -179,12 +205,12 @@
     let file = null;
     file = await fileOf(rec);
     if (!file) { if (!quiet) alert(t(availability(rec) === 'missing' ? 'missing' : 'availabilityFailed')); return null; }
-    return checkFile(file, rec);
+    return checkFile(file, rec, {force:true});
   }
 
   // The catalog text of a PDF comes from the same reader (before: raw PDF bytes such as "/Subtype /Image …").
   const originalExtract = window.extractPdf;
-  if (typeof originalExtract === 'function') {
+  if (!window.PBOCR && typeof originalExtract === 'function') {
     window.extractPdf = async function (u8) {
       try {
         if (!window.pdfjsLib) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js'; s.onload = ok; s.onerror = no; document.head.append(s); });
@@ -209,7 +235,7 @@
       const result = await originalSign.apply(this, arguments);
       try {
         const rec = result?.rec || CATALOG.find(r => r.hash === result?.hash);
-        if (rec && !rec.mail && !rec.pruefung) await checkFile(file, rec);
+        if (rec && !rec.mail && !rec.pruefung) await checkFile(file, rec, {reindex:false});
       } catch { /* the import itself must not fail because of the check */ }
       return result;
     };
@@ -359,7 +385,8 @@
       for (const f of r.funde) { const li = make('li'); li.append(make('b', t(f.k)), document.createTextNode(' — ' + f.satz)); li.dataset.k = f.k; list.append(li); }
       dialog.append(list, make('p', t('whatNow'), 'pb-check-whatnow'));
     } else dialog.append(make('p', '✓ ' + (r.ungeprueft ? t('partlyOk') : r.mail ? t('mailNone') : t('none')), 'pb-check-clean'));
-    const notes = [...r.hinweise.filter(h => /NICHT|ungeprüft|nicht geprüft|nicht erreichbar|nicht gelesen/i.test(h))];
+    if (r.ocr?.state === 'read') dialog.append(make('p', t('ocrRead'), 'hint pb-check-ocr-read'));
+    const notes = [...r.hinweise.filter(h => /NICHT|ungeprüft|nicht geprüft|nicht erreichbar|nicht gelesen|Speichergrenze|überschreitet/i.test(h))];
     // Klaus 2026-10-22: in plain words first, the technical list folded away underneath.
     const why = plainWhy(r, notes);
     if (why.length) { dialog.append(make('h3', t('partlyWhy'))); const ul = make('ul', null, 'pb-check-why'); for (const w of why) ul.append(make('li', w)); dialog.append(ul); }
@@ -383,7 +410,8 @@
     if (r.mailTextMissing) add(t('mailNoText'));
     const read = /NICHT gelesen \(höchstens (\d+)\)/.exec(all); if (read) add(t('whyPages').replace('{n}', read[1]));
     const hidden = /nicht gegengelesen \(höchstens (\d+)\)/.exec(all); if (hidden) add(t('whyHidden').replace('{n}', hidden[1]));
-    if (r.bild || /Texterkennung/.test(all)) add(t('whyOcr'));
+    if (r.ocr && r.ocr.state === 'partial') add(t('whyOcr'));
+    else if (!r.ocr && (r.bild || /Text im Bild ungeprüft|Texterkennung.*(?:fehlt|lief nicht|nicht erreichbar)/i.test(all))) add(t('whyOcrEarlier'));
     if (/gepackte Ströme/.test(all)) add(t('whyPacked'));
     for (const n of notes) if (n === t('tooBig') || n.startsWith(t('failed'))) add(n);
     if (r.ungeprueft && !out.length) add(t('imageText'));
@@ -470,7 +498,7 @@
     if (!force && sha && vaultMemory()[sha]) return vaultMemory()[sha];
     let result;
     if (entry.size > LIMIT) result = { zeit: Date.now(), funde: [], angaben: [], hinweise: [t('tooBig')], ungeprueft: true };
-    else result = await checkBytes(entry.name, await window.PBVault.bytes(entry));
+    else result = await checkBytes(entry.name, await window.PBVault.bytes(entry), {force});
     if (sha) remember(sha, result);
     return result;
   }
