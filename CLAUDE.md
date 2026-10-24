@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Android .30 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.30/Private-Brain-Pro-1.0.0-preview.30.apk),
+Quelle `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`, Release-Lauf `40094110986` vollständig grün.
+Android-/Windows-main und Signierung grün; signiertes Update .28 → .30 bestanden.
+Öffentliche APK unabhängig geladen: 7.461.797 Bytes, SHA-256 `15f75701de03e3c70fb65132ec7c0e029e09266efe7c0eb988b4f4ab99dd1b88`.
+Vier Themen, klare Liniensymbole, kompakte Navigation, Senden oben und Cc/Bcc klappbar.
+Windows bleibt veröffentlicht bei .29; sein gemeinsamer neuer Quellstand ist geprüft.
+Die [weiteren Funktionsvorschläge](docs/design/umbau-2026-10-24/README.md) sind vorbereitet, nicht als eingebaute Sammlung behaupten.
+
 **Aktueller Freibrief (Klaus 2026-10-24): Designumbau umsetzen, PRs/Commits selbstständig übernehmen,
 Repo aktualisieren und die native Android-App als signierte Update-APK mit direktem Link veröffentlichen.**
 Erster App-Schritt für .30: vier Themen, ruhige native Oberfläche, vier Hauptwege,

@@ -1,5 +1,8 @@
 # Eigenständiger Designumbau · 24.10.2026
 
+**Android .30 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.30/Private-Brain-Pro-1.0.0-preview.30.apk).
+Quelle: `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`, [übernommener PR #76](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/76).
+
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
 signierten Android-Update-APK ausdrücklich freigegeben.
@@ -43,9 +46,14 @@ Es gibt keine PDF-Verschmelzung. Outlook liefert Anregungen, keine Kopiervorlage
   [Token-Referenz](design-kit/tokens.css), [Referenzblatt](design-kit/kit.html).
 - [Vorschauprüfung](vorschau-qa.json): 81 Layoutprüfungen, sieben Szenarien,
   keine JavaScript-Fehler oder externen Anfragen.
-- Für die echte App: neue Themenprobe (33 Fälle), bestehende Web-/Mail-/Native-
-  Prüfungen sowie Android- und Windows-CI. Signierte Veröffentlichung erst nach
-  erfolgreicher main-Abnahme und Signatur-/Updateprobe .28 → .30.
+- Für die echte App bestanden: neue Themenprobe (33 Fälle), bestehende Web-/Mail-/Native-
+  Prüfungen sowie Android-/Web-main (`40093195380`), Windows-main (`40093195384`)
+  und Signierungsprüfung (`40093195392`).
+- [Release-Lauf 40094110986](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40094110986):
+  Signatur, Paketkennung, Version und signiertes Update .28 → .30 bestanden.
+- Öffentliche APK unabhängig heruntergeladen: **7.461.797 Bytes**, SHA-256
+  `15f75701de03e3c70fb65132ec7c0e029e09266efe7c0eb988b4f4ab99dd1b88`;
+  bytegleich mit den veröffentlichten Prüfsummen und dem GitHub-Asset-Digest.
 
 Der Bau und die CI prüfen die Software. Bedienung auf Klaus' eigenem Tablet ist
 damit noch nicht gemessen. Der Release enthält die konkreten App-Änderungen oben;

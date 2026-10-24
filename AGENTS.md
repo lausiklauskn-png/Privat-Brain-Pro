@@ -7,7 +7,14 @@
   Release-Freigabe verlangen. Paketkennung und ursprüngliche Signatur erhalten;
   vor Veröffentlichung Prüfungen und Updateprobe bestehen lassen. Die vier positiv
   bewerteten Designrichtungen bleiben Grundlage; Outlook ist Anregung, keine Kopie.
-  Gemeinsame UI-Änderungen auch für Windows prüfen. Aktuelles Android-Ziel: .30.
+  Gemeinsame UI-Änderungen auch für Windows prüfen.
+- Android .30 ist veröffentlicht: `v1.0.0-preview.30`, VersionCode 30, Quelle
+  `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`; Release-Lauf `40094110986` grün,
+  einschließlich ursprünglicher Signatur und Update .28 → .30. Android-/Web-main
+  `40093195380`, Windows-main `40093195384` und Signierung `40093195392` grün.
+  Öffentliche APK unabhängig geladen und SHA-256 bestätigt:
+  `15f75701de03e3c70fb65132ec7c0e029e09266efe7c0eb988b4f4ab99dd1b88`.
+  Die Veröffentlichung ist erledigt; nicht dieselbe Version erneut veröffentlichen.
 
 - Windows ist veröffentlicht: `windows-v1.0.0-preview.29`, Quelle
   `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, erfolgreicher Release 39920396303.
@@ -39,8 +46,8 @@
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
-- Aktueller Quellstand für Android und Windows: `1.0.0-preview.29`, Android-Code
-  29. Windows ist veröffentlicht, Android .29 noch nicht. Originale Android-Identität unverändert. Der finale
+- Android ist bei `1.0.0-preview.30`, Code 30 veröffentlicht; die Windows-Ausgabe
+  bleibt bei `.29`. Originale Android-Identität unverändert. Der finale
   Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
   grün bleiben. `native/*.js` sind gemeinsam: Android bei Änderungen mitprüfen.

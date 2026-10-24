@@ -3,6 +3,10 @@
 Stand: 24.10.2026. Abgleich mit Quellstand `30c11ea`, Konzept und vorhandenen
 Bildaufnahmen; keine neue Prüfung an echten Geräten oder Mailkonten.
 
+**Fortschritt danach:** Der erste native Designumbau wurde mit Klaus' Freibrief
+umgesetzt und als signierte Android-Version .30 veröffentlicht. Der fachliche
+Abgleich unten beschreibt den Ausgangsstand. [Umsetzung und Release-Nachweise](design/umbau-2026-10-24/README.md).
+
 ## Wofür die App gebaut wurde
 
 **Eigene Dateien, Bilder und Nachrichten in einem gemeinsamen Wissensbestand
