@@ -94,12 +94,12 @@ try{
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hidden&&document.querySelector('.live-mail [data-mail-all=open]'));
   const allAccountsEntry=mail.locator('.live-mail .mail-folders > :first-child');
   await allAccountsEntry.locator('svg.native-folder-icon[data-icon-key="accounts"]').waitFor();
-  ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&[...button.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join('').trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
+  ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&button.querySelector('.native-mail-all-label')?.innerText.trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
   await mail.getByRole('button',{name:/^Alle Konten\s*\d*$/}).click();
   await capture(page,'1-erster-abruf');
   ok('First view explains reading only, 12 months and no attachments',(await panel.textContent()).includes('12 Monate')&&(await panel.textContent()).includes('Anhänge werden nicht geladen'));
   ok('Other mailbox parts are hidden while the overview is open',await mail.locator('.live-mail').isHidden()&&await mail.locator('.mail-account-bar').isHidden());
-  await panel.getByRole('button',{name:'📥 Alle Konten abrufen und einordnen'}).click();
+  await panel.getByRole('button',{name:'Alle Konten abrufen und einordnen'}).click();
   await page.waitForFunction(()=>!PBMailIndex.running()&&localStorage.getItem('pb_mail_index_last'));
   const calls=await page.evaluate(()=>window.mailCalls);
   const indexed=calls.filter(c=>c.method==='index');
@@ -297,6 +297,10 @@ try{
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.waitForFunction(()=>document.querySelector('#pb-mail-all h2')?.textContent==='All accounts');
   ok('Switches to English without reload',(await panel.textContent()).includes('Senders')&&(await panel.textContent()).includes('Clean up'));
+  await panel.locator('.mail-all-head>.mail-back').click();
+  await page.waitForFunction(()=>{const entry=document.querySelector('.live-mail [data-mail-all=open]');return !document.querySelector('.live-mail').hidden&&entry?.querySelector('.native-mail-all-label')?.innerText.trim()==='All accounts';});
+  ok('The existing all-accounts folder label also follows the locale without losing its SVG',await mail.locator('.live-mail [data-mail-all=open]').evaluate(button=>button.querySelector('.native-mail-all-label')?.innerText.trim()==='All accounts'&&button.querySelectorAll('svg.native-folder-icon[data-icon-key=accounts]').length===1));
+  await mail.locator('.live-mail [data-mail-all=open]').click();
   await page.evaluate(()=>{document.documentElement.lang='de';});
   await page.setViewportSize({width:360,height:740});
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));

@@ -107,6 +107,7 @@
     }
     const status = document.querySelector('.pb-input-language-status');
     if (status) {
+      status.classList.toggle('pb-help-status-redundant',!unsaved);
       const value = unsaved ? text.unsaved : text.saved.replace('{name}',languages.find(item => item.code === current).name);
       if (status.textContent !== value) status.textContent = value;
     }

@@ -557,7 +557,7 @@
   /** First entry of the mailbox folder bar; costs no extra row on a phone. */
   function entry() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'mail-folder'; b.dataset.mailAll = 'open';
-    b.setAttribute('aria-current', 'false'); b.append(t('open'), el('small', '', String(visible().length || '')));
+    b.setAttribute('aria-current', 'false'); b.append(el('span', 'native-mail-all-label', t('open')), el('small', '', String(visible().length || '')));
     b.onclick = () => show(true); return b;
   }
   function button(text, fn, cls = '') {
@@ -583,8 +583,10 @@
   function mailRow(r) {
     const row = el('div', 'mail-item' + (!r.mailSeen ? ' unread' : '')), b = el('button');
     b.type = 'button'; b.dataset.mailAllId = r.hash;
+    const subject=el('span', 'mail-subject', (r.mailFlagged ? '★ ' : '') + (r.name || t('noSubject')));
+    if(r.mailFlagged)subject.dataset.pbGeneratedPrefix='star';
     b.append(el('span', 'mail-avatar', senderName(r.mail.from).slice(0, 1).toUpperCase()),
-      el('span', 'mail-subject', (r.mailFlagged ? '★ ' : '') + (r.name || t('noSubject'))),
+      subject,
       el('span', 'mail-preview', [senderName(r.mail.from), chip(r), (r.mailBody || '').replace(/\s+/g, ' ').slice(0, 80)].filter(Boolean).join(' · ')),
       el('time', 'mail-date', fmtDate(r.date)));
     b.onclick = () => { openRecord = r.hash; draw(); };
@@ -625,7 +627,10 @@
     return box;
   }
   function draw() {
-    for (const b of host.querySelectorAll('[data-mail-all=open]')) b.firstChild.nodeValue = t('open');
+    for (const b of host.querySelectorAll('[data-mail-all=open]')) {
+      const label=b.querySelector('.native-mail-all-label');
+      if(label&&label.textContent!==t('open'))label.textContent=t('open');
+    }
     if (panel.hidden) return;
     const keepFocus = document.activeElement?.dataset?.mailAll === 'search', caret = keepFocus ? document.activeElement.selectionStart : 0;
     panel.replaceChildren();
@@ -684,7 +689,8 @@
       } else {
         for (const x of groups(mails)) {
           const row = el('div', 'mail-item'), b = el('button'); b.type = 'button'; b.dataset.mailSender = x.key;
-          b.append(el('span', 'mail-avatar', x.name.slice(0, 1).toUpperCase()), el('span', 'mail-subject', (x.list ? '📰 ' : '') + x.name),
+          const subject=el('span', 'mail-subject', (x.list ? '📰 ' : '') + x.name);if(x.list)subject.dataset.pbGeneratedPrefix='mail';
+          b.append(el('span', 'mail-avatar', x.name.slice(0, 1).toUpperCase()), subject,
             el('span', 'mail-preview', x.key + ' · ' + many(x.mails.length)), el('time', 'mail-date', fmtDate(x.newest)));
           b.onclick = () => { selectedSender = x.key; draw(); };
           row.append(el('span', 'mail-count-badge', String(x.mails.length)), b); list.append(row);

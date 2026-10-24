@@ -98,7 +98,9 @@
       button.title = w.names[i] + ' · ' + w.descriptions[i];
     });
     text(panel.querySelector('.pb-theme-description'), w.descriptions[selected]);
-    text(panel.querySelector('.pb-theme-status'), w.selected.replace('{name}', w.names[selected]) + (unsaved ? ' · ' + w.unsaved : ''));
+    const status=panel.querySelector('.pb-theme-status');
+    status.classList.toggle('pb-help-status-redundant',!unsaved);
+    text(status, w.selected.replace('{name}', w.names[selected]) + (unsaved ? ' · ' + w.unsaved : ''));
   }
   function start() {
     if (started) return; started = true;

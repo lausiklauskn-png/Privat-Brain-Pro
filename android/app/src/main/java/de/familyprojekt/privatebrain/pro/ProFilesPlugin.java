@@ -29,6 +29,12 @@ import java.util.concurrent.Executors;
 @CapacitorPlugin(name = "ProFiles")
 public class ProFilesPlugin extends Plugin {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    // A slow PDF render must not queue a deliberate Open/Share action behind it.
+    // The selected original is still verified on this background lane before any URI is granted.
+    private final ExecutorService handoffs = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean handingOff = new AtomicBoolean();
+    private final Object exportLock = new Object();
+    private volatile boolean destroyed;
     private final AtomicBoolean exportingRecovery = new AtomicBoolean();
     private byte[] recoveryBytes;
 
@@ -130,6 +136,9 @@ public class ProFilesPlugin extends Plugin {
             File file=originals.file(hash);if(!hash.equals(OriginalFileStore.digest(file)))throw new IllegalStateException();
             return new Selected(file,MailMime.filename(metadata.getString("name")));
         }
+        synchronized(exportLock){return exported(call);}
+    }
+    private Selected exported(PluginCall call) throws Exception {
         String encoded=call.getString("data"),name=call.getString("name","file");
         if(encoded==null||encoded.length()>22369624||name.length()>1024)throw new IllegalArgumentException();
         byte[] bytes=Base64.decode(encoded,Base64.NO_WRAP);if(bytes.length>16*1024*1024)throw new IllegalArgumentException();
@@ -149,15 +158,22 @@ public class ProFilesPlugin extends Plugin {
     @PluginMethod public void open(PluginCall call){external(call,false);}
     @PluginMethod public void share(PluginCall call){external(call,true);}
     private void external(PluginCall call,boolean share){
-        worker.execute(()->{
+        if (destroyed) { call.reject("File unavailable","FILE_UNAVAILABLE"); return; }
+        if (!handingOff.compareAndSet(false,true)) { call.reject("File action busy","FILE_BUSY"); return; }
+        try{handoffs.execute(()->{
             try{
                 Selected chosen=selected(call);Intent intent=fileIntent(getContext(),chosen.file,chosen.name,share);
+                if(destroyed)throw new IllegalStateException();
                 getActivity().runOnUiThread(()->{
-                    try{getActivity().startActivity(Intent.createChooser(intent,chosen.name));call.resolve(new JSObject().put("ok",true));}
+                    try{
+                        if(destroyed||getActivity().isFinishing()||getActivity().isDestroyed())throw new IllegalStateException();
+                        getActivity().startActivity(Intent.createChooser(intent,chosen.name));call.resolve(new JSObject().put("ok",true));
+                    }
                     catch(Exception error){call.reject("File unavailable","FILE_UNAVAILABLE");}
+                    finally{handingOff.set(false);}
                 });
-            }catch(Exception error){call.reject("File unavailable","FILE_UNAVAILABLE");}
-        });
+            }catch(Exception error){handingOff.set(false);call.reject("File unavailable","FILE_UNAVAILABLE");}
+        });}catch(java.util.concurrent.RejectedExecutionException error){handingOff.set(false);call.reject("File unavailable","FILE_UNAVAILABLE");}
     }
     static Intent fileIntent(android.content.Context context,File file,String name,boolean share)throws Exception{
         String safe=MailMime.filename(name);
@@ -169,8 +185,14 @@ public class ProFilesPlugin extends Plugin {
         else intent.setDataAndType(uri,type);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION).setClipData(ClipData.newRawUri("",uri));return intent;
     }
-    @PluginMethod public void openPdf(PluginCall call){original(call,()->pdf.open(selected(call).file));}
+    @PluginMethod public void openPdf(PluginCall call){worker.execute(()->{
+        final Selected chosen;
+        try{chosen=selected(call);}
+        catch(Exception error){call.reject("Original unavailable","ORIGINAL_UNAVAILABLE");return;}
+        try{call.resolve(JSObject.fromJSONObject(pdf.open(chosen.file)));}
+        catch(Exception error){call.reject("PDF preview unavailable","PDF_PREVIEW_UNAVAILABLE");}
+    });}
     @PluginMethod public void pdfPage(PluginCall call){original(call,()->pdf.page(call.getString("id"),call.getInt("page",-1),call.getInt("width",1200)));}
     @PluginMethod public void closePdf(PluginCall call){original(call,()->{pdf.close(call.getString("id"));return new org.json.JSONObject().put("ok",true);});}
-    @Override protected void handleOnDestroy(){worker.execute(()->{clearRecovery();pdf.close();});worker.shutdown();}
+    @Override protected void handleOnDestroy(){destroyed=true;handoffs.shutdown();worker.execute(()->{clearRecovery();pdf.close();});worker.shutdown();}
 }

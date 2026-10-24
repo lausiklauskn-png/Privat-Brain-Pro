@@ -11,6 +11,7 @@
     pl:['← Wstecz','Dalej →','Otwórz w innej aplikacji','Ten plik nie ma podglądu w aplikacji.','Plik nie jest już dostępny w tej sesji. Otwórz go ponownie w Eksploratorze.','Nie można otworzyć pliku.','Wczytywanie pliku …','Otwieranie zewnętrzne obsługuje pliki do 16 MiB.']
   };
   const extras={de:['Teilen …','Öffnen mit …'],en:['Share …','Open with …'],ru:['Поделиться …','Открыть с помощью …'],pl:['Udostępnij …','Otwórz za pomocą …']};
+  const waiting={de:['Teilen wird vorbereitet …','Öffnen wird vorbereitet …'],en:['Preparing to share …','Preparing to open …'],ru:['Подготовка к отправке …','Подготовка к открытию …'],pl:['Przygotowywanie udostępniania …','Przygotowywanie otwarcia …']};
   const x=i=>(extras[document.documentElement.lang]||extras.de)[i];
   const t=i=>(words[document.documentElement.lang]||words.de)[i];
   const make=(tag,cls,text)=>{const e=document.createElement(tag);e.className=cls;if(text)e.textContent=text;return e;};
@@ -20,10 +21,11 @@
   const viewer=make('section','native-file-viewer');viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');
   const head=make('div','native-file-head'),close=make('button','ghost'),title=make('strong','native-file-title'),external=make('button','ghost');
   const share=make('button','ghost');share.type='button';
+  share.dataset.nativeAction='share';external.dataset.nativeAction='open';
   close.type=external.type='button';title.id='native-file-title';viewer.setAttribute('aria-labelledby',title.id);
   const body=make('div','native-file-body');head.append(close,title,external,share);viewer.append(head,body);document.body.append(viewer);
   const files=new Map(), snapshots=new Map();
-  let sequence=0, current=0, maximum=0, active=null, applying=false, pending=false, generation=0, objectURL='', focusBefore=null,pdfCleanup=null;
+  let sequence=0, current=0, maximum=0, active=null, applying=false, pending=false, generation=0, objectURL='', focusBefore=null,pdfCleanup=null,handoffJob=null;
   const page=()=>document.querySelector('.main-pages .tab.on,.workspace-tools .tab.on')?.dataset.tab||'search';
   let route={page:page(),explorer:workspace.explorerState(),viewer:null,lightbox:null};
   const originalLightbox=window.openLightbox,originalClose=window.closeLightbox;
@@ -50,9 +52,8 @@
     body.replaceChildren();active=route.viewer?files.get(route.viewer):null;viewer.hidden=!route.viewer;
     document.querySelector('.wrap').inert=Boolean(route.viewer);
     if(!route.viewer){focusBefore?.focus?.({preventScroll:true});buttons();return;}
-    title.textContent=active?.name||'';external.hidden=share.hidden=!active;external.disabled=share.disabled=!active;close.focus({preventScroll:true});
+    title.textContent=active?.name||'';external.hidden=share.hidden=!active;handoffControls();close.focus({preventScroll:true});
     if(!active){body.append(make('p','',t(4)));buttons();return;}
-    external.disabled=share.disabled=false;
     const file=active.file,ext=active.name.split('.').pop().toLowerCase();
     if(/^image\/(png|jpeg|gif|webp|avif|bmp)$/.test(file.type)||/^(png|jpe?g|gif|webp|avif|bmp)$/.test(ext)){
       const img=make('img','native-file-image');img.alt=active.name;objectURL=URL.createObjectURL(file);img.src=objectURL;
@@ -95,15 +96,28 @@
     commit({...route,viewer:key});
   }
   previous.onclick=close.onclick=back;next.onclick=forward;
+  function handoffControls(){
+    external.disabled=share.disabled=Boolean(handoffJob)||!active;
+    for(const item of menu.children)item.disabled=Boolean(handoffJob)||!active;
+  }
   async function handoff(method){
-    const entry=active;if(!entry)return;menu.hidden=true;
-    // Files from the encrypted folder leave it only after the folder's own warning.
-    if(entry.file.pbVaultId&&window.PBVault){try{await PBVault.handOut(entry.file.pbVaultId,method==='share');}catch{if(active===entry)body.append(make('p','',t(5)));}return;}
-    if(!entry.file.pbOriginalHash&&entry.file.size>16*1024*1024){body.append(make('p','',t(7)));return;}
-    external.disabled=share.disabled=true;
-    try{await window.Capacitor.Plugins.ProFiles[method](await PBPDF.arguments(entry.file));}
-    catch{if(active===entry)body.append(make('p','',t(5)));}
-    finally{if(active===entry)external.disabled=share.disabled=false;}
+    const entry=active;if(!entry||handoffJob)return;menu.hidden=true;
+    if(!(entry.file.pbVaultId&&window.PBVault)&&!entry.file.pbOriginalHash&&entry.file.size>16*1024*1024){body.append(make('p','',t(7)));return;}
+    const version=generation,job={};handoffJob=job;handoffControls();
+    const activity=window.PBActivity?.start({label:()=> (waiting[document.documentElement.lang]||waiting.de)[method==='share'?0:1],target:method==='share'?share:external});
+    const currentEntry=()=>active===entry&&generation===version&&!viewer.hidden&&viewer.isConnected;
+    try{
+      if(activity)await activity.ready;
+      if(!currentEntry())return;
+      // Files from the encrypted folder leave it only after the folder's own warning.
+      if(entry.file.pbVaultId&&window.PBVault)await PBVault.handOut(entry.file.pbVaultId,method==='share');
+      else{
+        const args=await PBPDF.arguments(entry.file);
+        if(!currentEntry())return;
+        await window.Capacitor.Plugins.ProFiles[method](args);
+      }
+    }catch{if(active===entry&&generation===version)body.append(make('p','',t(5)));}
+    finally{activity?.finish();if(handoffJob===job)handoffJob=null;handoffControls();}
   }
   external.onclick=()=>handoff('open');share.onclick=()=>handoff('share');
   const menu=make('div','native-file-menu');menu.hidden=true;menu.setAttribute('role','menu');

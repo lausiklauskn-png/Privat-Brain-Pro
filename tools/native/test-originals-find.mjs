@@ -47,9 +47,9 @@ try{
  await page.evaluate(()=>openFile(CATALOG.find(r=>r.name==='Stadtwerke.txt').hash));
  const dlg=page.locator('.native-original-reconnect');await dlg.waitFor();
  ok('Otherwise the dialog names the file and where it came from',(await dlg.textContent()).includes('„Stadtwerke.txt“ ist im Katalog')&&(await dlg.textContent()).includes('Woher: Stadtwerke.txt'));
- ok('It offers to search a whole folder',await dlg.getByRole('button',{name:'📁 Ordner durchsuchen'}).isVisible());
+ ok('It offers to search a whole folder',await dlg.getByRole('button',{name:'Ordner durchsuchen'}).isVisible());
  folder=[{id:'1',name:'Stadtwerke-Kopie.txt',type:'text/plain',size:A.length,path:'Download/Stadtwerke-Kopie.txt',bytes:A},{id:'2',name:'Einkauf.txt',type:'text/plain',size:B.length,path:'Download/Einkauf.txt',bytes:B},{id:'3',name:'Urlaub.jpg',type:'image/jpeg',size:999999,path:'Download/Urlaub.jpg',bytes:Buffer.alloc(10)}];
- await dlg.getByRole('button',{name:'📁 Ordner durchsuchen'}).click();
+ await dlg.getByRole('button',{name:'Ordner durchsuchen'}).click();
  await page.locator('.native-file-viewer').waitFor();
  ok('One folder search brings back every missing original found there, matched by fingerprint (also under another name)',saved.has(digest(A))&&saved.has(digest(B)));
  ok('Only files of a matching size are read',!sourceReads.includes('3'));
