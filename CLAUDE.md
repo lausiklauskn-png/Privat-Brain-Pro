@@ -1,5 +1,8 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Nächste Sitzung (Klaus 2026-10-24): modernes Design wie Outlook**, Linien-Symbole statt Emojis, flache Knöpfe bleiben.
+[Brief](BRIEF_NACHFOLGE_2026-10-24_DESIGN.md) mit Ist-Bildern (`docs/design/ist-2026-10-24/`), Vorbildern und Ablauf.
+
 **Videos 2026-10-23 abends:** Siegel im Kopf korrigiert (★ in der Kugel, kein Wort „SIEGEL“, PR #73), Werbefilm und
 Handbuchvideo neu aufgenommen. FP Video (#23) zeigt nur Full HD: Werbefilm quer + hochkant, Handbuch quer ♪1/♪2, Handbuch
 hochkant (Uplifting). Geschenkseite kompakt, nur Querformat (Version 10). [Film](docs/film/README.md), [Handbuch](docs/handbuchvideo/README.md).
