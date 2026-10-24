@@ -48,6 +48,33 @@ async function recoveryDiagnostics(previousPage){
   [evidence.appPages,evidence.targets]=await Promise.all([Promise.all(tasks),targets]);
   return evidence;
 }
+async function toolImportDiagnostics(){
+  const bounded=async(promise)=>{
+    let timer;
+    try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Tool import diagnostic timed out')),2000);})]);}
+    finally{clearTimeout(timer);}
+  };
+  const evidence={pages:browser.contexts().flatMap(context=>context.pages().map(target=>({url:target.url(),closed:target.isClosed()})))};
+  try{evidence.app=await bounded(page.evaluate(()=>{
+    const rect=node=>{if(!node)return null;const r=node.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};};
+    const identify=node=>node?{tag:node.tagName,id:node.id,class:String(node.className||'')}:null;
+    const offers=[...document.querySelectorAll('.pb-tool-file')];
+    const take=offers[0]?.querySelector('button'),box=take?.getBoundingClientRect();
+    return{url:location.href,panel:document.querySelector('.panel.on')?.id,
+      signing:typeof signing==='undefined'?null:signing,cancelRequested:typeof cancelReq==='undefined'?null:cancelReq,
+      active:identify(document.activeElement),devicePixelRatio,viewport:{width:innerWidth,height:innerHeight},
+      toolFrame:rect(document.querySelector('.pb-tool-frame iframe')),offerCount:offers.length,
+      offers:offers.map(dialog=>({open:dialog.open,file:dialog.querySelector('.pb-tool-file-name')?.textContent,buttons:[...dialog.querySelectorAll('button')].map(button=>({text:button.textContent,disabled:button.disabled,rect:rect(button)}))})),
+      takeCenterHit:box?identify(document.elementFromPoint(box.x+box.width/2,box.y+box.height/2)):null,
+      progress:{visible:Boolean(document.getElementById('prog')?.classList.contains('on')),current:document.getElementById('progCur')?.textContent,count:document.getElementById('progCount')?.textContent},
+      catalog:typeof CATALOG==='undefined'?null:CATALOG.slice(0,12).map(record=>({name:record.name,hash:record.hash})),
+      diagnosticLog:document.getElementById('diagLog')?.textContent.slice(0,3000),toast:document.getElementById('toast')?.textContent};
+  }));}catch(error){evidence.app={error:error.message};}
+  const tool=page.frames().find(frame=>frame.url().startsWith('https://pbtool.localhost/kimboard/'));
+  if(tool)try{evidence.tool=await bounded(tool.evaluate(()=>({url:location.href,active:document.activeElement?{tag:document.activeElement.tagName,id:document.activeElement.id}:null,
+    openSelects:CSS.supports('selector(:open)')?[...document.querySelectorAll('select:open')].map(select=>select.id):null})));}catch(error){evidence.tool={error:error.message};}
+  return evidence;
+}
 async function dialog(){
   for(let i=0;i<80;i++){
     const target=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().includes('/windows/dialog/index.html'));
@@ -132,9 +159,21 @@ try{
     await licensed.locator('html').evaluate(()=>{parent.postMessage({kind:'pb-tool-file',nonce:'wrong',name:'forged-tool.txt',type:'text/plain',bytes:new ArrayBuffer(4)},'https://tauri.localhost');});
     await pause(100);ok('tool file with the wrong handoff nonce is ignored',await page.locator('.pb-tool-file').count()===0);
     await licensed.locator('html').evaluate(()=>{const a=document.createElement('a');a.download='windows-tool-proof.txt';a.href=URL.createObjectURL(new Blob(['Actual isolated tool handoff'],{type:'text/plain'}));a.click();});
-    await page.locator('.pb-tool-file button').first().click();
-    await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='windows-tool-proof.txt'),null,{timeout:90000});
-    ok('actual tool download enters the same checked native import',!(await call('ProFiles','originalInfo',{hash:createHash('sha256').update('Actual isolated tool handoff').digest('hex')})).missing);
+    try{
+      // The failed Windows capture retained a native tool-select popup over
+      // this modal. Exercise the same actual Take button with one keyboard
+      // activation, without retrying the handoff or invoking its handler.
+      const take=page.locator('.pb-tool-file button').first();await take.focus();
+      assert.ok(await take.evaluate(button=>document.activeElement===button),'Tool Take button receives keyboard focus');
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(()=>!document.querySelector('dialog.pb-tool-file[open]')&&!document.querySelector('.pb-tool-frame'),null,{timeout:10000});
+      await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='windows-tool-proof.txt'),null,{timeout:90000});
+    }catch(error){
+      try{report.toolImport=await toolImportDiagnostics();}catch(diagnosticError){report.toolImport={diagnosticError:diagnosticError.message};}
+      console.error('TOOL IMPORT diagnostics '+JSON.stringify(report.toolImport));throw error;
+    }
+    const toolHash=createHash('sha256').update('Actual isolated tool handoff').digest('hex');
+    ok('actual tool download enters the same checked native import',!(await call('ProFiles','originalInfo',{hash:toolHash})).missing&&Buffer.from((await call('ProFiles','readOriginal',{hash:toolHash,offset:0})).data,'base64').equals(Buffer.from('Actual isolated tool handoff')));
     await page.evaluate(()=>PBTools.open('pinnwand'));await page.locator('.pb-tool-frame iframe').waitFor();
     await page.evaluate(async()=>{for(const key of ['pb_studio_v1','pb_studio_probe','pb_studio_visible'])localStorage.removeItem(key);await PBLicense.refresh();});
     ok('revoking the tool permission closes its active isolated frame',await page.locator('.pb-tool-frame').count()===0);
@@ -180,7 +219,18 @@ try{
     if(!page){
       try{report.rendererRecovery=await recoveryDiagnostics(crashPage);}
       catch(error){report.rendererRecovery={diagnosticError:error.message};}
-      console.error('RECOVERY diagnostics '+JSON.stringify(report.rendererRecovery));
+      const nativeRoot=report.rendererRecovery.connected===true&&Array.isArray(report.rendererRecovery.targets)&&report.rendererRecovery.targets.some(target=>target.type==='page'&&target.url==='https://tauri.localhost/index.html');
+      if(nativeRoot){
+        // WebView2 has recovered its real root target, but the CDP client can
+        // miss the replacement Page. Reattach this driver once; closing a
+        // connectOverCDP browser disconnects its transport, not the native app.
+        report.rendererRecovery.driverReconnect={attempts:1,reason:'native-root-present-without-mapped-page'};
+        await browser.close();browser=null;await connect();
+        for(let i=0;i<80;i++){page=browser.contexts().flatMap(context=>context.pages()).find(target=>target.url()==='https://tauri.localhost/index.html');if(page)break;await pause(250);}
+        report.rendererRecovery.driverReconnect.mappedURL=page?.url()||null;
+        if(!page)try{report.rendererRecovery.afterDriverReconnect=await recoveryDiagnostics(crashPage);}catch(error){report.rendererRecovery.afterDriverReconnect={diagnosticError:error.message};}
+      }
+      console.log('RECOVERY diagnostics '+JSON.stringify(report.rendererRecovery));
     }
     assert.ok(page,'App recovers its main page after a renderer crash');
     page.on('pageerror',error=>report.errors.push(error.stack||error.message));
