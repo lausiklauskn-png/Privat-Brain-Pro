@@ -1,5 +1,14 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Erweiterter .31-Auftrag:** Samsung Galaxy DeX unter Android und automatische
+Hochformatansicht auch auf Tablets; Eingabe-/Diktatsprache unabhängig wählen,
+Mikrofone an gewöhnlichen Texteingaben und automatische lokale Mailübersetzung
+unter dem Original (DE/EN/RU/PL). Bestehende Verdeckung für ausdrücklich gewählte
+Cloudwege erhalten. [Auftrag und Nachweise](docs/design/umbau-2026-10-24/ERWEITERUNGEN-NATIVE-BEDIENUNG.md),
+[lokale Übersetzung](docs/NATIVE-LOKALE-UEBERSETZUNG.md). Quellstand ist in Arbeit;
+erst finale CI einschließlich echter Offline-Inferenz abnehmen und dann .31
+mit ursprünglicher Signatur und Updateprobe veröffentlichen. Freibrief gilt.
+
 **Eigenständige Fortsetzung für Android .31 (24.10.2026):** Originalverfügbarkeit
 und Prüfbericht getrennt, ausdrücklich begrenzte Mailtextprüfung, historische
 Befunde bei Lesefehlern erhalten und Speicherfehler sichtbar. Klaus hat die

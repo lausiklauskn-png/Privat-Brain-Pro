@@ -617,6 +617,7 @@
     if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
     box.append(tools);
     box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
+    if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
     if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), async () => {
       const l = r.mailRemotes[0]; show(false);
       await PBLiveMail.openRemote({ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, subject: r.name, from: r.mail.from, date: r.date });

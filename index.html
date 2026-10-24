@@ -2220,15 +2220,31 @@ function populateFilterSelects(){
 }
 // Tags
 async function addTag(hash){
-  const r=CATALOG.find(x=>x.hash===hash); if(!r) return;
-  const t=(prompt("Schlagwort hinzufügen:")||"").trim(); if(!t) return;
-  r.tags=r.tags||[]; if(!r.tags.includes(t)){ r.tags.push(t); try{ await idbPut("catalog",r); }catch{} }
-  populateFilterSelects(); renderResults($("#q").value);
+  if(!CATALOG.some(x=>x.hash===hash))return;
+  const words=({de:["Schlagwort hinzufügen:","Das Schlagwort konnte nicht gespeichert werden. Die bisherigen Schlagwörter bleiben erhalten."],en:["Add tag:","The tag could not be saved. Existing tags are preserved."],ru:["Добавить метку:","Не удалось сохранить метку. Прежние метки сохранены."],pl:["Dodaj znacznik:","Nie udało się zapisać znacznika. Dotychczasowe znaczniki pozostają."]})[document.documentElement.lang]||["Schlagwort hinzufügen:","Das Schlagwort konnte nicht gespeichert werden. Die bisherigen Schlagwörter bleiben erhalten."];
+  const answer=window.PBTextPrompt?await PBTextPrompt.ask(words[0]):prompt(words[0]);
+  const t=(answer||"").trim(); if(!t) return;
+  const writes=addTag.pending||(addTag.pending=new Map());
+  const write=(writes.get(hash)||Promise.resolve()).catch(()=>{}).then(async()=>{
+    const r=CATALOG.find(x=>x.hash===hash);if(!r)return;
+    const tags=Array.isArray(r.tags)?r.tags:[];if(tags.includes(t))return;
+    const next={...r,tags:[...tags,t]};
+    try{await idbPut("catalog",next);}catch{toast(words[1]);return;}
+    r.tags=next.tags;populateFilterSelects();renderResults($("#q").value);
+  });
+  writes.set(hash,write);
+  try{await write;}finally{if(writes.get(hash)===write)writes.delete(hash);}
 }
 async function removeTag(hash, tag){
-  const r=CATALOG.find(x=>x.hash===hash); if(!r) return;
-  r.tags=(r.tags||[]).filter(t=>t!==tag); try{ await idbPut("catalog",r); }catch{}
-  populateFilterSelects(); renderResults($("#q").value);
+  const writes=addTag.pending||(addTag.pending=new Map());
+  const write=(writes.get(hash)||Promise.resolve()).catch(()=>{}).then(async()=>{
+    const r=CATALOG.find(x=>x.hash===hash);if(!r)return;
+    const next={...r,tags:(Array.isArray(r.tags)?r.tags:[]).filter(t=>t!==tag)};
+    try{await idbPut("catalog",next);}catch{toast(({de:"Das Schlagwort konnte nicht entfernt werden. Die bisherigen Schlagwörter bleiben erhalten.",en:"The tag could not be removed. Existing tags are preserved.",ru:"Не удалось удалить метку. Прежние метки сохранены.",pl:"Nie udało się usunąć znacznika. Dotychczasowe znaczniki pozostają."})[document.documentElement.lang]||"Das Schlagwort konnte nicht entfernt werden. Die bisherigen Schlagwörter bleiben erhalten.");return;}
+    r.tags=next.tags;populateFilterSelects();renderResults($("#q").value);
+  });
+  writes.set(hash,write);
+  try{await write;}finally{if(writes.get(hash)===write)writes.delete(hash);}
 }
 // Der Vermerk „vor dem Senden an eine KI entfernt" (Reinigung vor der KI, Klaus 2026-10-14).
 function kiEntferntHtml(r){

@@ -79,6 +79,15 @@ jobs:
           npm test 2>&1 | tee "$RUNNER_TEMP/web-tests.log"
           npm run sync:android
           npm run test:native-web
+      - name: Gepinntes Übersetzungsmodell für echte lokale Inferenz laden
+        run: node tools/native/fetch-translation-fixtures.mjs "$RUNNER_TEMP/translation-fixtures"
+      - name: Echte Marian-Übersetzung im isolierten Worker prüfen
+        run: |
+          set -euo pipefail
+          export CB_CHROMIUM="$(node --input-type=module -e 'import {chromium} from "playwright-core"; process.stdout.write(chromium.executablePath())')"
+          node tools/native/test-translation-device.mjs
+        env:
+          TRANSLATION_REAL_MODELS_DIR: ${{ runner.temp }}/translation-fixtures
       - run: npm test --prefix mail-service
       - run: ./gradlew --no-daemon --max-workers=2 testDebugUnitTest assembleDebug lintDebug
         working-directory: android
@@ -91,7 +100,7 @@ jobs:
   native-smoke:
     needs: validate
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0

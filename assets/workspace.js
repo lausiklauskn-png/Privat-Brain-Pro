@@ -60,7 +60,7 @@
     }
     syncNavigation();
   }
-  let folderPath = '', library = null, ready = null;
+  let folderPath = '', library = null, ready = null, revealSelectedPath = true;
   let libraryId = localStorage.getItem('pb_library_id');
   async function permission(handle, mode) {
     if (!handle.queryPermission) return true; // e.g. browser-owned test directory
@@ -164,6 +164,7 @@
   function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value,reverse:explorerReverse,content:contentBox.checked};}
   function restoreExplorer(state){
     folderPath=String(state?.path||'');el('explorerFilter').value=String(state?.filter||'');
+    revealSelectedPath=true;
     el('explorerSort').value=['name','date','size'].includes(state?.sort)?state.sort:'date';
     explorerReverse=state?.reverse===true;contentBox.checked=state?.content===true;renderExplorer();
   }
@@ -179,7 +180,7 @@
   }
   function openFolder(path,{clear=false}={}){
     if(window.PBNavigation)return window.PBNavigation.folder(path,clear);
-    folderPath=path;if(clear)el('explorerFilter').value='';renderExplorer();
+    folderPath=path;revealSelectedPath=true;if(clear)el('explorerFilter').value='';renderExplorer();
   }
   // What kind an entry is, so the explorer and the import note can say where a file is.
   const KINDS=[['mail','✉️'],['doc','📄'],['photo','🖼️'],['note','📝'],['attach','📎']];
@@ -384,9 +385,10 @@
     const nodes=buildModel(all);lastModel=nodes;
     const topics=window.PBExplorerTopics, views=topics?.views()||[];
     const view=folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):null;
-    if(!view){const real=resolvePath(nodes,folderPath);if(real!==folderPath)folderPath=real;}
+    if(!view){const real=resolvePath(nodes,folderPath);if(real!==folderPath){folderPath=real;revealSelectedPath=true;}}
     const here=view?null:nodes.get(folderPath);
-    if(here)for(const n of chain(nodes,folderPath))openNodes.add(n.path);
+    if(here&&revealSelectedPath)for(const n of chain(nodes,folderPath))openNodes.add(n.path);
+    revealSelectedPath=false;
     treeView(nodes,tree);
     // Categories (native): views over the catalog, nothing is moved. Path "topic:<key>".
     if(views.length)tree.append(heading(text('topicsHead')));
