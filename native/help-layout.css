@@ -1,0 +1,18 @@
+/* Ordinary help is available on click, touch and keyboard, without occupying
+   the working area until requested. Functional labels and live errors stay. */
+html.pb-help-ready .pb-help-heading { display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;min-width:0; }
+html.pb-help-ready .pb-help-heading > h2,
+html.pb-help-ready .pb-help-heading > h3 { flex:1 1 auto;min-width:0;margin:0; }
+html.pb-help-ready .pb-help-toggle { display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:36px;height:36px;min-width:36px;min-height:36px;padding:7px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mut);box-shadow:none;cursor:pointer; }
+html.pb-help-ready .pb-help-toggle:hover { color:var(--ink);background:var(--bg2,var(--card2));border-color:var(--line); }
+html.pb-help-ready .pb-help-toggle[aria-expanded="true"] { color:var(--acc,var(--ink));background:var(--bg2,var(--card2));border-color:var(--line); }
+html.pb-help-ready .pb-help-toggle:focus-visible { outline:2px solid var(--acc,var(--ink));outline-offset:2px; }
+html.pb-help-ready .pb-help-toggle svg { display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none; }
+html.pb-help-ready .pb-help-content { margin:6px 0 12px;padding:10px 12px;border-left:2px solid var(--line);font-size:.9rem;line-height:1.5;overflow-wrap:anywhere;color:var(--mut); }
+html.pb-help-ready .pb-help-content > :first-child { margin-top:0; }
+html.pb-help-ready .pb-help-content > :last-child { margin-bottom:0; }
+html.pb-help-ready .pb-help-content[hidden] { display:none!important; }
+html.pb-help-ready .pb-help-status-redundant { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important; }
+@media(pointer:coarse) {
+  html.pb-help-ready .pb-help-toggle { width:44px;height:44px;min-width:44px;min-height:44px; }
+}

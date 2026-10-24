@@ -44,7 +44,34 @@
     accounts:'M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M13 4a4 4 0 0 1 0 8m5 3a4 4 0 0 1 4 4v2 M12 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
     writing:'M4 5h16M4 10h12M4 15h8 M16 15l5 5m-5 0 5-5',
     undo:'M4 4v6h6 M4 10a8 8 0 1 1 1 9',
-    folder:'M3 7V4h6l2 3h10v13H3Z'
+    folder:'M3 7V4h6l2 3h10v13H3Z',
+    file:'M14 3H5v18h14V8Z M14 3v5h5',
+    note:'M14 3H5v18h14V8Z M14 3v5h5 M8 12h8m-8 4h6',
+    person:'M20 21v-2a6 6 0 0 0-6-6h-4a6 6 0 0 0-6 6v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+    shield:'M12 3 3 6v6c0 5 9 10 9 10s9-5 9-10V6Z M8 12l3 3 5-6',
+    sort:'M7 3v18m-3-3 3 3 3-3 M17 21V3m-3 3 3-3 3 3',
+    panel:'M3 4h18v16H3Z M9 4v16',collapse:'M4 4h16v16H4Z M8 12h8',
+    chevronRight:'m9 5 7 7-7 7',chevronDown:'m5 9 7 7 7-7',
+    partial:'M12 3a9 9 0 1 0 0 18V3Z M12 3a9 9 0 0 1 0 18',
+    unavailable:'M4 20 20 4 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+    pending:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 7v5l3 2',
+    lock:'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0v3',
+    link:'m9 15 6-6 M8 16l-2 2a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0 M16 8l2-2a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0',
+    clean:'m15 3 6 6-9 9-6-6Z M6 12l-4 8h12l-2-2 M5 20l2-5m3 5 1-3',
+    device:'M3 4h18v13H3Z M8 21h8m-4-4v4',
+    table:'M3 3h18v18H3Z M3 9h18M9 3v18m-6-6h18',
+    chart:'M4 3v17h17 M7 15l4-5 4 2 5-7',
+    presentation:'M3 3h18v13H3Z M12 16v6m-5 0 5-6 5 6',
+    code:'m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16',
+    package:'m3 7 9-5 9 5v10l-9 5-9-5Z M3 7l9 5 9-5m-9 5v10M7 4l10 6',
+    chat:'M3 4h18v13H9l-6 4Z M7 8h10m-10 4h7',
+    hand:'M7 13V7a2 2 0 0 1 4 0v5 M11 12V4a2 2 0 0 1 4 0v8 M15 12V6a2 2 0 0 1 4 0v7 M7 10 5 9a2 2 0 0 0-3 2l4 8c1 2 3 3 6 3 5 0 9-3 9-8v-3a2 2 0 0 0-4 0',
+    info:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 11v6m0-10h.1',
+    shuffle:'M3 5h3l12 14h3m-4-4 4 4-4 4 M3 19h3l4-5m4-4 4-5h3m-4-4 4 4-4 4',
+    lab:'M8 3h8m-7 0v6L3 20v1h18v-1L15 9V3 M6 15h12',
+    brain:'M12 4v16 M8 4a4 4 0 0 0-6 4 4 4 0 0 0 0 7 4 4 0 0 0 6 5m8-16a4 4 0 0 1 6 4 4 4 0 0 1 0 7 4 4 0 0 1-6 5 M5 9l3 2m-3 5 3-2m11-5-3 2m3 5-3-2',
+    key:'M14 7a5 5 0 1 1-3 4l-8 8v3h4v-3h3v-3l4-4 M17 7h.1',
+    network:'M8 3h8v6H8Z M2 16h6v6H2Zm14 0h6v6h-6Z M12 9v4H5v3m7-3h7v3'
   };
   function icon(key){
     if(!Object.hasOwn(paths,key))return null;
@@ -55,16 +82,16 @@
   // App-owned callers share this offline source. An unknown action keeps its name;
   // it must never acquire an unrelated three-dot symbol.
   window.PBIcons=Object.freeze({create:icon,has:key=>Object.hasOwn(paths,key)});
-  const cleanLabel=value=>value.trim().replace(/^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\uFE0E\u200D]|[↗←→↑↓✓☑☐])+\s*/u,'').trim();
+  const cleanLabel=value=>value.trim().replace(/^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\uFE0E\u200D]|[↗←→↑↓↕✓☑☐])+\s*/u,'').trim();
   function sourceLabel(node){return(node.dataset.i18nTitle?node.title:(node.querySelector(':scope>.compact-label')||node).textContent).trim().replace(/\s+/g,' ');}
   function setControlText(node,label){
     const content=node.querySelector(':scope>.compact-label')||node;
     if(content.textContent!==label)content.textContent=label;
   }
-  function decorate(node,key){
+  function decorate(node,key,suppliedLabel){
     if(!node)return;
     const raw=sourceLabel(node),known=Object.hasOwn(paths,key),page=pages.indexOf(node.dataset.tab);
-    const label=page>=0?(captions[document.documentElement.lang]||captions.de)[page]:node.dataset.mailAi==='open'?(writingWords[document.documentElement.lang]||writingWords.de):cleanLabel(raw)||raw;
+    const label=suppliedLabel||(page>=0?(captions[document.documentElement.lang]||captions.de)[page]:node.dataset.mailAi==='open'?(writingWords[document.documentElement.lang]||writingWords.de):cleanLabel(raw)||raw);
     if(!label)return;
     if(!node.querySelector(':scope>.compact-label')){
       const content=make('span','compact-label');content.append(...node.childNodes);
@@ -77,7 +104,7 @@
     node.setAttribute('aria-label',label);node.title=label;
     // Klaus 2026-10-21: magnifier and gear are self-explanatory; their words go, the name stays as tooltip.
     if(node.dataset.tab&&ICON_ONLY.has(node.dataset.tab)&&!node.closest('.native-menu-views')){node.querySelector(':scope>.compact-caption')?.remove();node.classList.add('compact-icon-only');}
-    else if(node.dataset.tab||node.hasAttribute('data-mail-caption')||!known||node.tagName==='SUMMARY'&&key==='more'||node.dataset.mailAi==='open'||['spam','notspam','restore'].includes(node.dataset.nativeSelection)||node.dataset.liveText==='notSpam'){
+    else if(node.dataset.tab||node.hasAttribute('data-mail-caption')||node.dataset.iconCaption==='true'||!known||node.tagName==='SUMMARY'&&key==='more'||node.dataset.mailAi==='open'||['spam','notspam','restore'].includes(node.dataset.nativeSelection)||node.dataset.liveText==='notSpam'){
       node.classList.remove('compact-icon-only');
       let caption=node.querySelector(':scope>.compact-caption');if(!caption){caption=make('span','compact-caption');caption.setAttribute('aria-hidden','true');node.append(caption);}
       if(caption.textContent!==label)caption.textContent=label;
@@ -92,11 +119,49 @@
   }
   function decorateInline(node,key,cls,stripLabel=true){
     if(!node)return;
-    if(stripLabel)for(const part of node.childNodes)if(part.nodeType===Node.TEXT_NODE){const value=cleanLabel(part.nodeValue);if(value!==part.nodeValue.trim())part.nodeValue=value?value+' ':'';}
     const previous=node.querySelector(':scope>.'+cls);
     if(previous?.dataset.iconKey===key)return;
     const glyph=icon(key);if(!glyph)return;glyph.classList.add(cls);
+    // Preserve textContent exactly: the check/status modules use it to decide
+    // whether to repaint. Only the known app-owned decoration becomes hidden;
+    // names following that first decoration are never parsed or stripped.
+    if(stripLabel&&!node.querySelector(':scope>.pb-icon-fallback')){
+      const first=[...node.childNodes].find(part=>part.nodeType===Node.TEXT_NODE&&part.nodeValue.trim());
+      const value=first?.nodeValue||'',prefix=prefixes.find(candidate=>value.trimStart().startsWith(candidate));
+      if(prefix){const length=value.length-value.trimStart().length+prefix.length,fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');fallback.textContent=value.slice(0,length);first.before(fallback);first.nodeValue=value.slice(length);}
+    }
     if(previous)previous.replaceWith(glyph);else node.prepend(glyph);
+  }
+  function decorateSlot(slot){
+    const key=slot.dataset.pbIcon,previous=slot.querySelector(':scope>.compact-icon');
+    if(previous?.dataset.iconKey===key)return;
+    const glyph=icon(key);if(!glyph)return;
+    if(slot.parentElement?.classList.contains('mail-folder'))glyph.classList.add('native-folder-icon');
+    if(!slot.querySelector(':scope>.pb-icon-fallback')){const fallback=make('span','pb-icon-fallback');fallback.hidden=true;fallback.setAttribute('aria-hidden','true');fallback.append(...slot.childNodes);slot.append(fallback);}
+    if(previous)previous.replaceWith(glyph);else slot.append(glyph);
+    slot.classList.add('pb-content-icon');
+  }
+  const prefixKeys=new Map([['📁','folder'],['📂','folder'],['✉','mail'],['✉️','mail'],['📧','mail'],['📄','file'],['📜','file'],['🧾','file'],['🖼','images'],['🖼️','images'],['📝','note'],['📎','attach'],['👤','person'],['👥','accounts'],['🛡','shield'],['🛡️','shield'],['📥','inbox'],['📤','send'],['📋','view'],['📰','mail'],['🧹','clean'],['🤖','writing'],['📭','mail'],['🔎','search'],['🔍','search'],['🔒','lock'],['🔓','lock'],['🗄','archive'],['🗄️','archive'],['🗑','trash'],['🗑️','trash'],['⚠','warning'],['⚠️','warning'],['✓','check'],['⊘','unavailable'],['◐','partial'],['○','pending'],['↗','external'],['↕','sort'],['↑','up'],['↓','download'],['✏','compose'],['✏️','compose'],['✎','compose'],['🔗','link'],['🌐','external'],['⚡','send']]);
+  for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
+  prefixKeys.set('★','star');
+  for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','brain'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock']])prefixKeys.set(prefix,key);
+  const prefixes=[...prefixKeys.keys()].sort((a,b)=>b.length-a.length);
+  function decorateKnownPrefix(node,preferred){
+    if(!node||node.querySelector(':scope>.compact-icon'))return;
+    const first=[...node.childNodes].find(part=>part.nodeType===Node.TEXT_NODE&&part.nodeValue.trim());
+    if(!first)return;
+    // Longest first handles optional variation selectors without hiding a
+    // second emoji that belongs to a user-supplied filename or folder name.
+    const found=prefixes.find(prefix=>first.nodeValue.trimStart().startsWith(prefix));
+    if(found)decorateInline(node,preferred||prefixKeys.get(found),'native-content-icon');
+  }
+  function decorateHeading(node,key){
+    if(!node)return;
+    // A heading has one dedicated glyph. Generic translated-label decoration
+    // must not add another one before or after a helper wraps the heading.
+    node.querySelectorAll(':scope>.native-content-icon').forEach(glyph=>glyph.remove());
+    [...node.querySelectorAll(':scope>.native-heading-icon')].slice(1).forEach(glyph=>glyph.remove());
+    decorateInline(node,key,'native-heading-icon');
   }
   // WebView does not reliably display the browser's title popup. Render our own,
   // shared by pointer hover and keyboard focus, outside clipped/scrolling panes.
@@ -210,9 +275,37 @@
       const key=button.dataset.liveText||button.dataset.mailText||button.dataset.sharedText||button.dataset.nativeSelection||button.dataset.nativeTool||(button.dataset.mailAi==='open'?'writing':'');
       if(key||button.tagName==='SUMMARY')decorate(button,keys[key]||key||'more');
     });
-    document.querySelectorAll('#mailWorkspace .mail-folder').forEach(button=>decorateInline(button,folderIcon(button),'native-folder-icon',Boolean(button.dataset.mailAll)||Object.hasOwn(folderIcons,button.dataset.mailFolder)));
-    decorateInline(document.querySelector('#panel-explorer>h2'),'folder','native-heading-icon');
-    decorateInline(document.querySelector('#panel-intake>h2'),'intake','native-heading-icon');
+    document.querySelectorAll('[data-pb-icon]').forEach(decorateSlot);
+    document.querySelectorAll('#mailWorkspace .mail-folder').forEach(button=>{
+      const label=button.querySelector(':scope>.native-mail-all-label');
+      if(label)decorateInline(label,folderIcon(button),'native-folder-icon');
+      else if(!button.querySelector(':scope>[data-pb-icon]'))decorateInline(button,folderIcon(button),'native-folder-icon',Boolean(button.dataset.mailAll)||Object.hasOwn(folderIcons,button.dataset.mailFolder));
+    });
+    // The icon and the subject share one line. Initials remain in a hidden
+    // fallback solely to preserve renderer equality checks and PWA behavior.
+    document.querySelectorAll('#mailWorkspace .mail-avatar').forEach(slot=>{
+      const key=slot.parentElement?.hasAttribute('data-mail-sender')?'person':'mail';
+      if(slot.dataset.pbIcon!==key){slot.dataset.pbIcon=key;slot.setAttribute('aria-hidden','true');}
+      decorateSlot(slot);
+    });
+    document.querySelectorAll('[data-pb-generated-prefix]').forEach(node=>decorateKnownPrefix(node,node.dataset.pbGeneratedPrefix));
+    decorateInline(document.getElementById('explorerOrder'),'sort','native-content-icon');
+    for(const node of document.querySelectorAll('#explorerTreeToggle,.explorer-collapse,.explorer-twisty,.explorer-dir-open')){
+      const key=node.id==='explorerTreeToggle'?'panel':node.classList.contains('explorer-collapse')?'collapse':node.classList.contains('explorer-twisty')?(node.getAttribute('aria-expanded')==='true'?'chevronDown':'chevronRight'):'chevronRight';
+      decorate(node,key,node.getAttribute('aria-label')||node.title);
+    }
+    for(const node of document.querySelectorAll('#explorerTree button.explorer-folder')){
+      const previous=node.querySelector(':scope>.native-folder-warning');
+      if(node.hasAttribute('data-found')){if(!previous){const glyph=icon('warning');glyph.classList.add('native-folder-warning');node.append(glyph);}}
+      else previous?.remove();
+    }
+    const fixedControls={pickFiles:'file',pickMail:'mail',pickDir:'folder',chooseLibrary:'folder',pauseLibrary:'close'};
+    for(const [id,key] of Object.entries(fixedControls))decorateInline(document.getElementById(id),key,'native-content-icon');
+    decorateHeading(document.querySelector('#panel-explorer>h2'),'folder');
+    decorateHeading(document.querySelector('#panel-intake>h2,#panel-intake>.pb-help-heading>h2'),'intake');
+    document.querySelectorAll('#results .fname,#results .origin,#results .relhead,#results .cardbtns button,#results .empty .big,#groups .ic,#searchInfo>b,.native-import-reassurance>.ic').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('[data-i18n],[data-ws],#panel-settings h3,#panel-order>h3,#pb-mail-all>.mail-head>.mail-primary').forEach(node=>decorateKnownPrefix(node));
+    document.querySelectorAll('.pb-check-all-button,.pb-check-badge,.pb-record-availability,.pb-check-find,.pb-check-summary,.pb-check-entrance-list li[data-check]>span,.pb-check-entrance .delBtn,.pb-schutz-mail>summary,.native-original-reconnect button,.native-vault-row>div>strong,.native-vault-attachment>span,.native-vault-head>span,.native-vault-clear,.native-vault-where button,#vault-lock,#vaultLine>span,#mailWorkspace [data-mail-all=list],#mailWorkspace [data-mail-all=senders],#mailWorkspace [data-mail-all=clean],#mailWorkspace [data-mail-all=order],#mailWorkspace [data-mail-mark],#mailWorkspace [data-mail-clean],#mailWorkspace .mail-undo>span').forEach(node=>decorateKnownPrefix(node));
     // Siegel (Modul 17) and Mycel (Modul 23-UI) float and snap to the header themselves (native-mycel.js).
     // One shared account/action row instead of a separate account row above the mailbox.
     const account=document.querySelector('.mail-account-bar'),head=document.querySelector('.live-mail>.mail-head');

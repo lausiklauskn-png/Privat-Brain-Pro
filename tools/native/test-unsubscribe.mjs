@@ -67,7 +67,7 @@ try{
   await mail.locator('[data-live-text=connect]').click();
   await page.waitForFunction(()=>document.querySelector('.live-mail [data-mail-all=open]'));
   await mail.locator('[data-mail-all=open]').click();
-  await panel.getByRole('button',{name:'📥 Alle Konten abrufen und einordnen'}).click();
+  await panel.getByRole('button',{name:'Alle Konten abrufen und einordnen'}).click();
   await page.waitForFunction(()=>!PBMailIndex.running()&&localStorage.getItem('pb_mail_index_last'));
   const calls=()=>page.evaluate(()=>window.mailCalls);
   ok('Fetching never unsubscribes, sends or opens anything by itself',!(await calls()).some(c=>['unsubscribe','send','openLink'].includes(c.method)));

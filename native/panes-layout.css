@@ -1,0 +1,39 @@
+/* Native splitters overlay the boundary; the existing panes keep their nodes. */
+.pb-pane-splitter { display:none; position:absolute; top:0; bottom:0; width:14px; margin-left:-7px; z-index:8; cursor:col-resize; touch-action:none; outline:none; }
+.pb-pane-splitter[hidden] { display:none!important; }
+.pb-pane-splitter::before { content:''; position:absolute; top:0; bottom:0; left:6px; width:1px; background:var(--line); }
+.pb-pane-splitter::after { content:''; position:absolute; top:calc(50% - 17px); left:4px; width:5px; height:34px; border-radius:4px; background:var(--mut); opacity:.45; }
+.pb-pane-splitter:hover::before,.pb-pane-splitter:focus-visible::before { width:2px; background:var(--acc); }
+.pb-pane-splitter:hover::after,.pb-pane-splitter:focus-visible::after { background:var(--acc); opacity:1; }
+.pb-pane-splitter:focus-visible { outline:2px solid var(--acc); outline-offset:-2px; border-radius:4px; }
+.pb-panes-active { position:relative; }
+.pb-panes-active>.pb-pane-splitter { display:block; }
+.pb-pane-drag-shield { position:fixed; inset:0; z-index:2147483646; cursor:col-resize; touch-action:none; }
+body.pb-panes-dragging,body.pb-panes-dragging * { user-select:none!important; cursor:col-resize!important; }
+@media(pointer:coarse) { .pb-pane-splitter { width:24px; margin-left:-12px; } .pb-pane-splitter::before { left:11px; } .pb-pane-splitter::after { left:9px; } }
+@media(min-width:651px) and (orientation:landscape) {
+  html[data-pb-theme] #panel-explorer:not(.explorer-tree-hidden) #explorerTree { display:block!important; }
+  html[data-pb-theme] #panel-explorer #explorerTreeToggle { display:inline-flex!important; }
+  html[data-pb-theme] #panel-explorer:not(.explorer-tree-hidden) .explorer-layout.pb-panes-active { grid-template-columns:var(--pb-pane-explorer,230px) minmax(0,1fr); gap:12px; }
+  html[data-pb-theme] .explorer-layout.pb-panes-active #explorerTree { min-width:0; border-right:0; }
+}
+@media(min-width:901px) and (orientation:landscape) {
+  html[data-pb-theme] #mailWorkspace .mail-layout.pb-panes-active { grid-template-columns:var(--pb-pane-folders,180px) var(--pb-pane-list,300px) minmax(0,1fr); }
+  html[data-pb-theme] #mailWorkspace .mail-layout.pb-panes-active>.mail-folders,
+  html[data-pb-theme] #mailWorkspace .mail-layout.pb-panes-active>.mail-list { min-width:0; border-right:0; }
+  html[data-pb-theme] #mailWorkspace .mail-layout.pb-panes-active>.mail-reader { grid-column:auto; border-top:0; min-width:0; }
+}
+/* A narrow window has one working pane, even when it is wider than it is tall. */
+@media(max-width:900px), (orientation:portrait) {
+  html[data-pb-theme] #mailWorkspace .mail-layout { display:flex; flex-direction:column; }
+  html[data-pb-theme] #mailWorkspace .mail-folders { flex:none; display:flex; align-items:center; gap:4px; max-height:48px; min-height:40px; padding:2px; border-right:0; overflow:auto; }
+  html[data-pb-theme] #mailWorkspace .mail-folder { flex:none; width:auto; white-space:nowrap; }
+  html[data-pb-theme] #mailWorkspace .mail-list { flex:1; border-right:0; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=list] .mail-reader { display:none; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-layout { display:block; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-reader { width:100%; height:100%; }
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-folders,
+  html[data-pb-theme] #mailWorkspace .mail-app[data-view=reader] .mail-list { display:none; }
+  html[data-pb-theme] #mailWorkspace .mail-back { display:inline-flex!important; }
+  #mailWorkspace .pb-pane-splitter { display:none!important; }
+}

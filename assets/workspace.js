@@ -149,6 +149,12 @@
     } catch (_) { toast(text('unavailable'),6000); }
   }
   function button(label, action) { const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent=label;b.onclick=action;return b; }
+  // Keep app decoration separate from names. Native Pro replaces only these
+  // explicit slots; the independent PWA keeps its original text fallback.
+  function iconText(target,key,glyph,label){
+    const slot=document.createElement('span');slot.className='workspace-icon';slot.dataset.pbIcon=key;slot.setAttribute('aria-hidden','true');slot.textContent=glyph;
+    target.replaceChildren(slot,document.createTextNode(' '+label));
+  }
   // Newest on top by default; ↕ turns any order around; the content switch also searches the file text.
   let explorerReverse=false;
   const orderBox=document.createElement('span');orderBox.className='explorer-order';
@@ -158,7 +164,7 @@
   const contentText=document.createElement('span');contentLabel.append(contentBox,contentText);orderBox.append(orderButton,contentLabel);
   el('explorerSort').after(orderBox);
   if(!el('explorerSort').dataset.chosen)el('explorerSort').value='date';
-  function orderLabel(){const k={name:'orderName',date:'orderDate',size:'orderSize'}[el('explorerSort').value]||'orderDate';orderButton.textContent=text(k+(explorerReverse?'R':''));orderButton.setAttribute('aria-pressed',String(explorerReverse));contentText.textContent=text('inContent');}
+  function orderLabel(){const k={name:'orderName',date:'orderDate',size:'orderSize'}[el('explorerSort').value]||'orderDate';orderButton.textContent=text(k+(explorerReverse?'R':''));orderButton.setAttribute('aria-pressed',String(explorerReverse));iconText(contentText,'search','🔎',text('inContent').replace(/^🔎\s*/,''));}
   orderButton.onclick=()=>{explorerReverse=!explorerReverse;renderExplorer();};
   contentBox.onchange=()=>renderExplorer();
   function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value,reverse:explorerReverse,content:contentBox.checked};}
@@ -185,6 +191,7 @@
   // What kind an entry is, so the explorer and the import note can say where a file is.
   const KINDS=[['mail','✉️'],['doc','📄'],['photo','🖼️'],['note','📝'],['attach','📎']];
   const kindIcon=k=>(KINDS.find(x=>x[0]===k)||KINDS[1])[1];
+  const kindKey=k=>({mail:'mail',doc:'file',photo:'images',note:'note',attach:'attach'}[k]||'file');
   const ATTACH_DIR='Mail-Anhang', MAIL_DIR='Mail';
   function attachSender(path){const p=String(path||'').split('/'),i=p.indexOf(ATTACH_DIR);return i>=0&&p.length>i+2?p[i+1]:'';}
   function kindOf(r,path){
@@ -222,7 +229,7 @@
       const c=counts.get(key);if(!c)continue;
       const line=document.createElement('p');line.dataset.kind=key;
       const label=document.createElement('span');
-      label.textContent=icon+' '+text('kind_'+key)+': '+(c.fresh+c.known)+(c.known?' ('+c.known+' '+text('doneKnown')+')':'');
+      iconText(label,kindKey(key),icon,text('kind_'+key)+': '+(c.fresh+c.known)+(c.known?' ('+c.known+' '+text('doneKnown')+')':''));
       const go=button('→ '+text('showIn'),()=>showKind(key));go.dataset.show=key;
       line.append(label,go);box.append(line);
     }
@@ -248,15 +255,15 @@
   function buildModel(all){
     const nodes=new Map(), shown=new Map();
     const node=(path,label,parent,extra)=>{let n=nodes.get(path);if(!n){n={path,label,parent,kids:[],files:[],vault:[],...(extra||{})};nodes.set(path,n);if(parent!=null)nodes.get(parent).kids.push(n);}return n;};
-    node('','📁 '+text('all'),null);
-    for(const [k,icon] of TOP)node('kind:'+k,icon+' '+text('kind_'+k),'',{kind:k});
+    node('','📁 '+text('all'),null,{iconKey:'folder',glyph:'📁'});
+    for(const [k,icon] of TOP)node('kind:'+k,icon+' '+text('kind_'+k),'',{kind:k,iconKey:kindKey(k),glyph:icon});
     const seen=new Set(),list=[];
     for(const e of all){if(seen.has(e.r.hash))continue;seen.add(e.r.hash);list.push(e);}
-    const senderNode=(key,label)=>{if(!shown.has(key))shown.set(key,label);return node('mail:'+key,'👤 '+(key?shown.get(key):text('unknownSender')),'kind:mail',{sender:key});};
+    const senderNode=(key,label)=>{if(!shown.has(key))shown.set(key,label);return node('mail:'+key,'👤 '+(key?shown.get(key):text('unknownSender')),'kind:mail',{sender:key,iconKey:'person',glyph:'👤'});};
     const mailsOf=new Map(), mailByHash=new Map();
     for(const e of list){if(!e.r.mail)continue;const seg=e.path.split('/')[1]||e.r.mail.from||'';const key=senderKey(seg);
       mailByHash.set(e.r.hash,{e,key});if(!mailsOf.has(key))mailsOf.set(key,[]);mailsOf.get(key).push(e);senderNode(key,tidy(String(seg).slice(0,40)));}
-    const mailNode=(m)=>node('msg:'+m.e.r.hash,'✉️ '+m.e.r.name,'mail:'+m.key,{mail:m.e});
+    const mailNode=(m)=>node('msg:'+m.e.r.hash,'✉️ '+m.e.r.name,'mail:'+m.key,{mail:m.e,iconKey:'mail',glyph:'✉️'});
     const attachTo=new Map();
     for(const e of list){
       const kind=kindOf(e.r,e.path);
@@ -266,10 +273,10 @@
         let m=e.r.fromMail&&mailByHash.get(e.r.fromMail);
         if(!m&&(mailsOf.get(key)||[]).length===1)m=mailByHash.get(mailsOf.get(key)[0].r.hash);
         if(m){mailNode(m).files.push(e);continue;}
-        senderNode(key,tidy(seg));node('loose:'+key,'📎 '+text('looseAttach'),'mail:'+key,{loose:true}).files.push(e);continue;
+        senderNode(key,tidy(seg));node('loose:'+key,'📎 '+text('looseAttach'),'mail:'+key,{loose:true,iconKey:'attach',glyph:'📎'}).files.push(e);continue;
       }
       const dir=e.path.split('/').slice(0,-1);let parent='kind:'+kind;
-      for(let i=0;i<dir.length;i++){const p='dir:'+kind+':'+dir.slice(0,i+1).join('/');node(p,'📁 '+dir[i],parent,{dir:true});parent=p;}
+      for(let i=0;i<dir.length;i++){const p='dir:'+kind+':'+dir.slice(0,i+1).join('/');node(p,'📁 '+dir[i],parent,{dir:true,iconKey:'folder',glyph:'📁'});parent=p;}
       nodes.get(parent).files.push(e);
     }
     // Attachments kept in the storage folder from mails opened in the mailbox (native/native-vault.js).
@@ -278,7 +285,7 @@
       const key=senderKey(String(v.from||'').replace(/[<>\/]/g,' ').trim());
       senderNode(key,tidy(String(v.from||'').slice(0,40)));
       const match=(mailsOf.get(key)||[]).find(e=>(e.r.mail.subject||e.r.name)===v.subject);
-      const n=match?mailNode(mailByHash.get(match.r.hash)):node('pmsg:'+key+'|'+(v.subject||''),'✉️ '+(v.subject||text('noSubject')),'mail:'+key,{postbox:true});
+      const n=match?mailNode(mailByHash.get(match.r.hash)):node('pmsg:'+key+'|'+(v.subject||''),'✉️ '+(v.subject||text('noSubject')),'mail:'+key,{postbox:true,iconKey:'mail',glyph:'✉️'});
       n.vault.push(v);
     }
     for(const [key,ms] of mailsOf)for(const e of ms){const n=nodes.get('msg:'+e.r.hash);if(n)n.files.unshift(e);else nodes.get('mail:'+key).files.push(e);}
@@ -318,14 +325,17 @@
     return '';
   }
   function chain(nodes,path){const out=[];for(let n=nodes.get(path);n;n=n.parent==null?null:nodes.get(n.parent))out.unshift(n);return out;}
+  function nodeLabel(target,n,suffix=''){
+    const prefix=n.glyph+' ',label=n.label.startsWith(prefix)?n.label.slice(prefix.length):n.label;
+    iconText(target,n.iconKey||'folder',n.glyph||'📁',label+suffix);
+  }
   function crumbs(nodes,path){
     const box=el('explorerPath');box.replaceChildren();
     const parts=chain(nodes,path);
     parts.forEach((n,i)=>{
       if(i){const s=document.createElement('span');s.className='explorer-crumb-sep';s.textContent=' › ';box.append(s);}
-      const label=i?n.label:'📁 '+text('all');
-      if(i===parts.length-1){const s=document.createElement('span');s.className='explorer-crumb-here';s.textContent=label;box.append(s);}
-      else{const b=button(label,()=>openFolder(n.path));b.className='ghost explorer-crumb';box.append(b);}
+      if(i===parts.length-1){const s=document.createElement('span');s.className='explorer-crumb-here';nodeLabel(s,n);box.append(s);}
+      else{const b=button('',()=>openFolder(n.path));nodeLabel(b,n);b.className='ghost explorer-crumb';box.append(b);}
     });
   }
   function treeView(nodes,tree){
@@ -339,7 +349,7 @@
       if(n.kids.length){const tw=button(isOpen?'▾':'▸',()=>{isOpen?openNodes.delete(n.path):openNodes.add(n.path);saveOpen();renderExplorer();});
         tw.className='ghost explorer-twisty';tw.dataset.toggle=n.path;tw.setAttribute('aria-expanded',String(isOpen));tw.title=tw.ariaLabel=text(isOpen?'collapse':'expand');row.append(tw);}
       else{const sp=document.createElement('span');sp.className='explorer-twisty-space';row.append(sp);}
-      const b=button(n.path?n.label+' ('+n.tally.n+')':n.label,()=>{openNodes.add(n.path);saveOpen();openFolder(n.path);});
+      const b=button('',()=>{openNodes.add(n.path);saveOpen();openFolder(n.path);});nodeLabel(b,n,n.path?' ('+n.tally.n+')':'');
       b.dataset.path=n.path;b.classList.add('explorer-folder');if(n.kind)b.dataset.kind=n.kind;
       if(n.tally.found)b.dataset.found=String(n.tally.found);
       b.setAttribute('aria-current',n.path===folderPath?'location':'false');b.title=tallyText(n.tally);
@@ -360,7 +370,7 @@
   function folderRow(n){
     const row=document.createElement('article');row.className='explorer-dir';row.dataset.path=n.path;if(n.tally.found)row.dataset.found='1';
     const info=document.createElement('div'),name=document.createElement('strong'),meta=document.createElement('div');
-    name.textContent=n.label;meta.className='explorer-meta';meta.textContent=tallyText(n.tally);
+    nodeLabel(name,n);meta.className='explorer-meta';meta.textContent=tallyText(n.tally);
     info.append(name,meta);
     const go=button('›',()=>{openNodes.add(n.path);saveOpen();openFolder(n.path);});go.className='ghost explorer-dir-open';go.title=go.ariaLabel=text('openFolder');
     row.append(info,go);row.onclick=ev=>{if(ev.target===row||info.contains(ev.target))go.click();};
@@ -370,7 +380,7 @@
     const row=document.createElement('article');row.className='explorer-row';row.dataset.hash=e.r.hash;
     const info=document.createElement('div'), name=document.createElement('strong'), meta=document.createElement('div');
     const kind=kindOf(e.r,e.path),sender=kind==='attach'?attachSender(e.path):'';row.dataset.kind=kind;
-    name.textContent=kindIcon(kind)+' '+(e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
+    iconText(name,kindKey(kind),kindIcon(kind),e.dirId && !e.r.mail?e.path.split('/').pop():e.r.name);meta.className='explorer-meta';
     const date=e.r.date?new Date(e.r.date).toLocaleDateString(document.documentElement.lang):'';
     const where=window.PBRecordStatus?'':window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog');
     const from=kind==='attach'?'📎 '+text('fromMail')+' '+senderLabel(sender).slice(3):kind==='mail'?text('from')+' '+tidy(e.r.mail?.from||e.path.split('/')[1]||'?'):'';
@@ -431,7 +441,7 @@
     el('pauseLibrary').disabled=!library || signing;
     el('pickDir').textContent=text(library?'copyFolder':'linkFolder');
     el('pickDir').title=text(library?'copyFolder':'linkFolder');
-    el('libraryStatus').textContent=library?text('active')+': '+library.name:window.showDirectoryPicker?text('noFolder'):text('unsupported');
+    if(!window.PBFolders)el('libraryStatus').textContent=library?text('active')+': '+library.name:window.showDirectoryPicker?text('noFolder'):text('unsupported');
     el('searchMailCount').textContent=CATALOG.filter(r=>r.mail).length+' '+text('emails');
     el('searchDocCount').textContent=CATALOG.filter(r=>!r.mail).length+' '+text('documents');
     el('searchLocalCount').textContent=entries().filter(e=>e.dirId || SESSION_FILES.has(e.r.hash) || window.PBOriginals?.stored.has(e.r.hash)).length+' '+text('stored');

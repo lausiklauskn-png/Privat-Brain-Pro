@@ -84,4 +84,6 @@ if len(semantic)!=1:raise SystemExit('Expected exactly one executed meaning-mode
 for name in ('selectedPublicModelTranslatesBelowOriginalWithoutNetworkOrAiKey', 'staleCompletionAndDownloadCannotClearTheInferenceCrashGuard'):
     matching=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeTranslationTest' and case.get('name')==name]
     if len(matching)!=1:raise SystemExit(f'Expected exactly one executed native local translation test: {name}')
+handoff=[case for case in cases if case.get('classname')=='de.familyprojekt.privatebrain.pro.NativeFileHandoffTest' and case.get('name')=='shareBypassesBusyPdfQueueAndStillRejectsChangedOriginalBytes']
+if len(handoff)!=1:raise SystemExit('Expected exactly one executed independent share-queue and original-integrity test')
 print(f'Android startup and mail tests passed; {len(cases)} test case(s), no failures/skips.')

@@ -1,0 +1,21 @@
+/* All movement is compositor-friendly transform/opacity; no JS animation loop. */
+.pb-activity { display:flex; align-items:center; gap:8px; flex:none; padding:7px 10px; margin:0 0 5px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font-size:.82rem; min-width:0; }
+.pb-activity[hidden],.pb-progress-busy[hidden] { display:none!important; }
+.pb-activity-text { overflow-wrap:anywhere; min-width:0; }
+.native-file-head>.pb-activity { flex-basis:100%; margin:0; }
+.pb-activity-dots { display:inline-block; width:18px; height:18px; position:relative; flex:none; color:var(--acc,currentColor); will-change:transform; animation:pb-activity-turn 1.1s linear infinite; }
+.pb-activity-dots>i { display:block; position:absolute; width:4px; height:4px; border-radius:50%; background:currentColor; }
+.pb-activity-dots>i:nth-child(1) { left:7px; top:1px; }
+.pb-activity-dots>i:nth-child(2) { left:13px; top:11px; opacity:.72; }
+.pb-activity-dots>i:nth-child(3) { left:1px; top:11px; opacity:.45; }
+.pb-activity-target { position:relative; }
+.pb-activity-target:is(button,a,[role=button]) { padding-inline-end:31px!important; }
+.pb-activity-target:is(button,a,[role=button])::after { content:""; position:absolute; inset-inline-end:7px; top:calc(50% - 7px); width:14px; height:14px; border-radius:50%; background:radial-gradient(circle at 50% 14%,currentColor 0 12%,transparent 14%),radial-gradient(circle at 82% 78%,currentColor 0 12%,transparent 14%),radial-gradient(circle at 18% 78%,currentColor 0 12%,transparent 14%); animation:pb-activity-turn 1.1s linear infinite; }
+.pb-progress-busy { display:inline-flex; align-items:center; margin:0 6px 0 0; vertical-align:middle; }
+#prog.pb-dot-progress>.bar,#capProgWrap.pb-dot-progress>.capbar,#pb-semantic.pb-dot-progress>.pb-semantic-bar { display:none!important; }
+#capProgWrap.pb-dot-progress { padding:7px 10px; }
+#capProgWrap.pb-dot-progress>#capProgText { display:inline; margin:0; }
+#prog.pb-dot-progress>.line { display:flex; }
+.pb-mail-translation>.pb-progress-busy { float:inline-end; }
+@keyframes pb-activity-turn { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .pb-activity-dots,.pb-activity-target::after { animation:none!important; } }

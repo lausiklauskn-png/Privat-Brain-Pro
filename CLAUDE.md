@@ -1,5 +1,13 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**.32 in Arbeit:** Konsequent sichtbare SVG-Liniensymbole auch im Explorer,
+Mailicon in der Titelzeile, verschiebbare Datei-/Mailbereiche, einklappbare
+Info-Erklärungen und sofort drehende Wartepunkte. Klaus meldet 10–30 Sekunden
+beim Teilen auf dem Tab S6; unnötige PDF-Bridgekopien und die gemeinsame native
+PDF-/Teilen-Warteschlange werden gezielt korrigiert. [Umfang und Nachweise](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
+Keine echte Tab-S6-/DeX-Messung behaupten. Freibrief gilt für Prüfung, Merge und
+signiertes Update .31 → .32. Bis zum abgeschlossenen Release bleibt .31 aktuell.
+
 **Android .31 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk),
 Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, Release `40107514450` vollständig grün.
 Signiertes Update .30 → .31, echte automatische Offlineübersetzung und 54 native

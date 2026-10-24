@@ -1,5 +1,17 @@
 # Private Brain Pro — laufender Auftrag
 
+- Fortsetzung für Android .32 (24.10.2026): Klaus zeigt .31 auf Samsung DeX.
+  Verbliebene System-Emojis durch konsequente Liniensymbole ersetzen, Mailicon
+  neben Titel/Betreff statt eigener Zeile. Datei-/Mailbereiche per Maus/Touch
+  und Tastatur verstellbar, Breiten merken, kleine Fenster einspaltig halten.
+  Lange Erklärungen hinter Info-Buttons; Fortschritt und Fehler offen lassen.
+  Auf langsame Reaktion besonders beim Teilen mit sofortigen drehenden Punkten
+  und tatsächlicher Optimierung reagieren. Keine Tab-S6-Zeitmessung behaupten.
+  Native Originalintegrität/Readonly-Provider bleiben Pflicht. [Umfang und Stand](docs/design/umbau-2026-10-24/NACHBESSERUNGEN-32.md).
+  .32 ist in Arbeit; .31 bleibt bis zum geprüften Release der aktuelle Download.
+  Freibrief gilt weiterhin: vollständige Prüfungen, Übernahme und signiertes
+  Update .31 → .32 eigenständig abschließen; keine neue Freigabe verlangen.
+
 - Android .31 ist veröffentlicht: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk), VersionCode 31,
   Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, übernommener PR #77.
   Main Android `40106803209`, Windows `40106803287`, Signierung `40106803132`

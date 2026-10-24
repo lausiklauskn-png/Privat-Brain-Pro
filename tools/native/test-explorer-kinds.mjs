@@ -97,6 +97,49 @@ try{
   await page.waitForFunction(()=>document.querySelector('#explorerTree [data-kind="mail"]')?.textContent==='✉️ Emails (6)');
   await page.locator('#explorerHome').click();
   ok('The tree follows the app language',(await node('').textContent())==='📁 All files'&&(await dirs.first().locator('.explorer-meta').textContent()).includes('files'));
+  await page.waitForFunction(()=>document.querySelector('#explorerTree [data-pb-icon=person] > svg[data-icon-key=person]'));
+  ok('Folder, email and sender decorations use the shared SVG line set',await tree.locator('[data-pb-icon=folder]>svg[data-icon-key=folder]').count()>0&&await tree.locator('[data-pb-icon=mail]>svg[data-icon-key=mail]').count()>0&&await tree.locator('[data-pb-icon=person]>svg[data-icon-key=person]').count()>0);
+  ok('App emoji fallbacks in the tree and breadcrumb are hidden from rendering and accessibility',await page.locator('#explorerTree [data-pb-icon],#explorerPath [data-pb-icon]').evaluateAll(slots=>slots.every(slot=>{const fallback=slot.querySelector('.pb-icon-fallback'),svg=slot.querySelector('svg');return fallback?.hidden&&getComputedStyle(fallback).display==='none'&&svg?.getAttribute('aria-hidden')==='true';})));
+  ok('The visible tree no longer mixes colored app glyphs with line icons',!/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(await tree.innerText()));
+  ok('Content-search and check-status controls have line icons without duplicate captions',await page.locator('.explorer-content [data-pb-icon=search]>svg').count()===1&&(await page.locator('#explorerOrder').innerText()).trim()==='Newest first'&&await page.locator('.explorer-toolbar .pb-check-all-button>svg[data-icon-key=shield]').count()===1);
+  await page.evaluate(async()=>{
+    const add=async(name,path,extra={})=>{const toks=tokens(name);const r={hash:await sha256(new TextEncoder().encode(path).buffer),name,path,type:'',ext:name.split('.').pop(),date:Date.now(),size:1000,snippet:'',via:'icon-test',vector:buildVector(toks),tf:termFreq(toks),summary:'',category:'',dirId:null,nameTokens:tokens(name),dupes:[],tags:[],...extra};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);return r;};
+    const unusual=await add('👤 Keep this name.weird','📁 Personal/👤 Keep this name.weird',{pruefung:{funde:[{k:'READER_INSTRUCTION'}],ungeprueft:false,zeit:Date.now()}});
+    const mail=await add('✉️ Keep this subject','Mail/Person/✉️ Keep this subject',{mail:{from:'person@example.invalid',subject:'✉️ Keep this subject'},mailBody:'Only a synthetic message.',mailStar:true});
+    window.iconTestHashes={file:unusual.hash,mail:mail.hash};rebuildIndex();refreshAll();PBWorkspace.restoreExplorer({path:'dir:doc:📁 Personal'});
+  });
+  await page.waitForFunction(()=>document.querySelector('#explorerFiles .explorer-row strong .workspace-icon>svg'));
+  const unusual=page.locator('#explorerFiles .explorer-row').filter({hasText:'Keep this name.weird'}),ownFolder=node('dir:doc:📁 Personal');
+  ok('An unknown file gets a neutral document SVG while its own leading emoji stays unchanged',(await unusual.locator('strong').innerText()).trim()==='👤 Keep this name.weird'&&await unusual.locator('strong [data-pb-icon=file]>svg').count()===1);
+  ok('Only the generated folder decoration is replaced; a user folder keeps its own leading emoji',(await ownFolder.innerText()).trim()==='📁 Personal (1)');
+  ok('Tree warnings use an actual line SVG and retain the finding count in the accessible description',await ownFolder.evaluate(b=>Boolean(b.querySelector(':scope>.native-folder-warning[data-icon-key=warning]'))&&getComputedStyle(b,'::after').content==='none'&&b.title.includes('1 with a finding')));
+  await page.locator('[data-tab="mail"]').click();
+  const mailRow=page.locator('[data-mail-id]').filter({hasText:'Keep this subject'});
+  await mailRow.locator('.mail-avatar>svg[data-icon-key=mail]').waitFor();
+  ok('A generated star uses SVG while the original email subject retains its own emoji',(await mailRow.locator('.mail-subject').innerText()).trim()==='✉️ Keep this subject'&&await mailRow.locator('.mail-subject>svg[data-icon-key=star]').count()===1);
+  for(const[width,height]of [[320,740],[800,1280],[1280,800],[2560,1440]]){
+    await page.setViewportSize({width,height});
+    ok(`${width}px: email line icon shares the subject row and does not consume its own line`,await mailRow.evaluate(button=>{const icon=button.querySelector('.mail-avatar'),subject=button.querySelector('.mail-subject'),a=icon.getBoundingClientRect(),b=subject.getBoundingClientRect();return a.width>0&&a.height>0&&Math.abs(a.top+a.height/2-b.top-b.height/2)<3&&a.right<=b.left+1&&getComputedStyle(icon).backgroundColor==='rgba(0, 0, 0, 0)';}));
+    ok(`${width}px: mail icons do not introduce horizontal page overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  }
+  await page.setViewportSize({width:1280,height:900});
+  await page.locator('[data-tab="explorer"]').click();
+  const beforeIconState=await page.evaluate(()=>({catalog:JSON.stringify(CATALOG),path:PBWorkspace.explorerState?.()?.path||'',icons:document.querySelectorAll('#explorerTree svg').length}));
+  for(const lang of ['ru','pl','de','en'])await page.evaluate(lang=>{document.documentElement.lang=lang;},lang);
+  await page.waitForFunction(()=>document.querySelector('#explorerTree [data-pb-icon=person]>svg[data-icon-key=person]'));
+  ok('Locale changes preserve catalog content and keep one SVG per explicit icon slot',await page.evaluate(before=>JSON.stringify(CATALOG)===before.catalog&&[...document.querySelectorAll('[data-pb-icon]')].every(slot=>slot.querySelectorAll(':scope>svg').length===1),beforeIconState));
+  for(const [view,key]of [['explorer','folder'],['intake','intake']]){
+    await page.locator(`[data-tab=${view}]`).click();
+    const selector=view==='explorer'?'#panel-explorer>h2':'#panel-intake>.pb-help-heading>h2,#panel-intake>h2',heading=page.locator(selector);
+    const originalHeading=await heading.textContent();
+    for(const lang of ['de','en'])await page.evaluate(lang=>{document.documentElement.lang=lang;PBWorkspace.refresh();},lang);
+    await page.waitForFunction(({selector,key})=>{const heading=document.querySelector(selector);return heading?.querySelectorAll(':scope>svg').length===1&&heading.querySelector(':scope>svg')?.dataset.iconKey===key;},{selector,key});
+    ok(`${view}: exactly one heading icon survives help wrapping, translation and redraw without changing its title`,await heading.evaluate((heading,original)=>heading.textContent===original&&heading.querySelectorAll(':scope>svg').length===1&&(!heading.parentElement.classList.contains('pb-help-heading')||heading.parentElement.querySelectorAll(':scope>.pb-help-toggle>svg').length===1),originalHeading));
+  }
+  await page.evaluate(()=>{const sample=PBSchutz.mailPanel({from:'person@example.invalid',subject:'Synthetic mail',text:'A synthetic message for local protection display.',attachments:[]});sample.id='icon-protection-sample';document.body.append(sample);});
+  const protection=page.locator('#icon-protection-sample>summary');
+  await protection.locator(':scope>svg[data-icon-key=shield]').waitFor();
+  ok('The real mail-protection summary uses one line shield while preserving its status text',await protection.evaluate(summary=>summary.querySelectorAll(':scope>svg').length===1&&/^🛡/u.test(summary.textContent)&&!/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(summary.innerText)&&summary.innerText.includes('Protection')));
   ok('No runtime errors',errors.length===0||console.log(errors));
   console.log(`${count} explorer kind checks passed (seeded catalog, one real import).`);
 }finally{await browser?.close();server.close();}

@@ -1,0 +1,19 @@
+/* Native Pro content uses the same offline SVG stroke set as its toolbar.
+   Original glyph text remains hidden for existing renderer comparisons only. */
+html[data-pb-theme] .pb-icon-fallback { display:none!important; }
+html[data-pb-theme] .pb-content-icon { display:inline-flex; width:18px; height:18px; vertical-align:-3px; flex:none; align-items:center; justify-content:center; }
+html[data-pb-theme] .pb-content-icon>.compact-icon { width:18px; height:18px; }
+html[data-pb-theme] .native-content-icon { width:18px; height:18px; vertical-align:-3px; margin-right:5px; }
+html[data-pb-theme] .native-mail-all-label>.native-folder-icon { vertical-align:-3px; margin-right:4px; }
+html[data-pb-theme] #explorerTree button.explorer-folder[data-found]::after { content:none; }
+html[data-pb-theme] .native-folder-warning { width:14px; height:14px; color:var(--bad); vertical-align:-2px; margin-left:5px; }
+html[data-pb-theme] .explorer-content>span { display:inline-flex; align-items:center; gap:4px; }
+html[data-pb-theme] #groups .ic>.native-content-icon { width:24px; height:24px; margin-right:0; }
+html[data-pb-theme] #results .empty .big>.native-content-icon { width:36px; height:36px; margin-right:0; }
+/* An envelope/avatar never consumes a separate mail row, including the live
+   and all-account layouts whose older rules used display:block. */
+html[data-pb-theme] #mailWorkspace .mail-item button { display:grid!important; grid-template-columns:18px minmax(0,1fr); column-gap:7px; row-gap:2px; align-items:center; }
+html[data-pb-theme] #mailWorkspace .mail-item .mail-avatar { display:inline-flex!important; grid-column:1; grid-row:1; width:18px; height:18px; padding:0; margin:0; border:0; border-radius:0; background:none; color:var(--mut); }
+html[data-pb-theme] #mailWorkspace .mail-item .mail-subject { display:block; grid-column:2; grid-row:1; min-width:0; max-width:100%; }
+html[data-pb-theme] #mailWorkspace .mail-item .mail-preview { grid-column:2; grid-row:2; min-width:0; }
+html[data-pb-theme] #mailWorkspace .mail-item .mail-date { grid-column:2; grid-row:3; min-width:0; }
