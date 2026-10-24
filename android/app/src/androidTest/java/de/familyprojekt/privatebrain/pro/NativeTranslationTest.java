@@ -31,10 +31,11 @@ public class NativeTranslationTest {
             String value = evaluate(scenario, script);
             if (value != null && !value.equals("null") && !value.equals("\"\"")) return value;
             String gone = context.getSharedPreferences("translation", Context.MODE_PRIVATE).getString("lastGone", "");
-            if (!gone.isEmpty()) fail("Translation renderer stopped: " + gone);
+            if (!gone.isEmpty()) fail("Translation renderer stopped: " + gone + "; local assets=" + TranslationAssets.diagnostics());
             Thread.sleep(1000);
         }
-        fail("Translation did not finish within " + seconds + " seconds");
+        String diagnostic = evaluate(scenario, "JSON.stringify({worker:window.PBTranslationDevice?.diagnostics?.(),models:window.__translationReaderTest?.models})");
+        fail("Translation did not finish within " + seconds + " seconds; diagnostic=" + diagnostic + "; local assets=" + TranslationAssets.diagnostics());
         return null;
     }
 
@@ -80,9 +81,15 @@ public class NativeTranslationTest {
         for (TranslationModels.Definition def : all.route("de", "en")) def.model.install((d, t, f, s) -> {});
         assertTrue(all.library.installed());
         assertTrue(all.route("de", "en").get(0).model.installed());
+        TranslationAssets.enableDiagnostics(true);
         AppNetwork.setOffline(context, true);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             await(scenario, "(window.PBMailTranslation&&window.PBTranslationDevice&&window.PBNetwork&&PBNetwork.ready)?'yes':''", 90, context);
+            scenario.onActivity(activity -> {
+                assertTrue("document network stays blocked", activity.getBridge().getWebView().getSettings().getBlockNetworkLoads());
+                assertTrue("worker network stays blocked", android.webkit.ServiceWorkerController.getInstance()
+                    .getServiceWorkerWebSettings().getBlockNetworkLoads());
+            });
             final String originalText = "Die Katze sitzt auf dem Tisch. Bitte prüfen Sie die Rechnung für unsere Besprechung. "
                 + "Wir werden die Unterlagen mit freundlichen Grüßen an Ihre Firma schicken.";
             try {
@@ -90,6 +97,11 @@ public class NativeTranslationTest {
                 // translation API is called by the test: opening the reader starts its real flow.
                 evaluate(scenario, "window.__localTranslation=null;(async()=>{try{"
                     + "const text=" + JSONObject.quote(originalText) + ";"
+                    + "const modelState=await PBTranslationDevice.status({source:'de',target:'en'});"
+                    + "const models={ready:modelState.ready,blocked:modelState.blocked,crashes:modelState.crashes,route:modelState.route?.map(leg=>leg.key),total:modelState.total,present:modelState.present};"
+                    + "const checked=await fetch(location.origin+'/pb-translation/models/Xenova/opus-mt-de-en/config.json');"
+                    + "if(checked.status!==200)throw Object.assign(new Error('Local model preflight'),{code:'LOCAL_MODEL_HTTP_'+checked.status});"
+                    + "const config=await checked.json();if(config.model_type!=='marian')throw Object.assign(new Error('Local model preflight'),{code:'LOCAL_MODEL_CONFIG'});"
                     + "const saved={language:localStorage.getItem('pb_mail_translation_language_v1'),route:localStorage.getItem('pb_mail_translation_route_v1'),ui:document.documentElement.lang};"
                     + "localStorage.setItem('pb_mail_translation_language_v1','en');localStorage.setItem('pb_mail_translation_route_v1','device');document.documentElement.lang='de';"
                     + "const host=document.createElement('section');host.id='native-translation-reader';host.style.cssText='position:fixed;inset:0;z-index:2147483647;display:block;overflow:auto;background:white;color:black;padding:16px';"
@@ -97,16 +109,16 @@ public class NativeTranslationTest {
                     + "const original=document.createElement('pre');original.className='mail-text';original.textContent=text;host.append(actions,original);document.body.append(host);"
                     + "const mounted=PBMailTranslation.mount({host,actions,source:async()=>({text})});"
                     + "if(!mounted)throw new Error('Real mail translation panel did not mount');"
-                    + "window.__translationReaderTest={host,original,panel:mounted.panel,saved};"
-                    + "}catch(e){window.__localTranslation=JSON.stringify({error:String(e&&e.message||e),code:e&&e.code});}})()");
+                    + "window.__translationReaderTest={host,original,panel:mounted.panel,saved,models};"
+                    + "}catch(e){window.__localTranslation=JSON.stringify({error:'Native reader setup failed',code:e&&e.code,diagnostics:window.PBTranslationDevice?.diagnostics?.()});}})()");
                 String raw = await(scenario, "window.__localTranslation||(()=>{const f=window.__translationReaderTest;if(!f)return '';"
                     + "const output=f.panel.querySelector('.pb-mail-translation-result'),result=f.panel.querySelector('[data-mail-translate=result]'),target=f.panel.querySelector('[data-mail-translate=target]');"
                     + "const status=f.panel.querySelector('[role=status]')?.textContent||'';"
-                    + "if(/konnte nicht|nicht verfügbar|angehalten|nicht sicher|fehlen noch/.test(status))return JSON.stringify({error:status});"
+                    + "if(/konnte nicht|nicht verfügbar|angehalten|nicht sicher|fehlen noch/.test(status))return JSON.stringify({error:status,diagnostics:PBTranslationDevice.diagnostics?.(),models:f.models});"
                     + "if(!output||output.hidden||!result?.textContent.trim()||target.disabled)return '';"
                     + "return JSON.stringify({text:result.textContent,original:f.original.textContent,below:f.original.nextElementSibling===f.panel,visible:!f.panel.hidden&&f.host.getClientRects().length>0,target:target.value,source:f.panel.querySelector('[data-mail-translate=source]').value,route:f.panel.querySelector('[data-mail-translate=route]').value,resultLanguage:result.lang,offline:PBNetwork.offline});})()", 360, context);
                 JSONObject result = new JSONObject(new JSONObject("{\"v\":" + raw + "}").getString("v"));
-                assertFalse("real reader/bridge/worker inference failed: " + result, result.has("error"));
+                assertFalse("real reader/bridge/worker inference failed: " + result + "; local assets=" + TranslationAssets.diagnostics(), result.has("error"));
                 assertTrue("reader translated automatically while offline", result.getBoolean("offline"));
                 assertEquals("original mail text is preserved exactly", originalText, result.getString("original"));
                 assertTrue("translation panel directly follows the original", result.getBoolean("below"));
@@ -123,6 +135,9 @@ public class NativeTranslationTest {
             } finally {
                 evaluate(scenario, "(()=>{const f=window.__translationReaderTest;if(!f)return;f.host.remove();for(const [key,value] of [['pb_mail_translation_language_v1',f.saved.language],['pb_mail_translation_route_v1',f.saved.route]]){if(value==null)localStorage.removeItem(key);else localStorage.setItem(key,value);}document.documentElement.lang=f.saved.ui;delete window.__translationReaderTest;})()");
             }
-        } finally { AppNetwork.setOffline(context, false); }
+        } finally {
+            TranslationAssets.enableDiagnostics(false);
+            AppNetwork.setOffline(context, false);
+        }
     }
 }

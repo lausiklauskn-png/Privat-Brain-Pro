@@ -98,7 +98,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   native-smoke:
-    needs: validate
+    # This job builds and tests its own checkout; run it independently so a
+    # WebView-only failure is visible while the browser regressions run.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

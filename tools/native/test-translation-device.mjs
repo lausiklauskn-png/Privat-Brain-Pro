@@ -17,13 +17,13 @@ export async function pipeline(task,model,options){
     self.postMessage({type:'fixture-call',model,text});
     if(text.includes('WORKER_WAIT'))await new Promise(()=>{});
     if(text.includes('NETWORK_ATTEMPT'))await fetch('https://forbidden.invalid/translate',{method:'POST',body:text});
-    if(text.includes('MODEL_FAIL'))throw new Error('synthetic failure');
+    if(text.includes('MODEL_FAIL'))throw new Error('synthetic failure: '+text);
     return[{translation_text:model.split('/').pop()+': '+text}];
   };
   run.tokenizer=text=>({input_ids:{dims:[1,Array.from(text).length+2]}});
   run.dispose=async()=>self.postMessage({type:'fixture-disposed',model});return run;
 }`;
-async function fixture(real=false){
+async function fixture(real=false,{libraryStatus=200}={}){
   const context=await browser.newContext(),page=await context.newPage(),requests=[],external=[],errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await context.route('**/*',async route=>{
@@ -31,7 +31,7 @@ async function fixture(real=false){
     if(!address.startsWith(origin)){external.push(address);return route.abort();}
     const path=new URL(address).pathname;
     if(path==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' \'unsafe-inline\' \'wasm-unsafe-eval\'; worker-src \'self\'; connect-src \'self\'"><script src="native-translation-device.js"></script>'});
-    if(path==='/pb-translation/lib/transformers.min.js'&&!real)return route.fulfill({contentType:'text/javascript',body:libraryFixture});
+    if(path==='/pb-translation/lib/transformers.min.js'&&!real)return route.fulfill({status:libraryStatus,contentType:'text/javascript',body:libraryStatus===200?libraryFixture:''});
     const local=path.startsWith('/pb-translation/')&&real?resolve(realRoot,'.'+path.slice('/pb-translation'.length)):resolve(root,'.'+path);
     if(!local.startsWith((path.startsWith('/pb-translation/')&&real?realRoot:root)+'/'))return route.abort();
     try{return route.fulfill({contentType:types[extname(local)]||'application/octet-stream',body:await readFile(local)});}catch{return route.fulfill({status:404,body:''});}
@@ -96,7 +96,11 @@ try{
   ok('A recorded model crash prevents automatic worker restart',await resultCode(page,{source:'de',target:'en',text})==='TRANSLATION_BLOCKED'&&await page.evaluate(()=>fixtureCreated)===modelsBefore);
   await page.evaluate(()=>PBTranslationDevice.clearCrash());
   ok('Only explicit recovery clears the crash guard',await page.evaluate(()=>!fixtureBlocked&&fixtureCalls.filter(call=>call.method==='clearCrash').length===1));
-  ok('An attempted remote translation request is blocked inside the worker',await resultCode(page,{source:'de',target:'en',text:'NETWORK_ATTEMPT private test text'})==='TRANSLATION_FAILED'&&external.length===0&&!requests.some(url=>url.includes('forbidden.invalid')));
+  ok('An attempted remote translation request is blocked inside the worker',await resultCode(page,{source:'de',target:'en',text:'NETWORK_ATTEMPT private test text'})==='TRANSLATION_NETWORK_BLOCKED'&&external.length===0&&!requests.some(url=>url.includes('forbidden.invalid')));
+  const privateFailure='MODEL_FAIL private synthetic mail content';
+  ok('Worker failures preserve a fixed phase-specific code',await resultCode(page,{source:'de',target:'en',text:privateFailure})==='TRANSLATION_INFERENCE_FAILED');
+  const failureDiagnostic=await page.evaluate(()=>PBTranslationDevice.diagnostics());
+  ok('Diagnostics expose the failure stage without leaking library exception text',failureDiagnostic.code==='TRANSLATION_INFERENCE_FAILED'&&failureDiagnostic.stage==='inference'&&failureDiagnostic.reason==='unknown'&&!JSON.stringify(failureDiagnostic).includes(privateFailure));
   await page.evaluate(()=>{window.fixturePending=PBTranslationDevice.translate({source:'de',target:'en',text:'WORKER_WAIT local text'}).then(()=> 'unexpected-success',error=>error.code);});
   await page.waitForFunction(()=>fixtureWorkerEvents.some(event=>event.type==='fixture-call'&&event.text.includes('WORKER_WAIT')));
   await page.evaluate(()=>PBTranslationDevice.cancel());
@@ -104,6 +108,11 @@ try{
   await page.waitForFunction(()=>fixtureCalls.some(call=>call.method==='markFinished'&&call.args.failed===false&&call.args.id===fixtureCalls.filter(call=>call.method==='markLoading').at(-1).args.id));
   ok('Deliberate cancellation does not record a model crash',await page.evaluate(()=>fixtureCalls.filter(call=>call.method==='markFinished').at(-1).args.failed===false));
   ok('Bridge and actual worker paths raise no unhandled app errors or external requests',errors.length===0&&external.length===0);
+  await context.close();
+  ({context,page}=await fixture(false,{libraryStatus:404}));
+  await page.evaluate(()=>{fixtureReady=true;});
+  ok('A missing local runtime is distinguished from an inference failure',await resultCode(page,{source:'de',target:'en',text:'Local runtime failure fixture.'})==='TRANSLATION_LIBRARY_FAILED');
+  ok('Progress before import preserves the WebView runtime-loading failure stage',await page.evaluate(()=>PBTranslationDevice.diagnostics().stage==='library'));
   await context.close();
   if(realRoot){
     const manifest=JSON.parse(await readFile('tools/native/translation-models.json','utf8'));

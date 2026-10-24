@@ -16,6 +16,8 @@ Die Nachricht bleibt unverändert. Eine Übersetzung wird unter dem Original ang
 
 Die native Android-Brücke heißt `ProTranslation`; die JavaScript-Schnittstelle heißt `PBTranslationDevice`. `status`, `download`, `translate`, `identify` und `cancel` bilden den öffentlichen Vertrag. Unter Windows wird keine lokale Fähigkeit vorgetäuscht, wenn kein entsprechender Backend vorhanden ist. Dort bleibt die bereits vorhandene, ausdrücklich gewählte Cloud-Übersetzung mit Anonymisierung nutzbar.
 
+Android-WebView leitet auch Unterressourcen eines Dedicated Worker über den `ServiceWorkerClient` weiter. Der Standardclient von Capacitor kennt nur die APK-Dateien; ausschließlich im `WebViewClient` bereitgestellte, nachgeladene Modelle erreicht der Worker dadurch nicht. Beide Clients verwenden deshalb denselben lokalen Dateifilter und dieselbe App-Internetsperre. Für andere Dateien bleibt Capacitors lokaler Server zuständig. Die getrennten WebView- und Worker-Einstellungen zum Blockieren von Netzwerkzugriffen folgen weiterhin demselben Internetschalter. Dieser Plattformbefund erklärt den ersten fehlgeschlagenen Android-Inferenzlauf; der korrigierte Pfad muss durch einen neuen tatsächlichen Emulatorlauf bestätigt werden.
+
 ## Warum kein Google-ML-Kit-Download
 
 ML Kit bietet kompakte Offline-Übersetzung, aber sein öffentlicher `RemoteModelManager` bietet keinen Abbruch eines laufenden Modell-Downloads. SDK-eigene Verbindungen könnten den appweiten Internetschalter umgehen. Der app-eigene Downloader erhält die bestehende Abbruchgarantie. Das ist eine technische Entscheidung für diesen App-Vertrag.

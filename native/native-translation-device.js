@@ -14,7 +14,30 @@
     'pl-en':{key:'pl-en',source:'pl',target:'en',id:'Xenova/opus-mt-pl-en',prefix:''},
     'en-pl':{key:'en-pl',source:'en',target:'pl',id:'Xenova/opus-mt-en-mul',prefix:'>>pol<< '}
   });
-  const error = code => Object.assign(new Error(code),{code});
+  const stages = new Set(['idle','status','marker','worker','validate','library','environment','model','tokenize','inference','dispose','complete','cancel']);
+  const reasons = new Set(['memory','policy','fetch','wasm','backend','missing','unknown']);
+  const codes = new Set(['TRANSLATION_UNSUPPORTED','TRANSLATION_BAD_TEXT','TRANSLATION_ROUTE_MISMATCH','TRANSLATION_CANCELLED',
+    'TRANSLATION_TIMEOUT','TRANSLATION_BAD_RESULT','TRANSLATION_FAILED','TRANSLATION_WORKER_FAILED','TRANSLATION_WORKER_START_FAILED',
+    'TRANSLATION_BLOCKED','TRANSLATION_MODELS_MISSING','TRANSLATION_BAD_INPUT','TRANSLATION_BAD_ORIGIN','TRANSLATION_LIBRARY_FAILED',
+    'TRANSLATION_ENVIRONMENT_FAILED','TRANSLATION_MODEL_FAILED','TRANSLATION_TOKENIZER_FAILED','TRANSLATION_INFERENCE_FAILED',
+    'TRANSLATION_DISPOSE_FAILED','TRANSLATION_NETWORK_BLOCKED','TRANSLATION_ASSET_FETCH_FAILED','TRANSLATION_OUTPUT_LIMIT',
+    'TRANSLATION_INPUT_LIMIT','TRANSLATION_NATIVE_FAILED','MODEL_BLOCKED','MODEL_STORAGE','MODEL_BUSY','APP_OFFLINE']);
+  const assets = new Set(['lib/transformers.min.js','lib/ort-wasm-simd.wasm','lib/ort-wasm.wasm']);
+  for (const model of Object.values(models)) for (const file of ['config.json','tokenizer.json','tokenizer_config.json',
+    'generation_config.json','special_tokens_map.json','onnx/encoder_model_quantized.onnx','onnx/decoder_model_merged_quantized.onnx']) assets.add('models/'+model.id+'/'+file);
+  function safeDetails(value={}) {
+    const result = {};
+    if(stages.has(value.stage))result.stage=value.stage;
+    if(reasons.has(value.reason))result.reason=value.reason;
+    if(assets.has(value.asset))result.asset=value.asset;
+    if(Number.isInteger(value.httpStatus)&&value.httpStatus>=0&&value.httpStatus<=599)result.httpStatus=value.httpStatus;
+    return result;
+  }
+  let diagnostic = Object.freeze({code:'',stage:'idle'});
+  function record(value={}) {
+    diagnostic = Object.freeze({code:codes.has(value.code)?value.code:'',...safeDetails(value)});
+  }
+  const error = (code,details={}) => Object.assign(new Error(code),{code,...safeDetails(details)});
   function pair(args) {
     const source = args?.source, target = args?.target;
     if (!supported.includes(source) || !supported.includes(target)) throw error('TRANSLATION_UNSUPPORTED');
@@ -76,20 +99,24 @@
   }
   function runLeg(text,leg,id,generation) {
     return new Promise((resolve,reject)=>{
-      const worker = new Worker(new URL('translation-worker.js',document.baseURI),{type:'module'});
+      record({stage:'worker'});
+      let worker;
+      try {worker = new Worker(new URL('translation-worker.js',document.baseURI),{type:'module'});}
+      catch {const failure=error('TRANSLATION_WORKER_START_FAILED',{stage:'worker'});record(failure);reject(failure);return;}
       const done = (failure,value) => {
         clearTimeout(job.timer);worker.terminate();if(active===job)active=null;
-        if(failure)reject(failure);else resolve(value);
+        if(failure){record({...diagnostic,...failure});reject(failure);}else resolve(value);
       };
       const job = {worker,reject,timer:setTimeout(()=>done(error('TRANSLATION_TIMEOUT')),300000)};
       active = job;
       worker.onmessage = event => {
         const value = event.data;
         if (!value || value.id !== id || generation !== sequence) return;
-        if (value.type === 'result') {
+        if (value.type === 'progress') record(value);
+        else if (value.type === 'result') {
           if (typeof value.text !== 'string' || !value.text.trim() || value.text.length > MAX_TEXT*4) done(error('TRANSLATION_BAD_RESULT'));
           else done(null,value.text);
-        } else if (value.type === 'error') done(error(value.code === 'TRANSLATION_OUTPUT_LIMIT' ? value.code : 'TRANSLATION_FAILED'));
+        } else if (value.type === 'error') done(error(codes.has(value.code) ? value.code : 'TRANSLATION_FAILED',value));
       };
       worker.onerror = event => {event.preventDefault?.();done(error('TRANSLATION_WORKER_FAILED'));};
       worker.onmessageerror = () => done(error('TRANSLATION_BAD_RESULT'));
@@ -99,6 +126,7 @@
   async function translate(args) {
     const selected = pair(args); let text = textOf(args?.text);
     const generation = ++sequence; stopWorker();
+    record({stage:'status'});
     if (selected.source === selected.target) return {text,...selected};
     const state = await status(selected);
     if (generation !== sequence) throw error('TRANSLATION_CANCELLED');
@@ -107,7 +135,9 @@
     for (const [index,leg] of route(selected).entries()) {
       if (generation !== sequence) throw error('TRANSLATION_CANCELLED');
       const id = 'translation-'+Date.now()+'-'+generation+'-'+index;
-      await plugin.markLoading({id});
+      record({stage:'marker'});
+      try {await plugin.markLoading({id});}
+      catch(cause){record({stage:'marker',code:codes.has(cause?.code)?cause.code:'TRANSLATION_NATIVE_FAILED'});throw cause;}
       let failed = true;
       try {
         if (generation !== sequence) throw error('TRANSLATION_CANCELLED');
@@ -118,11 +148,12 @@
       } finally { await plugin.markFinished({id,failed}); }
     }
     if (generation !== sequence) throw error('TRANSLATION_CANCELLED');
+    record({stage:'complete'});
     return {text,...selected};
   }
   async function cancel() {
-    sequence++; stopWorker(); await plugin.cancel?.();
+    sequence++; stopWorker();record({stage:'cancel',code:'TRANSLATION_CANCELLED'});await plugin.cancel?.();
   }
   async function clearCrash() { await plugin.clearCrash(); return status(); }
-  window.PBTranslationDevice = Object.freeze({identify,status,download,translate,cancel,clearCrash});
+  window.PBTranslationDevice = Object.freeze({identify,status,download,translate,cancel,clearCrash,diagnostics:()=>({...diagnostic})});
 })();
