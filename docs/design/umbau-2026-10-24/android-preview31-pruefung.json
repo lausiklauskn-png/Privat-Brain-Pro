@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0-preview.31",
+  "version_code": 31,
+  "source_commit": "5c3cd2115a5abbf3d5daa50b126182f4d360001d",
+  "release_run": "40107514450",
+  "apk": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk",
+  "bytes": 7512142,
+  "sha256": "ba0f5a9bab788c1aac1b209f550811b00bb8bf86746791643e291f813bbd56b7",
+  "published_checksum_matches": true,
+  "github_asset_digest_matches": true,
+  "signing_report_original_identity_matches": true,
+  "independent_download": true,
+  "release_tag_matches_source": true,
+  "packaged_native_files_match_source": [
+    "native-translation-device.js",
+    "translation-worker.js",
+    "native-mail-translation.js",
+    "native-input-language.js",
+    "native-text-input.js",
+    "native-speech.js",
+    "native-record-status.js",
+    "native-check.js",
+    "design-layout.css",
+    "design-tokens.css",
+    "translation-notices.html"
+  ],
+  "translation_model_pins_match_source": true,
+  "native_translation_plugin_in_dex": true,
+  "pull_request": 77,
+  "main_android_run": 40106803209,
+  "main_windows_run": 40106803287,
+  "main_signing_run": 40106803132,
+  "native_tests": {
+    "executed": 54,
+    "failed": 0,
+    "skipped": 0,
+    "actual_offline_automatic_translation": true,
+    "both_native_internet_gates_blocked": true
+  },
+  "signed_upgrade": {
+    "from": 30,
+    "to": 31,
+    "seed": true,
+    "baseline": true,
+    "verify": true
+  },
+  "physical_samsung_dex_tested": false
+}

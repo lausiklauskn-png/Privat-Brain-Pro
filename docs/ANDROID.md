@@ -135,7 +135,7 @@ Details zu Versandzuständen, Größenlimits und Bibliotheksrechten:
 
 ## Erste direkte Geräte-Mail testen
 
-Aktueller [APK-Download](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v0.1.0-preview.4/Private-Brain-Pro-0.1.0-preview.4.apk).
+Aktueller [APK-Download (.31)](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
 Über die vorhandene Test-App installieren, ohne sie zu deinstallieren.
 Postfach → Mailkonto verbinden → Telekom / T-Online oder Hetzner.
 Die E-Mail-Adresse und das separate Passwort für E-Mail-Programme nur im nativen

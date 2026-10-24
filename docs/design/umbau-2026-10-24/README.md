@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .30 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.30/Private-Brain-Pro-1.0.0-preview.30.apk).
-Quelle: `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`, [übernommener PR #76](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/76).
+**Android .31 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
+Quelle: `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, [übernommener PR #77](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/77).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -22,18 +22,32 @@ signierten Android-Update-APK ausdrücklich freigegeben.
 - Paketkennung, Signatur, Originalablage, Katalog, SMTP-Ablauf und geschützte
   Module bleiben erhalten. Android-VersionCode 30; Update über die vorhandene App.
 
-## Weitere konkrete Vorschläge
+## Zweiter umgesetzter App-Schritt (.31)
 
-Der nächste App-Schritt setzt die getrennte Darstellung von Original und
-Prüfung um: [Bedienung, Umfang und technische Grenzen](STATUS-ORIGINALE-PRUEFUNG.md).
-Die Veröffentlichung von .31 wird nach abgeschlossenen Abnahmen hier nachgetragen.
-Klaus hat anschließend [DeX, Hochformat, Spracheingabe und Mailübersetzung](ERWEITERUNGEN-NATIVE-BEDIENUNG.md)
-als weitere native Anforderungen ergänzt; der .31-Endstand umfasst diese Fortsetzung.
+- Originalverfügbarkeit und historischer Prüfbericht getrennt darstellen;
+  [Bedienung, Prüfumfang und Grenzen](STATUS-ORIGINALE-PRUEFUNG.md).
+- Automatische lokale Mailübersetzung unter dem Original, DE/EN/RU/PL.
+  Benötigte Sprachmodelle einmal ausdrücklich laden; danach ohne KI-Schlüssel
+  und ohne Mailübertragung an einen Server. [Bedienung](../../NATIVE-LOKALE-UEBERSETZUNG.md).
+- Eingabe-/Diktatsprache direkt an der Suche und in Einstellungen unabhängig
+  wählen; Mikrofone an gewöhnlichen Textfeldern und Texteingabedialogen.
+- Einzelne Arbeitsspalte im Hochformat auch auf Tablets und hohen DeX-Fenstern,
+  erhaltene Entwürfe, Suchanfrage, Pfad und Filter.
+- Android-main und Windows-main vollständig grün; 54 native Tests ohne Fehler
+  oder Skips, einschließlich echter automatischer Offlineübersetzung. Signiertes
+  Update .30 → .31 und unabhängiger öffentlicher APK-Download bestanden.
+  [Release 40107514450](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40107514450),
+  [Download- und Quellnachweis](android-preview31-pruefung.json).
+
+[Ergänzter Auftrag, Befunde und Prüfgrenzen](ERWEITERUNGEN-NATIVE-BEDIENUNG.md).
+Eine tatsächliche Prüfung auf Klaus' Samsung-DeX-Gerät steht noch aus.
+
+## Stand der weiteren Funktionsvorschläge
 
 1. **Gemischte Sammlung über vorhandene Tags:** zusammengehörige Mails und Dateien
    unter einem Vorgang finden. Eigene Ansichtsadapter statt den Explorer mit allen
    Index-Mails zu fluten; zunächst keine neue Datenmigration.
-2. **Original und Prüfung getrennt anzeigen:** „Lokal verfügbar“, „Nur im Katalog“
+2. **Original und Prüfung getrennt anzeigen (.31 umgesetzt):** „Lokal verfügbar“, „Nur im Katalog“
    und „Original fehlt“ beschreiben die Verfügbarkeit. Daneben stehen Prüfstand,
    Zeitpunkt und Umfang. Ein geprüfter Mailtext beweist keine geprüften Anhänge.
 3. **Den vollständigen Weg sichtbar machen:** Mail → Anhang ablegen → Zuordnen →

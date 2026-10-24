@@ -1,3 +1,30 @@
+# Aktueller Prüfstand: veröffentlichte .31 — 2026-10-24
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk).
+PR #77 übernommen; Tag `v1.0.0-preview.31` zeigt exakt auf `5c3cd2115a5abbf3d5daa50b126182f4d360001d`,
+VersionCode 31, ursprüngliche Paketkennung und Signatur erhalten.
+
+- Android-/Web-main [40106803209](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40106803209),
+  Windows-main [40106803287](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40106803287)
+  und Signierung `40106803132` vollständig erfolgreich.
+- 54 native Tests ohne Fehler/Skips, einschließlich echter automatischer
+  Marian-Übersetzung unter dem Original bei beiden aktiven nativen Internetsperren.
+  Größenwechsel/Drehung erhält Activity, WebView und Suchanfrage.
+- Release [40107514450](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40107514450)
+  vollständig erfolgreich: Build `120912168179`, signiertes Update .30 → .31
+  `120915301804`, Veröffentlichung `120915749781`. Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **7.512.142 Bytes**, SHA-256
+  `ba0f5a9bab788c1aac1b209f550811b00bb8bf86746791643e291f813bbd56b7`. Prüfsumme, GitHub-Asset-Digest und Release-Quellstand stimmen;
+  elf gepackte UI-/Worker-/Lizenzdateien und Modellpins bytegleich zur Quelle,
+  nativer Übersetzungsadapter im DEX.
+- Physisches Samsung DeX, Klaus' Tablet und echte Mailanbieter sind damit nicht
+  als getestet behauptet. Windows bleibt veröffentlicht bei .29.
+
+[Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview31-pruefung.json),
+[Bedienung der Übersetzung](NATIVE-LOKALE-UEBERSETZUNG.md).
+
+---
+
 > Vorschau .19 veröffentlicht (2026-10-21), einschließlich PR #44: signierte .18→.19-Updateprobe und öffentliche Downloadprüfung erfolgreich.
 > Tag exakt auf `418ff2eeced686af8145aecd2d5e82a746a25f18`; APK-Link, SHA-256 und Lauf-IDs im Abschnitt .19 unten.
 

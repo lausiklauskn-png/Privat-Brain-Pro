@@ -58,7 +58,7 @@ App-Internetschalter. Danach dürfen Erkennung und Übersetzung beim Öffnen der
 Mail ohne Textübertragung an einen Server laufen. Lokale Modelle werden erst
 als verfügbar angezeigt, wenn sie tatsächlich vorhanden und geprüft sind.
 
-## Prüfstand während der Umsetzung
+## Prüfstand der veröffentlichten .31
 
 - Adaptive Browserprobe: **263 Fälle bestanden**, elf Fensterformate und vier
   Themen; Telefon/Tablet im Hochformat und DeX-artige Querformatfenster bis 2560
@@ -76,9 +76,13 @@ als verfügbar angezeigt, wenn sie tatsächlich vorhanden und geprüft sind.
   Antworten werden im Browser geprüft. Geräte-/KI-Transporte sind dort
   nachgebildet; die echte Modellinferenz wird zusätzlich separat verlangt.
 - Neue Android-Drehungsprobe: Hochformat → Querformat → Hochformat mit derselben
-  Activity/WebView und erhaltener Suchanfrage. Ausführung erfolgt in der CI.
-- Übersetzungsmodelle, native Offline-Inferenz und der gesamte Endstand müssen
-  vor einer Veröffentlichung noch abgenommen werden.
+  Activity/WebView und erhaltener Suchanfrage: in der Android-CI bestanden.
+- Worker-/Adapter-Verträge: **30 Fälle bestanden**; echte gepinnte Marian-Inferenz
+  zusätzlich im Browser und in der Android-WebView bestanden.
+- Android-main: **54/54**, keine Fehler oder übersprungenen Tests. Automatische
+  Übersetzung unter dem unveränderten Original mit beiden nativen Internetsperren.
+- Signiertes Update **.30 → .31** und unabhängiger öffentlicher Download bestanden.
+  [Release- und Quellnachweis](android-preview31-pruefung.json).
 
 Eine tatsächliche Prüfung auf Klaus' Samsung-DeX-Gerät und seinem Tablet wird
 dadurch nicht behauptet.

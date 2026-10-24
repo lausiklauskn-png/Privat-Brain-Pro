@@ -1,8 +1,24 @@
 # Lokale Mailübersetzung in Private Brain Pro
 
-Stand: Entwicklung für Vorschau .31. Die Freigabe erfordert einen erfolgreichen echten Android-Inferenztest; ein nachgebildeter JavaScript-Vertrag genügt dafür nicht.
+Stand: Vorschau .31 veröffentlicht. Echte automatische Offlineübersetzung im Android-Mailleser und signiertes Update .30 → .31 bestanden; [Release 40107514450](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40107514450), [Download- und Quellnachweis](design/umbau-2026-10-24/android-preview31-pruefung.json).
 
 Die Nachricht bleibt unverändert. Eine Übersetzung wird unter dem Original angezeigt. Zielsprache und Eingabesprache sind unabhängig von Androids Gerätesprache einstellbar. Deutsch, Englisch, Russisch und Polnisch werden durch spezialisierte OPUS-MT/Marian-Modelle unterstützt. Zwischen zwei nicht englischen Sprachen läuft die Übersetzung nacheinander über Englisch. EN→PL verwendet den tatsächlich verfügbaren Export `Xenova/opus-mt-en-mul` mit dessen festem Zieltoken `>>pol<< `.
+
+## Bedienung
+
+1. Eine E-Mail öffnen. Unter dem Original die gewünschte **Zielsprache** wählen.
+2. Wenn Modelle fehlen, **Sprachmodelle laden** wählen. Die angezeigte Größe
+   umfasst nur die für diese Übersetzung benötigten Dateien.
+3. Danach erscheint die lokale Übersetzung automatisch beim Lesen. Dafür sind
+   weder ein KI-Schlüssel noch eine Internetverbindung nötig.
+
+Bei kurzen oder uneindeutigen Nachrichten lässt sich die **Originalsprache**
+auswählen. Eine Nachricht in der gewählten Zielsprache erhält keinen doppelten
+Textblock. Das Original und seine Anhänge bleiben erhalten.
+
+**Übersetzungsweg** bietet außerdem Mistral und den Kopierweg für die eigene KI.
+Diese Wege verwenden die vorhandene Verdeckung mit Vorschau und lokaler
+Rückzuordnung; es gibt keinen automatischen Wechsel zur Cloud.
 
 ## Modelle und Datenfluss
 
@@ -37,6 +53,6 @@ Die Modellgewichte stammen von Helsinki-NLP/OPUS-MT; die unveränderten, quantis
 
 [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) und [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) erlauben kommerzielle Verwendung unter ihren jeweiligen Bedingungen. Die Modellkarten bleiben als Originalquellen verlinkt. Laufzeit: [Transformers.js 2.17.2](https://github.com/huggingface/transformers.js/tree/2.17.2), Apache-2.0; [ONNX Runtime](https://github.com/microsoft/onnxruntime), MIT.
 
-## Nachweise vor der Freigabe
+## Bestandene Nachweise
 
 `TranslationModelsTest` prüft Sprachrouten, den echten EN→PL-Zieltoken, die Trennung vom Bedeutungsmodell, Dateifreigaben und Abbrechen vor dem Öffnen einer Verbindung. `NativeTranslationTest` lädt ausschließlich öffentliche DE→EN-Testdateien und schaltet das App-Internet vor dem Start aus. Anschließend öffnet er den tatsächlichen Mailübersetzungsleser mit synthetischem deutschem Text. Ohne Klick muss darunter eine sichtbare englische Übersetzung erscheinen; Original, Sprachwahl und Abfolge der Ansicht werden mitgeprüft. Dieser Test benötigt die tatsächlichen Modellgewichte und darf nicht übersprungen oder durch einen Echo-Stub ersetzt werden. Ein zweiter nativer Test prüft die Abbruchsperre und den ausdrücklich gewählten neuen Versuch.

@@ -1,6 +1,6 @@
 # Originalverfügbarkeit und Prüfbericht getrennt anzeigen
 
-Nächster nativer Umbauschritt nach .30, vorbereitet für Android .31.
+In Android .31 umgesetzt und veröffentlicht; [Release- und Quellnachweis](android-preview31-pruefung.json).
 Die vier Farbthemen und die kompakte Navigation bleiben Grundlage.
 
 ## Was sich für die Bedienung ändert

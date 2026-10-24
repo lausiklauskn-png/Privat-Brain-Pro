@@ -1,19 +1,27 @@
 # Private Brain Pro — Sitzungs-Anker
 
+**Android .31 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk),
+Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, Release `40107514450` vollständig grün.
+Signiertes Update .30 → .31, echte automatische Offlineübersetzung und 54 native
+Tests bestanden. Öffentlicher Download unabhängig geprüft: 7.512.142 Bytes,
+SHA-256 `ba0f5a9bab788c1aac1b209f550811b00bb8bf86746791643e291f813bbd56b7`.
+[Bedienung](docs/NATIVE-LOKALE-UEBERSETZUNG.md), [Prüfnachweis](docs/design/umbau-2026-10-24/android-preview31-pruefung.json).
+Die Veröffentlichung ist erledigt; nicht erneut auslösen. Echter Samsung-DeX-Test
+steht aus. Windows-Download bleibt .29; gemeinsamer Quellstand ist geprüft.
+
 **Erweiterter .31-Auftrag:** Samsung Galaxy DeX unter Android und automatische
 Hochformatansicht auch auf Tablets; Eingabe-/Diktatsprache unabhängig wählen,
 Mikrofone an gewöhnlichen Texteingaben und automatische lokale Mailübersetzung
 unter dem Original (DE/EN/RU/PL). Bestehende Verdeckung für ausdrücklich gewählte
 Cloudwege erhalten. [Auftrag und Nachweise](docs/design/umbau-2026-10-24/ERWEITERUNGEN-NATIVE-BEDIENUNG.md),
-[lokale Übersetzung](docs/NATIVE-LOKALE-UEBERSETZUNG.md). Quellstand ist in Arbeit;
-erst finale CI einschließlich echter Offline-Inferenz abnehmen und dann .31
-mit ursprünglicher Signatur und Updateprobe veröffentlichen. Freibrief gilt.
+[lokale Übersetzung](docs/NATIVE-LOKALE-UEBERSETZUNG.md). In PR #77 umgesetzt und
+als .31 mit ursprünglicher Signatur veröffentlicht. Freibrief gilt.
 
 **Eigenständige Fortsetzung für Android .31 (24.10.2026):** Originalverfügbarkeit
 und Prüfbericht getrennt, ausdrücklich begrenzte Mailtextprüfung, historische
 Befunde bei Lesefehlern erhalten und Speicherfehler sichtbar. Klaus hat die
 Weiterarbeit ohne sein Zutun erneut beauftragt. [Bedienung und Grenzen](docs/design/umbau-2026-10-24/STATUS-ORIGINALE-PRUEFUNG.md).
-Bis zur dokumentierten Veröffentlichung bleibt .30 der aktuelle APK-Download.
+Dieser Schritt ist ebenfalls in .31 enthalten; aktueller Download oben.
 
 **Android .30 veröffentlicht (24.10.2026):** [APK als Update](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.30/Private-Brain-Pro-1.0.0-preview.30.apk),
 Quelle `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`, Release-Lauf `40094110986` vollständig grün.

@@ -1,22 +1,32 @@
 # Private Brain Pro — laufender Auftrag
 
+- Android .31 ist veröffentlicht: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.31/Private-Brain-Pro-1.0.0-preview.31.apk), VersionCode 31,
+  Quelle `5c3cd2115a5abbf3d5daa50b126182f4d360001d`, übernommener PR #77.
+  Main Android `40106803209`, Windows `40106803287`, Signierung `40106803132`
+  und Release `40107514450` vollständig grün; 54 native Tests ohne Fehler/Skips,
+  echte automatische Offlineübersetzung und signiertes Update .30 → .31 bestanden.
+  Öffentliche APK unabhängig geladen: 7.512.142 Bytes, SHA-256
+  `ba0f5a9bab788c1aac1b209f550811b00bb8bf86746791643e291f813bbd56b7`. Elf gepackte UI-/Worker-/Lizenzdateien und Modellpins bytegleich,
+  nativer Übersetzungsadapter im DEX. [Nachweis](docs/design/umbau-2026-10-24/android-preview31-pruefung.json).
+  Nicht dieselbe Version erneut veröffentlichen. Physisches Samsung DeX/Tablet
+  ist weiterhin nicht geprüft; Windows bleibt als Download bei .29.
+
 - Ergänzung im selben Chat am 24.10.2026: Samsung Galaxy DeX (Android, nicht
   Windows), automatische Handy-/Tablet-Hochformatansicht, unabhängige Such- und
   Diktatsprache, Mikrofone an Texteingaben und automatische Mailübersetzung
   unter dem Original. Lokales kleines Übersetzungsmodell bevorzugt prüfen;
   DE/EN/RU/PL, vorhandene Anonymisierung und bewusst wählbare KI-Alternativen
   beibehalten. [Auftrag, Befunde und Prüfstand](docs/design/umbau-2026-10-24/ERWEITERUNGEN-NATIVE-BEDIENUNG.md).
-  Diese Arbeiten erweitern den noch offenen .31-PR; erst den vollständigen
-  Endstand abnehmen und dann übernehmen/veröffentlichen. Keine erneute Freigabe
-  für Umsetzung und signierte Update-APK verlangen.
+  Diese Arbeiten sind in PR #77 übernommen und als .31 veröffentlicht (oben).
+  Die erledigte Veröffentlichung nicht erneut auslösen. Der Freibrief für die
+  beauftragte Umsetzung bleibt dokumentiert.
 
 - Fortsetzung 24.10.2026: Klaus beauftragt die eigenständige Weiterarbeit ohne
   weitere Rückfragen. Nächster abgegrenzter Schritt für Android .31: Original-
   verfügbarkeit und historischen Prüfstand getrennt zeigen, Mailtext-Prüfumfang
   und ungespeicherte Berichte ehrlich benennen. Kein automatisches Laden von
   Originalen/Anhängen durch die Anzeige. [Umfang](docs/design/umbau-2026-10-24/STATUS-ORIGINALE-PRUEFUNG.md).
-  .31 ist bis zum erfolgreichen Release als in Arbeit zu behandeln; .30 bleibt
-  der veröffentlichte Download. Keine Überschreibung vorhandener Release-Dateien.
+  In .31 veröffentlicht; Nachweise oben. Vorhandene Release-Dateien nicht überschreiben.
 
 - Neuer ausdrücklicher Freibrief von Klaus am 24.10.2026 in diesem Chat:
   den eigenständigen Designumbau umsetzen, nötige PRs und Commits selbstständig
@@ -26,7 +36,7 @@
   vor Veröffentlichung Prüfungen und Updateprobe bestehen lassen. Die vier positiv
   bewerteten Designrichtungen bleiben Grundlage; Outlook ist Anregung, keine Kopie.
   Gemeinsame UI-Änderungen auch für Windows prüfen.
-- Android .30 ist veröffentlicht: `v1.0.0-preview.30`, VersionCode 30, Quelle
+- Zuvor wurde Android .30 veröffentlicht: `v1.0.0-preview.30`, VersionCode 30, Quelle
   `a81d33ba2048ff6ea646a79f7a311c1e9661e1b7`; Release-Lauf `40094110986` grün,
   einschließlich ursprünglicher Signatur und Update .28 → .30. Android-/Web-main
   `40093195380`, Windows-main `40093195384` und Signierung `40093195392` grün.
@@ -64,7 +74,7 @@
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
-- Android ist bei `1.0.0-preview.30`, Code 30 veröffentlicht; die Windows-Ausgabe
+- Android ist bei `1.0.0-preview.31`, Code 31 veröffentlicht; die Windows-Ausgabe
   bleibt bei `.29`. Originale Android-Identität unverändert. Der finale
   Windows-Bau muss ohne `messprobe` entstehen und installiert geprüft werden.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
@@ -85,5 +95,5 @@
   Installer vollständig vorbereiten; konkrete Übernahmen/Veröffentlichungen
   danach mit Klaus freigeben. Für den Windows-Gesamtstand #69 liegt diese Freigabe
   jetzt vor (oben). Kein Release allein durch Versions-Tag auslösen.
-- Bestehenden Checkout und Branch `codex/windows-native-host` verwenden.
-  Keine Änderungen verwerfen; keine Worktrees ohne ausdrücklichen Auftrag.
+- Bestehenden Checkout weiterverwenden; im verwalteten Arbeitsraum heißt der
+  Branch `work`. Keine Änderungen verwerfen; keine Worktrees ohne Auftrag.
