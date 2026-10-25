@@ -1,6 +1,6 @@
 // CI-only launcher for the unchanged production installers. WebView2 >= 150
 // ignores its browser-argument environment override in an elevated host.
-// Use this account's existing medium token; never change the app or its profile.
+// Use a verified Medium token of this account; never change the app or its profile.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -43,9 +43,13 @@ public static class UpgradeProbeLauncher
     private const int MediumRid = 8192;
     private const int HighRid = 12288;
     private const int FullElevation = 2;
+    private const int DefaultElevation = 1;
     private const uint TokenAssignPrimary = 0x0001;
     private const uint TokenDuplicate = 0x0002;
     private const uint TokenQuery = 0x0008;
+    private const uint TokenAdjustDefault = 0x0080;
+    private const uint DisableMaxPrivilege = 0x0001;
+    private const uint LuaToken = 0x0004;
     private const uint CreateSuspended = 0x00000004;
     private const uint CreateUnicodeEnvironment = 0x00000400;
     private const uint LogonWithProfile = 0x00000001;
@@ -58,6 +62,10 @@ public static class UpgradeProbeLauncher
         internal int ElevationType;
         internal bool Elevated;
         internal int Session;
+        internal bool AdminMember;
+        internal bool AdminDenyOnly;
+        internal int OtherPrivileges;
+        internal int EnabledOtherPrivileges;
     }
 
     // Run immediately after Add-Type, before building or installing the app.
@@ -66,21 +74,25 @@ public static class UpgradeProbeLauncher
     {
         RequireRunner();
         IntPtr currentToken = IntPtr.Zero;
-        IntPtr linkedToken = IntPtr.Zero;
+        IntPtr ownedSourceToken = IntPtr.Zero;
         try
         {
             if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate, out currentToken))
                 throw Win32Failure("OPEN_CURRENT_TOKEN");
             TokenEvidence current = ReadToken(currentToken);
             WriteParentEvidence(current);
-            IntPtr sourceToken = MediumSourceToken(currentToken, current, out linkedToken);
+            IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             TokenEvidence source = ReadToken(sourceToken);
             Console.WriteLine("WINDOWS_UPGRADE_TOKEN_PREFLIGHT {\"targetIntegrityRid\":"
                 + source.Rid.ToString(CultureInfo.InvariantCulture)
                 + ",\"targetElevationType\":" + source.ElevationType.ToString(CultureInfo.InvariantCulture)
-                + ",\"targetElevated\":" + (source.Elevated ? "true" : "false") + ",\"sameUserSid\":true}");
+                + ",\"targetElevated\":" + (source.Elevated ? "true" : "false")
+                + ",\"adminMember\":" + (source.AdminMember ? "true" : "false")
+                + ",\"adminDenyOnly\":" + (source.AdminDenyOnly ? "true" : "false")
+                + ",\"otherPrivileges\":" + source.OtherPrivileges.ToString(CultureInfo.InvariantCulture)
+                + ",\"sameUserSid\":true}");
         }
-        finally { Close(linkedToken); Close(currentToken); }
+        finally { Close(ownedSourceToken); Close(currentToken); }
     }
 
     public static UpgradeProbeLaunchResult Start(string exe, string cwd,
@@ -98,7 +110,7 @@ public static class UpgradeProbeLauncher
             && SamePath(Environment.GetEnvironmentVariable("USERPROFILE"), expectedUserProfile), "PARENT_PROFILE_PATH_MISMATCH");
 
         IntPtr currentToken = IntPtr.Zero;
-        IntPtr linkedToken = IntPtr.Zero;
+        IntPtr ownedSourceToken = IntPtr.Zero;
         IntPtr primaryToken = IntPtr.Zero;
         IntPtr targetToken = IntPtr.Zero;
         IntPtr nativeEnvironment = IntPtr.Zero;
@@ -114,13 +126,14 @@ public static class UpgradeProbeLauncher
             TokenEvidence current = ReadToken(currentToken);
             // Preserve the parent evidence even when the linked-token query fails.
             WriteParentEvidence(current);
-            IntPtr sourceToken = MediumSourceToken(currentToken, current, out linkedToken);
+            IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             if (!DuplicateTokenEx(sourceToken, TokenQuery | TokenDuplicate | TokenAssignPrimary,
                 IntPtr.Zero, 2, 1, out primaryToken))
                 throw Win32Failure("DUPLICATE_MEDIUM_PRIMARY_TOKEN");
             TokenEvidence primary = ReadToken(primaryToken);
             Require(primary.Sid == current.Sid && primary.Session == current.Session
                 && primary.Rid == MediumRid && !primary.Elevated, "DUPLICATED_TOKEN_MISMATCH");
+            RequireNoAdminAuthority(primary, IsDefaultHigh(current));
 
             // Do not inherit the elevated runner's environment or test switches.
             if (!CreateEnvironmentBlock(out nativeEnvironment, primaryToken, false))
@@ -153,6 +166,10 @@ public static class UpgradeProbeLauncher
             TokenEvidence target = ReadToken(targetToken);
             Require(target.Sid == current.Sid && target.Session == current.Session
                 && target.Rid == MediumRid && !target.Elevated, "CREATED_PROCESS_TOKEN_MISMATCH");
+            RequireNoAdminAuthority(target, IsDefaultHigh(current));
+            Console.WriteLine("WINDOWS_UPGRADE_ACTUAL_CHILD_TOKEN {\"integrityRid\":8192,\"elevated\":false,\"adminMember\":false,\"adminDenyOnly\":"
+                + (target.AdminDenyOnly ? "true" : "false") + ",\"otherPrivileges\":"
+                + target.OtherPrivileges.ToString(CultureInfo.InvariantCulture) + ",\"sameUserSid\":true}");
             Require(child.dwProcessId <= Int32.MaxValue, "PROCESS_ID_OUT_OF_RANGE");
             managedProcess = Process.GetProcessById((int)child.dwProcessId);
             uint priorSuspendCount = ResumeThread(child.hThread);
@@ -183,7 +200,7 @@ public static class UpgradeProbeLauncher
             }
             if (nativeEnvironment != IntPtr.Zero) DestroyEnvironmentBlock(nativeEnvironment);
             Close(primaryToken);
-            Close(linkedToken);
+            Close(ownedSourceToken);
             Close(currentToken);
         }
     }
@@ -203,22 +220,92 @@ public static class UpgradeProbeLauncher
             + ",\"currentElevated\":" + (current.Elevated ? "true" : "false") + "}");
     }
 
-    private static IntPtr MediumSourceToken(IntPtr currentToken, TokenEvidence current, out IntPtr linkedToken)
+    private static IntPtr MediumSourceToken(IntPtr currentToken, TokenEvidence current, out IntPtr ownedSourceToken)
     {
-        linkedToken = IntPtr.Zero;
+        ownedSourceToken = IntPtr.Zero;
         IntPtr sourceToken = currentToken;
         if (current.Rid != MediumRid || current.Elevated)
         {
-            Require(current.Rid == HighRid && current.Elevated && current.ElevationType == FullElevation,
-                "FULL_HIGH_OR_MEDIUM_TOKEN_REQUIRED");
-            linkedToken = LinkedToken(currentToken);
-            sourceToken = linkedToken;
+            if (IsDefaultHigh(current))
+            {
+                // This exact runner state was measured in the early preflight.
+                // Only reduce its authority; never manufacture another user/profile.
+                ownedSourceToken = RestrictedMediumToken(currentToken);
+            }
+            else
+            {
+                Require(current.Rid == HighRid && current.Elevated && current.ElevationType == FullElevation,
+                    "FULL_HIGH_DEFAULT_HIGH_OR_MEDIUM_TOKEN_REQUIRED");
+                ownedSourceToken = LinkedToken(currentToken);
+            }
+            sourceToken = ownedSourceToken;
         }
         TokenEvidence source = ReadToken(sourceToken);
         Require(source.Sid == current.Sid && source.Session == current.Session,
             "LINKED_TOKEN_USER_OR_SESSION_MISMATCH");
         Require(source.Rid == MediumRid && !source.Elevated, "EXACT_MEDIUM_UNELEVATED_TOKEN_REQUIRED");
+        RequireNoAdminAuthority(source, IsDefaultHigh(current));
         return sourceToken;
+    }
+
+    private static bool IsDefaultHigh(TokenEvidence current)
+    {
+        return current.Rid == HighRid && current.Elevated && current.ElevationType == DefaultElevation;
+    }
+
+    private static void RequireNoAdminAuthority(TokenEvidence value, bool reduced)
+    {
+        Require(!value.AdminMember && value.EnabledOtherPrivileges == 0, "ADMIN_AUTHORITY_NOT_REMOVED");
+        if (reduced) Require(value.AdminDenyOnly && value.OtherPrivileges == 0, "RESTRICTED_TOKEN_AUTHORITY_MISMATCH");
+    }
+
+    private static IntPtr RestrictedMediumToken(IntPtr currentToken)
+    {
+        IntPtr adjustable = IntPtr.Zero, restricted = IntPtr.Zero, adminSid = IntPtr.Zero;
+        IntPtr disabledGroup = IntPtr.Zero, label = IntPtr.Zero;
+        bool returned = false;
+        try
+        {
+            if (!DuplicateTokenEx(currentToken, TokenQuery | TokenDuplicate | TokenAssignPrimary | TokenAdjustDefault,
+                IntPtr.Zero, 2, 1, out adjustable)) throw Win32Failure("DUPLICATE_RESTRICTION_SOURCE");
+            adminSid = SidBuffer("S-1-5-32-544");
+            disabledGroup = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SidAndAttributes)));
+            Marshal.StructureToPtr(new SidAndAttributes { Sid = adminSid, Attributes = 0 }, disabledGroup, false);
+            // Neither SANDBOX_INERT nor any policy-bypassing flag is used.
+            if (!CreateRestrictedToken(adjustable, DisableMaxPrivilege | LuaToken, 1, disabledGroup,
+                0, IntPtr.Zero, 0, IntPtr.Zero, out restricted)) throw Win32Failure("CREATE_REDUCED_SAME_USER_TOKEN");
+            SecurityIdentifier mediumSid = new SecurityIdentifier("S-1-16-8192");
+            byte[] sidBytes = new byte[mediumSid.BinaryLength];
+            mediumSid.GetBinaryForm(sidBytes, 0);
+            int structureSize = Marshal.SizeOf(typeof(SidAndAttributes));
+            int labelSize = checked(structureSize + sidBytes.Length);
+            label = Marshal.AllocHGlobal(labelSize);
+            IntPtr sidInLabel = IntPtr.Add(label, structureSize);
+            Marshal.Copy(sidBytes, 0, sidInLabel, sidBytes.Length);
+            Marshal.StructureToPtr(new SidAndAttributes { Sid = sidInLabel, Attributes = 0x20 }, label, false);
+            if (!SetTokenInformation(restricted, 25, label, labelSize)) throw Win32Failure("SET_REDUCED_MEDIUM_INTEGRITY");
+            Console.WriteLine("WINDOWS_UPGRADE_TOKEN_REDUCTION {\"flags\":5,\"sameUser\":true,\"requestedIntegrityRid\":8192}");
+            returned = true;
+            return restricted;
+        }
+        finally
+        {
+            if (label != IntPtr.Zero) Marshal.FreeHGlobal(label);
+            if (disabledGroup != IntPtr.Zero) Marshal.FreeHGlobal(disabledGroup);
+            if (adminSid != IntPtr.Zero) Marshal.FreeHGlobal(adminSid);
+            if (!returned) Close(restricted);
+            Close(adjustable);
+        }
+    }
+
+    private static IntPtr SidBuffer(string value)
+    {
+        SecurityIdentifier sid = new SecurityIdentifier(value);
+        byte[] bytes = new byte[sid.BinaryLength];
+        sid.GetBinaryForm(bytes, 0);
+        IntPtr data = Marshal.AllocHGlobal(bytes.Length);
+        Marshal.Copy(bytes, 0, data, bytes.Length);
+        return data;
     }
 
     private static TokenEvidence ReadToken(IntPtr token)
@@ -234,18 +321,61 @@ public static class UpgradeProbeLauncher
             Require(IsValidSid(userSid) && IsValidSid(integritySid), "INVALID_TOKEN_SID");
             byte count = Marshal.ReadByte(GetSidSubAuthorityCount(integritySid));
             Require(count > 0, "MISSING_TOKEN_INTEGRITY_RID");
-            return new TokenEvidence {
+            TokenEvidence result = new TokenEvidence {
                 Sid = new SecurityIdentifier(userSid).Value,
                 Rid = Marshal.ReadInt32(GetSidSubAuthority(integritySid, (uint)(count - 1))),
                 ElevationType = TokenInt(token, 18),
                 Elevated = TokenInt(token, 20) != 0,
                 Session = TokenInt(token, 12)
             };
+            ReadAuthority(token, result);
+            return result;
         }
         finally
         {
             if (integrity != IntPtr.Zero) Marshal.FreeHGlobal(integrity);
             if (user != IntPtr.Zero) Marshal.FreeHGlobal(user);
+        }
+    }
+
+    private static void ReadAuthority(IntPtr token, TokenEvidence evidence)
+    {
+        IntPtr groups = IntPtr.Zero, privileges = IntPtr.Zero;
+        try
+        {
+            int length;
+            groups = TokenInformation(token, 2, out length);
+            int count = Marshal.ReadInt32(groups);
+            int offset = Marshal.OffsetOf(typeof(TokenGroupsLayout), "First").ToInt32();
+            int stride = Marshal.SizeOf(typeof(SidAndAttributes));
+            Require(count >= 0 && count <= 4096 && (long)offset + (long)count * stride <= length, "TOKEN_GROUPS_BOUNDS");
+            for (int i = 0; i < count; i++)
+            {
+                SidAndAttributes group = (SidAndAttributes)Marshal.PtrToStructure(IntPtr.Add(groups, offset + i * stride), typeof(SidAndAttributes));
+                Require(IsValidSid(group.Sid), "INVALID_GROUP_SID");
+                if (new SecurityIdentifier(group.Sid).Value != "S-1-5-32-544") continue;
+                evidence.AdminMember = (group.Attributes & 0x4) != 0;
+                evidence.AdminDenyOnly = (group.Attributes & 0x10) != 0 && !evidence.AdminMember;
+            }
+            privileges = TokenInformation(token, 3, out length);
+            count = Marshal.ReadInt32(privileges);
+            offset = Marshal.OffsetOf(typeof(TokenPrivilegesLayout), "First").ToInt32();
+            stride = Marshal.SizeOf(typeof(LuidAndAttributes));
+            Require(count >= 0 && count <= 4096 && (long)offset + (long)count * stride <= length, "TOKEN_PRIVILEGES_BOUNDS");
+            Luid notify;
+            if (!LookupPrivilegeValue(null, "SeChangeNotifyPrivilege", out notify)) throw Win32Failure("LOOKUP_NORMAL_USER_PRIVILEGE");
+            for (int i = 0; i < count; i++)
+            {
+                LuidAndAttributes privilege = (LuidAndAttributes)Marshal.PtrToStructure(IntPtr.Add(privileges, offset + i * stride), typeof(LuidAndAttributes));
+                if (privilege.Value.LowPart == notify.LowPart && privilege.Value.HighPart == notify.HighPart) continue;
+                evidence.OtherPrivileges++;
+                if ((privilege.Attributes & 0x2) != 0) evidence.EnabledOtherPrivileges++;
+            }
+        }
+        finally
+        {
+            if (privileges != IntPtr.Zero) Marshal.FreeHGlobal(privileges);
+            if (groups != IntPtr.Zero) Marshal.FreeHGlobal(groups);
         }
     }
 
@@ -288,8 +418,13 @@ public static class UpgradeProbeLauncher
 
     private static IntPtr TokenInformation(IntPtr token, int informationClass)
     {
-        Require(informationClass == 1 || informationClass == 25, "VARIABLE_TOKEN_CLASS_REQUIRED");
         int length;
+        return TokenInformation(token, informationClass, out length);
+    }
+
+    private static IntPtr TokenInformation(IntPtr token, int informationClass, out int length)
+    {
+        Require(informationClass == 1 || informationClass == 2 || informationClass == 3 || informationClass == 25, "VARIABLE_TOKEN_CLASS_REQUIRED");
         bool sized = GetTokenInformation(token, informationClass, IntPtr.Zero, 0, out length);
         int sizeError = Marshal.GetLastWin32Error();
         if (!sized && sizeError != 122) // ERROR_INSUFFICIENT_BUFFER is the expected size query.
@@ -357,6 +492,17 @@ public static class UpgradeProbeLauncher
     private static void Close(IntPtr handle) { if (handle != IntPtr.Zero) CloseHandle(handle); }
 
     [StructLayout(LayoutKind.Sequential)]
+    private struct SidAndAttributes { internal IntPtr Sid; internal uint Attributes; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TokenGroupsLayout { internal uint Count; internal SidAndAttributes First; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Luid { internal uint LowPart; internal int HighPart; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LuidAndAttributes { internal Luid Value; internal uint Attributes; }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TokenPrivilegesLayout { internal uint Count; internal LuidAndAttributes First; }
+
+    [StructLayout(LayoutKind.Sequential)]
     private struct StartupInformation
     {
         internal int cb;
@@ -384,6 +530,15 @@ public static class UpgradeProbeLauncher
     private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetTokenInformation(IntPtr token, int informationClass, IntPtr information, int size, out int requiredSize);
+    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetTokenInformation(IntPtr token, int informationClass, IntPtr information, int size);
+    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateRestrictedToken(IntPtr existing, uint flags, uint disabledSidCount,
+        IntPtr disabledSids, uint deletePrivilegeCount, IntPtr deletedPrivileges,
+        uint restrictedSidCount, IntPtr restrictedSids, out IntPtr restricted);
+    [DllImport("advapi32.dll", EntryPoint = "LookupPrivilegeValueW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool LookupPrivilegeValue(string system, string name, out Luid value);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DuplicateTokenEx(IntPtr token, uint access, IntPtr attributes, int impersonationLevel, int tokenType, out IntPtr duplicated);
     [DllImport("advapi32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsValidSid(IntPtr sid);
