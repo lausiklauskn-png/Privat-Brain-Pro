@@ -12,21 +12,21 @@ $setups = @(Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '
 if ($setups.Count -ne 1) { throw 'Exactly one current production installer required.' }
 $currentSetup = $setups[0].FullName
 $config = Get-Content windows/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-if ($config.version -ne '1.0.37' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
+if ($config.version -ne '1.0.38' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
 if ((Get-AuthenticodeSignature -LiteralPath $currentSetup).Status -ne 'NotSigned') { throw 'Expected the chosen unsigned production installer.' }
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-upgrade-' + $token)
 $reports = Join-Path (Get-Location) 'windows/pruef-out/upgrade-36-37'
 $vault = Join-Path $work 'chosen-vault'
 New-Item -ItemType Directory -Force $work, $reports, $vault | Out-Null
-$oldSetup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.36-x64-setup.exe'
-$oldUrl = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe'
+$oldSetup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.37-x64-setup.exe'
+$oldUrl = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe'
 Invoke-WebRequest -UseBasicParsing -Uri $oldUrl -OutFile $oldSetup
 $oldHash = (Get-FileHash -LiteralPath $oldSetup -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($oldHash -ne '138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091' -or (Get-Item $oldSetup).Length -ne 58666597) { throw 'Published 1.0.36 installer differs from its independently verified release pin.' }
+if ($oldHash -ne '8452d322b2ebbbc8ef9de11ab548a61f0e129d94503354812db1abdc4ca4b71a' -or (Get-Item $oldSetup).Length -ne 58666944) { throw 'Published 1.0.37 installer differs from its independently verified release pin.' }
 if ((Get-AuthenticodeSignature -LiteralPath $oldSetup).Status -ne 'NotSigned') { throw 'Unexpected legacy installer signing state.' }
 # The prior installed test used synthetic data in this isolated account. Reset
-# it ONCE before 1.0.36 starts; there is strictly no reset between versions.
+# it ONCE before 1.0.37 starts; there is strictly no reset between versions.
 if (Test-Path $dataDir) {
   if (((Get-Item -LiteralPath $dataDir -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Refusing a redirected app data root.' }
   Remove-Item -LiteralPath $dataDir -Recurse -Force
@@ -210,7 +210,7 @@ try {
   Install-Setup $currentSetup
   Phase 'verify' $false
   Phase 'verify-unlock' $false
-  $summary = [ordered]@{ from = '1.0.36'; to = '1.0.37'; oldSource = 'a1bd98f40b0186c5a9a148dbd04d19979e6262c4'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
+  $summary = [ordered]@{ from = '1.0.37'; to = '1.0.38'; oldSource = '015c9a1266a64f44a1896ead56349094c64e2f9a'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
   Write-Output 'WINDOWS_INSTALLER_UPGRADE_36_TO_37_PASS'

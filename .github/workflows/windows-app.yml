@@ -52,7 +52,7 @@ jobs:
           Add-Type -Path (Join-Path (Get-Location) 'windows/pruefung/upgrade-launcher.cs')
           [UpgradeProbeLauncher]::Preflight()
           Write-Output 'PASS CI-only medium-integrity launcher compiles and its unchanged-user context is valid'
-      - name: Unveränderten veröffentlichten 1.0.36-Installer vor dem App-Bau starten
+      - name: Unveränderten veröffentlichten 1.0.37-Installer vor dem App-Bau starten
         timeout-minutes: 8
         run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File windows/pruefung/legacy-startup.ps1
         env:
@@ -93,7 +93,7 @@ jobs:
           retention-days: 14
       - name: Auslieferungsbau ohne Prüfzugang
         run: npm run tauri --prefix windows -- build --bundles nsis
-      - name: Veröffentlichten 1.0.36-Installer wirklich auf 1.0.37 aktualisieren
+      - name: Veröffentlichten 1.0.37-Installer wirklich auf 1.0.38 aktualisieren
         timeout-minutes: 15
         run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File windows/pruefung/upgrade.ps1
         env:
