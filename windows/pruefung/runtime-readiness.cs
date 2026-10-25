@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,6 +19,7 @@ public static class RuntimeReadiness
     private const int ByteLimit = 65536;
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = ByteLimit, RecursionLimit = 24 };
     private static string Stage = "identity";
+    private static bool JreReadExecuteAllowed, PipeSetupAllowed;
     private static void Emit(string operation, params object[] pairs)
     {
         Dictionary<string, object> value = new Dictionary<string, object>();
@@ -86,6 +88,8 @@ public static class RuntimeReadiness
             string java = Path.Combine(runtime, "jre", "bin", "java.exe");
             string data = Path.Combine(local, "de.familyprojekt.privatebrain.pro");
             Need(File.Exists(java) && Directory.Exists(Path.Combine(runtime, "engine", "classes")), "EXACT_INSTALLED_RUNTIME_REQUIRED");
+            Stage = "read-only-access-diagnostics";
+            DiagnoseAccess(java, runtime);
             Stage = "java-version";
             CheckVersion(java, runtime);
             Stage = "engine-device-readiness";
@@ -115,21 +119,178 @@ public static class RuntimeReadiness
         foreach (string name in new string[] { "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS" })
             start.EnvironmentVariables.Remove(name);
         Process process = new Process { StartInfo = start };
+        bool started = false;
+        string previousStage = Stage, operation = "java-Process.Start";
         try
         {
+            Emit("java-Process.Start", "state", "calling");
             if (!process.Start()) throw new InvalidOperationException("JAVA_PROCESS_NOT_STARTED");
+            started = true;
+            Emit("java-Process.Start", "state", "returned", "processId", process.Id);
+            operation = "java-process-handle";
+            Stage = "java-process-handle";
             Need(process.Handle != IntPtr.Zero, "JAVA_PROCESS_HANDLE_REQUIRED");
+            Emit("java-process-handle", "success", true);
+            Stage = previousStage;
             Emit("java-spawn", "success", true, "processId", process.Id);
             return process;
         }
         catch (Win32Exception error)
         {
-            Emit("java-spawn", "success", false, "win32", error.NativeErrorCode);
-            process.Dispose();
+            Emit(operation, "success", false, "win32", error.NativeErrorCode);
+            if (!started && error.NativeErrorCode == 5 && JreReadExecuteAllowed && PipeSetupAllowed)
+                ReportOwnedExecutionEvents(java);
+            try { if (started) StopJava(process); } finally { process.Dispose(); }
             throw;
         }
-        catch { process.Dispose(); throw; }
+        catch { try { if (started) StopJava(process); } finally { process.Dispose(); } throw; }
     }
+
+    private static void DiagnoseAccess(string java, string runtime)
+    {
+        IntPtr read = IntPtr.Zero, write = IntPtr.Zero, duplicate = IntPtr.Zero, nul = IntPtr.Zero;
+        bool pipe = false, copied = false;
+        try
+        {
+            pipe = CreatePipe(out read, out write, IntPtr.Zero, 0);
+            int error = pipe ? 0 : Marshal.GetLastWin32Error();
+            Emit("CreatePipe-default-security", "success", pipe, "win32", error);
+            nul = OpenFile("NUL", 0x80000000, 3, IntPtr.Zero, 3, 0x80, IntPtr.Zero);
+            if (nul != new IntPtr(-1) && nul != IntPtr.Zero)
+            {
+                copied = DuplicateHandle(GetCurrentProcess(), nul, GetCurrentProcess(), out duplicate, 0, false, 2);
+                error = copied ? 0 : Marshal.GetLastWin32Error();
+                Emit("DuplicateHandle-own-NUL", "success", copied, "win32", error);
+            }
+            else Emit("open-own-NUL", "success", false, "win32", Marshal.GetLastWin32Error());
+        }
+        finally { if (pipe) { CloseValid(read); CloseValid(write); } if (copied) CloseValid(duplicate); CloseValid(nul); }
+        PipeSetupAllowed = pipe && copied;
+        JreReadExecuteAllowed = ReadPathAccess("installed-JRE-executable", java, false);
+        ReadPathAccess("installed-runtime-cwd", runtime, true);
+        uint pid = unchecked((uint)Process.GetCurrentProcess().Id);
+        foreach (uint mask in new uint[] { 0x40, 0x80, 0x400, 0x20000 })
+        {
+            IntPtr opened = OpenProcess(mask, false, pid);
+            int error = opened == IntPtr.Zero ? Marshal.GetLastWin32Error() : 0;
+            Emit("OpenProcess-self", "accessMask", "0x" + mask.ToString("X"), "success", opened != IntPtr.Zero, "win32", error);
+            CloseValid(opened);
+        }
+        using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+        {
+            string self = identity.User.Value;
+            try
+            {
+                uint length;
+                GetTokenBuffer(identity.Token, 6, IntPtr.Zero, 0, out length);
+                Need(length >= IntPtr.Size && length <= ByteLimit, "DEFAULT_DACL_QUERY_BOUNDS");
+                IntPtr info = Marshal.AllocHGlobal((int)length);
+                try
+                {
+                    if (!GetTokenBuffer(identity.Token, 6, info, length, out length)) throw NativeFailure("TokenDefaultDacl-query");
+                    ReportAcl("TokenDefaultDacl", Marshal.ReadIntPtr(info), self);
+                }
+                finally { Marshal.FreeHGlobal(info); }
+            }
+            catch (Exception error) { Emit("TokenDefaultDacl-unavailable", "exceptionType", error.GetType().FullName); }
+            IntPtr owner, group, dacl, sacl, descriptor;
+            uint status = GetSecurityInfo(GetCurrentProcess(), 6, 5, out owner, out group, out dacl, out sacl, out descriptor);
+            Emit("self-process-security", "success", status == 0, "win32", status);
+            if (status == 0)
+            {
+                try
+                {
+                    Emit("self-process-owner", "sidClass", SidClass(new SecurityIdentifier(owner).Value, self));
+                    ReportAcl("self-process-DACL", dacl, self);
+                }
+                catch (Exception error) { Emit("self-process-ACL-unavailable", "exceptionType", error.GetType().FullName); }
+                finally { if (descriptor != IntPtr.Zero) LocalFree(descriptor); }
+            }
+            try { ReportFileAcl(java, false, self); }
+            catch (Exception error) { Emit("JRE-ACL-unavailable", "exceptionType", error.GetType().FullName); }
+            try { ReportFileAcl(runtime, true, self); }
+            catch (Exception error) { Emit("runtime-cwd-ACL-unavailable", "exceptionType", error.GetType().FullName); }
+        }
+    }
+
+    private static bool ReadPathAccess(string label, string path, bool directory)
+    {
+        IntPtr handle = OpenFile(path, directory ? 0xA0u : 0xA0000000u, 7, IntPtr.Zero, 3, directory ? 0x02000000u : 0x80u, IntPtr.Zero);
+        bool allowed = handle != IntPtr.Zero && handle != new IntPtr(-1);
+        int error = allowed ? 0 : Marshal.GetLastWin32Error();
+        Emit("path-access-probe", "label", label, "success", allowed, "win32", error);
+        CloseValid(handle);
+        return allowed;
+    }
+
+    private static void ReportOwnedExecutionEvents(string java)
+    {
+        foreach (string channel in new string[] { "Microsoft-Windows-AppLocker/EXE and DLL", "Microsoft-Windows-CodeIntegrity/Operational" })
+        {
+            int matched = 0;
+            try
+            {
+                System.Diagnostics.Eventing.Reader.EventLogQuery query = new System.Diagnostics.Eventing.Reader.EventLogQuery(channel,
+                    System.Diagnostics.Eventing.Reader.PathType.LogName, "*[System[TimeCreated[timediff(@SystemTime) <= 300000]]]");
+                query.ReverseDirection = true;
+                using (System.Diagnostics.Eventing.Reader.EventLogReader reader = new System.Diagnostics.Eventing.Reader.EventLogReader(query))
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        using (System.Diagnostics.Eventing.Reader.EventRecord record = reader.ReadEvent(TimeSpan.FromMilliseconds(200)))
+                        {
+                            if (record == null) break;
+                            string xml = record.ToXml();
+                            if (xml.Length > 32768 || xml.IndexOf(java, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                            matched++;
+                            Emit("owned-JRE-execution-event", "channel", channel, "eventId", record.Id);
+                        }
+                    }
+                }
+                Emit("owned-JRE-event-scan", "channel", channel, "matched", matched, "maximumRecords", 8);
+            }
+            catch (Exception error) { Emit("owned-JRE-event-scan-unavailable", "channel", channel, "exceptionType", error.GetType().FullName); }
+        }
+    }
+
+    private static string SidClass(string sid, string self)
+    {
+        return sid == self ? "same-user" : sid == "S-1-5-32-544" ? "builtin-admin" : sid == "S-1-5-18" ? "system" : "other";
+    }
+
+    private static void ReportAcl(string label, IntPtr acl, string self)
+    {
+        if (acl == IntPtr.Zero) { Emit("acl-metadata", "label", label, "nullDacl", true); return; }
+        int size = unchecked((ushort)Marshal.ReadInt16(acl, 2));
+        Need(size >= 8 && size <= ByteLimit, "ACL_SIZE_BOUNDS");
+        byte[] bytes = new byte[size]; Marshal.Copy(acl, bytes, 0, size);
+        RawAcl parsed = new RawAcl(bytes, 0);
+        Emit("acl-metadata", "label", label, "nullDacl", false, "aceCount", parsed.Count);
+        for (int i = 0; i < Math.Min(parsed.Count, 32); i++)
+        {
+            KnownAce known = parsed[i] as KnownAce;
+            Emit("acl-ace", "label", label, "type", parsed[i].AceType.ToString(), "flags", parsed[i].AceFlags.ToString(),
+                "mask", known == null ? null : "0x" + unchecked((uint)known.AccessMask).ToString("X8"),
+                "sidClass", known == null ? "unavailable" : SidClass(known.SecurityIdentifier.Value, self));
+        }
+    }
+
+    private static void ReportFileAcl(string path, bool directory, string self)
+    {
+        FileSystemSecurity security = directory ? (FileSystemSecurity)Directory.GetAccessControl(path, AccessControlSections.Access | AccessControlSections.Owner)
+            : File.GetAccessControl(path, AccessControlSections.Access | AccessControlSections.Owner);
+        string label = directory ? "runtime-cwd" : "installed-JRE";
+        Emit("file-owner", "label", label, "sidClass", SidClass(security.GetOwner(typeof(SecurityIdentifier)).Value, self));
+        int count = 0;
+        foreach (FileSystemAccessRule rule in security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
+        {
+            if (count++ >= 32) break;
+            Emit("file-ace", "label", label, "type", rule.AccessControlType.ToString(), "inherited", rule.IsInherited,
+                "mask", "0x" + unchecked((uint)rule.FileSystemRights).ToString("X8"), "sidClass", SidClass(rule.IdentityReference.Value, self));
+        }
+    }
+
+    private static void CloseValid(IntPtr handle) { if (handle != IntPtr.Zero && handle != new IntPtr(-1)) CloseHandle(handle); }
 
     private static void CheckVersion(string java, string runtime)
     {
@@ -446,6 +607,17 @@ public static class RuntimeReadiness
         internal UIntPtr ProcessMemoryLimit, JobMemoryLimit, PeakProcessMemoryUsed, PeakJobMemoryUsed;
     }
     [DllImport("kernel32.dll")] private static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreatePipe(out IntPtr read, out IntPtr write, IntPtr security, uint size);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess,
+        out IntPtr target, uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint options);
+    [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr OpenFile(string path, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+    [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint processId);
+    [DllImport("advapi32.dll", SetLastError = true)] private static extern uint GetSecurityInfo(IntPtr handle, int type, uint information,
+        out IntPtr owner, out IntPtr group, out IntPtr dacl, out IntPtr sacl, out IntPtr descriptor);
+    [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr memory);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsProcessInJob(IntPtr process, IntPtr job, [MarshalAs(UnmanagedType.Bool)] out bool result);
     [DllImport("kernel32.dll", EntryPoint = "QueryInformationJobObject", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
