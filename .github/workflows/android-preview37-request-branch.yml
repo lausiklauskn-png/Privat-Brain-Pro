@@ -1,0 +1,265 @@
+# Scratch-only Android dispatcher on release-request/android37, not main.
+# SOURCE remains the same frozen app/main source as the verified Windows release.
+# Wcontrol is a direct SOURCE child adding only its Windows helper; this control
+# commit is a direct Wcontrol child adding only this Android helper. Neither is merged.
+# Fill SOURCE, WINDOWS_DISPATCH_COMMIT, WINDOWS_RELEASE_RUN_ID and MODE only after
+# actual Windows publication, independent public download and complete source gates.
+# Normal source rows are 10/13 without pseudo-request; plus two bound Windows rows
+# gives the 12/15 pre-Android gate. This ref=main Android release itself later adds
+# three actual source check rows; final source raw totals become 15/18, not 12/15.
+name: Öffentliche signierte Android-Version 1.0.37 einmalig anfordern
+on:
+  push:
+    branches: [release-request/android37]
+    paths: ['.github/workflows/android-preview37-request-branch.yml']
+permissions:
+  contents: read
+  checks: read
+  actions: write
+concurrency:
+  group: android-preview37-one-shot
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    if: github.repository == 'lausiklauskn-png/Privat-Brain-Pro' && github.ref == 'refs/heads/release-request/android37'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 015c9a1266a64f44a1896ead56349094c64e2f9a
+      WINDOWS_DISPATCH_COMMIT: 92076cc6a6803841448a31bd8c4c4463f74bc917
+      REQUEST_BRANCH: release-request/android37
+      HELPER_PATH: .github/workflows/android-preview37-request-branch.yml
+      WINDOWS_HELPER_PATH: .github/workflows/windows-preview37-request-branch.yml
+      WINDOWS_RELEASE_RUN_ID: 40224745892
+      RELEASE_TAG: v1.0.37
+      SOURCE_CHECK_MODE: legacy-transition
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bereits geprüfte Quelle und einmalige Anforderung prüfen
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GH_REPO" = lausiklauskn-png/Privat-Brain-Pro
+          test "$REQUEST_BRANCH" = release-request/android37
+          test "$HELPER_PATH" = .github/workflows/android-preview37-request-branch.yml
+          test "$WINDOWS_HELPER_PATH" = .github/workflows/windows-preview37-request-branch.yml
+          test "$GITHUB_REF" = "refs/heads/$REQUEST_BRANCH"
+          test "$GITHUB_REF_NAME" = "$REQUEST_BRANCH"
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$WINDOWS_RELEASE_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$WINDOWS_DISPATCH_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$RELEASE_TAG" = v1.0.37
+          skip() {
+            printf 'dispatch=false\n' >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          # A durable pre-request marker makes a manual re-run conservative even
+          # when the dispatch response was lost. Never resend that request blindly.
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/dispatch-artifacts.json"
+          if jq -e '[.[].artifacts[] | select(.name == "preview37-dispatch-intent" and .expired == false)] | length > 0' "$RUNNER_TEMP/dispatch-artifacts.json" >/dev/null; then
+            skip 'Eine .37-Anforderung wurde für diesen Lauf bereits vorgemerkt. Den bestehenden Release-Lauf prüfen; keine erneute Anforderung.'
+          fi
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/dispatch-releases.json"
+          if jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length > 0' "$RUNNER_TEMP/dispatch-releases.json" >/dev/null; then
+            skip 'Für .37 besteht bereits eine Veröffentlichung oder ein Entwurf. Unverändert belassen und prüfen; nichts erneut anfordern.'
+          fi
+          # Checkout fetched all tags. An existing tag without a release is an
+          # explicit stop, not permission to publish or move that tag.
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo 'Der .37-Tag besteht bereits. Keine Anforderung ohne Prüfung dieses Zustands.' >&2
+            exit 1
+          fi
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_SHA^{commit}")" = "$SOURCE_SHA"
+          test "$(git rev-parse "$WINDOWS_DISPATCH_COMMIT^{commit}")" = "$WINDOWS_DISPATCH_COMMIT"
+          test "$(git rev-list --parents -n 1 HEAD)" = "$GITHUB_SHA $WINDOWS_DISPATCH_COMMIT"
+          test "$(git rev-list --parents -n 1 "$WINDOWS_DISPATCH_COMMIT")" = "$WINDOWS_DISPATCH_COMMIT $SOURCE_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+          test "$(git diff --no-ext-diff --no-textconv --no-renames --name-status "$SOURCE_SHA" "$WINDOWS_DISPATCH_COMMIT" --)" = "$(printf 'A\t%s' "$WINDOWS_HELPER_PATH")"
+          test "$(git diff --no-ext-diff --no-textconv --no-renames --name-status "$WINDOWS_DISPATCH_COMMIT" HEAD --)" = "$(printf 'A\t%s' "$HELPER_PATH")"
+          test "$(git diff --no-ext-diff --no-textconv --no-renames --name-status "$SOURCE_SHA" HEAD --)" = "$(printf 'A\t%s\nA\t%s' "$HELPER_PATH" "$WINDOWS_HELPER_PATH")"
+          test "$(git rev-parse "HEAD:$WINDOWS_HELPER_PATH")" = "$(git rev-parse "$WINDOWS_DISPATCH_COMMIT:$WINDOWS_HELPER_PATH")"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$REQUEST_BRANCH" --jq .object.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/release-request/windows37-v2" --jq .object.sha)" = "$WINDOWS_DISPATCH_COMMIT"
+          git show "$SOURCE_SHA:android/app/build.gradle" > "$RUNNER_TEMP/dispatch-source.gradle"
+          python3 - "$RUNNER_TEMP/dispatch-source.gradle" <<'PY'
+          import re, sys
+          from pathlib import Path
+          text = Path(sys.argv[1]).read_text()
+          assert re.findall(r'^\s*versionCode\s+(\d+)\s*$', text, re.M) == ['37'], 'Exact source versionCode 37 required'
+          assert re.findall(r'^\s*versionName\s+"([^"\n]+)"\s*$', text, re.M) == ['1.0.37'], 'Exact source versionName .37 required'
+          assert len(re.findall(r'^\s*applicationId\b', text, re.M)) == 1, 'Exactly one base applicationId declaration required'
+          base_ids = re.findall(r'^\s*applicationId\s+"([^"\n]+)"\s*$', text, re.M)
+          assert base_ids == ['de.familyprojekt.privatebrain.pro'], 'Original Android base applicationId required'
+          assert len(re.findall(r'^\s*preview\s*\{', text, re.M)) == 1, 'Exactly one preview declaration required'
+          preview_blocks = re.findall(r'^\s*preview\s*\{([^{}]*)\}', text, re.M)
+          assert len(preview_blocks) == 1, 'Exactly one preview buildType required'
+          assert len(re.findall(r'^\s*applicationIdSuffix\b', preview_blocks[0], re.M)) == 1, 'Exactly one preview suffix declaration required'
+          preview_suffixes = re.findall(r'^\s*applicationIdSuffix\s+"([^"\n]+)"\s*$', preview_blocks[0], re.M)
+          assert preview_suffixes == ['.preview'], 'Original preview applicationIdSuffix required'
+          assert base_ids[0] + preview_suffixes[0] == 'de.familyprojekt.privatebrain.pro.preview', 'Original public Android package required'
+          PY
+          gh api "repos/$GH_REPO/actions/runs/$WINDOWS_RELEASE_RUN_ID" > "$RUNNER_TEMP/dispatch-windows-release-run.json"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$WINDOWS_RELEASE_RUN_ID/jobs?filter=latest&per_page=100" > "$RUNNER_TEMP/dispatch-windows-release-jobs.json"
+          gh api --paginate --slurp "repos/$GH_REPO/commits/$SOURCE_SHA/check-runs?filter=latest&per_page=100" > "$RUNNER_TEMP/dispatch-checks.json"
+          python3 - "$RUNNER_TEMP/dispatch-windows-release-run.json" "$RUNNER_TEMP/dispatch-windows-release-jobs.json" "$RUNNER_TEMP/dispatch-checks.json" <<'PY'
+          import json, os, re, sys
+          from pathlib import Path
+          source = os.environ['SOURCE_SHA']
+          release_id = int(os.environ['WINDOWS_RELEASE_RUN_ID'])
+          repo = os.environ['GH_REPO']
+          api = 'https://api.github.com/repos/' + repo
+          web = 'https://github.com/' + repo
+          read = lambda path: json.loads(Path(path).read_text())
+          positive = lambda value: type(value) is int and value > 0
+          run, job_pages, check_pages = map(read, sys.argv[1:])
+          assert positive(run['id']) and run['id'] == release_id
+          assert run['repository']['full_name'] == run['head_repository']['full_name'] == repo
+          assert run['head_sha'] == source and run['head_branch'] == 'main'
+          assert run['path'] == '.github/workflows/windows-release.yml'
+          assert run['event'] == 'workflow_dispatch'
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['url'] == api + '/actions/runs/' + str(release_id)
+          assert run['html_url'] == web + '/actions/runs/' + str(release_id)
+          assert run['jobs_url'] == run['url'] + '/jobs'
+          assert positive(run['run_attempt']) and positive(run['check_suite_id'])
+          suite = run['check_suite_id']
+          assert run['check_suite_url'] == api + '/check-suites/' + str(suite)
+          assert type(job_pages) is list and job_pages
+          assert all(page['total_count'] == 2 for page in job_pages)
+          jobs = [job for page in job_pages for job in page['jobs']]
+          assert len(jobs) == 2 and sorted(job['name'] for job in jobs) == ['pruefen', 'veroeffentlichen']
+          assert len({job['id'] for job in jobs}) == 2 and all(positive(job['id']) for job in jobs)
+          release_checks = {}
+          for job in jobs:
+              assert job['run_id'] == release_id and job['run_url'] == run['url']
+              assert job['head_sha'] == source and job['run_attempt'] == run['run_attempt']
+              assert job['status'] == 'completed' and job['conclusion'] == 'success'
+              assert job['html_url'] == run['html_url'] + '/job/' + str(job['id'])
+              match = re.fullmatch(re.escape(api) + r'/check-runs/([1-9][0-9]*)', job['check_run_url'])
+              assert match, 'Release job check URL must belong to this repository'
+              check_id = int(match[1])
+              assert check_id not in release_checks
+              release_checks[check_id] = job
+          mode = os.environ['SOURCE_CHECK_MODE']
+          assert mode in ('workflow-only', 'legacy-transition'), 'Exact Pages/source check contract required'
+          required = ['Responsive Oberfläche (firefox)', 'Responsive Oberfläche (webkit)',
+                      'validate', 'native-smoke', 'upgrade-probe-smoke', 'windows',
+                      'encrypted-signing', 'shared-engine', 'pages-build', 'pages-deploy']
+          if mode == 'legacy-transition':
+              required += ['build', 'deploy', 'report-build-status']
+          expected_source_count = len(required)
+          expected_total_count = expected_source_count + 2
+          assert type(check_pages) is list and check_pages
+          assert all(page['total_count'] == expected_total_count for page in check_pages)
+          checks = [check for page in check_pages for check in page['check_runs']]
+          assert len(checks) == expected_total_count and len({check['id'] for check in checks}) == expected_total_count
+          assert all(positive(check['id']) and check['app']['slug'] == 'github-actions' and
+                     check['head_sha'] == source and check['status'] == 'completed' and
+                     check['conclusion'] == 'success' for check in checks)
+          actual = {check['id']: check for check in checks}
+          for check_id, job in release_checks.items():
+              check = actual[check_id]
+              assert check['name'] == job['name']
+              assert check['check_suite']['id'] == suite
+              assert check['url'] == job['check_run_url']
+              assert check['details_url'] == check['html_url'] == job['html_url']
+          assert {check['id'] for check in checks if check['check_suite']['id'] == suite} == set(release_checks)
+          source_checks = [check for check in checks if check['id'] not in release_checks]
+          assert len(source_checks) == expected_source_count and sorted(check['name'] for check in source_checks) == sorted(required)
+          evidence = {'source_commit': source, 'windows_release_run_id': release_id,
+                      'windows_release_check_suite_id': suite, 'windows_release_check_run_ids': sorted(release_checks),
+                      'source_checks_mode': mode, 'source_checks_count': expected_source_count,
+                      'source_check_names': sorted(required), 'total_checks_count': expected_total_count}
+          Path(os.environ['RUNNER_TEMP'], 'dispatch-windows-release-gate.json').write_text(json.dumps(evidence) + '\n')
+          PY
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?per_page=100" > "$RUNNER_TEMP/dispatch-runs.json"
+          if jq -e --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | length > 0' "$RUNNER_TEMP/dispatch-runs.json" >/dev/null; then
+            skip 'Für diesen Dispatch-Commit besteht bereits ein manueller Release-Lauf, möglicherweise als Testlauf. Diesen prüfen oder gezielt wiederholen; keine zweite Anforderung.'
+          fi
+          if jq -e '[.[].workflow_runs[] | select(.status != "completed")] | length > 0' "$RUNNER_TEMP/dispatch-runs.json" >/dev/null; then
+            echo 'Ein anderer Android-Release läuft oder wartet bereits. Keine zweite Anforderung.' >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/preview37-one-shot"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP']) / 'preview37-one-shot'
+          request = {'ref':'main','inputs':{'channel':'public','tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dry_run':False}}
+          windows = json.loads(Path(os.environ['RUNNER_TEMP'], 'dispatch-windows-release-gate.json').read_text())
+          intent = {'release_tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dispatcher_commit':os.environ['GITHUB_SHA'],'dispatcher_ref':os.environ['GITHUB_REF'],'dispatcher_branch':os.environ['REQUEST_BRANCH'],'target_workflow_ref':'main','helper_path':os.environ['HELPER_PATH'],'windows_helper_path':os.environ['WINDOWS_HELPER_PATH'],'windows_dispatcher_commit':os.environ['WINDOWS_DISPATCH_COMMIT'],'dispatcher_run_id':os.environ['GITHUB_RUN_ID'],'source_checks_mode':os.environ['SOURCE_CHECK_MODE'],'source_checks_sha256':hashlib.sha256(Path(os.environ['RUNNER_TEMP'],'dispatch-checks.json').read_bytes()).hexdigest(),'windows_release_run_id':windows['windows_release_run_id'],'windows_release_check_suite_id':windows['windows_release_check_suite_id'],'windows_release_check_run_ids':windows['windows_release_check_run_ids'],'state':'intent recorded before request; acceptance is not yet confirmed'}
+          (folder / 'request.json').write_text(json.dumps(request) + '\n')
+          (folder / 'intent.json').write_text(json.dumps(intent) + '\n')
+          PY
+          printf 'dispatch=true\n' >> "$GITHUB_OUTPUT"
+      - name: Anforderungsabsicht vor dem nicht wiederholten Request sichern
+        if: steps.gate.outputs.dispatch == 'true'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: preview37-dispatch-intent
+          path: ${{ runner.temp }}/preview37-one-shot/intent.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Gesicherte öffentliche Anforderungsabsicht im Joblog belegen
+        if: steps.gate.outputs.dispatch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload = (Path(os.environ['RUNNER_TEMP']) / 'preview37-one-shot/intent.json').read_bytes()
+          assert 0 < len(payload) <= 16384, 'Bounded public intent required'
+          intent = json.loads(payload)
+          expected = {'release_tag','source_commit','dispatcher_commit','dispatcher_ref',
+                      'dispatcher_branch','target_workflow_ref','helper_path','windows_helper_path',
+                      'windows_dispatcher_commit','dispatcher_run_id','source_checks_mode',
+                      'source_checks_sha256','windows_release_run_id','windows_release_check_suite_id',
+                      'windows_release_check_run_ids','state'}
+          assert set(intent) == expected, 'Only reviewed public intent fields may be logged'
+          assert intent['dispatcher_branch'] == 'release-request/android37'
+          assert intent['target_workflow_ref'] == 'main'
+          print('REQUEST37_INTENT_JSON ' + json.dumps(intent, ensure_ascii=False, sort_keys=True, separators=(',',':')))
+          PY
+      - name: Bestehenden signierten Release mit unveränderten Prüfungen starten
+        if: steps.gate.outputs.dispatch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Recheck after uploading the intent: no changed main or concurrent
+          # release may slip through that upload interval. A stop keeps the
+          # intent marker, requiring inspection rather than a blind retry.
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$REQUEST_BRANCH" --jq .object.sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/release-request/windows37-v2" --jq .object.sha)" = "$WINDOWS_DISPATCH_COMMIT"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?per_page=100" > "$RUNNER_TEMP/dispatch-runs-final.json"
+          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/dispatch-runs-final.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/dispatch-releases-final.json"
+          jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RUNNER_TEMP/dispatch-releases-final.json" >/dev/null
+          remote_tag=$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")
+          test -z "$remote_tag"
+          # Deliberately no retry for this non-idempotent POST. The existing
+          # workflow still checks source/main, native smoke, signature and upgrade.
+          gh api --silent --method POST "repos/$GH_REPO/actions/workflows/android-release.yml/dispatches" --input "$RUNNER_TEMP/preview37-one-shot/request.json"
+          for attempt in {1..10}; do
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/android-release.yml/runs?event=workflow_dispatch&head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/dispatch-observed.json"
+            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/dispatch-observed.json")
+            if [[ -n "$run_id" ]]; then
+              printf 'release_run_id=%s\n' "$run_id" >> "$GITHUB_OUTPUT"
+              printf 'Release angefordert: https://github.com/%s/actions/runs/%s\nQuelle: `%s`, Tag: `%s`. Veröffentlichung und signiertes Update sind separat abzuwarten.\n' "$GH_REPO" "$run_id" "$SOURCE_SHA" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'Request angenommen, aber noch keine Lauf-ID beobachtet. Nicht erneut anfordern; Actions und die vorgemerkte Absicht prüfen.' >&2
+          exit 1
