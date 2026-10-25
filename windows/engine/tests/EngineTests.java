@@ -122,6 +122,13 @@ public final class EngineTests {
             String next=folders.copy(hash,name).getString("name");ok(!next.equals(safe)&&Files.exists(library.resolve(safe)),"existing library file remains intact on a duplicate name");
         }
         folders.pause();ok(!folders.copy(hash,"paused.txt").getBoolean("copied"),"pausing keeps originals and previously made copies");
+        DesktopFolders reopened=new DesktopFolders(state);ok(!reopened.state().getBoolean("enabled")&&reopened.state().getBoolean("configured")&&reopened.state().getString("name").equals("library"),"pause preserves the destination across reopen");
+        ok(reopened.resume().getBoolean("enabled")&&new DesktopFolders(state).state().getBoolean("enabled"),"resume verifies the remembered destination and persists enabled state");
+        ok(reopened.copy(hash,"resumed.txt").getBoolean("copied")&&Arrays.equals(Files.readAllBytes(library.resolve("resumed.txt")),data),"resumed library writes exact additional bytes without reselection");
+        try(var names=Files.list(library)){ok(names.noneMatch(path->path.getFileName().toString().startsWith(".private-brain-copy-check-")),"resume removes its temporary access probe");}
+        reopened.pause();Path absent=Files.createDirectory(root.resolve("gone-library"));reopened.library(absent.toString());reopened.pause();Files.delete(absent);
+        try{reopened.resume();throw new AssertionError("missing destination was re-enabled");}catch(IOException expected){}
+        ok(!new DesktopFolders(state).state().getBoolean("enabled")&&new DesktopFolders(state).state().getString("name").equals("gone-library")&&Arrays.equals(originals.read(hash,0),data),"failed resume keeps copying off and preserves originals and selected destination");
     }
     static void service(Path root,Path repository)throws Exception {
         Path resources=Files.createDirectory(root.resolve("resources")),chosen=Files.createDirectory(root.resolve("api-vault"));

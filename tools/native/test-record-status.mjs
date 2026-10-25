@@ -194,8 +194,24 @@ try {
     for (const width of [320,412,768,1280,1920]) {
       await page.setViewportSize({width,height:900});
       await page.waitForTimeout(30);
-      const layout = await page.locator('#results .pb-record-availability').evaluateAll(chips => chips.length === 7 && chips.every(chip => {const r=chip.getBoundingClientRect();return r.width > 0 && r.left >= -1 && r.right <= innerWidth+1 && chip.scrollWidth <= r.width+2;}));
-      ok(language + ' / ' + width + 'px: availability text stays inside the visible result cards',layout);
+      const layout = await page.locator('#results .card[data-hash]').evaluateAll(cards => cards.length === 7 && cards.every(card => {
+        const raw=card.querySelector('.pb-record-availability'),path=card.querySelector('.pb-result-path'),r=path?.getBoundingClientRect();
+        return raw&&path&&path.dataset.original===raw.dataset.original&&r.width>0&&r.left>=-1&&r.right<=innerWidth+1&&path.scrollWidth<=path.clientWidth+2;
+      }));
+      ok(language + ' / ' + width + 'px: the compact path exposes the unchanged availability state without overflowing',layout);
+    }
+    // The former availability chip is now a detail of the compact source/path
+    // control. Check the actual visible disclosure rather than accepting hidden
+    // duplicated labels as a user-visible explanation.
+    for(const key of Object.keys(hashes)){
+      const path=card(page,key).locator('.pb-result-path');await path.click();
+      await page.locator('#pb-result-path-popover').waitFor({state:'visible'});
+      const detail=await page.evaluate(hash=>{
+        const record=CATALOG.find(record=>record.hash===hash),expected=PBRecordStatus.availability(record),popup=document.getElementById('pb-result-path-popover'),path=document.querySelector('#results .card[data-hash="'+hash+'"] .pb-result-path');
+        const rect=popup.getBoundingClientRect();return{key:expected.key,label:expected.label,detail:expected.detail,path:record.path,actualKey:path.dataset.original,actualPath:popup.querySelector('.pb-result-path-full').textContent,actualLabel:popup.querySelector('.pb-result-source-state').textContent,actualDetail:popup.querySelector('.pb-result-source-detail').textContent,accessible:path.getAttribute('aria-label'),fits:rect.left>=0&&rect.right<=innerWidth+1&&popup.scrollWidth<=popup.clientWidth+1};
+      },hashes[key]);
+      ok(language+' / '+key+': source details remain visible and truthful through the path control',detail.actualKey===detail.key&&detail.actualPath===detail.path&&detail.actualLabel===detail.label&&detail.actualDetail===detail.detail&&detail.accessible.includes(detail.path)&&detail.accessible.includes(detail.label)&&detail.fits);
+      await page.keyboard.press('Escape');
     }
   }
   await page.evaluate(() => {document.documentElement.lang='de';});

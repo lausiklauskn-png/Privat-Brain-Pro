@@ -1,4 +1,6 @@
 /* Private Brain Pro: quiet native layout. Loaded after the legacy native rules. */
+html[data-pb-theme] { --pb-control-size:44px; }
+@media(any-pointer:fine) { html[data-pb-theme] { --pb-control-size:32px; } }
 html[data-pb-theme] body { background:var(--bg); background-image:none; color:var(--ink); font-family:var(--sans); }
 html[data-pb-theme] h1,html[data-pb-theme] h2,html[data-pb-theme] h3,html[data-pb-theme] h4 { font-family:var(--sans); letter-spacing:-.025em; }
 html[data-pb-theme] .wrap { max-width:none; padding:8px 16px max(12px,env(safe-area-inset-bottom)); }
@@ -224,18 +226,18 @@ html[data-pb-theme] .pb-mail-translation .mail-reader-actions { flex-wrap:wrap; 
 html[data-pb-theme] .pb-overview-help>summary { width:44px; min-height:44px; border:0; }
 html[data-pb-theme] .pb-overview-help>summary>svg { width:20px; height:20px; }
 
-/* Keep touch actions easy to hit. A wide mouse workspace has a flatter
-   toolbar; content rows, message text, checkboxes and radios keep their sizing. */
-html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button { min-height:44px!important; }
+/* Mouse controls keep the same compact height when a DeX window is narrowed
+   or turned upright. Touch-only controls retain their larger hit area. */
+html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.filterbar,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button { min-height:44px!important; }
 html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:44px; }
-@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+@media(any-pointer:fine) {
   html[data-pb-theme] .native-toolbar-row .main-pages .tab { min-width:32px!important; min-height:32px!important; padding:3px 7px!important; }
   html[data-pb-theme] .native-toolbar-row .main-pages .tab.compact-icon-only { width:32px!important; min-width:32px!important; }
   html[data-pb-theme] .native-toolbar-quick>.tab,
   html[data-pb-theme] .native-toolbar-quick>#pb-palette-button { width:32px!important; min-width:32px!important; height:32px!important; min-height:32px!important; }
-  html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button,
+  html[data-pb-theme] :is(.native-navigation,.explorer-toolbar,.cardbtns,.filterbar,.mail-head,.mail-compose-actions,.mail-reader-actions,.pb-dup-actions,.native-options-panel,.panel .btnrow)>button,
   html[data-pb-theme] .native-file-head>button,
-  html[data-pb-theme] .pb-explorer-sort-popup button { min-height:32px!important; height:auto; padding-block:2px!important; line-height:1.2; }
+  html[data-pb-theme] .pb-explorer-sort-popup button { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:32px!important; height:auto; padding-block:2px!important; line-height:1.2; }
   html[data-pb-theme] :is(.filterbar,.explorer-toolbar,.mail-head,.pb-input-language-quick) :is(select,input[type=search],input[type=text]) { min-height:32px; height:32px; box-sizing:border-box; padding-block:2px; line-height:1.2; }
   html[data-pb-theme] #pb-explorer-sort>summary { min-height:32px; padding-block:2px; line-height:1.2; }
   html[data-pb-theme] #panel-search .searchbox input[type=search] { min-height:32px; height:32px; padding-block:2px; line-height:1.1; }
@@ -260,12 +262,12 @@ html[data-pb-theme] #pb-search-language-menu { position:fixed; z-index:64; width
 html[data-pb-theme] #pb-search-language-menu>button { display:block; width:100%; min-height:44px; margin:0; padding:5px 8px; border-color:transparent; font-size:.85rem; line-height:1.2; text-align:start; white-space:normal; overflow-wrap:normal; word-break:normal; }
 html[data-pb-theme] #pb-search-language-menu>button[aria-pressed=true] { border-color:var(--acc); color:var(--acc); background:var(--pb-selected,var(--card2)); font-weight:600; }
 html[data-pb-theme] #pb-search-language-menu>button:active { transform:none!important; }
-@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+@media(any-pointer:fine) {
   html[data-pb-theme] #pb-search-language { width:32px; min-width:32px; height:32px; min-height:32px!important; }
   html[data-pb-theme] #pb-search-language-menu>button { min-height:32px; padding-block:2px; }
 }
 @media(max-width:650px) {
-  html[data-pb-theme] #panel-search .searchbox { grid-template-columns:minmax(0,1fr) 44px 44px; }
+  html[data-pb-theme] #panel-search .searchbox { grid-template-columns:minmax(0,1fr) var(--pb-control-size) var(--pb-control-size); }
   html[data-pb-theme] #panel-search .searchbox input[type=search] { grid-column:1; grid-row:1; }
   html[data-pb-theme] #panel-search #mic { grid-column:2; grid-row:1; }
   html[data-pb-theme] #panel-search #pb-input-language-quick { grid-column:3; grid-row:1; }
@@ -274,6 +276,20 @@ html[data-pb-theme] #pb-search-language-menu>button:active { transform:none!impo
 
 /* Help follows the same mouse/touch target profile as the nearby settings. */
 html[data-pb-theme].pb-help-ready .pb-help-toggle { width:44px; height:44px; min-width:44px; min-height:44px; padding:10px; }
-@media(min-width:1000px) and (orientation:landscape) and (any-pointer:fine) {
+@media(any-pointer:fine) {
   html[data-pb-theme].pb-help-ready .pb-help-toggle { width:32px; height:32px; min-width:32px; min-height:32px; padding:6px; }
 }
+
+/* Page navigation follows the same compact profile as file and mail actions. */
+html[data-pb-theme] .native-pdf-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+html[data-pb-theme] .native-pdf-toolbar>select { flex:0 1 15rem; width:auto; max-width:100%; min-width:0; }
+@media(any-pointer:fine) {
+  html[data-pb-theme] :is(.native-pdf-toolbar,.native-file-menu,.library-setup .btnrow)>:is(button,select),
+  html[data-pb-theme] #pb-search-language-menu>button {
+    min-height:32px!important; height:32px; box-sizing:border-box; padding-block:2px!important; line-height:1.2;
+  }
+}
+
+/* The status chip's legacy top margin stretched its sibling actions by 4px. */
+html[data-pb-theme] #results .pb-result-compact>.cardbtns { align-items:center; }
+html[data-pb-theme] #results .pb-result-compact>.cardbtns>.pb-check-badge { margin:0; }

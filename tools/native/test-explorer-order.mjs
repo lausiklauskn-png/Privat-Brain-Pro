@@ -44,7 +44,7 @@ try{
   ok('The single Sort button describes the actual initial order',(await summary.innerText()).trim()==='Sortieren'&&(await summary.getAttribute('title'))==='Sortieren: Datum · Neueste oben');
   ok('Legacy select and direction remain in the DOM but are hidden',await page.locator('#explorerSort').count()===1&&await page.locator('#explorerOrder').count()===1&&!await page.locator('#explorerSort').isVisible()&&!await page.locator('#explorerOrder').isVisible());
   ok('The new button uses the shared line sort icon',await summary.locator('svg[data-icon-key="sort"]').count()===1);
-  ok('A wide mouse workspace uses a flat Sort target',await summary.evaluate(e=>{const rect=e.getBoundingClientRect();return matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches&&rect.height>=32&&rect.height<=34;}));
+  ok('A wide mouse workspace uses a flat Sort target',await summary.evaluate(e=>{const rect=e.getBoundingClientRect();return matchMedia('(any-pointer:fine)').matches&&rect.height>=32&&rect.height<=34;}));
   await chooseDirection(true);
   ok('The direction choice puts the oldest on top',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf','Gehaltsabrechnung-September.pdf','Rechnung-Stadtwerke.pdf'])&&(await summary.getAttribute('title')).endsWith('Älteste oben'));
   ok('Choosing a direction closes its menu',!await menu.evaluate(e=>e.open));
@@ -86,7 +86,7 @@ try{
   ok('History restores the same visible sort description',(await summary.getAttribute('title'))==='Sort: Date · Oldest first'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
   await page.setViewportSize({width:360,height:740});
   ok('Toolbar fits a phone without sideways scrolling',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  ok('One compact Sort target is at least 44 px and the content switch stays flat',await page.evaluate(()=>{const rect=document.querySelector('#pb-explorer-sort>summary').getBoundingClientRect(),toolbar=document.querySelector('.explorer-toolbar').getBoundingClientRect(),h=document.querySelector('.explorer-content').getBoundingClientRect().height;return rect.height>=44&&rect.width<toolbar.width*.8&&h>=26&&h<=32;}));
+  ok('One compact Sort target follows the pointer profile and the content switch stays flat',await page.evaluate(()=>{const rect=document.querySelector('#pb-explorer-sort>summary').getBoundingClientRect(),toolbar=document.querySelector('.explorer-toolbar').getBoundingClientRect(),h=document.querySelector('.explorer-content').getBoundingClientRect().height;const target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+1&&rect.width<toolbar.width*.8&&h>=26&&h<=32;}));
   for(const [lang,label] of [['de','Sortieren'],['en','Sort'],['ru','Сортировка'],['pl','Sortuj']]){
     await page.evaluate(lang=>{document.documentElement.lang=lang;PBWorkspace.refresh();},lang);
     let fits=true;
@@ -97,7 +97,7 @@ try{
       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       fits&&=await page.evaluate(()=>{
         const control=document.querySelector('#pb-explorer-sort>summary'),popup=document.querySelector('#pb-explorer-sort-popup'),rect=popup.getBoundingClientRect();
-        const target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;
+        const target=matchMedia('(any-pointer:fine)').matches?32:44;
         return document.documentElement.scrollWidth<=innerWidth+1&&control.scrollWidth<=control.clientWidth+1&&control.getBoundingClientRect().height>=target&&rect.left>=-1&&rect.right<=innerWidth+1&&popup.scrollWidth<=popup.clientWidth+1&&[...popup.querySelectorAll('button')].every(button=>button.getBoundingClientRect().height>=target);
       });
       await summary.click();
@@ -143,7 +143,7 @@ try{
     ok('A wide touch-only device retains 44 px Sort and choice targets',await touchPage.evaluate(()=>!matchMedia('(any-pointer:fine)').matches&&[document.querySelector('#pb-explorer-sort>summary'),...document.querySelectorAll('#pb-explorer-sort-popup button')].every(e=>e.getBoundingClientRect().height>=44)));
   }finally{await touch.close();}
   await page.setViewportSize({width:1280,height:1600});
-  ok('Portrait keeps the large Sort target even with a mouse',await summary.evaluate(e=>!matchMedia('(orientation:landscape)').matches&&e.getBoundingClientRect().height>=44));
+  ok('Portrait mouse windows keep the same flat Sort target',await summary.evaluate(e=>!matchMedia('(orientation:landscape)').matches&&matchMedia('(any-pointer:fine)').matches&&e.getBoundingClientRect().height>=32&&e.getBoundingClientRect().height<=33));
   ok('No runtime errors',errors.length===0);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} explorer order checks passed (seeded catalog; no files written).`);

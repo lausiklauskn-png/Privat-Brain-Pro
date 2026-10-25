@@ -8,22 +8,25 @@
     ru:['Выбрать папку копий','Изменить папку копий','Отключить копирование','Подключить папку','Файлы остаются на устройстве. Исходные папки только читаются; оригиналы не изменяются и не перемещаются. В выбранную папку сохраняются дополнительные копии новых импортов. Ранее сохранённые файлы остаются доступны при смене папки.','Копии оригиналов сохраняются в приложении.','Дополнительные копии в: ','Выбор папки на устройстве','Android запросит доступ к папке. Выберите нужную папку. Этот выбор не загружает файлы в интернет.','Больше не показывать','Перейти к выбору папки','Отмена','Не удалось прочитать папку или записать копию. Выберите снова и проверьте разрешения Android. Импортированные файлы сохранены.','Слишком большая папка: до 2000 файлов, 80 МиБ на файл, 512 МиБ всего и 8 уровней вложенности. Выберите меньшую подпапку.','Чтение папки …','В папке нет файлов для импорта.','Папки читаются в локальные копии приложения. Исходные файлы не меняются.'],
     pl:['Wybierz folder kopii','Zmień folder kopii','Wyłącz kopiowanie','Połącz folder','Pliki zostają na urządzeniu. Foldery źródłowe są tylko odczytywane; oryginały nie są zmieniane ani przenoszone. Wybrany folder otrzymuje dodatkowe kopie nowych importów. Zapisane pliki pozostają dostępne po zmianie folderu.','Kopie oryginałów pozostają w aplikacji.','Dodatkowe kopie w: ','Wybór folderu na urządzeniu','Android poprosi o dostęp do folderu. Wybierz żądany folder. Ten wybór nie wysyła plików do internetu.','Nie pokazuj ponownie','Przejdź do wyboru folderu','Anuluj','Nie można odczytać folderu lub zapisać kopii. Wybierz ponownie i sprawdź uprawnienia Android. Zaimportowane pliki pozostają.','Za duży folder: do 2000 plików, 80 MiB na plik, 512 MiB łącznie i 8 poziomów podfolderów. Wybierz mniejszy podfolder.','Odczytywanie folderu …','Folder nie zawiera plików do importu.','Foldery źródłowe są odczytywane do lokalnych kopii aplikacji. Oryginały pozostają niezmienione.']
   };
+  const extra={de:['Kopieren einschalten','Zusätzliche Ablagekopien ausgeschaltet.'],en:['Turn on copying','Additional library copies are off.'],ru:['Включить копирование','Дополнительное копирование в папку отключено.'],pl:['Włącz kopiowanie','Dodatkowe kopie w folderze są wyłączone.']};
+  for(const lang of Object.keys(words))words[lang].push(...extra[lang]);
   if(window.Capacitor?.getPlatform?.()==='windows'){
     const adapted=[["Windows öffnet die Ordnerauswahl. Wähle nur den gewünschten Ordner. Die Auswahl lädt nichts ins Internet.", "Ordner nicht erreichbar oder nicht beschreibbar. Prüfe das Laufwerk und wähle ihn erneut. Importierte Dateien bleiben erhalten."], ["Windows opens the folder picker. Select only the folder you want. This uploads nothing.", "Folder unavailable or not writable. Check the drive and select it again. Imported files are preserved."], ["Windows откроет выбор папки. Выберите нужную папку. Ничего не загружается в интернет.", "Папка недоступна или закрыта для записи. Проверьте диск и выберите снова. Импортированные файлы сохранены."], ["Windows otworzy wybór folderu. Wybierz żądany folder. Nic nie jest wysyłane do internetu.", "Folder niedostępny lub bez prawa zapisu. Sprawdź dysk i wybierz ponownie. Zaimportowane pliki pozostają."]];['de','en','ru','pl'].forEach((lang,i)=>{words[lang][8]=adapted[i][0];words[lang][12]=adapted[i][1];});
   }
   const t=i=>(words[document.documentElement.lang]||words.de)[i];
   const choose=document.getElementById('chooseLibrary'),pause=document.getElementById('pauseLibrary'),connect=document.getElementById('pickDir'),status=document.getElementById('libraryStatus');
-  let state={enabled:false,name:''},busy=false,problem='',reading='';
+  let state={enabled:false,name:'',configured:false},busy=false,loading=true,problem='',reading='';
+  const configured=()=>state.configured===true||Boolean(state.name);
   function refresh(){
     choose.hidden=pause.hidden=connect.hidden=false;
     // The PWA bootstrap hides this when showDirectoryPicker is absent in WebView.
     // Native SAF is independent of that browser feature detection.
-    connect.style.display='';choose.disabled=pause.disabled=connect.disabled=busy||Boolean(signing);
-    pause.disabled=busy||Boolean(signing)||!state.enabled;
-    for(const [node,key] of [[choose,state.name?1:0],[pause,2],[connect,3]]){node.textContent=t(key);node.title=t(key);}
+    connect.style.display='';choose.disabled=pause.disabled=connect.disabled=busy||loading||Boolean(signing);
+    pause.setAttribute('aria-pressed',String(Boolean(state.enabled)));
+    for(const [node,key] of [[choose,configured()?1:0],[pause,state.enabled?2:17],[connect,3]]){node.textContent=t(key);node.title=t(key);}
     document.querySelector('[data-ws=libraryHelp]').textContent=t(4);
     document.getElementById('fsHint').textContent=t(16);
-    status.textContent=(reading?t(14)+' '+reading+' ':'')+(problem?problem+' ':'')+t(5)+(state.enabled?' '+t(6)+state.name:'');
+    status.textContent=(reading?t(14)+' '+reading+' ':'')+(problem?problem+' ':'')+(state.enabled?t(6)+state.name:t(18)+(configured()?' '+state.name:''));
   }
   function hint(){
     if(localStorage.getItem('pb_fs_ok')==='1')return Promise.resolve(true);
@@ -36,7 +39,7 @@
     });
   }
   async function pick(library){
-    if(busy||signing)return;busy=true;problem='';refresh();
+    if(busy||loading||signing)return;busy=true;problem='';refresh();
     try{
       if(!await hint())return;
       const selected=await api[library?'chooseLibrary':'chooseSource']();if(selected?.cancelled)return;
@@ -57,7 +60,15 @@
     }catch(error){problem=t(error?.code==='FOLDER_LIMIT'?13:12);}
     finally{await api.finishSource().catch(()=>{});busy=false;reading='';refresh();}
   }
-  for(const [node,action]of [[choose,()=>pick(true)],[connect,()=>pick(false)],[pause,async()=>{if(busy||signing)return;busy=true;problem='';refresh();try{state=await api.pause();}catch{problem=t(12);}finally{busy=false;refresh();}}]]){
+  async function toggleCopies(){
+    if(busy||loading||signing)return;
+    if(!state.enabled&&!configured())return pick(true);
+    busy=true;problem='';refresh();
+    try{state=await api[state.enabled?'pause':'resume']();}
+    catch{problem=t(12);try{state=await api.state();}catch{/* Keep the last confirmed state and the visible failure. */}}
+    finally{busy=false;refresh();}
+  }
+  for(const [node,action]of [[choose,()=>pick(true)],[connect,()=>pick(false)],[pause,toggleCopies]]){
     node.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();action();},true);
   }
   window.PBFolders={refresh,async copy(hash,name){try{await api.copyOriginal({hash,name});}catch{problem=t(12);refresh();throw new Error(problem);}}};
@@ -66,5 +77,5 @@
   const browserHint=window.renderFsHint;
   window.renderFsHint=()=>{browserHint?.();refresh();};
   new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-  api.state().then(value=>{state=value;refresh();}).catch(()=>{problem=t(12);refresh();});refresh();
+  api.state().then(value=>{state=value;}).catch(()=>{problem=t(12);}).finally(()=>{loading=false;refresh();});refresh();
 })();

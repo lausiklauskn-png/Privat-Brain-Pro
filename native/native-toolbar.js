@@ -323,7 +323,7 @@
       if(node.hasAttribute('data-found')){if(!previous){const glyph=icon('warning');glyph.classList.add('native-folder-warning');node.append(glyph);}}
       else previous?.remove();
     }
-    const fixedControls={pickFiles:'file',pickMail:'mail',pickDir:'folder',chooseLibrary:'folder',pauseLibrary:'close'};
+    const fixedControls={pickFiles:'file',pickMail:'mail',pickDir:'folder',chooseLibrary:'folder',pauseLibrary:document.getElementById('pauseLibrary')?.getAttribute('aria-pressed')==='false'?'check':'close'};
     for(const [id,key] of Object.entries(fixedControls))decorateInline(document.getElementById(id),key,'native-content-icon');
     decorateHeading(document.querySelector('#panel-explorer>h2'),'folder');
     decorateHeading(document.querySelector('#panel-intake>h2,#panel-intake>.pb-help-heading>h2'),'intake');

@@ -109,7 +109,7 @@ final class DesktopService {
     }
     private JSONObject folders(String method,JSONObject o)throws Exception {
         return switch(method){
-            case "state" -> folders.state();case "pause" -> folders.pause();
+            case "state" -> folders.state();case "pause" -> folders.pause();case "resume" -> folders.resume();
             case "chooseLibrary","chooseSource" -> {
                 JSONObject chosen=host.call("folder",new JSONObject());if(chosen.optBoolean("cancelled"))yield chosen;
                 yield method.equals("chooseLibrary")?folders.library(chosen.getString("path")):folders.source(chosen.getString("path"));
