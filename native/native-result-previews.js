@@ -19,7 +19,7 @@
   const attr=(node,key,value)=>{if(node.getAttribute(key)!==value)node.setAttribute(key,value);};
   const dataImage=value=>typeof value==='string'&&value.length<=3*1024*1024&&/^data:image\/(?:png|jpe?g|gif|webp|bmp|avif);base64,[A-Za-z0-9+/\r\n]+={0,2}$/.test(value);
   function kind(rec){
-    if(rec.mail||rec.mailIndex||rec.mailBody!=null||rec.origin)return '';
+    if(rec.mail||rec.mailIndex||rec.mailBody!=null)return '';
     const name=String(rec.name||rec.path||'');
     if(rec.type==='application/pdf'||/\.pdf$/i.test(name))return 'pdf';
     return /^image\/(?:png|jpeg|gif|webp|bmp|avif)$/.test(rec.type||'')||/\.(?:png|jpe?g|gif|webp|bmp|avif)$/i.test(name)?'image':'';

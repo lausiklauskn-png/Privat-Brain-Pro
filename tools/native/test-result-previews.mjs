@@ -156,6 +156,25 @@ try{
   ok('Shared missing-original labels stay translated in English, Russian and Polish',true);
   await page.evaluate(()=>{document.documentElement.lang='de';const rec=CATALOG[0];fixtureRender([rec]);fixtureNavigate('search');});await page.locator('#results .pb-result-preview[data-state="ready"] img').waitFor();
   ok('Returning to search gives the same cached-only availability and indicator',await page.locator('#results .pb-result-preview').getAttribute('aria-label').then(text=>text.includes('Gespeicherte Vorschau')&&text.includes('Original fehlt'))&&await page.locator('#results .pb-result-preview-source').count()===1);
+  const beforeImportedFile=await page.evaluate(()=>({native:fixtureCalls.length,resolve:fixtureResolveCount}));
+  await page.evaluate(()=>{
+    // importMerge adds origin/dirId/nameTokens to ordinary imported catalog files.
+    const image=fixtureRecord(151,'image','missing',{origin:'Rechner-lokal',dirId:null,nameTokens:['foto'],thumb:'data:image/png;base64,'+fixturePng});
+    const mail=fixtureRecord(152,'image','missing',{origin:'Rechner-lokal',mail:{from:'Anna'},thumb:image.thumb});
+    const index=fixtureRecord(153,'image','missing',{origin:'Rechner-lokal',mailIndex:true,thumb:image.thumb});
+    const body=fixtureRecord(154,'image','missing',{origin:'Rechner-lokal',mailBody:'',thumb:image.thumb});
+    fixtureRender([image,mail,index,body]);fixtureExplorerRender(CATALOG);fixtureNavigate('search');document.getElementById('panel-explorer').classList.add('on');
+  });
+  await page.waitForFunction(()=>document.querySelectorAll('.pb-result-preview[data-state="ready"] img').length===2);
+  ok('An imported catalog image keeps its saved preview and missing-original indicator in both views',await page.evaluate(()=>[...document.querySelectorAll('.pb-result-preview')].every(node=>node.dataset.original==='missing'&&node.title.includes('Gespeicherte Vorschau')&&node.getAttribute('aria-label').includes('Original fehlt')&&node.querySelector('.pb-result-preview-source'))));
+  ok('Imported saved thumbnails do not probe originals, resolve bytes or request a network source',await page.evaluate(before=>fixtureCalls.length===before.native&&fixtureResolveCount===before.resolve,beforeImportedFile)&&external.length===0);
+  ok('Imported mail, index and mail-body records still receive no file preview in either view',await page.evaluate(()=>[152,153,154].every(suffix=>[...document.querySelectorAll('[data-hash="'+suffix.toString(16).padStart(64,'0')+'"]')].length===2&&![...document.querySelectorAll('[data-hash="'+suffix.toString(16).padStart(64,'0')+'"]')].some(node=>node.querySelector('.pb-result-preview')))));
+  const beforeImportedPdf=await page.evaluate(()=>fixtureCalls.length);
+  await page.evaluate(()=>{const rec=fixtureRecord(155,'pdf','local',{origin:'Rechner-lokal',dirId:null,nameTokens:['pdf']});fixtureRender([rec]);fixtureExplorerRender([rec]);});
+  await page.waitForFunction(()=>document.querySelectorAll('.pb-result-preview[data-state="ready"] img').length===2);
+  ok('An imported local PDF renders once by hash and shares the same page cache between both views',await page.evaluate(before=>{
+    const calls=fixtureCalls.slice(before),images=[...document.querySelectorAll('.pb-result-preview img')];return images.length===2&&images[0].src===images[1].src&&calls.filter(c=>c.method==='originalInfo').length===1&&calls.filter(c=>c.method==='openPdf').length===1&&calls.filter(c=>c.method==='pdfPage').length===1&&calls.filter(c=>c.method==='closePdf').length===1&&fixtureOpen===0;
+  },beforeImportedPdf));
   await page.evaluate(()=>{fixtureHold=true;delete window.fixtureRelease;fixtureRender([fixtureRecord(201,'pdf','local')]);fixtureExplorerRender([CATALOG[0]]);fixtureNavigate('search');});
   await page.waitForFunction(()=>typeof fixtureRelease==='function');
   await page.evaluate(()=>{fixtureNavigate('explorer');fixtureHold=false;fixtureRelease();});await page.locator('#explorerFiles .pb-result-preview[data-state="ready"] img').waitFor();

@@ -62,6 +62,7 @@ public static class UpgradeProbeLauncher
         internal int ElevationType;
         internal bool Elevated;
         internal int Session;
+        internal int Type;
         internal bool AdminMember;
         internal bool AdminDenyOnly;
         internal int OtherPrivileges;
@@ -77,10 +78,12 @@ public static class UpgradeProbeLauncher
         IntPtr ownedSourceToken = IntPtr.Zero;
         try
         {
-            if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate, out currentToken))
+            AssertNoThreadToken("preflight-caller");
+            if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate | TokenAssignPrimary | TokenAdjustDefault, out currentToken))
                 throw Win32Failure("OPEN_CURRENT_TOKEN");
             TokenEvidence current = ReadToken(currentToken);
             WriteParentEvidence(current);
+            WriteCallerPrivileges(currentToken);
             WriteDesktopEvidence(current.Session);
             IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             TokenEvidence source = ReadToken(sourceToken);
@@ -123,19 +126,25 @@ public static class UpgradeProbeLauncher
         bool resumed = false;
         try
         {
-            if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate, out currentToken))
+            AssertNoThreadToken("launch-caller");
+            if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate | TokenAssignPrimary | TokenAdjustDefault, out currentToken))
                 throw Win32Failure("OPEN_CURRENT_TOKEN");
             TokenEvidence current = ReadToken(currentToken);
             // Preserve the parent evidence even when the linked-token query fails.
             WriteParentEvidence(current);
+            WriteCallerPrivileges(currentToken);
             WriteDesktopEvidence(current.Session);
             IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
-            if (!DuplicateTokenEx(sourceToken, TokenQuery | TokenDuplicate | TokenAssignPrimary,
-                IntPtr.Zero, 2, 1, out primaryToken))
+            bool duplicated = IsDefaultHigh(current)
+                ? DuplicateHandle(GetCurrentProcess(), sourceToken, GetCurrentProcess(), out primaryToken,
+                    TokenQuery | TokenDuplicate | TokenAssignPrimary, false, 0)
+                : DuplicateTokenEx(sourceToken, TokenQuery | TokenDuplicate | TokenAssignPrimary,
+                    IntPtr.Zero, 2, 1, out primaryToken);
+            if (!duplicated)
                 throw Win32Failure("DUPLICATE_MEDIUM_PRIMARY_TOKEN");
             TokenEvidence primary = ReadToken(primaryToken);
             Require(primary.Sid == current.Sid && primary.Session == current.Session
-                && primary.Rid == MediumRid && !primary.Elevated, "DUPLICATED_TOKEN_MISMATCH");
+                && primary.Type == 1 && primary.Rid == MediumRid && !primary.Elevated, "DUPLICATED_TOKEN_MISMATCH");
             RequireNoAdminAuthority(primary, IsDefaultHigh(current));
 
             // Do not inherit the elevated runner's environment or test switches.
@@ -181,7 +190,7 @@ public static class UpgradeProbeLauncher
                 throw Win32Failure("OPEN_CREATED_PROCESS_TOKEN");
             TokenEvidence target = ReadToken(targetToken);
             Require(target.Sid == current.Sid && target.Session == current.Session
-                && target.Rid == MediumRid && !target.Elevated, "CREATED_PROCESS_TOKEN_MISMATCH");
+                && target.Type == 1 && target.Rid == MediumRid && !target.Elevated, "CREATED_PROCESS_TOKEN_MISMATCH");
             RequireNoAdminAuthority(target, IsDefaultHigh(current));
             Console.WriteLine("WINDOWS_UPGRADE_ACTUAL_CHILD_TOKEN {\"integrityRid\":8192,\"elevated\":false,\"adminMember\":false,\"adminDenyOnly\":"
                 + (target.AdminDenyOnly ? "true" : "false") + ",\"otherPrivileges\":"
@@ -238,6 +247,7 @@ public static class UpgradeProbeLauncher
 
     private static IntPtr MediumSourceToken(IntPtr currentToken, TokenEvidence current, out IntPtr ownedSourceToken)
     {
+        Require(current.Type == 1, "CALLER_PROCESS_PRIMARY_TOKEN_REQUIRED");
         ownedSourceToken = IntPtr.Zero;
         IntPtr sourceToken = currentToken;
         if (current.Rid != MediumRid || current.Elevated)
@@ -259,7 +269,7 @@ public static class UpgradeProbeLauncher
         TokenEvidence source = ReadToken(sourceToken);
         Require(source.Sid == current.Sid && source.Session == current.Session,
             "LINKED_TOKEN_USER_OR_SESSION_MISMATCH");
-        Require(source.Rid == MediumRid && !source.Elevated, "EXACT_MEDIUM_UNELEVATED_TOKEN_REQUIRED");
+        Require(source.Type == 1 && source.Rid == MediumRid && !source.Elevated, "EXACT_MEDIUM_UNELEVATED_TOKEN_REQUIRED");
         RequireNoAdminAuthority(source, IsDefaultHigh(current));
         return sourceToken;
     }
@@ -313,6 +323,7 @@ public static class UpgradeProbeLauncher
             // accidentally retaining a thread impersonation context.
             if (!RevertToSelf()) Environment.FailFast("UPGRADE_LAUNCH_REVERT_ACCESS_PROBE_FAILED");
         }
+        AssertNoThreadToken("after-access-revert");
         Require(allowed, "TARGET_ACCESS_OR_LOADED_PROFILE_DENIED");
     }
 
@@ -336,18 +347,18 @@ public static class UpgradeProbeLauncher
 
     private static IntPtr RestrictedMediumToken(IntPtr currentToken)
     {
-        IntPtr adjustable = IntPtr.Zero, restricted = IntPtr.Zero, adminSid = IntPtr.Zero;
+        IntPtr restricted = IntPtr.Zero, adminSid = IntPtr.Zero;
         IntPtr disabledGroup = IntPtr.Zero, label = IntPtr.Zero;
         bool returned = false;
         try
         {
-            if (!DuplicateTokenEx(currentToken, TokenQuery | TokenDuplicate | TokenAssignPrimary | TokenAdjustDefault,
-                IntPtr.Zero, 2, 1, out adjustable)) throw Win32Failure("DUPLICATE_RESTRICTION_SOURCE");
             adminSid = SidBuffer("S-1-5-32-544");
             disabledGroup = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SidAndAttributes)));
             Marshal.StructureToPtr(new SidAndAttributes { Sid = adminSid, Attributes = 0 }, disabledGroup, false);
             // Neither SANDBOX_INERT nor any policy-bypassing flag is used.
-            if (!CreateRestrictedToken(adjustable, DisableMaxPrivilege | LuaToken, 1, disabledGroup,
+            // Restrict the actual caller primary directly. Opening its handle
+            // with adjustment rights does not modify that original token.
+            if (!CreateRestrictedToken(currentToken, DisableMaxPrivilege | LuaToken, 1, disabledGroup,
                 0, IntPtr.Zero, 0, IntPtr.Zero, out restricted)) throw Win32Failure("CREATE_REDUCED_SAME_USER_TOKEN");
             SecurityIdentifier mediumSid = new SecurityIdentifier("S-1-16-8192");
             byte[] sidBytes = new byte[mediumSid.BinaryLength];
@@ -369,7 +380,6 @@ public static class UpgradeProbeLauncher
             if (disabledGroup != IntPtr.Zero) Marshal.FreeHGlobal(disabledGroup);
             if (adminSid != IntPtr.Zero) Marshal.FreeHGlobal(adminSid);
             if (!returned) Close(restricted);
-            Close(adjustable);
         }
     }
 
@@ -401,7 +411,8 @@ public static class UpgradeProbeLauncher
                 Rid = Marshal.ReadInt32(GetSidSubAuthority(integritySid, (uint)(count - 1))),
                 ElevationType = TokenInt(token, 18),
                 Elevated = TokenInt(token, 20) != 0,
-                Session = TokenInt(token, 12)
+                Session = TokenInt(token, 12),
+                Type = TokenInt(token, 8)
             };
             ReadAuthority(token, result);
             return result;
@@ -456,10 +467,53 @@ public static class UpgradeProbeLauncher
 
     private static int TokenInt(IntPtr token, int informationClass)
     {
-        Require(informationClass == 12 || informationClass == 18 || informationClass == 20,
+        Require(informationClass == 8 || informationClass == 12 || informationClass == 18 || informationClass == 20,
             "FIXED_DWORD_TOKEN_CLASS_REQUIRED");
         IntPtr data = FixedTokenInformation(token, informationClass, sizeof(int));
         try { return Marshal.ReadInt32(data); }
+        finally { Marshal.FreeHGlobal(data); }
+    }
+
+    private static void AssertNoThreadToken(string stage)
+    {
+        IntPtr token;
+        bool present = OpenThreadToken(GetCurrentThread(), TokenQuery, true, out token);
+        int error = present ? 0 : Marshal.GetLastWin32Error();
+        try
+        {
+            Console.WriteLine("WINDOWS_UPGRADE_THREAD_CONTEXT {\"stage\":\"" + stage
+                + "\",\"threadTokenPresent\":" + (present ? "true" : "false")
+                + ",\"win32\":" + error.ToString(CultureInfo.InvariantCulture) + "}");
+            Require(!present && error == 1008, "CALLER_THREAD_CONTEXT_NOT_RESTORED");
+        }
+        finally { if (present) Close(token); }
+    }
+
+    private static void WriteCallerPrivileges(IntPtr token)
+    {
+        int length;
+        IntPtr data = TokenInformation(token, 3, out length);
+        try
+        {
+            int count = Marshal.ReadInt32(data);
+            int offset = Marshal.OffsetOf(typeof(TokenPrivilegesLayout), "First").ToInt32();
+            int stride = Marshal.SizeOf(typeof(LuidAndAttributes));
+            Require(count >= 0 && count <= 4096 && (long)offset + (long)count * stride <= length, "CALLER_PRIVILEGES_BOUNDS");
+            foreach (string name in new string[] { "SeIncreaseQuotaPrivilege", "SeAssignPrimaryTokenPrivilege", "SeImpersonatePrivilege" })
+            {
+                Luid id;
+                if (!LookupPrivilegeValue(null, name, out id)) throw Win32Failure("LOOKUP_CALLER_PRIVILEGE");
+                bool present = false, enabled = false;
+                for (int i = 0; i < count; i++)
+                {
+                    LuidAndAttributes privilege = (LuidAndAttributes)Marshal.PtrToStructure(IntPtr.Add(data, offset + i * stride), typeof(LuidAndAttributes));
+                    if (privilege.Value.LowPart != id.LowPart || privilege.Value.HighPart != id.HighPart) continue;
+                    present = true; enabled = (privilege.Attributes & 2) != 0;
+                }
+                Console.WriteLine("WINDOWS_UPGRADE_CALLER_PRIVILEGE {\"name\":\"" + name
+                    + "\",\"present\":" + (present ? "true" : "false") + ",\"enabled\":" + (enabled ? "true" : "false") + "}");
+            }
+        }
         finally { Marshal.FreeHGlobal(data); }
     }
 
@@ -595,6 +649,10 @@ public static class UpgradeProbeLauncher
     }
 
     [DllImport("kernel32.dll")] private static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll")] private static extern IntPtr GetCurrentThread();
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess,
+        out IntPtr target, uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint options);
     [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetProcessWindowStation();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetThreadDesktop(uint thread);
@@ -611,6 +669,8 @@ public static class UpgradeProbeLauncher
     [DllImport("kernel32.dll", SetLastError = true)] private static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenProcessToken(IntPtr process, uint access, out IntPtr token);
+    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool OpenThreadToken(IntPtr thread, uint access, [MarshalAs(UnmanagedType.Bool)] bool asSelf, out IntPtr token);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ImpersonateLoggedOnUser(IntPtr token);
     [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
