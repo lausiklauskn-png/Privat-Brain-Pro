@@ -19,8 +19,10 @@ Add-Type -Path (Join-Path $PSScriptRoot 'upgrade-launcher.cs')
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-legacy-startup-' + $token)
 $capture = Join-Path $work 'native-capture'
+$runtimeProbeDir = Join-Path $work 'runtime-readiness'
+$runtimeCapture = Join-Path $work 'runtime-capture'
 $reports = Join-Path $env:GITHUB_WORKSPACE ('windows/pruef-out/legacy-startup/' + $token)
-New-Item -ItemType Directory -Path $work, $capture, $reports | Out-Null
+New-Item -ItemType Directory -Path $work, $capture, $runtimeProbeDir, $runtimeCapture, $reports | Out-Null
 $setup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe'
 $url = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.0-preview.29/Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe'
 $pin = '55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97'
@@ -107,6 +109,31 @@ function Stop-LegacyProbeApp {
   if (Get-Process private-brain-pro -ErrorAction SilentlyContinue) { throw 'An app process remains; no unrelated process will be stopped.' }
 }
 
+function Invoke-LegacyRuntimeReadiness {
+  $probeExe = Join-Path $runtimeProbeDir 'runtime-readiness.exe'
+  Add-Type -Path (Join-Path $PSScriptRoot 'runtime-readiness.cs') -OutputAssembly $probeExe -OutputType ConsoleApplication -ReferencedAssemblies @('System.dll','System.Core.dll','System.Security.dll','System.Web.Extensions.dll')
+  $probe = $null
+  try {
+    $launch = [UpgradeProbeLauncher]::Start($probeExe, $runtimeProbeDir, $env:LOCALAPPDATA, $env:USERPROFILE, $browserArguments, $runtimeCapture)
+    $probe = $launch.Process
+    $deadline = [DateTime]::UtcNow.AddSeconds(45)
+    while (!$probe.WaitForExit(200)) {
+      Assert-ProbeNativeOutputBound $runtimeCapture
+      if ([DateTime]::UtcNow -ge $deadline) { throw 'The same-user runtime diagnostic exceeded its bounded deadline.' }
+    }
+    $report.runtimeReadinessExitCode = $probe.ExitCode
+    if ($probe.ExitCode -ne 0) { throw ('Installed .29 runtime readiness failed; inspect the exact operation evidence. Exit: ' + $probe.ExitCode) }
+    $report.checks += 'Actual Medium primary process verified installed JRE, own job operations and real ProDevice response'
+  } finally {
+    try {
+      if ($probe -and !$probe.HasExited) { $probe.Kill(); [void]$probe.WaitForExit(5000) }
+    } finally {
+      if ($probe) { $probe.Dispose() }
+      Export-ProbeNativeOutput $runtimeCapture $reports 'runtime-readiness'
+    }
+  }
+}
+
 try {
   if (Test-LegacyPort) { throw 'A pre-existing process already owns the requested loopback port.' }
   [UpgradeProbeLauncher]::Preflight()
@@ -126,6 +153,12 @@ try {
   $installedExeHash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash
   $report.checks += 'Pinned old installer established the unchanged per-user app path'
   if (Get-Process private-brain-pro -ErrorAction SilentlyContinue) { throw 'The installer unexpectedly started an uncontrolled app instance.' }
+  Invoke-LegacyRuntimeReadiness
+  # The diagnostic uses the real default data path. Remove only its isolated
+  # synthetic state so it cannot pre-initialize or mask a fresh GUI startup.
+  Assert-LegacyRegularTree $dataDir
+  if (Test-Path -LiteralPath $dataDir) { Remove-Item -LiteralPath $dataDir -Recurse -Force }
+  if (Test-Path -LiteralPath $dataDir) { throw 'Runtime diagnostic state survived the fresh-GUI reset.' }
   $launch = [UpgradeProbeLauncher]::Start($exe, $appDir, $env:LOCALAPPDATA, $env:USERPROFILE, $browserArguments, $capture)
   $app = $launch.Process
   $report.token = $launch | Select-Object -Property @('CurrentIntegrityRid','CurrentElevationType','CurrentElevated','TargetIntegrityRid','TargetElevationType','TargetElevated','SameUserSid')
