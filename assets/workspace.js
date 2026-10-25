@@ -44,6 +44,12 @@
     doneClose:['Hinweis schließen','Close note','Закрыть','Zamknij'],documents:['Dateien','Files','Файлы','Pliki'],stored:['lokal verknüpft','linked locally','локальные ссылки','powiązane lokalnie']
   };
   function text(key) { return (words[key] || [key])[Math.max(0,['de','en','ru','pl'].indexOf(document.documentElement.lang.slice(0,2)))] || key; }
+  function controlText(node,value) {
+    // A built Pro shell already has its stroke icon and visual caption. Keep
+    // those nodes when translating the original accessible label.
+    const label=node.querySelector(':scope>.compact-label')||node;
+    if(label.textContent!==value)label.textContent=value;
+  }
   const pages=new Set([...document.querySelectorAll('.tab[data-tab]')].map(t=>t.dataset.tab));
   function syncSearchWelcome(){
     const welcome=document.querySelector('#panel-search .search-welcome');
@@ -57,7 +63,7 @@
   function syncNavigation(){
     syncSearchWelcome();
     const searching=el('panel-search').classList.contains('on'), key=searching?'search':'backSearch';
-    const tab=document.querySelector('[data-tab="search"]');tab.textContent=text(key);
+    const tab=document.querySelector('[data-tab="search"]');controlText(tab,text(key));
     document.querySelectorAll('.tab[data-tab]').forEach(t=>t.setAttribute('aria-current',el('panel-'+t.dataset.tab)?.classList.contains('on')?'page':'false'));
   }
   function navigate(page,{record=true,replace=false}={}){
@@ -488,7 +494,7 @@
   }
   function refresh() {
     if(library && !DIR_HANDLES.has(libraryId)) {library=null;localStorage.setItem('pb_library_enabled','0');}
-    for (const node of document.querySelectorAll('[data-ws]')) node.textContent=text(node.dataset.ws);
+    for (const node of document.querySelectorAll('[data-ws]')) controlText(node,text(node.dataset.ws));
     el('explorerFilter').placeholder=text('filter');el('explorerFilter').setAttribute('aria-label',text('filter'));
     syncNavigation();
     el('chooseLibrary').disabled=!window.showDirectoryPicker || signing;

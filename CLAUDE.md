@@ -1,5 +1,14 @@
 # Private Brain Pro — Sitzungs-Anker
 
+Aktiver Folgeauftrag: Startflackern für 1.0.37 beheben. Klaus sieht kurz die
+alte Ansicht vor dem neuen Rendering und verweist auf V3. Die neue Shell wird
+beim Bau vorgerendert, das gespeicherte Thema vor dem ersten Paint gesetzt und
+die vorhandenen Elemente werden danach von den Runtimeadaptern übernommen.
+PWA-Veröffentlichung muss das gebaute `www` liefern. Kein Ladevorhang, keine
+Browserdaten-/Cachepauschallöschung, kein Ändern der 22 geschützten Module oder
+des separaten V3-Repos. [Laufender Prüfstand](docs/design/umbau-2026-10-24/STARTDARSTELLUNG-37.md).
+1.0.37 ist noch nicht veröffentlicht; die folgenden 1.0.36-Belege bleiben gültig.
+
 Android und Windows 1.0.36 sind öffentlich verfügbar (25.10.2026); PR #82 übernommen.
 [Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
 Gemeinsame Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`. Suche, Explorer und Kategorien verwenden dieselben

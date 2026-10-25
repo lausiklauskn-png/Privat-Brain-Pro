@@ -1,5 +1,6 @@
 import { adaptRecovery } from './adapt-recovery.mjs';
 import { adaptSearch } from './adapt-search.mjs';
+import { prerenderShell } from './prerender-shell.mjs';
 import { bundleSemanticModel } from './fetch-semantic-model.mjs';
 import { bundleOcrAssets } from './fetch-ocr-assets.mjs';
 import { cp, mkdir, readFile, rm, writeFile, lstat, readdir } from 'node:fs/promises';
@@ -46,7 +47,11 @@ const legacyPin = '<script type="module" src="modules/pinnwand-widget.js"></scri
 if (!html.includes(legacyPin)) throw new Error('Review legacy pin board adaptation after source changes');
 html = html.replace(legacyPin, '');
 const csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
-html = html.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script src="native-network.js"></script>\n<script src="native-semantic.js"></script>\n<script src="native-seal-place.js"></script>`);
+const earlyTheme = await readFile(join(root, 'native/native-theme-early.js'), 'utf8');
+const charset = '<meta charset="utf-8">';
+if (html.split(charset).length !== 2) throw new Error('Review early UTF-8 declaration');
+html = html.replace(charset, '');
+html = html.replace('<head>', `<head>\n${charset}\n<meta http-equiv="Content-Security-Policy" content="${csp}">\n<script data-pb-early-theme>${earlyTheme}</script>\n<script src="native-network.js"></script>\n<script src="native-semantic.js"></script>\n<script src="native-seal-place.js"></script>`);
 const start = 'initEmbedding();  // echtes Bedeutungs-Modell laden';
 if (!html.includes(start)) throw new Error('Review native model start after source changes');
 // The model starts only through the switch (native-semantic.js): when loaded, checked and not after a crash.
@@ -72,6 +77,12 @@ const origins = 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io"];';
 if (!statusInit.includes(origins)) throw new Error('Review native status origin after source changes');
 statusInit = statusInit.replace(origins, 'var ALLOWED_ORIGINS = ["https://lausiklauskn-png.github.io", "https://localhost"];');
 await writeFile(statusPath, statusInit);
+const versionSource = await readFile(join(root, 'android/app/build.gradle'), 'utf8');
+const versionName = /^\s*versionName "([^"]+)"/m.exec(versionSource)?.[1];
+if (!versionName) throw new Error('Review first-paint shell version source');
+html = await prerenderShell(html, root, { version: versionName });
+if (!html.includes('<html lang="de" data-pb-prerender="shell">')) throw new Error('Review first-paint shell theme anchor');
+html = html.replace('<html lang="de" data-pb-prerender="shell">', '<html lang="de" data-pb-prerender="shell" data-pb-theme="klarblau">');
 await writeFile(join(out, 'index.html'), html);
 // Klaus' tools (tools/native/apps.json): copied unchanged into apps/<dir>/, adjusted here only for the app window.
 const apps = JSON.parse(await readFile(join(root, 'tools/native/apps.json'), 'utf8')).apps;

@@ -1,4 +1,4 @@
-# Early, isolated acceptance of the exact published production .29 installer.
+# Early, isolated acceptance of the exact published production 1.0.36 installer.
 # No WebView profile override, test build, catalog seed or application rewrite.
 $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'Legacy startup acceptance requires the isolated GitHub Windows runner.' }
@@ -23,11 +23,11 @@ $runtimeProbeDir = Join-Path $work 'runtime-readiness'
 $runtimeCapture = Join-Path $work 'runtime-capture'
 $reports = Join-Path $env:GITHUB_WORKSPACE ('windows/pruef-out/legacy-startup/' + $token)
 New-Item -ItemType Directory -Path $work, $capture, $runtimeProbeDir, $runtimeCapture, $reports | Out-Null
-$setup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe'
-$url = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.0-preview.29/Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe'
-$pin = '55d5728a4623e079ac0303442c6ff94fe77c35621f1c935c0342d1cfeab52e97'
+$setup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.36-x64-setup.exe'
+$url = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe'
+$pin = '138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091'
 $browserArguments = '--remote-debugging-port=9224 --remote-debugging-address=127.0.0.1'
-$report = [ordered]@{ source = $env:PB_SOURCE_COMMIT; version = '1.0.0-preview.29'; installerSha256 = $pin; installerBytes = 48562317; sameUserDefaultProfile = $true; profileOverride = $false; catalogFixture = $false; checks = @(); success = $false; cleanupSuccess = $false }
+$report = [ordered]@{ source = $env:PB_SOURCE_COMMIT; baselineSource = 'a1bd98f40b0186c5a9a148dbd04d19979e6262c4'; version = '1.0.36'; installerSha256 = $pin; installerBytes = 58666597; sameUserDefaultProfile = $true; profileOverride = $false; catalogFixture = $false; checks = @(); success = $false; cleanupSuccess = $false }
 $app = $null
 $installerStarted = $false
 $ownData = $false
@@ -122,7 +122,7 @@ function Invoke-LegacyRuntimeReadiness {
       if ([DateTime]::UtcNow -ge $deadline) { throw 'The same-user runtime diagnostic exceeded its bounded deadline.' }
     }
     $report.runtimeReadinessExitCode = $probe.ExitCode
-    if ($probe.ExitCode -ne 0) { throw ('Installed .29 runtime readiness failed; inspect the exact operation evidence. Exit: ' + $probe.ExitCode) }
+    if ($probe.ExitCode -ne 0) { throw ('Installed 1.0.36 runtime readiness failed; inspect the exact operation evidence. Exit: ' + $probe.ExitCode) }
     $report.checks += 'Actual Medium primary process verified installed JRE, own job operations and real ProDevice response'
   } finally {
     try {
@@ -138,9 +138,9 @@ try {
   if (Test-LegacyPort) { throw 'A pre-existing process already owns the requested loopback port.' }
   [UpgradeProbeLauncher]::Preflight()
   Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $setup -TimeoutSec 90
-  if ((Get-Item -LiteralPath $setup).Length -ne 48562317 -or (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pin) { throw 'Published .29 installer differs from its immutable size/SHA-256 pin.' }
+  if ((Get-Item -LiteralPath $setup).Length -ne 58666597 -or (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pin) { throw 'Published 1.0.36 installer differs from its immutable size/SHA-256 pin.' }
   if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -ne 'NotSigned') { throw 'Unexpected legacy installer signing state.' }
-  $report.checks += 'Exact published .29 installer size, SHA-256 and chosen signing state'
+  $report.checks += 'Exact published 1.0.36 installer size, SHA-256 and chosen signing state'
   # This reset is restricted to the exact default app-data root of this fresh
   # isolated CI account, before the old app starts and before any upgrade seed.
   Assert-LegacyRegularTree $dataDir
@@ -168,14 +168,14 @@ try {
   while ([DateTime]::UtcNow -lt $deadline) {
     Assert-ProbeNativeOutputBound $capture
     $app.Refresh()
-    if ($app.HasExited) { $report.processExitCode = $app.ExitCode; throw ('Unchanged .29 production app exited before readiness: ' + $app.ExitCode) }
+    if ($app.HasExited) { $report.processExitCode = $app.ExitCode; throw ('Unchanged 1.0.36 production app exited before readiness: ' + $app.ExitCode) }
     if ((Test-LegacyPort) -and $app.MainWindowHandle -ne [IntPtr]::Zero) {
       try { $report.browser = Read-LegacyVersionEndpoint; $ready = $true; break }
       catch { $report.lastVersionEndpointError = $_.Exception.Message }
     }
     Start-Sleep -Milliseconds 200
   }
-  if (!$ready) { throw 'The unchanged .29 production app did not expose its loopback version endpoint and window within 45 seconds.' }
+  if (!$ready) { throw 'The unchanged 1.0.36 production app did not expose its loopback version endpoint and window within 45 seconds.' }
   # Require the real app to survive the successful endpoint response as well.
   $app.Refresh()
   if ($app.HasExited -or $app.MainWindowHandle -eq [IntPtr]::Zero) { throw 'The old production process did not retain its main window.' }

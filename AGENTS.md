@@ -1,4 +1,18 @@
-# Private Brain Pro — veröffentlichter Stand
+# Private Brain Pro — laufende Startkorrektur
+
+Klaus meldet nach 1.0.36: Beim Start blitzt die alte Oberfläche kurz auf, bevor
+die neue darüber aufgebaut wird. Beauftragte Korrektur für 1.0.37: wie V3 die
+moderne Oberfläche bereits beim Bau ins HTML schreiben und gespeicherte Farben
+vor dem ersten Paint anwenden. Bestehende Laufzeitadapter übernehmen dieselben
+Elemente und verbinden deren Funktionen. Kein Ladevorhang, keine Datenlöschung.
+Die PWA muss die geprüfte gebaute `www`-Fassung erhalten; rohe Root-index.html
+darf sie nicht durch einen parallelen Legacy-Pages-Bau ersetzen. Eine nötige
+GitHub-Pages-Quellenumstellung erst nach tatsächlichem API-/Deploymentbeleg als
+erfolgreich benennen. Umsetzung, Tests und Veröffentlichungen laufen noch.
+[Umfang und Prüfstand](docs/design/umbau-2026-10-24/STARTDARSTELLUNG-37.md).
+Der bestehende Freibrief gilt weiter; frühere 1.0.36 nicht erneut veröffentlichen.
+
+## Zuletzt veröffentlicht: 1.0.36
 
 Android und Windows 1.0.36 sind öffentlich verfügbar (25.10.2026); PR #82 übernommen.
 [Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
