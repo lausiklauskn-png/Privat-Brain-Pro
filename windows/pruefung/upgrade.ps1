@@ -51,6 +51,7 @@ public static class UpgradeProbeWindow {
 '@
 function Install-Setup([string]$path) {
   $process = Start-Process -FilePath $path -ArgumentList '/S' -PassThru
+  [void]$process.Handle
   if (!$process.WaitForExit(180000)) { $process | Stop-Process -Force; throw 'Installer timed out.' }
   if ($process.ExitCode -ne 0 -or !(Test-Path $exe)) { throw 'Installer failed to establish the same app path.' }
 }
@@ -169,6 +170,7 @@ function Phase([string]$name, [bool]$needsFolder) {
     $launch | Select-Object -Property @('ProcessId','CurrentIntegrityRid','CurrentElevationType','CurrentElevated','TargetIntegrityRid','TargetElevationType','TargetElevated','SameUserSid') | ConvertTo-Json -Compress | Write-Output
     $script = Join-Path (Get-Location) 'windows/pruefung/upgrade.mjs'
     $node = Start-Process -FilePath (Get-Command node).Source -ArgumentList ('"' + $script + '" ' + $name) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+    [void]$node.Handle
     if ($needsFolder) { Select-ProbeFolder -owner $app.Id -path $vault -nodeProcess $node -nativeCapture $nativeCapture }
     $phaseDeadline = [DateTime]::UtcNow.AddSeconds(240)
     while (!$node.WaitForExit(250)) {
@@ -177,7 +179,10 @@ function Phase([string]$name, [bool]$needsFolder) {
       if ($app.HasExited) { throw 'The installed app exited during the upgrade data phase; inspect its bounded native output.' }
       if ([DateTime]::UtcNow -ge $phaseDeadline) { throw 'Upgrade data phase timed out.' }
     }
-    if ($node.ExitCode -ne 0) { throw ('Upgrade phase failed: ' + $name) }
+    $node.WaitForExit()
+    $nodeExitCode = $node.ExitCode
+    Write-Output ('WINDOWS_UPGRADE_NODE_EXIT ' + (@{ phase = $name; exitCode = $nodeExitCode } | ConvertTo-Json -Compress))
+    if ($nodeExitCode -isnot [int] -or $nodeExitCode -ne 0) { throw ('Upgrade phase failed: ' + $name) }
     $report = Get-Content (Join-Path $reports ($name + '.json')) -Raw | ConvertFrom-Json
     if ($report.success -ne $true) { throw ('No successful exact report for phase ' + $name) }
   } finally {
