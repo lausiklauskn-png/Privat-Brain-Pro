@@ -74,7 +74,7 @@ jobs:
           retention-days: 14
       - name: Auslieferungsbau ohne Prüfzugang
         run: npm run tauri --prefix windows -- build --bundles nsis
-      - name: Veröffentlichten .29-Installer wirklich auf .35 aktualisieren
+      - name: Veröffentlichten .29-Installer wirklich auf .36 aktualisieren
         timeout-minutes: 15
         run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File windows/pruefung/upgrade.ps1
         env:
@@ -82,8 +82,8 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: windows-upgrade-29-35
-          path: windows/pruef-out/upgrade-29-35/
+          name: windows-upgrade-29-36
+          path: windows/pruef-out/upgrade-29-36/
           if-no-files-found: ignore
           retention-days: 30
       - name: Tatsächlichen Auslieferungsbau installieren, starten und entfernen

@@ -192,10 +192,29 @@ try{
     report.speech='API/cancellation only; no spoken-audio or microphone acceptance on the CI runner';
     const scan=await call('ProFiles','scan',{hash});
     ok('Defender adapter reports a bounded named result without claiming a clean file',scan.provider==='Microsoft Defender'&&['completed','attention','unavailable'].includes(scan.status));
-    await page.evaluate(()=>{window.modelDownload=null;window.modelProgress=0;Capacitor.Plugins.ProSemantic.addListener('progress',p=>window.modelProgress=p.done);Capacitor.Plugins.ProSemantic.install().then(v=>window.modelDownload=v,e=>window.modelDownload={error:e.code});});
-    await page.waitForFunction(()=>window.modelProgress>0||window.modelDownload,null,{timeout:180000});
-    if(!await page.evaluate(()=>Boolean(window.modelDownload))){await call('ProSemantic','cancel');await page.waitForFunction(()=>window.modelDownload,null,{timeout:30000});}
-    const partial=await call('ProSemantic','getState');ok('cancelled model download leaves a truthful resumable state',!partial.running&&(partial.installed||partial.present>0));
+    report.modelDownloadProbe={networkBefore:await call('ProNetwork','getState'),stateBefore:await call('ProSemantic','getState'),cancelRequested:false};
+    assert.equal(report.modelDownloadProbe.networkBefore.offline,false,'Model download requires the already restored online state');
+    try{
+      await page.evaluate(async()=>{window.modelDownload=null;window.modelProgress=0;await Capacitor.Plugins.ProSemantic.addListener('progress',p=>window.modelProgress=p.done);Capacitor.Plugins.ProSemantic.install().then(v=>window.modelDownload=v,e=>window.modelDownload={error:e.code||'UNKNOWN'});});
+      // A rejected installation is a download failure, not evidence that this
+      // driver cancelled a running transfer. Wait for real written bytes first.
+      await page.waitForFunction(()=>window.modelProgress>0||window.modelDownload,null,{timeout:180000});
+      const result=await page.evaluate(()=>window.modelDownload);
+      assert.ok(!result?.error,'Model installation failed before cancellation: '+result?.error);
+      if(!result){
+        report.modelDownloadProbe.cancelRequested=true;
+        await call('ProSemantic','cancel');
+        await page.waitForFunction(()=>window.modelDownload,null,{timeout:30000});
+      }
+    }finally{
+      report.modelDownloadProbe.stateAfter=await call('ProSemantic','getState');
+      report.modelDownloadProbe.networkAfter=await call('ProNetwork','getState');
+      report.modelDownloadProbe.transfer=await page.evaluate(()=>({progress:window.modelProgress,result:window.modelDownload}));
+      console.log('MODEL download probe '+JSON.stringify(report.modelDownloadProbe));
+    }
+    const outcome=report.modelDownloadProbe.transfer.result;
+    assert.ok(!outcome?.error||(report.modelDownloadProbe.cancelRequested&&outcome.error==='CANCELLED'),'Model download returned an unrelated failure: '+outcome?.error);
+    const partial=report.modelDownloadProbe.stateAfter;ok('cancelled model download leaves a truthful resumable state',!partial.running&&(partial.installed||partial.present>0));
     const model=await call('ProSemantic','install');ok('complete real model download matches the pinned fingerprints',model.installed===true);
     await page.evaluate(()=>PBNetwork.setOffline(true));
     ok('native local files remain readable through normal IPC after the app internet switch turns off',Buffer.from((await call('ProFiles','readOriginal',{hash,offset:0})).data,'base64').equals(bytes));

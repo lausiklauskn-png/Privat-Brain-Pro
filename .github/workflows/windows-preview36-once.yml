@@ -1,21 +1,21 @@
-# Temporary release request, included in the SAME PR as the Windows .35 versions.
+# Temporary release request, included in the SAME PR as the Windows .36 versions.
 # This workflow waits for the acceptance of its own main merge SHA. The existing
 # windows-release.yml requires inputs.commit == workflow head == current main.
-# Remove this file only after the public .35 Windows download is verified.
-name: Einmalige geprüfte Windows-Vorschau .35 anfordern
+# Remove this file only after the public .36 Windows download is verified.
+name: Einmalige geprüfte Windows-Vorschau .36 anfordern
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/windows-preview35-once.yml']
+    paths: ['.github/workflows/windows-preview36-once.yml']
 permissions:
   contents: read
   checks: read
   actions: write
 concurrency:
-  group: windows-preview35-one-shot
+  group: windows-preview36-one-shot
   cancel-in-progress: false
 jobs:
-  request-windows35:
+  request-windows36:
     if: github.repository == 'lausiklauskn-png/Privat-Brain-Pro' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -23,7 +23,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       SOURCE_SHA: ${{ github.sha }}
-      RELEASE_TAG: windows-v1.0.0-preview.35
+      RELEASE_TAG: windows-v1.0.0-preview.36
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -40,29 +40,29 @@ jobs:
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$SOURCE_SHA" = "$GITHUB_SHA"
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
-          test "$RELEASE_TAG" = windows-v1.0.0-preview.35
+          test "$RELEASE_TAG" = windows-v1.0.0-preview.36
           test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
           skip() {
             printf 'dispatch=false\n' >> "$GITHUB_OUTPUT"
             printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           }
-          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/windows35-artifacts.json"
-          if jq -e '[.[].artifacts[] | select(.name == "windows35-dispatch-intent" and .expired == false)] | length > 0' "$RUNNER_TEMP/windows35-artifacts.json" >/dev/null; then
-            skip 'Für diesen Lauf wurde eine Windows-.35-Anforderung bereits vorgemerkt. Bestehenden Release-Lauf prüfen; nicht erneut anfordern.'
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/windows36-artifacts.json"
+          if jq -e '[.[].artifacts[] | select(.name == "windows36-dispatch-intent" and .expired == false)] | length > 0' "$RUNNER_TEMP/windows36-artifacts.json" >/dev/null; then
+            skip 'Für diesen Lauf wurde eine Windows-.36-Anforderung bereits vorgemerkt. Bestehenden Release-Lauf prüfen; nicht erneut anfordern.'
           fi
-          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows35-releases.json"
-          if jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length > 0' "$RUNNER_TEMP/windows35-releases.json" >/dev/null; then
-            skip 'Windows .35 besitzt bereits eine Veröffentlichung oder einen Entwurf. Nichts überschreiben oder erneut anfordern.'
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows36-releases.json"
+          if jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length > 0' "$RUNNER_TEMP/windows36-releases.json" >/dev/null; then
+            skip 'Windows .36 besitzt bereits eine Veröffentlichung oder einen Entwurf. Nichts überschreiben oder erneut anfordern.'
           fi
           if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
-            echo 'Windows-.35-Tag besteht bereits. Keine automatische neue Anforderung.' >&2
+            echo 'Windows-.36-Tag besteht bereits. Keine automatische neue Anforderung.' >&2
             exit 1
           fi
           python3 - <<'PY'
           import json, re
           from pathlib import Path
-          expected = '1.0.0-preview.35'
+          expected = '1.0.0-preview.36'
           assert json.loads(Path('windows/package.json').read_text())['version'] == expected
           lock = json.loads(Path('windows/package-lock.json').read_text())
           assert lock['version'] == lock['packages']['']['version'] == expected
@@ -88,18 +88,18 @@ jobs:
           ready=false
           for attempt in {1..90}; do
             test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
-            gh api --paginate --slurp "repos/$GH_REPO/commits/$SOURCE_SHA/check-runs?filter=latest&per_page=100" > "$RUNNER_TEMP/windows35-checks.json"
-            if jq -e --arg sha "$SOURCE_SHA" '[.[].check_runs[] | select(.app.slug == "github-actions" and .head_sha == $sha and .name != "request-windows35" and .status == "completed" and .conclusion != "success")] | length > 0' "$RUNNER_TEMP/windows35-checks.json" >/dev/null; then
+            gh api --paginate --slurp "repos/$GH_REPO/commits/$SOURCE_SHA/check-runs?filter=latest&per_page=100" > "$RUNNER_TEMP/windows36-checks.json"
+            if jq -e --arg sha "$SOURCE_SHA" '[.[].check_runs[] | select(.app.slug == "github-actions" and .head_sha == $sha and .name != "request-windows36" and .status == "completed" and .conclusion != "success")] | length > 0' "$RUNNER_TEMP/windows36-checks.json" >/dev/null; then
               echo 'Ein Source-Check ist nicht erfolgreich. Anhalten und Ursache prüfen; keinen Release anfordern.' >&2
               exit 1
             fi
             if jq -e --arg sha "$SOURCE_SHA" '
               ["build","deploy","report-build-status","Responsive Oberfläche (firefox)","Responsive Oberfläche (webkit)","validate","native-smoke","upgrade-probe-smoke","windows","encrypted-signing","shared-engine"] as $required
-              | [.[].check_runs[] | select(.app.slug == "github-actions" and .head_sha == $sha and .name != "request-windows35")] as $checks
+              | [.[].check_runs[] | select(.app.slug == "github-actions" and .head_sha == $sha and .name != "request-windows36")] as $checks
               | (($checks | length) == 11)
                 and (($checks | map(.name) | sort) == ($required | sort))
                 and all($checks[]; .status == "completed" and .conclusion == "success")
-            ' "$RUNNER_TEMP/windows35-checks.json" >/dev/null; then
+            ' "$RUNNER_TEMP/windows36-checks.json" >/dev/null; then
               ready=true
               break
             fi
@@ -109,8 +109,8 @@ jobs:
           # Both existing release gates must see successful Main-PUSH runs of
           # exactly this head; a PR-only result is never substituted.
           for workflow in android.yml windows-app.yml; do
-            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/$workflow/runs?head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows35-$workflow.json"
-            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .event == "push" and .status == "completed" and .conclusion == "success")] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows35-$workflow.json")
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/$workflow/runs?head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows36-$workflow.json"
+            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .event == "push" and .status == "completed" and .conclusion == "success")] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows36-$workflow.json")
             [[ "$run_id" =~ ^[0-9]+$ ]]
             if test "$workflow" = windows-app.yml; then printf 'acceptance_run=%s\n' "$run_id" >> "$GITHUB_OUTPUT"; fi
           done
@@ -122,16 +122,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
-          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows35-runs.json"
-          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows35-runs.json" >/dev/null
-          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows35-releases-final.json"
-          jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RUNNER_TEMP/windows35-releases-final.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows36-runs.json"
+          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows36-runs.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows36-releases-final.json"
+          jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RUNNER_TEMP/windows36-releases-final.json" >/dev/null
           test -z "$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")"
-          mkdir -p "$RUNNER_TEMP/windows35-one-shot"
+          mkdir -p "$RUNNER_TEMP/windows36-one-shot"
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          folder = Path(os.environ['RUNNER_TEMP']) / 'windows35-one-shot'
+          folder = Path(os.environ['RUNNER_TEMP']) / 'windows36-one-shot'
           request = {'ref':'main','inputs':{'commit':os.environ['SOURCE_SHA'],'tag':os.environ['RELEASE_TAG']}}
           intent = {'release_tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dispatcher_commit':os.environ['GITHUB_SHA'],'dispatcher_run_id':os.environ['GITHUB_RUN_ID'],'windows_acceptance_run':os.environ['ACCEPTANCE_RUN'],'state':'intent recorded before request; acceptance is not yet confirmed'}
           (folder/'request.json').write_text(json.dumps(request)+'\n')
@@ -141,8 +141,8 @@ jobs:
         if: steps.preflight.outputs.dispatch == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: windows35-dispatch-intent
-          path: ${{ runner.temp }}/windows35-one-shot/intent.json
+          name: windows36-dispatch-intent
+          path: ${{ runner.temp }}/windows36-one-shot/intent.json
           if-no-files-found: error
           retention-days: 30
       - name: Unveränderten Windows-Release genau einmal anfordern
@@ -151,14 +151,14 @@ jobs:
         run: |
           set -euo pipefail
           test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
-          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows35-runs-final.json"
-          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows35-runs-final.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows36-runs-final.json"
+          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows36-runs-final.json" >/dev/null
           # No retry for this non-idempotent request. Existing windows-release.yml
           # independently checks current Main, both acceptance chains and bytes.
-          gh api --silent --method POST "repos/$GH_REPO/actions/workflows/windows-release.yml/dispatches" --input "$RUNNER_TEMP/windows35-one-shot/request.json"
+          gh api --silent --method POST "repos/$GH_REPO/actions/workflows/windows-release.yml/dispatches" --input "$RUNNER_TEMP/windows36-one-shot/request.json"
           for attempt in {1..10}; do
-            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?event=workflow_dispatch&head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows35-observed.json"
-            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows35-observed.json")
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?event=workflow_dispatch&head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows36-observed.json"
+            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows36-observed.json")
             if [[ "$run_id" =~ ^[0-9]+$ ]]; then
               printf 'Windows-Release angefordert: https://github.com/%s/actions/runs/%s\nQuelle: `%s`, Tag: `%s`. Veröffentlichung und öffentlicher Download sind separat abzuwarten.\n' "$GH_REPO" "$run_id" "$SOURCE_SHA" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
               exit 0

@@ -12,11 +12,11 @@ $setups = @(Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '
 if ($setups.Count -ne 1) { throw 'Exactly one current production installer required.' }
 $currentSetup = $setups[0].FullName
 $config = Get-Content windows/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-if ($config.version -ne '1.0.0-preview.35' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
+if ($config.version -ne '1.0.0-preview.36' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
 if ((Get-AuthenticodeSignature -LiteralPath $currentSetup).Status -ne 'NotSigned') { throw 'Expected the chosen unsigned production installer.' }
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-upgrade-' + $token)
-$reports = Join-Path (Get-Location) 'windows/pruef-out/upgrade-29-35'
+$reports = Join-Path (Get-Location) 'windows/pruef-out/upgrade-29-36'
 $vault = Join-Path $work 'chosen-vault'
 New-Item -ItemType Directory -Force $work, $reports, $vault | Out-Null
 $oldSetup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.0-preview.29-x64-setup.exe'
@@ -151,15 +151,15 @@ try {
   Install-Setup $currentSetup
   Phase 'verify' $false
   Phase 'verify-unlock' $false
-  $summary = [ordered]@{ from = '1.0.0-preview.29'; to = '1.0.0-preview.35'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
+  $summary = [ordered]@{ from = '1.0.0-preview.29'; to = '1.0.0-preview.36'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
-  Write-Output 'WINDOWS_INSTALLER_UPGRADE_29_TO_35_PASS'
+  Write-Output 'WINDOWS_INSTALLER_UPGRADE_29_TO_36_PASS'
 } finally {
   if ($beforeArgs) { $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $beforeArgs }
   else { Remove-Item Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue }
   foreach ($name in @('PB_WINDOWS_UPGRADE_CDP_PORT','PB_WINDOWS_UPGRADE_MARKER','PB_WINDOWS_UPGRADE_REPORT_ROOT','PB_WINDOWS_UPGRADE_VAULT')) { Remove-Item ('Env:' + $name) -ErrorAction SilentlyContinue }
   # Existing production.ps1 must subsequently start the exact new binary with
   # no externally enabled CDP endpoint and verify the ordinary production path.
-  if (!$finished) { Write-Output 'WINDOWS_INSTALLER_UPGRADE_29_TO_35_FAIL' }
+  if (!$finished) { Write-Output 'WINDOWS_INSTALLER_UPGRADE_29_TO_36_FAIL' }
 }

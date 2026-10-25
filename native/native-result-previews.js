@@ -1,16 +1,19 @@
-/* Small local result thumbnails. Original/catalog/check data remain untouched. */
+/* Shared local search/explorer thumbnails. Original/catalog/check data remain untouched. */
 (() => {
   'use strict';
   if(window.PBResultPreviews)return;
-  const root=document.getElementById('results');if(!root)return;
+  const views=[
+    {root:document.getElementById('results'),selector:':scope>.card[data-hash]',panel:'panel-search',explorer:false},
+    {root:document.getElementById('explorerFiles'),selector:':scope>.explorer-row[data-hash]:not(.native-vault-row)',panel:'panel-explorer',explorer:true}
+  ].filter(view=>view.root);if(!views.length)return;
   const imageLimit=2*1024*1024,pdfLimit=16*1024*1024,cacheLimit=6*1024*1024,maxCached=16;
   const cards=new Map(),pending=new Set(),cache=new Map();
   let bytes=0,running=false,scheduled=false,disposed=false,suspended=false,epoch=0;
   const words={
-    de:['Vorschau öffnen','Vorschau wird geladen','Keine lokale Vorschau verfügbar','Original fehlt','Vorschau nicht verfügbar'],
-    en:['Open preview','Loading preview','No local preview available','Original missing','Preview unavailable'],
-    ru:['Открыть предпросмотр','Загрузка предпросмотра','Нет локального предпросмотра','Нет оригинала','Предпросмотр недоступен'],
-    pl:['Otwórz podgląd','Ładowanie podglądu','Brak lokalnego podglądu','Brak oryginału','Podgląd niedostępny']
+    de:['Vorschau öffnen','Vorschau wird geladen','Keine lokale Vorschau verfügbar','Original fehlt','Vorschau nicht verfügbar','Gespeicherte Vorschau','Miniaturvorschau','Original derzeit nicht lesbar','Verfügbarkeit wird ermittelt','Lokale Kopie','In dieser Sitzung verfügbar','Quelle verknüpft'],
+    en:['Open preview','Loading preview','No local preview available','Original missing','Preview unavailable','Saved preview','Thumbnail preview','Original currently unreadable','Checking availability','Local copy','Available in this session','Source linked'],
+    ru:['Открыть предпросмотр','Загрузка предпросмотра','Нет локального предпросмотра','Нет оригинала','Предпросмотр недоступен','Сохранённый предпросмотр','Миниатюра','Оригинал сейчас недоступен','Проверяется доступность','Локальная копия','Доступно в этом сеансе','Источник связан'],
+    pl:['Otwórz podgląd','Ładowanie podglądu','Brak lokalnego podglądu','Brak oryginału','Podgląd niedostępny','Zapisany podgląd','Miniatura','Oryginał obecnie niedostępny','Sprawdzanie dostępności','Kopia lokalna','Dostępne w tej sesji','Źródło powiązane']
   };
   const t=i=>(words[String(document.documentElement.lang||'de').slice(0,2)]||words.de)[i];
   const attr=(node,key,value)=>{if(node.getAttribute(key)!==value)node.setAttribute(key,value);};
@@ -45,12 +48,31 @@
     if(cache.size>=maxCached||bytes+blob.size>cacheLimit)return null;
     const entry={key,url:URL.createObjectURL(blob),size:blob.size,refs:0};cache.set(key,entry);bytes+=blob.size;return entry;
   }
-  function stateLabel(state,status){return(status==='ready'?t(0):status==='loading'?t(1):status==='missing'?t(3):status==='unavailable'?t(4):t(2))+': '+String(state.record.name||state.record.path||'');}
+  function originalState(rec){
+    const shared=window.PBRecordStatus?.availability?.(rec);if(shared?.key)return shared;
+    const native=window.PBOriginals?.statusFor?.(rec.hash);
+    // Match the common adapter's precedence while it is still starting.
+    const key=native==='local'?'local':typeof SESSION_FILES!=='undefined'&&SESSION_FILES.has(rec.hash)?'session':native==='unavailable'?'unavailable':rec.localSource?.dirId||rec.dirId?'source':native||'unknown';
+    return{key,label:t(({missing:3,unavailable:7,unknown:8,local:9,session:10,source:11})[key]??8),detail:''};
+  }
+  const availability=rec=>originalState(rec).key;
+  function stateLabel(state,status,original=originalState(state.record)){
+    const prefix=status==='ready'?t(0)+' · '+t(state.source?5:6)+' · '+original.label:status==='loading'?t(1):status==='missing'?t(3):status==='unavailable'?t(4):t(2);
+    return prefix+': '+String(state.record.name||state.record.path||'');
+  }
+  function describe(state,status){
+    const original=originalState(state.record),label=stateLabel(state,status,original);
+    attr(state.slot,'aria-label',label);attr(state.slot,'title',label+(original.detail?'\n'+original.detail:''));attr(state.slot,'data-original',original.key);
+    attr(state.slot,'aria-busy',String(status==='loading'));
+    const marker=state.slot.querySelector(':scope>.pb-result-preview-source'),needed=status==='ready'&&!['local','session'].includes(original.key);
+    if(needed&&!marker){
+      const span=document.createElement('span');span.className='pb-result-preview-source';span.setAttribute('aria-hidden','true');
+      const svg=symbol('pdf');svg.querySelector('path').setAttribute('d','M4 4l16 16 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0');span.append(svg);state.slot.append(span);
+    }else if(!needed&&marker)marker.remove();
+  }
   function paint(state,status,entry=null,source=''){
     if(!state.slot.isConnected)return;
-    const label=stateLabel(state,status);attr(state.slot,'aria-label',label);attr(state.slot,'title',label);
-    attr(state.slot,'aria-busy',String(status==='loading'));
-    if(state.status===status&&state.entry===entry&&state.source===source)return;
+    if(state.status===status&&state.entry===entry&&state.source===source){describe(state,status);return;}
     release(state);state.status=status;state.source=source;state.slot.dataset.state=status;
     if(status==='ready'&&(entry||source)){
       if(entry){entry.refs++;state.entry=entry;cache.delete(entry.key);cache.set(entry.key,entry);}
@@ -63,15 +85,12 @@
       state.slot.replaceChildren(symbol(state.kind),name);
       if(status==='loading'){const dots=document.createElement('span');dots.className='pb-activity-dots';dots.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)dots.append(document.createElement('i'));state.slot.append(dots);}
     }
+    describe(state,status);
   }
   function active(state){
     return !disposed&&!suspended&&!document.hidden&&state.card.isConnected&&state.visible&&
-      document.getElementById('panel-search')?.classList.contains('on')&&
+      document.getElementById(state.view.panel)?.classList.contains('on')&&
       !document.querySelector('.native-file-viewer:not([hidden])');
-  }
-  function availability(rec){
-    if(typeof SESSION_FILES!=='undefined'&&SESSION_FILES.has(rec.hash))return 'session';
-    return window.PBOriginals?.statusFor?.(rec.hash)||'unknown';
   }
   async function dimensions(file){
     // Bound decoded pixels before allocating a thumbnail. Unknown formats stay
@@ -124,7 +143,7 @@
     if(running||disposed)return;running=true;
     try{while(pending.size&&!disposed){
       const state=pending.values().next().value;pending.delete(state);if(!active(state))continue;
-      const existing=state.record.thumb||state.record.preview;
+      const existing=[state.record.thumb,state.record.preview].find(dataImage)||'';
       if(dataImage(existing)&&state.rejectedSource!==existing){paint(state,'ready',null,existing);continue;}
       const key=state.kind+':'+state.record.hash,hit=cache.get(key);
       if(hit){paint(state,'ready',hit);continue;}
@@ -145,30 +164,30 @@
   function refresh(){
     scheduled=false;if(disposed)return;
     const catalog=typeof CATALOG!=='undefined'?new Map(CATALOG.map(rec=>[rec.hash,rec])):new Map();
-    for(const [card,state]of cards){if(!card.isConnected||!root.contains(card)||catalog.get(state.record.hash)!==state.record){visibility?.unobserve(card);pending.delete(state);release(state);state.slot.remove();cards.delete(card);}}
-    for(const card of root.querySelectorAll(':scope>.card[data-hash]')){
+    for(const [card,state]of cards){if(!card.isConnected||!state.view.root.contains(card)||catalog.get(state.record.hash)!==state.record){visibility?.unobserve(card);pending.delete(state);release(state);state.slot.remove();state.head.classList.remove('pb-explorer-preview-info');cards.delete(card);}}
+    for(const view of views)for(const card of view.root.querySelectorAll(view.selector)){
       const rec=catalog.get(card.dataset.hash);if(!rec)continue;
       const type=kind(rec),snip=card.querySelector(':scope>.snip');
       if(snip){const raw=rawSnippet(rec,snip.textContent);if(snip.classList.contains('pb-result-raw-snippet')!==raw)snip.classList.toggle('pb-result-raw-snippet',raw);}
       if(!type||cards.has(card))continue;
-      const head=card.querySelector(':scope>.h');if(!head)continue;
+      const head=card.querySelector(view.explorer?':scope>div':':scope>.h');if(!head)continue;
       const slot=document.createElement('button');slot.type='button';slot.className='pb-result-preview';
       const old=head.querySelector(':scope>.thumbimg');old?.remove();
-      const state={card,record:rec,slot,kind:type,visible:!visibility,status:'',entry:null,image:null,source:''};cards.set(card,state);head.prepend(slot);
+      const state={card,head,view,record:rec,slot,kind:type,visible:!visibility,status:'',entry:null,image:null,source:''};cards.set(card,state);head.prepend(slot);if(view.explorer)head.classList.add('pb-explorer-preview-info');
       slot.onclick=event=>{event.preventDefault();event.stopPropagation();if(typeof window.openFile==='function')void window.openFile(rec.hash);};
       paint(state,'idle');if(visibility)visibility.observe(card);else enqueue(state);
     }
     for(const state of cards.values()){
       const known=availability(state.record);
       if(state.availability!==known){state.availability=known;if(state.status==='missing'||state.status==='unavailable')paint(state,'idle');}
-      attr(state.slot,'aria-label',stateLabel(state,state.status));attr(state.slot,'title',stateLabel(state,state.status));
+      describe(state,state.status);
       if(active(state)&&state.status==='idle')enqueue(state);
     }
     watchViewer();
   }
   function schedule(){if(!scheduled&&!disposed){scheduled=true;queueMicrotask(refresh);}}
-  const changes=new MutationObserver(schedule);changes.observe(root,{childList:true,subtree:true});
-  const panel=document.getElementById('panel-search'),panelChanges=new MutationObserver(schedule);if(panel)panelChanges.observe(panel,{attributes:true,attributeFilter:['class','hidden']});
+  const changes=new MutationObserver(schedule),panelChanges=new MutationObserver(schedule);
+  for(const view of views){changes.observe(view.root,{childList:true,subtree:true});const panel=document.getElementById(view.panel);if(panel)panelChanges.observe(panel,{attributes:true,attributeFilter:['class','hidden']});}
   const language=new MutationObserver(schedule);language.observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   let viewer=null;const viewerChanges=new MutationObserver(schedule);
   function watchViewer(){const next=document.querySelector('.native-file-viewer');if(next===viewer)return;viewerChanges.disconnect();viewer=next;if(viewer)viewerChanges.observe(viewer,{attributes:true,attributeFilter:['hidden','class']});}

@@ -50,6 +50,21 @@ try{
  await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});await page.keyboard.press('Escape');
  await page.reload();await page.waitForFunction(()=>window.PBOriginals&&CATALOG.length===1);await page.evaluate(()=>openFile(CATALOG[0].hash));await page.locator('.native-file-image').waitFor();
  ok('Reattached original survives another restart',true);await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});
+ // Reimport through the normal picker must repair the native copy even when
+ // catalog deduplication reports the content as already known.
+ saved.delete(hash);await page.reload();await page.waitForFunction(()=>window.PBOriginals?.snapshot().ready&&CATALOG.length===1);
+ ok('Known catalog preview survives a missing native original before reimport',await page.evaluate(()=>Boolean(CATALOG[0].thumb)&&PBRecordStatus.availability(CATALOG[0]).key==='missing'));
+ await page.setInputFiles('#fileInput',source);await page.waitForFunction(()=>CATALOG.length===1&&!signing);
+ ok('Normal reimport of known content saves the exact missing original bytes',saved.get(hash)?.bytes.equals(png));
+ ok('Known-content reimport keeps one catalog entry and clears its missing status',await page.evaluate(()=>CATALOG.length===1&&PBOriginals.statusFor(CATALOG[0].hash)==='local'&&PBRecordStatus.availability(CATALOG[0]).key==='local'));
+ await page.click('[data-tab=explorer]');
+ await page.waitForFunction(h=>document.querySelector('#explorerFiles .explorer-row[data-hash="'+h+'"] .pb-record-availability')?.dataset.original==='local',hash);
+ ok('Explorer immediately shows the reimported original as local',await page.locator('#explorerFiles .explorer-row[data-hash="'+hash+'"] .pb-record-availability').getAttribute('data-original')==='local');
+ await page.click('[data-tab=search]');await page.locator('#q').fill('original-persistence');
+ await page.waitForFunction(h=>document.querySelector('#results .card[data-hash="'+h+'"] .pb-record-availability')?.dataset.original==='local',hash);
+ ok('Search immediately agrees with the Explorer original status',await page.locator('#results .card[data-hash="'+hash+'"] .pb-record-availability').getAttribute('data-original')==='local');
+ await page.reload();await page.waitForFunction(()=>window.PBOriginals?.snapshot().ready&&CATALOG.length===1);
+ ok('Known-content reimport remains local and byte-identical after restart',await page.evaluate(async()=>{const r=CATALOG[0],f=await resolveFile(r);return PBRecordStatus.availability(r).key==='local'&&f?.pbOriginalHash===r.hash&&await sha256(await f.arrayBuffer())===r.hash;}));
  failWrite=true;await page.setInputFiles('#fileInput',{name:'failed-copy.txt',mimeType:'text/plain',buffer:Buffer.from('must not enter catalog without copy')});await page.waitForFunction(()=>!signing);
  ok('Storage failure does not create a misleading durable catalog entry',await page.evaluate(()=>CATALOG.length===1)&&saved.get(hash)?.bytes.equals(png));failWrite=false;
  const broken=Buffer.from(png);broken[20]^=1;saved.get(hash).bytes=broken;await page.reload();await page.waitForFunction(()=>window.PBOriginals&&CATALOG.length===1);await page.evaluate(()=>openFile(CATALOG[0].hash));await page.locator('.native-original-reconnect').waitFor();

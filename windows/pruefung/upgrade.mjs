@@ -1,4 +1,4 @@
-// CI-only draft: real production .29 -> .35 data/installer acceptance.
+// CI-only draft: real production .29 -> .36 data/installer acceptance.
 // Run from the repository root after npm ci. It never chooses the OS folder;
 // the companion PowerShell helper must select PB_WINDOWS_UPGRADE_VAULT.
 import assert from 'node:assert/strict';
@@ -26,10 +26,10 @@ const PASSWORD='CI-only Windows Upgrade ä Ж 2026';
 const NAME='windows-upgrade-proof-Ж.txt';
 const FIXTURE_PATH='Upgradeprobe/'+NAME;
 const STAMP=1792886400000;
-const bytes=Buffer.from('Private Brain Windows installer upgrade 29 to 35. Fixture only. ä Ж\n'+marker+'\n','utf8');
+const bytes=Buffer.from('Private Brain Windows installer upgrade 29 to 36. Fixture only. ä Ж\n'+marker+'\n','utf8');
 const hash=sha256(bytes);
-const expectedVersion=phase==='seed'?'1.0.0-preview.29':'1.0.0-preview.35';
-const expectedCode=phase==='seed'?29:35;
+const expectedVersion=phase==='seed'?'1.0.0-preview.29':'1.0.0-preview.36';
+const expectedCode=phase==='seed'?29:36;
 const report={phase,expectedVersion,source:process.env.PB_SOURCE_COMMIT||'',marker,fixture:{name:NAME,hash,bytes:bytes.length},checks:[],errors:[],success:false};
 let browser,page;
 function required(name){const value=process.env[name];assert.ok(value,name+' is required');return value;}
