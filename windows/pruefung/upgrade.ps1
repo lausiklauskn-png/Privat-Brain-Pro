@@ -132,13 +132,17 @@ function Phase([string]$name, [bool]$needsFolder) {
     $node = Start-Process -FilePath (Get-Command node).Source -ArgumentList ('"' + $script + '" ' + $name) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
     if ($needsFolder) { Select-ProbeFolder -owner $app.Id -path $vault -nodeProcess $node }
     if (!$node.WaitForExit(240000)) { Stop-Process -Id $node.Id -Force; throw 'Upgrade data phase timed out.' }
-    if (Test-Path $stdout) { Get-Content $stdout }
-    if (Test-Path $stderr) { Get-Content $stderr }
     if ($node.ExitCode -ne 0) { throw ('Upgrade phase failed: ' + $name) }
     $report = Get-Content (Join-Path $reports ($name + '.json')) -Raw | ConvertFrom-Json
     if ($report.success -ne $true) { throw ('No successful exact report for phase ' + $name) }
   } finally {
     if ($node -and !$node.HasExited) { Stop-Process -Id $node.Id -Force }
+    # Folder selection may fail after Node has already written its actual error.
+    # Preserve that bounded evidence in the job log as well as in the artifact.
+    if (Test-Path $stdout) { Get-Content $stdout -Tail 80 }
+    if (Test-Path $stderr) { Get-Content $stderr -Tail 80 }
+    $phaseReport = Join-Path $reports ($name + '.json')
+    if (Test-Path $phaseReport) { Get-Content $phaseReport -Tail 80 }
     Stop-ProbeApp $app
   }
 }

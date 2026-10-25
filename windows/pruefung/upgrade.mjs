@@ -39,22 +39,39 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
 function ok(name,value){assert.ok(value,name);report.checks.push(name);console.log('PASS '+name);}
 async function call(plugin,method,args={}){return page.evaluate(async({plugin,method,args})=>Capacitor.Plugins[plugin][method](args),{plugin,method,args});}
 async function connect(){
+  report.stage='connect-cdp';
   for(let i=0;i<90;i++){
-    try{browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);break;}catch{await pause(500);}
+    try{browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);break;}catch(error){report.lastConnectionError=error.message.slice(0,600);await pause(500);}
   }
   assert.ok(browser,'The production app did not expose the externally requested loopback CDP port');
+  report.stage='find-main-origin';
   for(let i=0;i<180;i++){
     page=browser.contexts().flatMap(c=>c.pages()).find(p=>{try{const u=new URL(p.url());return u.origin==='https://tauri.localhost'&&['/','/index.html'].includes(u.pathname);}catch{return false;}});
     if(page)break;await pause(500);
   }
   assert.ok(page,'Exact production main origin not found');
   page.on('pageerror',e=>report.errors.push(e.message));
+  report.stage='wait-main-ready';
   await page.waitForFunction(()=>document.readyState==='complete'&&window.Capacitor&&window.PBWorkspace&&window.PBNetwork&&typeof db!=='undefined'&&db&&Array.isArray(CATALOG),null,{timeout:90000});
   await page.evaluate(()=>PBNetwork.initialized);
+  report.stage='native-version';
   const info=await call('ProDevice','getInfo');
   report.device={platform:info.platform,versionName:info.versionName,versionCode:info.versionCode};
   ok('The installed production app reports the exact phase version',info.platform==='windows'&&info.versionName===expectedVersion&&info.versionCode===expectedCode);
   ok('Both versions use the same main storage origin',new URL(page.url()).origin==='https://tauri.localhost');
+}
+async function failureDiagnostics(){
+  const evidence={connected:Boolean(browser?.isConnected()),pages:[]};
+  if(!browser?.isConnected())return evidence;
+  const pages=browser.contexts().flatMap(context=>context.pages()).slice(0,8);
+  evidence.pages=pages.map(target=>({url:target.url().split(/[?#]/)[0],closed:target.isClosed()}));
+  if(page&&!page.isClosed()){
+    let timer;
+    try{evidence.main=await Promise.race([page.evaluate(()=>({readyState:document.readyState,bridge:Boolean(window.Capacitor),workspace:Boolean(window.PBWorkspace),network:Boolean(window.PBNetwork),networkReady:window.PBNetwork?.ready,database:typeof db!=='undefined'&&Boolean(db),catalog:typeof CATALOG!=='undefined'&&Array.isArray(CATALOG)})),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Bounded startup diagnostic timed out')),2000);})]);}
+    catch(error){evidence.main={error:error.message};}
+    finally{clearTimeout(timer);}
+  }
+  return evidence;
 }
 async function passwordDialog(create=false){
   let dialog;
@@ -109,6 +126,7 @@ async function persistentState(){
 await mkdir(reportRoot,{recursive:true});
 try{
   await connect();
+  report.stage=phase+'-data';
   if(phase==='seed'){
     ok('The synthetic vault starts unconfigured',(await call('ProVault','state')).configured===false);
     await page.evaluate(()=>PBNetwork.setOffline(true));
@@ -167,7 +185,9 @@ try{
   ok('No uncaught main-app runtime error occurred',report.errors.length===0);
   report.success=true;console.log('WINDOWS_UPGRADE_'+phase.toUpperCase().replaceAll('-','_')+'_PASS');
 }catch(error){
-  report.failure=error.message;console.error('WINDOWS_UPGRADE_'+phase.toUpperCase().replaceAll('-','_')+'_FAIL: '+error.message);process.exitCode=1;
+  report.failure=error.message;
+  try{report.startupDiagnostics=await failureDiagnostics();}catch(diagnosticError){report.startupDiagnostics={error:diagnosticError.message};}
+  console.error('WINDOWS_UPGRADE_'+phase.toUpperCase().replaceAll('-','_')+'_FAIL: '+error.message);process.exitCode=1;
 }finally{
   await writeFile(join(reportRoot,phase+'.json'),JSON.stringify(report,null,2)+'\n');
   await browser?.close().catch(()=>{});
