@@ -1,0 +1,217 @@
+name: Pro-Oberfläche als installierbare PWA
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pro-pages-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  pages-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      index_sha256: ${{ steps.receipt.outputs.index_sha256 }}
+      worker_sha256: ${{ steps.receipt.outputs.worker_sha256 }}
+      manifest_sha256: ${{ steps.receipt.outputs.manifest_sha256 }}
+      receipt_sha256: ${{ steps.receipt.outputs.receipt_sha256 }}
+      build_id: ${{ steps.receipt.outputs.build_id }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Dieselbe fertige Pro-Oberfläche für den Browser vorbereiten
+        run: |
+          set -euo pipefail
+          npm run build:web
+          node tools/native/prepare-pages.mjs
+      - name: Versionskonsistenz, Offline-Bau und fremde Caches prüfen
+        run: node tools/native/test-pages.mjs
+      - name: Browser installieren
+        run: npx playwright-core install --with-deps chromium
+      - name: Tatsächlichen PWA-Start, Installation und Offline-Neustart prüfen
+        run: node tools/native/test-pages-browser.mjs www
+        env:
+          PB_PAGES_BROWSER_CI: 'true'
+      - name: Tatsächlich geprüftes Webpaket für den öffentlichen Bytevergleich binden
+        id: receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, re
+          from pathlib import Path
+          folder = Path('www')
+          receipt = json.loads((folder / 'pwa-build.json').read_bytes())
+          assert type(receipt) is dict and type(receipt.get('schema')) is int and receipt['schema'] == 1, 'Exact PWA receipt schema required'
+          build = receipt['build']
+          assert type(build) is str and re.fullmatch(r'[a-f0-9]{64}', build), 'Exact PWA build ID required'
+          html = (folder / 'index.html').read_text()
+          assert re.findall(r'<meta name="pb-pages-build" content="([a-f0-9]{64})">', html) == [build], 'HTML and receipt generation differ'
+          mapping = {'index_sha256':'index.html', 'worker_sha256':'sw.js', 'manifest_sha256':'app-manifest.json', 'receipt_sha256':'pwa-build.json'}
+          with Path(os.environ['GITHUB_OUTPUT']).open('a', encoding='ascii') as output:
+              for name, filename in mapping.items():
+                  value = hashlib.sha256((folder / filename).read_bytes()).hexdigest()
+                  output.write(name + '=' + value + '\n')
+              output.write('build_id=' + build + '\n')
+          PY
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+        with:
+          path: www
+          retention-days: 7
+  pages-deploy:
+    if: github.repository == 'lausiklauskn-png/Privat-Brain-Pro' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: pages-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # configure-pages only creates a missing site with enablement:true; it
+      # does not migrate an existing legacy site. Change only build_type and
+      # verify it before publishing, so a branch build cannot remain authoritative.
+      - name: Tatsächliche Pages-Quelle prüfen und auf Workflow stellen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! gh api "repos/$GH_REPO/pages" > "$RUNNER_TEMP/pages-before.json"; then
+            echo '::error title=Pages-Konfiguration::Die bestehende Pages-Site konnte nicht gelesen werden. Die Repositoryverwaltung muss Pages mit Quelle GitHub Actions einrichten; eine erfolgreiche Umstellung wird nicht angenommen.'
+            exit 1
+          fi
+          current=$(jq -r .build_type "$RUNNER_TEMP/pages-before.json")
+          case "$current" in
+            workflow) ;;
+            legacy)
+              if ! gh api --method PUT "repos/$GH_REPO/pages" -f build_type=workflow > "$RUNNER_TEMP/pages-updated.json"; then
+                echo '::error title=Pages-Quelle bleibt Legacy::GitHub hat die gezielte Umstellung auf build_type=workflow abgelehnt. Dieser Endpunkt verlangt zusätzlich Repository-Administration; GITHUB_TOKEN kann dieses Recht nicht erhalten. Unter Settings → Pages → Build and deployment muss die Quelle GitHub Actions gewählt werden. Das geprüfte www-Artefakt ist vorbereitet; es wurde noch nicht veröffentlicht.'
+                exit 1
+              fi
+              ;;
+            *) echo '::error title=Unbekannte Pages-Quelle::Keine Domain-, Branch- oder Sichtbarkeitsänderung wird geraten.'; exit 1 ;;
+          esac
+          gh api "repos/$GH_REPO/pages" > "$RUNNER_TEMP/pages-verified.json"
+          jq -e '.build_type == "workflow"' "$RUNNER_TEMP/pages-verified.json" > /dev/null
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+        with:
+          enablement: false
+      - name: Ausschließlich die geprüfte gebaute PWA veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+      - name: Wirklich öffentlich ausgelieferte PWA gegen den geprüften Bau verifizieren
+        id: public_bytes
+        shell: bash
+        env:
+          PB_PUBLIC_PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          PB_EXPECTED_BUILD: ${{ needs.pages-build.outputs.build_id }}
+          PB_INDEX_SHA256: ${{ needs.pages-build.outputs.index_sha256 }}
+          PB_WORKER_SHA256: ${{ needs.pages-build.outputs.worker_sha256 }}
+          PB_MANIFEST_SHA256: ${{ needs.pages-build.outputs.manifest_sha256 }}
+          PB_RECEIPT_SHA256: ${{ needs.pages-build.outputs.receipt_sha256 }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor
+          from datetime import datetime, timezone
+          import hashlib, json, os, re, time
+          from pathlib import Path
+          from urllib.parse import urlsplit, urljoin, urlencode
+          from urllib.request import Request, build_opener, HTTPRedirectHandler
+
+          target = Path(os.environ['RUNNER_TEMP']) / 'pwa-public-build-proof.json'
+          page_url = os.environ.get('PB_PUBLIC_PAGE_URL', '')
+          source = os.environ.get('GITHUB_SHA', '')
+          build = os.environ.get('PB_EXPECTED_BUILD', '')
+          expected = {'index.html':os.environ.get('PB_INDEX_SHA256', ''), 'sw.js':os.environ.get('PB_WORKER_SHA256', ''), 'app-manifest.json':os.environ.get('PB_MANIFEST_SHA256', ''), 'pwa-build.json':os.environ.get('PB_RECEIPT_SHA256', '')}
+          proof = {'schema':1, 'verified':False, 'pageUrl':page_url, 'sourceCommit':source, 'build':build, 'expectedSha256':expected, 'attempts':[], 'verifiedAt':None}
+          def save():
+              target.write_text(json.dumps(proof, ensure_ascii=False, indent=2) + '\n')
+          save()
+          def require(value, message):
+              if not value:
+                  proof['failure'] = message
+                  save()
+                  raise SystemExit(message)
+          require(re.fullmatch(r'[a-f0-9]{40}', source), 'Exact GitHub source required')
+          require(re.fullmatch(r'[a-f0-9]{64}', build), 'Exact PWA build ID required')
+          require(all(re.fullmatch(r'[a-f0-9]{64}', value) for value in expected.values()), 'Four exact build hashes required')
+          base = urlsplit(page_url)
+          owner, repository = os.environ['GITHUB_REPOSITORY'].split('/')
+          expected_path = '/' if repository.lower() == owner.lower() + '.github.io' else '/' + repository + '/'
+          require(base.scheme == 'https' and base.hostname == owner.lower() + '.github.io' and base.netloc == base.hostname and base.path == expected_path and not base.query and not base.fragment, 'Deployment URL must be this repository’s exact HTTPS Pages scope')
+          class SameScopeRedirect(HTTPRedirectHandler):
+              def redirect_request(self, request, response, code, message, headers, new_url):
+                  candidate = urlsplit(new_url)
+                  if candidate.scheme != base.scheme or candidate.netloc != base.netloc or not candidate.path.startswith(base.path):
+                      raise ValueError('Public verification redirect left the deployment scope')
+                  return super().redirect_request(request, response, code, message, headers, new_url)
+          def download(filename, attempt):
+              request_url = urljoin(page_url, filename) + '?' + urlencode({'pb-verify':build, 'attempt':attempt})
+              request = Request(request_url, headers={'Cache-Control':'no-cache', 'Pragma':'no-cache', 'User-Agent':'Private-Brain-Pro-Pages-Verification'}, method='GET')
+              with build_opener(SameScopeRedirect()).open(request, timeout=20) as response:
+                  final_url = response.geturl()
+                  final = urlsplit(final_url)
+                  if response.status != 200 or final.scheme != base.scheme or final.netloc != base.netloc or final.path != base.path + filename:
+                      raise ValueError('Public response did not identify the exact deployed file')
+                  data = response.read(4 * 1024 * 1024 + 1)
+                  if len(data) > 4 * 1024 * 1024:
+                      raise ValueError('Public proof file exceeded its size bound')
+              actual = hashlib.sha256(data).hexdigest()
+              return filename, data, {'url':request_url, 'finalUrl':final_url, 'expectedSha256':expected[filename], 'actualSha256':actual, 'bytes':len(data), 'matches':actual == expected[filename]}
+          for attempt in range(1, 9):
+              entry = {'attempt':attempt, 'files':{}, 'errors':[]}
+              payloads = {}
+              with ThreadPoolExecutor(max_workers=4) as pool:
+                  futures = {pool.submit(download, filename, attempt):filename for filename in expected}
+                  for future, filename in futures.items():
+                      try:
+                          _, data, result = future.result()
+                          payloads[filename] = data
+                          entry['files'][filename] = result
+                      except Exception as error:
+                          entry['errors'].append({'file':filename, 'error':str(error)[:600]})
+              consistent = False
+              if len(payloads) == 4 and all(value['matches'] for value in entry['files'].values()):
+                  try:
+                      meta = re.findall(r'<meta name="pb-pages-build" content="([a-f0-9]{64})">', payloads['index.html'].decode('utf-8'))
+                      receipt = json.loads(payloads['pwa-build.json'])
+                      consistent = type(receipt) is dict and meta == [build] and type(receipt.get('schema')) is int and receipt['schema'] == 1 and receipt.get('build') == build
+                  except (ValueError, UnicodeError):
+                      consistent = False
+              entry['generationMatches'] = consistent
+              proof['attempts'].append(entry)
+              if consistent:
+                  proof['verified'] = True
+                  proof['verifiedAt'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+                  save()
+                  print(json.dumps(proof, ensure_ascii=False, separators=(',', ':')))
+                  print('PWA_PUBLIC_BUILD_VERIFIED')
+                  break
+              save()
+              if attempt < 8:
+                  time.sleep(5)
+          require(proof['verified'] is True, 'Public PWA bytes did not match all four tested build files and their generation')
+          PY
+      - name: Öffentlichen Byte- und Quellnachweis aufbewahren
+        if: always() && steps.deployment.outcome == 'success'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: pwa-public-build-proof
+          path: ${{ runner.temp }}/pwa-public-build-proof.json
+          if-no-files-found: error
+          retention-days: 30

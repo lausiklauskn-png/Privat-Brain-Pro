@@ -15,9 +15,11 @@
   const x=i=>(extras[document.documentElement.lang]||extras.de)[i];
   const t=i=>(words[document.documentElement.lang]||words.de)[i];
   const make=(tag,cls,text)=>{const e=document.createElement(tag);e.className=cls;if(text)e.textContent=text;return e;};
-  const nav=make('nav','native-navigation');
-  const previous=make('button','ghost'),next=make('button','ghost');
-  previous.type=next.type='button';nav.append(previous,next);document.querySelector('header .tools').prepend(nav);
+  // The delivered shell already contains the final controls. Bind them in place.
+  const nav=document.querySelector('header .tools>.native-navigation')||make('nav','native-navigation');
+  const previous=nav.children[0]||make('button','ghost'),next=nav.children[1]||make('button','ghost');
+  previous.type=next.type='button';if(!nav.isConnected){nav.append(previous,next);document.querySelector('header .tools').prepend(nav);}
+  const say=(button,value)=>{const label=button.querySelector(':scope>.compact-label');if(label){if(label.textContent!==value)label.textContent=value;}else button.textContent=value;};
   const viewer=make('section','native-file-viewer');viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');
   const head=make('div','native-file-head'),close=make('button','ghost'),title=make('strong','native-file-title'),external=make('button','ghost');
   const share=make('button','ghost');share.type='button';
@@ -37,7 +39,7 @@
     // on every save is redundant and exhausts WebKit's History API rate limit.
   }
   function buttons(){
-    previous.textContent=close.textContent=t(0);next.textContent=t(1);external.textContent=x(1);share.textContent=x(0);
+    say(previous,t(0));close.textContent=t(0);say(next,t(1));external.textContent=x(1);share.textContent=x(0);
     previous.disabled=pending||current===0;next.disabled=pending||current>=maximum;
     nav.setAttribute('aria-label',t(0)+' / '+t(1));
   }
