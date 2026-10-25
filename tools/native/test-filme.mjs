@@ -48,23 +48,24 @@ try{
   await ctx.route('**/*',r=>{const u=r.request().url();if(u.startsWith(FPV)){const m=mock(new URL(u).pathname);return r.fulfill({status:m.status,contentType:m.type,headers:{'access-control-allow-origin':'*'},body:m.body});}return u.startsWith(url)?r.continue():r.abort();});
   const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);await page.waitForFunction(()=>window.PBFilme&&document.getElementById('pbFilme')?.dataset.wired);
-  ok('The button sits next to the gear in the navigation row, has a tooltip and is not covered by the Siegel',await page.evaluate(()=>{const b=document.getElementById('pbFilme');const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return b.parentElement?.matches('.native-toolbar-quick')&&b.previousElementSibling?.matches('[data-tab="settings"]')&&!b.closest('.native-options')&&/Werbefilm/.test(b.getAttribute('aria-label'))&&b.contains(hit);}));
+  ok('The button sits next to the gear in the navigation row, has a tooltip and is not covered by the Siegel',await page.evaluate(()=>{const b=document.getElementById('pbFilme');const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return b.parentElement?.matches('.native-toolbar-quick')&&b.previousElementSibling?.matches('[data-tab="settings"]')&&!b.closest('.native-options')&&/Anleitungsvideo/.test(b.getAttribute('aria-label'))&&b.contains(hit);}));
   ok('Nothing is loaded before the tap',served===0);
   await page.click('#pbFilme');
   await page.waitForFunction(()=>document.querySelector('.pb-filme')?.open);
-  ok('The dialog offers both films with their length',await page.waitForFunction(()=>{const b=[...document.querySelectorAll('.pb-filme-wahl button')].map(x=>x.textContent);return b.length===2&&/Werbefilm · 1:45/.test(b[0])&&/Handbuchvideo · 3:43/.test(b[1]);}).then(()=>true));
-  await page.click('.pb-filme-start');
-  await page.waitForFunction(()=>document.querySelector('.pb-filme video[data-filme-video]')?.readyState>=1,null,{timeout:20000});
-  ok('App path: all parts fetched, checked by SHA-256 and played in the window',served===3&&await page.evaluate(()=>{const v=document.querySelector('.pb-filme video');return v.src.startsWith('blob:')&&/Geprüft/.test(document.querySelector('.pb-filme-status').textContent);}));
-  if(process.env.PB_SHOT)await page.screenshot({path:process.env.PB_SHOT});
-  await page.click('[data-filme-laden]');
-  ok('Download opens the video page with ?laden= (in the app via the browser)',await page.evaluate(()=>window.__opened.some(u=>/index\.html\?laden=private-brain-pro-film#video-private-brain-pro-film$/.test(u))));
-  await page.click('.pb-filme-wahl button[data-film=private-brain-pro-handbuch]');
-  // Beschädigter Teil (der zweite Film wurde noch nicht geholt): ehrlicher Satz, kein Abspielen.
-  broken=true;
+  ok('The dialog shows only the manual video, no promo film and no film choice',await page.evaluate(()=>/Anleitungsvideo/.test(document.getElementById('pbFilmeTitel').textContent)&&!document.querySelector('.pb-filme-wahl').checkVisibility()&&!document.querySelector('.pb-filme [data-film=private-brain-pro-film]')&&!/Werbefilm/.test(document.querySelector('.pb-filme').textContent)));
+  // Beschädigter Teil zuerst (noch nichts geholt): ehrlicher Satz, kein Abspielen.
+  broken=true;await page.click('.pb-filme-start');
   await page.waitForFunction(()=>/beschädigt/.test(document.querySelector('.pb-filme-status').textContent),null,{timeout:20000});
   ok('A damaged part is not played; the message says so',!(await page.locator('.pb-filme video').count()));
-  broken=false;
+  broken=false;await page.click('.pb-filme .primary:has-text("Schließen")');await page.waitForFunction(()=>!document.querySelector('.pb-filme'));
+  await page.click('#pbFilme');await page.waitForFunction(()=>document.querySelector('.pb-filme')?.open);
+  const servedBefore=served;
+  await page.click('.pb-filme-start');
+  await page.waitForFunction(()=>document.querySelector('.pb-filme video[data-filme-video]')?.readyState>=1,null,{timeout:20000});
+  ok('App path: all parts fetched, checked by SHA-256 and played in the window',served-servedBefore===3&&await page.evaluate(()=>{const v=document.querySelector('.pb-filme video');return v.src.startsWith('blob:')&&/Geprüft/.test(document.querySelector('.pb-filme-status').textContent);}));
+  if(process.env.PB_SHOT)await page.screenshot({path:process.env.PB_SHOT});
+  await page.click('[data-filme-laden]');
+  ok('Download opens the video page with ?laden= (in the app via the browser)',await page.evaluate(()=>window.__opened.some(u=>/index\.html\?laden=private-brain-pro-handbuch#video-private-brain-pro-handbuch$/.test(u))));
   await page.click('.pb-filme .primary:has-text("Schließen")');
   // Das close-Ereignis des Dialogs kommt asynchron; erst danach ist das Fenster entfernt.
   ok('Closing removes the dialog',await page.waitForFunction(()=>!document.querySelector('.pb-filme'),null,{timeout:5000}).then(()=>true,()=>false));
@@ -78,7 +79,7 @@ try{
   const before=served;await p2.click('#pbFilme');
   await p2.waitForSelector('.pb-filme iframe');
   ok('Browser version: the video page player streams in a frame, the app does not fetch parts itself',
-    await p2.locator('.pb-filme iframe').getAttribute('src').then(s=>s.endsWith('/fpv/abspielen.html?id=private-brain-pro-film'))&&served===before&&!(await p2.locator('[data-filme-browser]').isVisible()));
+    await p2.locator('.pb-filme iframe').getAttribute('src').then(s=>s.endsWith('/fpv/abspielen.html?id=private-brain-pro-handbuch'))&&served===before&&!(await p2.locator('[data-filme-browser]').isVisible()));
   await web.close();
   console.log(`${count} film checks passed.`);
 }finally{await browser?.close();server.close();}

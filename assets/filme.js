@@ -1,5 +1,5 @@
 /* 🎬 Filme in der App (Klaus 2026-10-25): „in einem Video-Button, genau wie oben bei Workflow PDF … jeweils in der
-   entsprechenden Version von der App“. Ein Knopf in der Kopfleiste öffnet Werbefilm und Handbuchvideo.
+   entsprechenden Version von der App“. Ein Knopf in der Kopfleiste öffnet das Anleitungsvideo (Klaus: nur die Erklärung, nicht den Werbefilm, sonst wird es überladen).
    Die Filme liegen auf der Family-Projekt-Videoseite (Family-Projekt.de-Video, je Film EINE Fassung, Teile mit SHA-256):
    - Browserfassung auf github.io: derselbe Ursprung wie die Videoseite → deren Spieler (abspielen.html) streamt im Fenster.
    - App (Android, Windows): die Teile werden geholt, Größe und SHA-256 je Teil geprüft, dann spielt der Film im Fenster.
@@ -9,30 +9,29 @@
   'use strict';
   const BASE = window.PB_FILME_BASIS || 'https://lausiklauskn-png.github.io/Family-Projekt.de-Video/';
   const FILME = [
-    { id: 'private-brain-pro-film', key: 'film' },
     { id: 'private-brain-pro-handbuch', key: 'handbuch' }
   ];
   const W = {
-    de: { button: 'Filme', title: 'Filme: Werbefilm und Handbuchvideo', film: 'Werbefilm', handbuch: 'Handbuchvideo',
+    de: { button: 'Filme', title: 'Anleitungsvideo: was Private Brain kann', film: 'Werbefilm', handbuch: 'Handbuchvideo',
       play: 'Abspielen', download: 'Herunterladen', close: 'Schließen', loading: 'Film wird geladen und geprüft …',
       part: 'Teil {i} von {n} · {a} von {b}', ready: 'Geprüft. Der Film läuft.', offline: 'Ohne Internet lässt sich der Film nicht laden. Er liegt auf der Family-Projekt-Videoseite und wird nicht auf dem Gerät gespeichert.',
       failed: 'Der Film ließ sich nicht laden: {e}', bad: 'Ein Teil kam beschädigt an. Bitte noch einmal versuchen.', browser: 'Im Browser abspielen',
-      note: 'Die Filme liegen auf der Family-Projekt-Videoseite; jeder Teil wird geprüft. Herunterladen speichert die ganze Datei in voller Qualität.' },
-    en: { button: 'Films', title: 'Films: promo film and manual video', film: 'Promo film', handbuch: 'Manual video',
+      note: 'Das Video liegt auf der Family-Projekt-Videoseite; jeder Teil wird geprüft. Herunterladen speichert die ganze Datei in voller Qualität.' },
+    en: { button: 'Films', title: 'Manual video: what Private Brain can do', film: 'Promo film', handbuch: 'Manual video',
       play: 'Play', download: 'Download', close: 'Close', loading: 'Loading and checking the film …',
       part: 'Part {i} of {n} · {a} of {b}', ready: 'Checked. The film is playing.', offline: 'Without internet the film cannot load. It lives on the Family-Projekt video page and is not stored on the device.',
       failed: 'The film could not be loaded: {e}', bad: 'A part arrived damaged. Please try again.', browser: 'Play in the browser',
-      note: 'The films live on the Family-Projekt video page; every part is checked. Download saves the whole file in full quality.' },
-    ru: { button: 'Фильмы', title: 'Фильмы: рекламный ролик и видеоинструкция', film: 'Рекламный ролик', handbuch: 'Видеоинструкция',
+      note: 'The video lives on the Family-Projekt video page; every part is checked. Download saves the whole file in full quality.' },
+    ru: { button: 'Фильмы', title: 'Видеоинструкция: что умеет Private Brain', film: 'Рекламный ролик', handbuch: 'Видеоинструкция',
       play: 'Смотреть', download: 'Скачать', close: 'Закрыть', loading: 'Фильм загружается и проверяется …',
       part: 'Часть {i} из {n} · {a} из {b}', ready: 'Проверено. Фильм воспроизводится.', offline: 'Без интернета фильм не загрузится.',
       failed: 'Не удалось загрузить фильм: {e}', bad: 'Часть пришла повреждённой. Попробуйте ещё раз.', browser: 'Смотреть в браузере',
-      note: 'Фильмы хранятся на странице Family-Projekt; каждая часть проверяется. «Скачать» сохраняет весь файл в полном качестве.' },
-    pl: { button: 'Filmy', title: 'Filmy: film reklamowy i wideo-instrukcja', film: 'Film reklamowy', handbuch: 'Wideo-instrukcja',
+      note: 'Видео хранится на странице Family-Projekt; каждая часть проверяется. «Скачать» сохраняет весь файл в полном качестве.' },
+    pl: { button: 'Filmy', title: 'Wideo-instrukcja: co potrafi Private Brain', film: 'Film reklamowy', handbuch: 'Wideo-instrukcja',
       play: 'Odtwórz', download: 'Pobierz', close: 'Zamknij', loading: 'Film jest ładowany i sprawdzany …',
       part: 'Część {i} z {n} · {a} z {b}', ready: 'Sprawdzono. Film jest odtwarzany.', offline: 'Bez internetu filmu nie można załadować.',
       failed: 'Nie udało się załadować filmu: {e}', bad: 'Część dotarła uszkodzona. Spróbuj ponownie.', browser: 'Odtwórz w przeglądarce',
-      note: 'Filmy są na stronie wideo Family-Projekt; każda część jest sprawdzana. „Pobierz” zapisuje cały plik w pełnej jakości.' }
+      note: 'Wideo jest na stronie Family-Projekt; każda część jest sprawdzana. „Pobierz” zapisuje cały plik w pełnej jakości.' }
   };
   const t = k => (W[document.documentElement.lang] || W.de)[k];
   const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
@@ -151,6 +150,7 @@
       b.onclick = () => show(f.id, sameOrigin ? false : true);
       pick.append(b);
     }
+    if (FILME.length < 2) { pick.hidden = true; pick.style.display = 'none'; }   // ein Film: keine Auswahl
     dl.onclick = () => { stage.querySelectorAll('video').forEach(v => v.pause()); openExternal(loadUrl(current)); };
     ext.onclick = () => { stage.querySelectorAll('video').forEach(v => v.pause()); openExternal(playUrl(current)); };
     close.onclick = () => d.close();

@@ -1,4 +1,4 @@
-**1.0.38 in Arbeit (Klaus 2026-10-25, Claude):** 1.0.37 (Codex, Startkorrektur) plus Film-Knopf neben dem Zahnrad
+**1.0.38 in Arbeit (Klaus 2026-10-25, Claude):** 1.0.37 (Codex, Startkorrektur) plus Film-Knopf neben dem Zahnrad, nur mit dem Anleitungsvideo (Klaus: kein Werbefilm, sonst überladen)
 (`assets/filme.js` byte-gleich mit V3, Pro-Klebstoff `native/native-filme.js`, Probe `tools/native/test-filme.mjs`).
 Windows-Updateprobe jetzt 1.0.37 → 1.0.38. Veröffentlichung APK, Windows und PWA auf Klaus' Wort.
 
