@@ -1,0 +1,28 @@
+/* Metadata shares one compact row; the existing action/check handlers are unchanged. */
+html[data-pb-theme] #results > .pb-result-compact { padding:10px 12px; }
+html[data-pb-theme] #results > .pb-result-compact > .h { min-width:0; }
+html[data-pb-theme] #results .pb-result-heading { flex:1 1 0; min-width:0; }
+html[data-pb-theme] #results .pb-result-path-source { display:none!important; }
+html[data-pb-theme] #results .pb-result-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px; min-width:0; margin-top:5px; }
+html[data-pb-theme] #results .pb-result-meta > .cat { flex:none; margin:0; padding:2px 8px; line-height:1.35; }
+html[data-pb-theme] #results .pb-result-meta > .tags { display:contents; margin:0; }
+html[data-pb-theme] #results .pb-result-meta .tag { margin:0; font-size:.75rem; padding:2px 7px; line-height:1.35; }
+html[data-pb-theme] #results .pb-result-meta .tag.add { display:inline-flex; align-items:center; min-height:var(--pb-control-size,44px); box-sizing:border-box; cursor:pointer; }
+html[data-pb-theme] #results .pb-result-meta .tag.add:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+html[data-pb-theme] #results .pb-result-path { display:inline-flex; align-items:center; gap:5px; flex:1 1 10rem; width:0; min-width:72px; max-width:32rem; min-height:var(--pb-control-size,44px)!important; padding:2px 7px!important; margin:0; border:1px solid var(--line); border-radius:6px; background:var(--field); color:var(--mut); font-size:.75rem; line-height:1.35; white-space:nowrap; text-align:start; box-sizing:border-box; }
+html[data-pb-theme] #results .pb-result-path-short { display:block; flex:1 1 0; min-width:0; overflow:hidden; }
+html[data-pb-theme] #results .pb-result-path-state { flex:0 1 auto; min-width:0; max-width:55%; overflow:hidden; text-overflow:ellipsis; font-size:.7rem; }
+html[data-pb-theme] #results .pb-result-path-state[hidden] { display:none!important; }
+html[data-pb-theme] #results .pb-result-path[data-original=missing],
+html[data-pb-theme] #results .pb-result-path[data-original=unavailable] { color:var(--warn,var(--mut)); }
+html[data-pb-theme] #results .pb-result-path[aria-expanded=true] { border-color:var(--acc); color:var(--acc); }
+html[data-pb-theme] #results .pb-result-compact > .cardbtns { margin-top:7px; gap:5px; }
+/* Availability is presented in the path disclosure. A missing/check warning
+   remains visible either in that control or in the existing check badge. */
+html[data-pb-theme] #results .pb-result-compact > .cardbtns > .pb-record-availability { display:none!important; }
+html[data-pb-theme] .pb-result-path-popover { position:fixed; z-index:74; width:max-content; max-width:min(36rem,calc(100vw - 16px)); max-height:min(45vh,20rem); overflow:auto; box-sizing:border-box; padding:9px 11px; border:1px solid var(--line); border-radius:7px; background:var(--card); color:var(--ink); box-shadow:0 5px 20px #0002; font-size:.8rem; line-height:1.45; overflow-wrap:anywhere; word-break:normal; }
+html[data-pb-theme] .pb-result-path-popover[hidden] { display:none!important; }
+html[data-pb-theme] .pb-result-path-popover p { margin:0; }
+html[data-pb-theme] .pb-result-path-popover .pb-result-path-full { font-family:var(--mono); }
+html[data-pb-theme] .pb-result-path-popover .pb-result-source-state { margin-top:6px; font-weight:600; }
+html[data-pb-theme] .pb-result-path-popover .pb-result-source-detail { margin-top:3px; color:var(--mut); }

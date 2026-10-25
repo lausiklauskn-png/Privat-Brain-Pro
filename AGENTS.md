@@ -1,5 +1,17 @@
 # Private Brain Pro — laufender Auftrag
 
+- Fortsetzung für Android .35 (25.10.2026): **in Arbeit, noch nicht veröffentlicht**.
+  Neue Screenshots: Suchintro vollständig entfernen; Treffer mit lokaler Bild-/
+  PDF-Vorschau und kompakter Typ-/Tag-/Pfadzeile, voller Pfad per Hover/Fokus/Tippen.
+  Doppelte Herkunfts-/Fehlstatus entfernen, Schutz und Öffnungsverfügbarkeit erhalten.
+  Maus/DeX bei allen Fensterbreiten und Orientierungen 32-Pixel-Steuerungen,
+  Touch-only 44 Pixel. Zusätzliche Ablagekopien müssen im erhaltenen Ordner
+  dauerhaft aus- und wieder einschaltbar sein; App-Originalkopien bleiben getrennt.
+  Vorschau verändert weder Originale noch gespeicherten Suchtext und startet keine OCR.
+  Gemeinsame Abnahme und signiertes Update .34 → .35 stehen noch aus; keine neue
+  APK oder neue Testzahlen behaupten. [Auftrag und Abnahme](docs/design/umbau-2026-10-24/ERGEBNISSE-35.md).
+  Der bestehende Freibrief gilt weiter; keine erneute Merge-/Release-Freigabe verlangen.
+
 - Android .34 ist veröffentlicht (24.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk),
   VersionCode 34, Quelle `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, PR #80 übernommen.
   Kompakte Suche mit einem Bedeutungsschalter, sieben direkte Hauptwege,

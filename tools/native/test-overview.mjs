@@ -31,7 +31,7 @@ try{
   await page.locator('.pb-overview-folders [data-overview-path="dir:doc:Docs"]').waitFor();
   ok('The generic welcome explanation is absent from the overview',await page.locator('#panel-dash [data-i18n="dashH"],#panel-dash [data-i18n="dashP"]').count()===0);
   ok('Overview is directly available in the main navigation',await page.locator('.main-pages [data-tab="dash"]').isVisible()&&await page.locator('#panel-dash').evaluate(panel=>panel.classList.contains('on')));
-  ok('A wide mouse workspace has flat navigation and pinned actions',await page.evaluate(()=>matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches&&[...document.querySelectorAll('.main-pages>.tab,.native-toolbar-quick>button')].every(button=>{const height=button.getBoundingClientRect().height;return height>=32&&height<=34;})));
+  ok('A wide mouse workspace has flat navigation and pinned actions',await page.evaluate(()=>matchMedia('(any-pointer:fine)').matches&&[...document.querySelectorAll('.main-pages>.tab,.native-toolbar-quick>button')].every(button=>{const height=button.getBoundingClientRect().height;return height>=32&&height<=34;})));
   ok('Existing catalog metadata size remains explicitly distinct from original file storage',(await page.locator('#kpiSize').locator('..').textContent()).includes('nur Steckbriefe, keine Originale'));
   ok('Storage summary names local copies and does not claim free disk space',(await page.locator('#pb-overview-local').textContent()).includes('1')&&(await page.locator('.pb-overview-help').textContent()).includes('keine Anzeige des freien'));
   await page.locator('.pb-overview-folders [data-overview-path="dir:doc:Docs"]').click();
@@ -65,7 +65,7 @@ try{
   ok('Phone category cards stay inside the active panel at large font size',await page.evaluate(()=>{const panel=document.getElementById('panel-order');return panel.scrollWidth<=panel.clientWidth+1;}));
   ok('The original Settings tab stays directly available outside the scrolling destinations',await page.locator('.native-toolbar-quick [data-tab="settings"]').count()===1&&await page.locator('.native-menu-views .tab').count()===0&&await page.locator('[data-tab="settings"]').count()===1);
   await page.evaluate(()=>document.querySelector('.main-pages').scrollLeft=0);
-  ok('Pinned quick actions remain fully visible to the right with large text on a phone',await page.evaluate(()=>document.querySelector('.main-pages').getBoundingClientRect().right<=document.querySelector('.native-toolbar-quick').getBoundingClientRect().left&&[...document.querySelectorAll('.native-toolbar-quick>button')].every(button=>{const rect=button.getBoundingClientRect();return rect.width>=44&&rect.height>=44&&rect.left>=0&&rect.right<=innerWidth;})));
+  ok('Pinned quick actions remain fully visible to the right with large text on a phone',await page.evaluate(()=>document.querySelector('.main-pages').getBoundingClientRect().right<=document.querySelector('.native-toolbar-quick').getBoundingClientRect().left&&[...document.querySelectorAll('.native-toolbar-quick>button')].every(button=>{const rect=button.getBoundingClientRect(),target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.width>=target&&rect.height>=target&&rect.left>=0&&rect.right<=innerWidth;})));
   await page.locator('.native-toolbar-quick [data-tab="settings"]').click();
   ok('The pinned gear opens the existing Settings panel',await page.locator('#panel-settings').evaluate(panel=>panel.classList.contains('on'))&&await page.locator('.native-toolbar-quick [data-tab="settings"]>svg[data-icon-key="settings"]').count()===1);
   await page.setViewportSize({width:1280,height:900});await page.evaluate(()=>document.documentElement.style.fontSize='20px');
@@ -84,7 +84,7 @@ try{
     ok('A wide touch-only device retains large navigation and quick actions',await touchPage.evaluate(()=>!matchMedia('(any-pointer:fine)').matches&&[...document.querySelectorAll('.main-pages>.tab,.native-toolbar-quick>button')].every(button=>{const rect=button.getBoundingClientRect();return rect.width>=44&&rect.height>=44;})));
   }finally{await touch.close();}
   await page.setViewportSize({width:1280,height:1600});
-  ok('Portrait retains 44 px navigation even with a mouse',await page.evaluate(()=>!matchMedia('(orientation:landscape)').matches&&[...document.querySelectorAll('.main-pages>.tab,.native-toolbar-quick>button')].every(button=>button.getBoundingClientRect().height>=44)));
+  ok('Portrait mouse windows retain flat navigation',await page.evaluate(()=>!matchMedia('(orientation:landscape)').matches&&matchMedia('(any-pointer:fine)').matches&&[...document.querySelectorAll('.main-pages>.tab,.native-toolbar-quick>button')].every(button=>{const rect=button.getBoundingClientRect();return rect.height>=32&&rect.height<=34;})));
   ok('Overview and category navigation raise no runtime errors',errors.length===0);
   console.log(`${count} overview and category checks passed (real Explorer model, synthetic catalog, no original-byte reads).`);
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

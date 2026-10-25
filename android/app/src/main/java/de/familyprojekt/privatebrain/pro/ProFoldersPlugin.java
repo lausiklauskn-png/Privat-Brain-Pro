@@ -21,6 +21,7 @@ public class ProFoldersPlugin extends Plugin {
     private void work(PluginCall call,Work task){worker.execute(()->{try{call.resolve(JSObject.fromJSONObject(task.run()));}catch(Exception error){call.reject("Folder operation unavailable","FOLDER_LIMIT".equals(error.getMessage())?"FOLDER_LIMIT":"FOLDER_UNAVAILABLE");}});}
     @PluginMethod public void state(PluginCall call){work(call,()->folders.state());}
     @PluginMethod public void pause(PluginCall call){work(call,()->folders.pause());}
+    @PluginMethod public void resume(PluginCall call){work(call,()->folders.resume());}
     @PluginMethod public void chooseLibrary(PluginCall call){choose(call,true);}
     @PluginMethod public void chooseSource(PluginCall call){choose(call,false);}
     private void choose(PluginCall call,boolean library){

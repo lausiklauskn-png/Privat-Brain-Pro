@@ -36,24 +36,24 @@ try {
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
   ok('Native bundle starts on search',await page.locator('#q').isVisible() && await page.locator('.brand h1').textContent()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
   ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes('Direkte Mailverbindung')));
-  // Search keeps the introduction for an empty field and releases its space
-  // for actual queries, including the app's saved-search and dictation paths.
-  const introduction=await page.evaluate(()=>{const welcome=document.querySelector('.search-welcome');return {height:welcome.getBoundingClientRect().height,top:document.querySelector('.searchbox').offsetTop};});
-  ok('Empty search has a visible introduction',introduction.height>0);
+  // Search starts with its controls; no welcome copy returns after clearing,
+  // dictating, restoring a saved query or returning through navigation.
+  const searchTop=await page.locator('.searchbox').evaluate(node=>node.offsetTop);
+  ok('Empty search has no welcome heading or explanatory paragraph',await page.locator('.search-welcome,[data-ws="find"],[data-ws="findHelp"]').count()===0);
   await page.fill('#q','Radstand');
-  ok('Typing a query removes the introduction and releases its full layout height',await page.evaluate(before=>{const welcome=document.querySelector('.search-welcome');return welcome.hidden&&welcome.getBoundingClientRect().height===0&&before.top-document.querySelector('.searchbox').offsetTop>=before.height-1;},introduction));
+  ok('Typing a query keeps the already compact search controls in place',await page.locator('.search-welcome').count()===0&&await page.locator('.searchbox').evaluate((node,top)=>node.offsetTop===top,searchTop));
   await page.fill('#q','   ');
-  ok('Clearing the actual query restores the introduction',await page.locator('.search-welcome').isVisible());
+  ok('Clearing the query never restores a welcome block',await page.locator('.search-welcome').count()===0&&await page.locator('.searchbox').evaluate((node,top)=>node.offsetTop===top,searchTop));
   await page.evaluate(async()=>{document.getElementById('q').value='Gespeicherte Suche';await renderResults(document.getElementById('q').value);});
-  ok('Programmatic search text also removes the introduction without an input event',await page.locator('.search-welcome').isHidden());
+  ok('Programmatic search text works without an input event or welcome block',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').count()===0);
   await page.locator('#fSave').click();
   await page.fill('#q','');
   await page.locator('#savedRow [data-saved="0"]').click();
-  ok('Restoring a saved query keeps the introduction out of the result area',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').isHidden());
+  ok('Restoring a saved query keeps the introduction absent',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').count()===0);
   await clickControl(page,'.main-pages [data-tab="intake"]');
   await page.evaluate(()=>PBNavigation.back());
   await page.locator('#q').waitFor({state:'visible'});
-  ok('Returning to search retains its query and compact result layout',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').isHidden());
+  ok('Returning to search retains its query and compact result layout',await page.locator('#q').inputValue()==='Gespeicherte Suche'&&await page.locator('.search-welcome').count()===0);
   const enabled=await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed');
   await page.locator('#mode [data-m="mean"]').click();
   const toggled=await page.evaluate(()=>({mode:MODE,pressed:document.querySelector('#mode [data-m="mean"]').getAttribute('aria-pressed'),active:document.querySelector('#mode [data-m="mean"]').classList.contains('on')}));
@@ -71,7 +71,7 @@ try {
   ok('Phone, tablet portrait and DeX keep the short meaning label and trailing magnifier on one line at larger fonts: '+JSON.stringify(largeSearch),largeSearch.every(sample=>sample.fit));
   await page.evaluate(()=>document.documentElement.style.fontSize='');
   await page.setViewportSize({width:1280,height:900});
-  ok('The desktop search uses the compact mouse target while touch keeps its larger target',await page.evaluate(()=>{const mouse=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches,minimum=mouse?32:44,height=document.getElementById('q').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=(mouse?40:52)&&height>=minimum&&height<=minimum+2;}));
+  ok('The desktop search uses the compact mouse target while touch keeps its larger target',await page.evaluate(()=>{const mouse=matchMedia('(any-pointer:fine)').matches,minimum=mouse?32:44,height=document.getElementById('q').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=(mouse?40:52)&&height>=minimum&&height<=minimum+2;}));
   for(const width of [280,320,390,650,768,1000,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {
@@ -114,7 +114,7 @@ try {
       await control.scrollIntoViewIfNeeded();
       mainReachability.push(await control.evaluate(e=>{
         const r=e.getBoundingClientRect(),strip=e.parentElement.getBoundingClientRect(),icon=e.querySelector('.compact-icon'),caption=e.querySelector('.compact-caption');
-        const fits=r.left>=Math.max(0,strip.left)-1&&r.right<=Math.min(innerWidth,strip.right)+1&&r.width>=44&&r.height>=44;
+        const target=matchMedia('(any-pointer:fine)').matches?32:44;const fits=r.left>=Math.max(0,strip.left)-1&&r.right<=Math.min(innerWidth,strip.right)+1&&r.width>=target&&r.height>=target;
         let readable=Boolean(icon&&e.title.trim());
         if(e.classList.contains('compact-icon-only'))readable=readable&&!caption&&e.dataset.tab==='search';
         else if(caption&&icon){const cr=caption.getBoundingClientRect(),ir=icon.getBoundingClientRect();readable=readable&&Boolean(caption.textContent.trim())&&cr.left>=ir.right&&Math.abs(cr.top+cr.height/2-ir.top-ir.height/2)<2&&caption.scrollWidth<=caption.clientWidth+1;}
@@ -127,7 +127,7 @@ try {
     ok(`${lang}: the app menu has no duplicate view tabs`,await page.locator('.native-options-panel .tab').count()===0);
     await page.keyboard.press('Escape');
     const settingsName={en:'Settings',ru:'Настройки',pl:'Ustawienia',de:'Einstellungen'}[lang];
-    ok(`${lang}: the pinned settings gear and palette stay visible with accessible names and 44px targets`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"],#pb-palette-button').evaluateAll((nodes,name)=>nodes.length===2&&nodes.every(e=>{const r=e.getBoundingClientRect();return r.width>=44&&r.height>=44&&r.left>=0&&r.right<=innerWidth&&Boolean(e.querySelector('svg'))&&Boolean(e.title.trim())&&e.title===e.getAttribute('aria-label')&&(e.dataset.tab!=='settings'||e.getAttribute('aria-label')===name);}),settingsName));
+    ok(`${lang}: the pinned settings gear and palette stay visible with accessible names and pointer-appropriate targets`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"],#pb-palette-button').evaluateAll((nodes,name)=>nodes.length===2&&nodes.every(e=>{const r=e.getBoundingClientRect(),target=matchMedia('(any-pointer:fine)').matches?32:44;return r.width>=target&&r.height>=target&&r.left>=0&&r.right<=innerWidth&&Boolean(e.querySelector('svg'))&&Boolean(e.title.trim())&&e.title===e.getAttribute('aria-label')&&(e.dataset.tab!=='settings'||e.getAttribute('aria-label')===name);}),settingsName));
     await clickControl(page,'.native-toolbar-quick .tab[data-tab="settings"]');
     await page.locator('#panel-settings').waitFor({state:'visible'});
     ok(`${lang}: the pinned gear opens the original settings view`,!await page.locator('.native-options').evaluate(menu=>menu.open));

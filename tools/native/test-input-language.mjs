@@ -93,7 +93,7 @@ try{
     for(const size of[20,24]){
       await page.setViewportSize({width,height:width<1100?Math.round(width*1.5):900});await page.evaluate(size=>document.documentElement.style.fontSize=size+'px',size);
       await quick.click();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-      fits&&=await quick.evaluate(button=>{const rect=button.getBoundingClientRect(),popup=document.getElementById('pb-search-language-menu'),bounds=popup.getBoundingClientRect(),box=button.closest('.searchbox'),target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+2&&rect.width>=target&&rect.left>=0&&rect.right<=innerWidth+1&&bounds.left>=0&&bounds.right<=innerWidth+1&&bounds.top>=0&&bounds.bottom<=innerHeight+1&&popup.scrollWidth<=popup.clientWidth+1&&box.scrollWidth<=box.clientWidth+1&&(innerWidth>650||box.getBoundingClientRect().height<=100);});
+      fits&&=await quick.evaluate(button=>{const rect=button.getBoundingClientRect(),popup=document.getElementById('pb-search-language-menu'),bounds=popup.getBoundingClientRect(),box=button.closest('.searchbox'),target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+2&&rect.width>=target&&rect.left>=0&&rect.right<=innerWidth+1&&bounds.left>=0&&bounds.right<=innerWidth+1&&bounds.top>=0&&bounds.bottom<=innerHeight+1&&popup.scrollWidth<=popup.clientWidth+1&&box.scrollWidth<=box.clientWidth+1&&(innerWidth>650||box.getBoundingClientRect().height<=100);});
       await quick.click();
     }
     ok(width+'px: the code and complete language menu fit at 20/24 px without a separate explanation row',fits);

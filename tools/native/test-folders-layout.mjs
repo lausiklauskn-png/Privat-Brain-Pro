@@ -6,19 +6,20 @@ import {chromium} from 'playwright-core';
 import {navigateTo} from './test-navigation-helper.mjs';
 const root=resolve('www'),origin='https://localhost/',types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.json':'application/json'};
 let browser,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
-const saved=new Map(),pending=new Map(),copies=new Map();let destination='',sourceIndex=0,chooseCalls=0,cancelNext=false,failCopy=false;
+const saved=new Map(),pending=new Map(),copies=new Map();let destination='',copying=false,sourceIndex=0,chooseCalls=0,cancelNext=false,failCopy=false,failResume=false,holdResume=false,releaseResume,resumeCalls=0,resumeStarted;const resumeStart=new Promise(resolve=>resumeStarted=resolve);
 try{
  browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
  const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',async route=>{const url=route.request().url();if(!url.startsWith(origin))return route.abort();const path=resolve(root,'.'+new URL(url).pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+'/'))return route.abort();try{return route.fulfill({contentType:types[extname(path)]||'application/octet-stream',body:await readFile(path)});}catch{return route.fulfill({status:404,body:''});}});
  await page.exposeFunction('folderFixture',async(method,args={})=>{
-  if(method==='state')return{enabled:Boolean(destination),name:destination};
-  if(method==='pause'){destination='';return{enabled:false,name:''};}
-  if(method==='chooseLibrary'){chooseCalls++;if(cancelNext){cancelNext=false;return{cancelled:true};}destination='Library '+chooseCalls;copies.set(destination,[]);return{enabled:true,name:destination};}
+  if(method==='state')return{enabled:copying,name:destination,configured:Boolean(destination)};
+  if(method==='pause'){copying=false;return{enabled:false,name:destination,configured:Boolean(destination)};}
+  if(method==='resume'){resumeCalls++;if(failResume)throw new Error('remembered folder permission revoked');if(holdResume)await new Promise(resolve=>{releaseResume=resolve;resumeStarted();});copying=true;return{enabled:true,name:destination,configured:Boolean(destination)};}
+  if(method==='chooseLibrary'){chooseCalls++;if(cancelNext){cancelNext=false;return{cancelled:true};}destination='Library '+chooseCalls;copying=true;copies.set(destination,[]);return{enabled:true,name:destination,configured:true};}
   if(method==='chooseSource'){chooseCalls++;if(cancelNext){cancelNext=false;return{cancelled:true};}sourceIndex++;const bytes=Buffer.from('Read-only source '+sourceIndex);return{name:'Source '+sourceIndex,items:[{id:'selected',name:'source-'+sourceIndex+'.txt',path:'Source '+sourceIndex+'/source.txt',type:'text/plain',size:bytes.length}]};}
   if(method==='readSource')return{data:Buffer.from('Read-only source '+sourceIndex).subarray(args.offset,args.offset+262144).toString('base64')};
   if(method==='finishSource')return{ok:true};
-  if(method==='copyOriginal'){if(failCopy)throw new Error('permission revoked');if(destination)copies.get(destination).push({name:args.name,bytes:saved.get(args.hash)?.bytes});return{copied:Boolean(destination)};}
+  if(method==='copyOriginal'){if(failCopy)throw new Error('permission revoked');if(copying)copies.get(destination).push({name:args.name,bytes:saved.get(args.hash)?.bytes});return{copied:copying};}
   if(method==='listOriginals')return{items:[...saved.keys()]};
   if(method==='beginImport'){if(saved.has(args.hash))return{stored:true};const ticket=String(pending.size+1);pending.set(ticket,{meta:args,parts:[]});return{ticket};}
   if(method==='appendImport'){pending.get(args.ticket).parts.push(Buffer.from(args.data,'base64'));return{ok:true};}
@@ -28,7 +29,7 @@ try{
   if(method==='readOriginal')return{data:saved.get(args.hash).bytes.subarray(args.offset,args.offset+262144).toString('base64')};
   throw new Error('Unknown fixture method '+method);
  });
- await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
+ await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','resume','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
  for(const [lang,labels,settingsName]of [
   ['de',['Finden','Hinzufügen','Dateien','Mail','Übersicht','Kategorien','Doppelte'],'Einstellungen'],
@@ -37,12 +38,12 @@ try{
   ['pl',['Szukaj','Dodaj','Pliki','Poczta','Pulpit','Kategorie','Duplikaty'],'Ustawienia']
  ]){
   await page.locator('.native-options>summary').click();await page.locator(`[data-lang=${lang}]`).click();
-  ok(`${lang}: seven main paths show their translated names beside symbols, with an accessible search icon`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>{const minimum=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;return nodes.length===7&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['search','intake','explorer','mail','dash','order','dupes'][i]&&e.getAttribute('aria-label')===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&(e.dataset.tab==='search'?!caption:caption?.textContent===labels[i])&&r.width>=minimum&&r.height>=minimum;});},labels));
+  ok(`${lang}: seven main paths show their translated names beside symbols, with an accessible search icon`,await page.locator('.main-pages .tab').evaluateAll((nodes,labels)=>{const minimum=matchMedia('(any-pointer:fine)').matches?32:44;return nodes.length===7&&nodes.every((e,i)=>{const r=e.getBoundingClientRect(),caption=e.querySelector('.compact-caption');return e.dataset.tab===['search','intake','explorer','mail','dash','order','dupes'][i]&&e.getAttribute('aria-label')===labels[i]&&Boolean(e.querySelector('.compact-icon'))&&(e.dataset.tab==='search'?!caption:caption?.textContent===labels[i])&&r.width>=minimum&&r.height>=minimum;});},labels));
   for(const tab of ['dash','order','dupes']){await navigateTo(page,tab);ok(`${lang}: ${tab} is reached directly through its primary navigation tab`,await page.locator('#panel-'+tab).isVisible()&&await page.locator('.main-pages [data-tab="'+tab+'"]').count()===1&&!await page.locator('.native-options').evaluate(menu=>menu.open));}
   await page.locator('.native-options>summary').click();
   ok(`${lang}: the app menu has no duplicate view tabs`,await page.locator('.native-options-panel .tab').count()===0);
   await page.keyboard.press('Escape');
-  ok(`${lang}: the pinned gear retains its translated name and the appropriate mouse or touch target`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"]').evaluate((e,name)=>{const r=e.getBoundingClientRect(),minimum=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;return e.getAttribute('aria-label')===name&&e.title===name&&Boolean(e.querySelector('.compact-icon'))&&!e.querySelector('.compact-caption')&&r.width>=minimum&&r.width<=minimum+2&&r.height>=minimum&&r.height<=minimum+2&&r.left>=0&&r.right<=innerWidth;},settingsName));
+  ok(`${lang}: the pinned gear retains its translated name and the appropriate mouse or touch target`,await page.locator('.native-toolbar-quick .tab[data-tab="settings"]').evaluate((e,name)=>{const r=e.getBoundingClientRect(),minimum=matchMedia('(any-pointer:fine)').matches?32:44;return e.getAttribute('aria-label')===name&&e.title===name&&Boolean(e.querySelector('.compact-icon'))&&!e.querySelector('.compact-caption')&&r.width>=minimum&&r.width<=minimum+2&&r.height>=minimum&&r.height<=minimum+2&&r.left>=0&&r.right<=innerWidth;},settingsName));
   await navigateTo(page,'settings');ok(`${lang}: settings is reached by a real pinned-gear click`,await page.locator('#panel-settings').isVisible()&&!await page.locator('.native-options').evaluate(menu=>menu.open));
   const button=page.locator('[data-tab=explorer]');await button.hover();await page.locator('.native-tooltip').waitFor();ok(`${lang}: pointer hover shows an actual visible explanatory tooltip`,(await page.locator('.native-tooltip').textContent())===(await button.getAttribute('aria-label')));await page.mouse.move(1270,890);
   await button.focus();await page.locator('.native-tooltip').waitFor();ok(`${lang}: keyboard focus shows the same tooltip and Escape dismisses it`,await button.getAttribute('aria-describedby')==='native-control-tooltip');await page.keyboard.press('Escape');await page.locator('.native-tooltip').waitFor({state:'hidden'});
@@ -64,7 +65,7 @@ try{
  ok('First folder choice imports exact bytes after hiding only the explanation',chooseCalls===1&&saved.size===1&&[...saved.values()][0].bytes.equals(Buffer.from('Read-only source 1')));
  await page.click('#pickDir');await page.waitForFunction(()=>CATALOG.length===2&&!signing&&!document.querySelector('#pickDir').disabled);
  ok('Do not show again still opens another source folder without another hint',chooseCalls===2&&await page.locator('.native-folder-consent').count()===0);
- await page.click('#chooseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').disabled===false);const firstDestination=destination;
+ await page.click('#chooseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').getAttribute('aria-pressed')==='true'&&!document.querySelector('#pauseLibrary').disabled);const firstDestination=destination;
  ok('Library selection is independently usable after dismissing the folder explanation',chooseCalls===3&&Boolean(firstDestination));
  await page.click('#pickDir');await page.waitForFunction(()=>CATALOG.length===3&&!signing&&!document.querySelector('#pickDir').disabled);
  ok('New import makes a verified original and an additional selected-folder copy',copies.get(firstDestination).length===1&&copies.get(firstDestination)[0].bytes.equals(Buffer.from('Read-only source 3')));
@@ -78,15 +79,35 @@ try{
  ok('Folder actions remain usable after restart with saved hint and library choices',chooseCalls===8&&copies.get(secondDestination).length===2);
  failCopy=true;await page.click('#pickDir');await page.waitForFunction(()=>!signing&&!document.querySelector('#pickDir').disabled&&document.querySelector('#libraryStatus').textContent.includes('Freigabe prüfen'));
  ok('Revoked destination permission does not add an apparently successful catalog item',await page.evaluate(()=>CATALOG.length===5)&&copies.get(secondDestination).length===2);failCopy=false;
- await page.click('#pauseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').disabled);
+ await page.click('#pauseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').getAttribute('aria-pressed')==='false'&&!document.querySelector('#pauseLibrary').disabled);
+ ok('Pausing retains the remembered folder and offers an enabled turn-on action',destination===secondDestination&&!copying&&await page.locator('#pauseLibrary').textContent().then(t=>t.includes('Kopieren einschalten'))&&await page.locator('#libraryStatus').textContent().then(t=>t.includes('ausgeschaltet')&&t.includes(secondDestination)));
+ await page.waitForFunction(()=>document.querySelector('#pauseLibrary .native-content-icon')?.dataset.iconKey==='check');
+ ok('The turn-on action no longer shows the turn-off cross',await page.locator('#pauseLibrary .native-content-icon').evaluate(e=>e.dataset.iconKey!=='close'));
  await page.click('#pickDir');await page.waitForFunction(()=>CATALOG.length===6&&!signing&&!document.querySelector('#pickDir').disabled);
  ok('Stopping additional copies still keeps durable internal originals and allows folder imports',saved.size===7&&copies.get(secondDestination).length===2);
+ const choicesBeforeResume=chooseCalls;
+ failResume=true;await page.click('#pauseLibrary');await page.waitForFunction(()=>!document.querySelector('#pauseLibrary').disabled&&document.querySelector('#libraryStatus').textContent.includes('Freigabe prüfen'));
+ ok('A failed remembered-folder check leaves copying off, preserves originals, and allows another explicit attempt',!copying&&destination===secondDestination&&saved.size===7&&copies.get(secondDestination).length===2&&chooseCalls===choicesBeforeResume&&await page.locator('#pauseLibrary').getAttribute('aria-pressed')==='false');
+ failResume=false;holdResume=true;await page.click('#pauseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').disabled);
+ ok('Re-enabling cannot race another folder action while native permission checking is pending',!copying&&await page.locator('#chooseLibrary').isDisabled()&&await page.locator('#pickDir').isDisabled());
+ let waitTimer;try{await Promise.race([resumeStart,new Promise((_,reject)=>{waitTimer=setTimeout(()=>reject(new Error('Native resume fixture did not start')),10000);})]);}finally{clearTimeout(waitTimer);}
+ releaseResume();holdResume=false;await page.waitForFunction(()=>document.querySelector('#pauseLibrary').getAttribute('aria-pressed')==='true'&&!document.querySelector('#pauseLibrary').disabled);
+ await page.waitForFunction(()=>document.querySelector('#pauseLibrary .native-content-icon')?.dataset.iconKey==='close');
+ ok('Copying resumes in the same remembered folder without reopening the chooser',copying&&destination===secondDestination&&chooseCalls===choicesBeforeResume&&resumeCalls===2&&await page.locator('#pauseLibrary').textContent().then(t=>t.includes('Kopieren ausschalten')));
+ await page.click('#pickDir');await page.waitForFunction(()=>CATALOG.length===7&&!signing&&!document.querySelector('#pickDir').disabled);
+ ok('An import after re-enabling writes an exact additional copy to the same destination',copies.get(secondDestination).length===3&&copies.get(secondDestination)[2].bytes.equals(Buffer.from('Read-only source 8'))&&saved.size===8);
+ await page.click('#pauseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').getAttribute('aria-pressed')==='false'&&!document.querySelector('#pauseLibrary').disabled);
+ await page.reload();await page.waitForFunction(()=>window.PBFolders&&CATALOG.length===7&&!document.querySelector('#pauseLibrary').disabled);
+ await navigateTo(page,'intake');
+ ok('A restart preserves the paused state and remembered destination with a working turn-on action',!copying&&destination===secondDestination&&await page.locator('#pauseLibrary').getAttribute('aria-pressed')==='false'&&await page.locator('#libraryStatus').textContent().then(t=>t.includes('ausgeschaltet')&&t.includes(secondDestination)));
+ const restartChoices=chooseCalls;await page.click('#pauseLibrary');await page.waitForFunction(()=>document.querySelector('#pauseLibrary').getAttribute('aria-pressed')==='true'&&!document.querySelector('#pauseLibrary').disabled);
+ ok('The same folder can be re-enabled after restart without choosing a replacement',copying&&destination===secondDestination&&chooseCalls===restartChoices&&resumeCalls===3);
  await page.waitForFunction(()=>!document.querySelector("#toast").classList.contains("on"));
  for(const width of [320,390,768,1280]){
   await page.setViewportSize({width,height:width<650?640:900});
   await page.evaluate(()=>document.fonts.ready);
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-  ok(`${width}px: named navigation uses flat rows and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>{const tabs=[...e.querySelectorAll('.main-pages .tab')].map(button=>button.getBoundingClientRect()),mids=tabs.map(r=>r.top+r.height/2),minimum=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;return tabs.length===7&&tabs.every(r=>r.width>=minimum&&r.height>=minimum)&&Math.max(...mids)-Math.min(...mids)<2&&e.getBoundingClientRect().height<=Math.max(...tabs.map(r=>r.height))+24&&document.querySelector('.panel.on').scrollWidth<=document.querySelector('.panel.on').clientWidth+1;}));
+  ok(`${width}px: named navigation uses flat rows and import page has no horizontal overflow`,await page.locator('.native-toolbar-row').evaluate(e=>{const tabs=[...e.querySelectorAll('.main-pages .tab')].map(button=>button.getBoundingClientRect()),mids=tabs.map(r=>r.top+r.height/2),minimum=matchMedia('(any-pointer:fine)').matches?32:44;return tabs.length===7&&tabs.every(r=>r.width>=minimum&&r.height>=minimum)&&Math.max(...mids)-Math.min(...mids)<2&&e.getBoundingClientRect().height<=Math.max(...tabs.map(r=>r.height))+24&&document.querySelector('.panel.on').scrollWidth<=document.querySelector('.panel.on').clientWidth+1;}));
   if(process.env.PB_CAPTURE_DESIGN==='1'){await page.mouse.move(width-2,width<650?638:898);await mkdir('docs/design/compact16',{recursive:true});await page.screenshot({path:`docs/design/compact16/import-${width}.png`});}
   await navigateTo(page,'dash');
   ok(`${width}px: dashboard tiles stay compact and contain real keyboard buttons`,await page.locator('#panel-dash .tile').evaluateAll(nodes=>nodes.every(e=>e.getBoundingClientRect().height<=140))&&await page.locator('#kpiCats').evaluate(e=>e.closest('button').type==='button'));

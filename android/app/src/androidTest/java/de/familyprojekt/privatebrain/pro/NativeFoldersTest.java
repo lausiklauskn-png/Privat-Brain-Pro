@@ -34,7 +34,11 @@ public class NativeFoldersTest {
         assertArrayEquals(body,originals.read(hash,0));assertEquals(1,folders.source(tree("sourceB")).getJSONArray("items").length());
         try{folders.read(id,0);fail("Old selection token still readable");}catch(java.io.IOException expected){}
         folders.finishSource();folders.pause();assertFalse(new FolderStore(context()).state().getBoolean("enabled"));assertFalse(folders.copy(hash,"copy.txt").getBoolean("copied"));
-        folders.library(tree("libraryA"));assertTrue(folders.copy(hash,"copy.txt").getBoolean("copied"));
+        reopened=new FolderStore(context());assertEquals("libraryB",reopened.state().getString("name"));assertTrue(reopened.state().getBoolean("configured"));
+        assertTrue(reopened.resume().getBoolean("enabled"));assertTrue(new FolderStore(context()).state().getBoolean("enabled"));
+        assertEquals("copy (1).txt",reopened.copy(hash,"copy.txt").getString("name"));
+        assertEquals(2,reopened.source(tree("libraryB")).getJSONArray("items").length());
+        assertEquals(2,reopened.source(tree("libraryA")).getJSONArray("items").length());assertArrayEquals(body,originals.read(hash,0));
         assertEquals(1,folders.source(tree("sourceA")).getJSONArray("items").length());reset();
     }
     @Test public void lostDestinationDoesNotOverwriteExistingFilesOrRemoveOriginal()throws Exception{
@@ -44,6 +48,12 @@ public class NativeFoldersTest {
         folders.library(tree("libraryA"));folders.copy(hash,"keep.txt");context().getContentResolver().call(Uri.parse("content://"+authority()),"fixture-broken",null,null);
         try{folders.copy(hash,"keep.txt");fail("Failed destination pretended success");}catch(Exception expected){}
         assertArrayEquals(body,originals.read(hash,0));assertEquals(1,folders.source(tree("libraryA")).getJSONArray("items").length());
+        folders.pause();try{new FolderStore(context()).resume();fail("Inaccessible destination was re-enabled");}catch(Exception expected){}
+        assertFalse(new FolderStore(context()).state().getBoolean("enabled"));assertEquals("libraryA",new FolderStore(context()).state().getString("name"));
+        assertArrayEquals(body,originals.read(hash,0));assertEquals(1,folders.source(tree("libraryA")).getJSONArray("items").length());
+        context().getSharedPreferences("folders-v1",0).edit().clear().commit();
+        try{new FolderStore(context()).resume();fail("Missing destination was re-enabled");}catch(java.io.IOException expected){}
+        assertFalse(new FolderStore(context()).state().getBoolean("enabled"));
         try{folders.read("content://unselected/private",0);fail("Accepted unselected URI");}catch(java.io.IOException expected){}reset();
     }
 }

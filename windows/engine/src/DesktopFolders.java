@@ -15,12 +15,20 @@ final class DesktopFolders {
     private final Map<String,Source> sources=new HashMap<>();
     private record Source(Path path,long size,java.nio.file.attribute.FileTime modified,Object key){}
     DesktopFolders(DesktopState state){this.state=state;prefs=state.getSharedPreferences("folders-v1",0);originals=new OriginalFileStore(state);}
-    synchronized JSONObject state(){return new JSONObject().put("enabled",prefs.getBoolean("enabled",false)).put("name",prefs.getString("name",""));}
+    synchronized JSONObject state(){return new JSONObject().put("enabled",prefs.getBoolean("enabled",false)).put("name",prefs.getString("name","")).put("configured",!prefs.getString("tree","").isEmpty());}
     synchronized JSONObject library(String value)throws Exception {
         Path root=Path.of(value).toAbsolutePath().normalize();DesktopFiles.noLinks(root);if(!Files.isDirectory(root))throw new IOException("VAULT_FOLDER_UNAVAILABLE");
         if(!prefs.edit().putString("tree",root.toString()).putString("name",label(root)).putBoolean("enabled",true).commit())throw new IOException("VAULT_UNAVAILABLE");return state();
     }
     synchronized JSONObject pause()throws Exception {if(!prefs.edit().putBoolean("enabled",false).commit())throw new IOException("VAULT_UNAVAILABLE");return state();}
+    synchronized JSONObject resume()throws Exception {
+        String selected=prefs.getString("tree","");if(selected.isEmpty())throw new IOException("VAULT_FOLDER_UNAVAILABLE");
+        Path root=Path.of(selected).toAbsolutePath().normalize();DesktopFiles.noLinks(root);if(!Files.isDirectory(root))throw new IOException("VAULT_FOLDER_UNAVAILABLE");
+        Path probe=Files.createTempFile(root,".private-brain-copy-check-",".tmp");
+        try{byte[] expected={80,66};Files.write(probe,expected);if(!Arrays.equals(Files.readAllBytes(probe),expected))throw new IOException("VAULT_FOLDER_UNAVAILABLE");}
+        finally{Files.deleteIfExists(probe);}
+        if(!prefs.edit().putBoolean("enabled",true).commit())throw new IOException("VAULT_UNAVAILABLE");return state();
+    }
     private static String label(Path path){return path.getFileName()==null?path.toString():path.getFileName().toString();}
     synchronized JSONObject source(String value)throws Exception {
         sources.clear();JSONArray items=new JSONArray();Path root=Path.of(value).toAbsolutePath().normalize();DesktopFiles.noLinks(root);

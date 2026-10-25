@@ -21,6 +21,7 @@
   "ProFolders": [
     "state",
     "pause",
+    "resume",
     "chooseLibrary",
     "chooseSource",
     "readSource",

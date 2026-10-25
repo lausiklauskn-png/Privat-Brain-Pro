@@ -24,13 +24,32 @@ final class FolderStore {
             if(c==null||!c.moveToFirst())throw new IOException();return c.getString(0);
         }
     }
-    synchronized JSONObject state()throws Exception{return new JSONObject().put("enabled",prefs().getBoolean("enabled",false)).put("name",prefs().getString("name",""));}
+    synchronized JSONObject state()throws Exception{return new JSONObject().put("enabled",prefs().getBoolean("enabled",false)).put("name",prefs().getString("name","")).put("configured",!prefs().getString("tree","").isEmpty());}
     synchronized JSONObject library(Uri tree)throws Exception{
         String name=name(root(tree));
         if(!prefs().edit().putString("tree",tree.toString()).putString("name",name).putBoolean("enabled",true).commit())throw new IOException();
         return state();
     }
     synchronized JSONObject pause()throws Exception{if(!prefs().edit().putBoolean("enabled",false).commit())throw new IOException();return state();}
+    synchronized JSONObject resume()throws Exception{
+        String selected=prefs().getString("tree","");if(selected.isEmpty())throw new IOException();
+        Uri tree=Uri.parse(selected);if(!"content".equals(tree.getScheme()))throw new IOException();
+        // Verify the remembered grant with a fresh file, never an existing copy.
+        Uri probe=null;boolean removed=false;
+        try{
+            Uri folder=root(tree);
+            try(Cursor c=resolver.query(folder,new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE,DocumentsContract.Document.COLUMN_FLAGS},null,null,null)){
+                if(c==null||!c.moveToFirst()||!DocumentsContract.Document.MIME_TYPE_DIR.equals(c.getString(0))||(c.getInt(1)&DocumentsContract.Document.FLAG_DIR_SUPPORTS_CREATE)==0)throw new IOException();
+            }
+            probe=DocumentsContract.createDocument(resolver,folder,"application/octet-stream",".private-brain-copy-check-"+UUID.randomUUID()+".tmp");if(probe==null)throw new IOException();
+            byte[] expected={80,66};
+            try(OutputStream output=resolver.openOutputStream(probe,"w")){if(output==null)throw new IOException();output.write(expected);}
+            try(InputStream input=resolver.openInputStream(probe)){if(input==null||input.read()!=80||input.read()!=66||input.read()!=-1)throw new IOException();}
+            removed=DocumentsContract.deleteDocument(resolver,probe);if(!removed)throw new IOException();
+            if(!prefs().edit().putBoolean("enabled",true).commit())throw new IOException();
+            return state();
+        }finally{if(probe!=null&&!removed)try{DocumentsContract.deleteDocument(resolver,probe);}catch(Exception ignored){}}
+    }
     synchronized JSONObject source(Uri tree)throws Exception{
         sources.clear();sizes.clear();JSONArray items=new JSONArray();long[] total={0};
         String name=name(root(tree));

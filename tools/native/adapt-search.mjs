@@ -5,6 +5,7 @@ export function adaptSearch(source) {
     if (html.split(before).length !== 2) throw new Error('Review native search adaptation: ' + label);
     html = html.replace(before, after);
   }
+  replace('    <div class="search-welcome"><h2 data-ws="find">Was möchtest du finden?</h2><p data-ws="findHelp">Durchsuche E-Mails, Dokumente und Bilder gemeinsam nach ihrer Bedeutung.</p></div>\n', '', 'redundant search introduction');
   replace('        <button data-m="name" data-i18n="modeName">Namenssuche</button>\n', '', 'filename mode control');
   replace('<button class="on" data-m="mean" data-i18n="modeMean">Bedeutungssuche</button>',
     '<button type="button" class="on" data-m="mean" aria-pressed="true" aria-label="Bedeutungssuche" data-i18n-aria="modeMean"><span data-i18n="modeMeaningShort">Bedeutung</span><svg class="pb-search-mode-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>', 'meaning switch');

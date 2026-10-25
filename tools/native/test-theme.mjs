@@ -116,7 +116,7 @@ try {
   const paletteButton=page.locator('#pb-palette-button'),palette=page.locator('#pb-palette');
   await paletteButton.waitFor();
   ok('The direct palette is an icon-only control beside the original Settings tab',await paletteButton.evaluate(button=>{
-    const rect=button.getBoundingClientRect(),target=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches?32:44;
+    const rect=button.getBoundingClientRect(),target=matchMedia('(any-pointer:fine)').matches?32:44;
     return button.parentElement.classList.contains('native-toolbar-quick')&&!button.closest('.main-pages')&&
       button.parentElement.querySelectorAll('.tab[data-tab=settings]').length===1&&rect.width>=target&&rect.height>=target&&
       button.querySelector('svg[data-icon-key=palette]')&&!button.textContent.trim()&&button.getAttribute('aria-label')==='Farbthema wählen';
@@ -164,7 +164,7 @@ try {
       const geometry=await palette.evaluate(popup=>{
         const rect=popup.getBoundingClientRect(),trigger=document.getElementById('pb-palette-button').getBoundingClientRect();
         const quick=document.querySelector('.native-toolbar-quick').getBoundingClientRect(),tabs=document.querySelector('.main-pages').getBoundingClientRect();
-        const compact=matchMedia('(min-width:1000px) and (orientation:landscape) and (any-pointer:fine)').matches,target=compact?32:44;
+        const compact=matchMedia('(any-pointer:fine)').matches,target=compact?32:44;
         const choices=[...popup.querySelectorAll('[data-pb-palette-choice]')].map(button=>{const box=button.getBoundingClientRect(),name=button.querySelector('.pb-palette-name');return{rect:box.toJSON(),name:name.textContent,nameScroll:name.scrollWidth,nameWidth:name.clientWidth};});
         const checks={visible:!popup.hidden,inset:rect.left>=7&&rect.right<=innerWidth-7&&rect.top>=7&&rect.bottom<=innerHeight-7,
           noOverflow:popup.scrollWidth<=popup.clientWidth+1,trigger:trigger.left>=0&&trigger.right<=innerWidth&&trigger.width>=target&&trigger.height>=target,
@@ -193,10 +193,10 @@ try {
   ({context, page, errors} = await fixture('dunkel', 'invalid-theme'));
   ok('Invalid stored profile falls back to the existing installation mode', await page.locator('html').getAttribute('data-pb-theme') === 'nachtblau');
   await context.close();
-  for(const [name,device] of [['Touch tablet',{hasTouch:true}],['Portrait tablet',{viewport:{width:1280,height:1366}}]]){
+  for(const [name,device] of [['Touch tablet',{hasTouch:true}],['Portrait touch tablet',{viewport:{width:768,height:1024},hasTouch:true}]]){
     ({context,page,errors}=await fixture('tag',null,device));await page.locator('#pb-palette-button').click();
     ok(name+': palette trigger and choices retain 44px targets',await page.locator('#pb-palette').evaluate(popup=>{
-      const trigger=document.getElementById('pb-palette-button').getBoundingClientRect();return trigger.width>=44&&trigger.height>=44&&
+      const trigger=document.getElementById('pb-palette-button').getBoundingClientRect();return !matchMedia('(any-pointer:fine)').matches&&trigger.width>=44&&trigger.height>=44&&
         [...popup.querySelectorAll('[data-pb-palette-choice]')].every(button=>button.getBoundingClientRect().height>=44);
     }));
     ok(name+': no appearance runtime errors',errors.length===0);await context.close();
