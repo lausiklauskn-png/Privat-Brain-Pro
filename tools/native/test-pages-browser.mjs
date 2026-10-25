@@ -38,6 +38,7 @@ try{
   let timer;
   try{await Promise.race([arrival,new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Footer adapter was not reached')),45000))]);}finally{clearTimeout(timer);}
   await page.waitForFunction(()=>document.querySelector('header h1')&&performance.getEntriesByName('first-contentful-paint').length>0);
+  ok('The browser version is called Private Brain (no Pro) in the header, the tab title and as the install name',await page.evaluate(()=>{const h=document.querySelector('header h1').textContent.trim();return /^Private Brain\b/.test(h)&&!/\bPro\b/.test(h)&&!/\bPro\b/.test(document.title)&&!/\bPro\b/.test(document.querySelector('meta[name="apple-mobile-web-app-title"]')?.content||'');}));
   const first=await page.evaluate(()=>({version:!!document.getElementById('pbVersion'),theme:document.documentElement.getAttribute('data-pb-theme'),prerender:document.documentElement.getAttribute('data-pb-prerender'),toolbar:!!document.querySelector('.native-toolbar-row'),visible:getComputedStyle(document.querySelector('header h1')).visibility==='visible'}));
   ok('Before the delayed footer adapter the PWA already paints the prepared shell, theme and no native version',!first.version&&first.theme&&first.prerender==='shell'&&first.toolbar&&first.visible);
   release();await page.waitForLoadState('domcontentloaded');
