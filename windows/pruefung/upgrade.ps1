@@ -160,7 +160,7 @@ function Phase([string]$name, [bool]$needsFolder) {
     # WebView2 >=150 ignores environment browser arguments in elevated hosts.
     # Run each unchanged production binary as this same user's linked Medium
     # token. No policy, runtime, profile, installer or app-code change is used.
-    $launch = [UpgradeProbeLauncher]::Start($exe, (Get-Location).Path, $env:LOCALAPPDATA, $env:USERPROFILE, $requestedBrowserArgs)
+    $launch = [UpgradeProbeLauncher]::Start($exe, $appDir, $env:LOCALAPPDATA, $env:USERPROFILE, $requestedBrowserArgs)
     $app = $launch.Process
     $launch | Select-Object -Property @('ProcessId','CurrentIntegrityRid','CurrentElevationType','CurrentElevated','TargetIntegrityRid','TargetElevationType','TargetElevated','SameUserSid') | ConvertTo-Json -Compress | Write-Output
     $script = Join-Path (Get-Location) 'windows/pruefung/upgrade.mjs'
