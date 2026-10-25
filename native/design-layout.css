@@ -292,4 +292,4 @@ html[data-pb-theme] .native-pdf-toolbar>select { flex:0 1 15rem; width:auto; max
 
 /* The status chip's legacy top margin stretched its sibling actions by 4px. */
 html[data-pb-theme] #results .pb-result-compact>.cardbtns { align-items:center; }
-html[data-pb-theme] #results .pb-result-compact>.cardbtns>.pb-check-badge { margin:0; }
+html[data-pb-theme] #results .pb-result-compact>.cardbtns>.pb-check-badge { margin:0; padding-block:2px!important; line-height:1.2; }

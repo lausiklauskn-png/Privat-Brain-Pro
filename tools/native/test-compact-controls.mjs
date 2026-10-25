@@ -69,6 +69,37 @@ try{
         ok(`${touch?'Touch':'Mouse'} ${width}x${height}: pointer is genuinely ${touch?'coarse-only':'fine'}`,search.fine===!touch,search);
         ok(`${touch?'Touch':'Mouse'} ${width}x${height}: search, result actions and navigation retain ${search.target}px height`,sizesFit(search),search);
         ok(`${width}x${height}: no welcome block returns in search`,await page.locator('.search-welcome,[data-ws=find],[data-ws=findHelp]').count()===0);
+        if(touch&&width===320){
+          const badge=page.locator('#results .pb-check-badge').first();
+          const previous=await badge.evaluate(button=>{const previous={style:button.getAttribute('style'),text:button.textContent};button.style.width='200px';button.style.maxWidth='200px';return previous;});
+          await badge.scrollIntoViewIfNeeded();await settle(page);
+          const wrapped=await badge.evaluate(button=>{
+            const rect=button.getBoundingClientRect(),walker=document.createTreeWalker(button,NodeFilter.SHOW_TEXT),fragments=[],visible=[];
+            for(let node;node=walker.nextNode();){
+              if(!node.nodeValue.trim()||node.parentElement.closest('[hidden]'))continue;
+              const range=document.createRange();range.selectNodeContents(node);
+              const boxes=[...range.getClientRects()].filter(box=>box.width>0&&box.height>0);
+              if(boxes.length){visible.push(node.nodeValue);for(const box of boxes)fragments.push({left:box.left,right:box.right,top:box.top,bottom:box.bottom});}
+            }
+            const clippingRects=[];
+            for(let ancestor=button;ancestor;ancestor=ancestor.parentElement){
+              const style=getComputedStyle(ancestor),clipX=/^(auto|scroll|hidden|clip)$/.test(style.overflowX),clipY=/^(auto|scroll|hidden|clip)$/.test(style.overflowY);
+              if(!clipX&&!clipY)continue;
+              const box=ancestor.getBoundingClientRect(),left=box.left+ancestor.clientLeft,top=box.top+ancestor.clientTop;
+              clippingRects.push({tag:ancestor.tagName,id:ancestor.id,clipX,clipY,left,right:left+ancestor.clientWidth,top,bottom:top+ancestor.clientHeight});
+            }
+            const style=getComputedStyle(button);
+            // A UA button may report extra anonymous-inner scroll height even
+            // with visible overflow. Actual text boxes and ancestor clips are
+            // the readability check; retain scroll metrics only as diagnostics.
+            const noClip=style.clip==='auto'&&style.clipPath==='none'&&fragments.every(box=>box.left>=0&&box.right<=innerWidth&&box.top>=0&&box.bottom<=innerHeight&&clippingRects.every(clip=>(!clip.clipX||box.left>=clip.left&&box.right<=clip.right)&&(!clip.clipY||box.top>=clip.top&&box.bottom<=clip.bottom)));
+            return{text:button.textContent,visible:visible.join(' ').replace(/\s+/g,' ').trim(),lines:new Set(fragments.map(box=>Math.round(box.top))).size,height:rect.height,width:rect.width,scrollHeight:button.scrollHeight,clientHeight:button.clientHeight,scrollWidth:button.scrollWidth,clientWidth:button.clientWidth,overflow:style.overflow,fragments,clippingRects,contained:fragments.length>0&&fragments.every(box=>box.left>=rect.left&&box.right<=rect.right&&box.top>=rect.top&&box.bottom<=rect.bottom),noClip};
+          });
+          ok('Touch 320px: the real historical check label remains complete on two readable lines',wrapped.text===previous.text&&wrapped.visible.includes('Früherer Prüfstand')&&wrapped.visible.includes('Teilweise geprüft')&&wrapped.lines===2,wrapped);
+          ok('Touch 320px: a two-line historical badge remains 44px tall without clipping its text',wrapped.height>=43.9&&wrapped.height<=45&&wrapped.width<=201&&wrapped.contained&&wrapped.noClip,wrapped);
+          await badge.evaluate((button,previous)=>{if(previous.style===null)button.removeAttribute('style');else button.setAttribute('style',previous.style);},previous);
+          await settle(page);
+        }
         await page.locator('#pb-palette-button').click();await settle(page);
         const palette=await geometry(page,'#pb-palette [data-pb-palette-choice]');
         ok(`${width}x${height}: palette choices use the same ${palette.target}px profile`,sizesFit(palette),palette);await page.keyboard.press('Escape');
