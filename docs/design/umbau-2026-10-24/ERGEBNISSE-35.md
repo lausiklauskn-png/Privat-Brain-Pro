@@ -1,7 +1,6 @@
 # Trefferansicht und Kopierschalter für Android .35
 
-Stand 25.10.2026: **in Arbeit, noch nicht veröffentlicht**. Der bestätigte
-[Update-Download bleibt .34](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
+Stand 25.10.2026: **als .35 veröffentlicht**. [Signierte Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
 Klaus' neue Bilder zeigen die native .34-App in breiten, halben und schmalen
 Samsung-DeX-Fenstern. Dieser Auftrag setzt die dort sichtbaren Korrekturen um;
 die bisherigen .34-Prüfnachweise bleiben als Historie erhalten.
@@ -62,18 +61,30 @@ und 12 Megapixel vor dem Decodieren. Größere Dateien bleiben über Öffnen
 verfügbar. Ein einzelner Vorschauauftrag und maximal 16 Cacheeinträge mit
 zusammen 6 MiB begrenzen die Hintergrundarbeit.
 
-Die CI- und Gerätebrückenabnahme ist noch offen. Erforderlich sind die relevanten
-Browser-, Android-, Windows- und Signierungsprüfungen sowie das signierte Update
-.34 → .35. Dazu gehören Vorschauen mit echten Bild-/PDF-Beispielen, fehlende
-Dateien, Pfadbedienung, schmale DeX-Fenster und Kopieren aus/ein nach Neustart.
+Die folgenden Abschlussnachweise beziehen sich ausschließlich auf
+`d5635b7af9614757b36e3157023d5b68008ddb7a`:
 
-Die spätere öffentliche APK wird unabhängig geladen und gegen Prüfsumme,
-Asset-Digest, ursprüngliche Zertifikatskennung im veröffentlichten Signaturbericht,
-exakten Quellcommit und den browsergeprüften nativen Startseitendigest abgeglichen.
-Der vorbereitete Prüfer umfasst 43 native Dateien, 39 gepinnte OCR-Dateien,
-29 OCR-Lizenztexte und die 22 geschützten Module. Das ist noch kein bestandener
-.35-Nachweis. Tatsächliche Testzahlen, Quelle und Release-Lauf werden erst nach
-der Abnahme ergänzt.
+- Alle elf main-Prüfungen desselben Quellstands erfolgreich: [Android/Web 40170769470](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769470), [Windows 40170769501](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769501), [Signierung 40170769520](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769520) und [Pages 40170769001](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769001).
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769470/job/121100956974) ohne Fehler oder Skips, einschließlich der
+  Ablagebrücke. Browserprüfungen nachgebildeter Brücken bleiben davon getrennt.
+- Release [40171548476](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171548476) vollständig erfolgreich: Build `121103242068`,
+  signiertes Update .34 → .35 `121105250707`, Veröffentlichung `121105679398`.
+  Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.667.332 Bytes**, SHA-256 `59f0c3793e8bb0f5c2920de9250562e2445f31a36515740ecd96887fae5d067b`.
+  Prüfsumme, API-Asset-Digest, exakter Tag/Quellstand und ursprüngliche
+  Zertifikatskennung im veröffentlichten Signaturbericht stimmen. Dieser lokale
+  Prüfer kontrolliert den Bericht samt Digest; die kryptographische Signatur-
+  und installierte Updateprüfung lief in der Pipeline.
+- 43 native Dateien, drei Mail-/Explorerressourcen, 39 OCR-Dateien,
+  29 OCR-Lizenztexte und 22 Kanon-Module gegen Quelle beziehungsweise Pins geprüft.
+  Neue Vorschau-/Kartenmodule sind verdrahtet, das Suchintro fehlt. Native
+  Resume-Brückendeklaration und Ordnersymbole wurden geprüft; deren Verhalten
+  bleibt durch den nativen Testjob belegt, nicht durch den Bytevergleich allein.
+- Gepackte native Startseite stimmt mit dem separat browsergeprüften Stand überein:
+  `415f0c2abe9f5bf76e4fb321f48caa6ba769e9fced437a859ec39dd3fd11cc24`.
+- Einmaliger Dispatcher [40171535071](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171535071) forderte den Release an; er ist vom eigentlichen Release-Lauf getrennt.
+
+[Maschinenlesbarer Download- und Quellnachweis](android-preview35-pruefung.json).
 
 Der vorhandene Freibrief umfasst Umsetzung, Merge und Veröffentlichung des
 geprüften Updates; keine erneute Freigabe verlangen. Eine Messung am physischen

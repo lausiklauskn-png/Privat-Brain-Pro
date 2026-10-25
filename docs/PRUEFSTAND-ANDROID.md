@@ -1,4 +1,38 @@
-# Aktueller Prüfstand: veröffentlichte .34 — 2026-10-24
+# Aktueller Prüfstand: veröffentlichte .35 — 2026-10-25
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
+PR #81 übernommen; Tag `v1.0.0-preview.35` zeigt exakt auf `d5635b7af9614757b36e3157023d5b68008ddb7a`,
+VersionCode 35, ursprüngliche Paketkennung und Signatur erhalten.
+
+- Alle elf main-Prüfungen desselben Quellstands erfolgreich: [Android/Web 40170769470](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769470), [Windows 40170769501](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769501), [Signierung 40170769520](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769520) und [Pages 40170769001](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769001).
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40170769470/job/121100956974) ohne Fehler oder Skips, einschließlich der
+  Ablagebrücke. Browserprüfungen nachgebildeter Brücken bleiben davon getrennt.
+- Release [40171548476](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171548476) vollständig erfolgreich: Build `121103242068`,
+  signiertes Update .34 → .35 `121105250707`, Veröffentlichung `121105679398`.
+  Seed, Baseline und Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.667.332 Bytes**, SHA-256 `59f0c3793e8bb0f5c2920de9250562e2445f31a36515740ecd96887fae5d067b`.
+  Prüfsumme, API-Asset-Digest, exakter Tag/Quellstand und ursprüngliche
+  Zertifikatskennung im veröffentlichten Signaturbericht stimmen. Dieser lokale
+  Prüfer kontrolliert den Bericht samt Digest; die kryptographische Signatur-
+  und installierte Updateprüfung lief in der Pipeline.
+- 43 native Dateien, drei Mail-/Explorerressourcen, 39 OCR-Dateien,
+  29 OCR-Lizenztexte und 22 Kanon-Module gegen Quelle beziehungsweise Pins geprüft.
+  Neue Vorschau-/Kartenmodule sind verdrahtet, das Suchintro fehlt. Native
+  Resume-Brückendeklaration und Ordnersymbole wurden geprüft; deren Verhalten
+  bleibt durch den nativen Testjob belegt, nicht durch den Bytevergleich allein.
+- Gepackte native Startseite stimmt mit dem separat browsergeprüften Stand überein:
+  `415f0c2abe9f5bf76e4fb321f48caa6ba769e9fced437a859ec39dd3fd11cc24`.
+- Einmaliger Dispatcher [40171535071](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171535071) forderte den Release an; er ist vom eigentlichen Release-Lauf getrennt.
+
+Physisches Samsung DeX, Klaus' Tab S6 und reale Reaktionszeiten sind nicht gemessen.
+Windows bleibt als Download .29; sein gemeinsamer Quellstand ist geprüft.
+
+[Maschinenlesbarer Nachweis](design/umbau-2026-10-24/android-preview35-pruefung.json),
+[Bedienung und Grenzen](design/umbau-2026-10-24/ERGEBNISSE-35.md).
+
+---
+
+# Veröffentlichte .34 — 2026-10-24
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
 PR #80 übernommen; Tag `v1.0.0-preview.34` zeigt exakt auf `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`,

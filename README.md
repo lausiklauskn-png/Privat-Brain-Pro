@@ -1,8 +1,13 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android .34 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
+**[Android .35 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
 [Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
+Android .35 strafft Trefferkarten mit lokalen Bild-/PDF-Vorschauen und einer
+kompakten Typ-/Tag-/Pfadzeile. Der ganze Pfad erscheint bei Hover, Fokus oder Tippen.
+Das Suchintro entfällt, Maus-/DeX-Buttons bleiben auch in schmalen Fenstern flach,
+und zusätzliche Ablagekopien lassen sich im gespeicherten Ordner wieder einschalten.
+[Bedienung und Grenzen](docs/design/umbau-2026-10-24/ERGEBNISSE-35.md).
 Android .34 schafft mehr Platz für Suchtreffer: direkte Hauptbereiche,
 Farbpalette, Sprachcode, kurze Infohilfen und kompakte Einstellungen.
 Unter Android ab Version 10 lassen sich tatsächliche Dateikopien nach

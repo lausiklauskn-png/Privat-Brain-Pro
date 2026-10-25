@@ -1,16 +1,31 @@
 # Private Brain Pro — Sitzungs-Anker
 
-Fortsetzung für Android .35 (25.10.2026): **in Arbeit, noch nicht veröffentlicht**.
-Neue Screenshots: Suchintro vollständig entfernen; Treffer mit lokaler Bild-/
-PDF-Vorschau und kompakter Typ-/Tag-/Pfadzeile, voller Pfad per Hover/Fokus/Tippen.
-Doppelte Herkunfts-/Fehlstatus entfernen, Schutz und Öffnungsverfügbarkeit erhalten.
-Maus/DeX bei allen Fensterbreiten und Orientierungen 32-Pixel-Steuerungen,
-Touch-only 44 Pixel. Zusätzliche Ablagekopien müssen im erhaltenen Ordner
-dauerhaft aus- und wieder einschaltbar sein; App-Originalkopien bleiben getrennt.
-Vorschau verändert weder Originale noch gespeicherten Suchtext und startet keine OCR.
-Gemeinsame Abnahme und signiertes Update .34 → .35 stehen noch aus; keine neue
-APK oder neue Testzahlen behaupten. [Auftrag und Abnahme](docs/design/umbau-2026-10-24/ERGEBNISSE-35.md).
-Der bestehende Freibrief gilt weiter; keine erneute Merge-/Release-Freigabe verlangen.
+Windows-Auftrag vom 25.10.2026 läuft weiter: Klaus hat nach der fertigen APK
+auch die Aktualisierung der Windows-Version ausdrücklich beauftragt. Android .35
+ist fertig; nun Windows von .29 auf .35 mit denselben Verbesserungen, erhaltenen
+Datenpfaden und geprüftem Installer veröffentlichen. Erst nach beiden geprüften
+Downloads den Gesamtauftrag abschließen; keine erneute Merge-/Releasefreigabe.
+
+Android .35 ist veröffentlicht (25.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk),
+VersionCode 35, Quelle `d5635b7af9614757b36e3157023d5b68008ddb7a`, PR #81 übernommen.
+Suchintro vollständig entfernt; lokale Bild-/PDF-Vorschauen, kompakte Typ-/Tag-/
+Pfadzeile und vollständiger Pfad per Hover/Fokus/Tippen. Wiederholte Herkunfts-
+und Fehlstatus entfallen; Schutz und tatsächliche Öffnungsverfügbarkeit bleiben.
+Maus/DeX behält bei allen Fensterbreiten und Orientierungen 32-Pixel-Steuerungen,
+Touch-only 44 Pixel. Zusätzliche Ablagekopien lassen sich im gespeicherten Ordner
+nach Zugriffsprüfung wieder einschalten; App-Originalkopien bleiben getrennt.
+Vorschauen verändern Originale und gespeicherten Suchtext nicht und starten keine OCR.
+Alle elf Prüfungen desselben main-Quellstands erfolgreich: Android `40170769470`,
+Windows `40170769501`, Signierung `40170769520`, Pages `40170769001`.
+60 native Fälle ohne Fehler/Skips, Job `121100956974`; Release `40171548476`
+mit signiertem Update .34 → .35, Seed/Baseline/Verify und Veröffentlichung erfolgreich.
+Öffentlicher Download unabhängig geprüft: 18.667.332 Bytes,
+SHA-256 `59f0c3793e8bb0f5c2920de9250562e2445f31a36515740ecd96887fae5d067b`.
+[Bedienung](docs/design/umbau-2026-10-24/ERGEBNISSE-35.md),
+[Download- und Quellnachweis](docs/design/umbau-2026-10-24/android-preview35-pruefung.json).
+Veröffentlichung erledigt; nicht erneut auslösen. Physisches Samsung DeX/Tab S6
+und reale Reaktionszeiten bleiben ungemessen; Windows-Download bleibt .29.
+Der vorhandene Freibrief gilt weiter; keine erneute Merge-/Release-Freigabe verlangen.
 
 Android .34 ist veröffentlicht (24.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk),
 VersionCode 34, Quelle `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, PR #80 übernommen.

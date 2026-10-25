@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .34 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.34/Private-Brain-Pro-1.0.0-preview.34.apk).
-Quelle: `1fe0f684ec3b6c7e645c55387ec698f8e96204fb`, [übernommener PR #80](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/80).
+**Android .35 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
+Quelle: `d5635b7af9614757b36e3157023d5b68008ddb7a`, [übernommener PR #81](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/81).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -94,6 +94,20 @@ Die OCR gehört zum Funktionsumfang von .33; historische .32-Nachweise bleiben e
   [Bedienung und Prüfstand](SUCHE-34.md), [Werkzeuggrenzen](WERKZEUGE-34.md),
   [Download- und Quellnachweis](android-preview34-pruefung.json),
   [Release 40142276521](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40142276521).
+
+## Sechster umgesetzter App-Schritt (.35)
+
+- Suchintro entfernt; lokale Bild-/PDF-Vorschauen und kompakte Typ-/Tag-/Pfadzeile
+  mit aufklappbarem vollständigem Pfad. Doppelte Herkunfts-/Fehlstatus entfallen.
+- Maus-/DeX-Steuerungen bleiben auch in halben, gedrittelten und aufrechten
+  Fenstern kompakt; Touch-only behält größere Bedienflächen.
+- Zusätzliche Ablagekopien lassen sich im erhaltenen Ordner wieder einschalten;
+  Schreibzugriff wird vor der Aktivierung geprüft. App-Originalkopien bleiben getrennt.
+- Alle elf main-Prüfungen, 60 native Fälle, signiertes Update .34 → .35 und
+  unabhängiger öffentlicher Download erfolgreich.
+  [Bedienung und Grenzen](ERGEBNISSE-35.md),
+  [Download- und Quellnachweis](android-preview35-pruefung.json),
+  [Release 40171548476](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171548476).
 
 ## Stand der weiteren Funktionsvorschläge
 
