@@ -45,12 +45,13 @@ jobs:
         with:
           workspaces: windows/src-tauri -> target
           cache-on-failure: true
-      - name: CI-Launcher vor dem App-Bau mit Windows PowerShell kompilieren
+      - name: CI-Launcher und normale Benutzerrechte vor dem App-Bau prüfen
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           Add-Type -Path (Join-Path (Get-Location) 'windows/pruefung/upgrade-launcher.cs')
-          Write-Output 'PASS CI-only medium-integrity launcher compiles with Windows PowerShell 5.1'
+          [UpgradeProbeLauncher]::Preflight()
+          Write-Output 'PASS CI-only medium-integrity launcher compiles and its unchanged-user context is valid'
       - name: Gemeinsamer Kern auf dem Windows-Dateisystem
         run: node windows/engine/test.mjs
       - name: Eigene Windows-Laufzeit ohne zusätzliche Nutzerinstallation

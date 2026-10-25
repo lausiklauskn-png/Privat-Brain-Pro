@@ -60,12 +60,33 @@ public static class UpgradeProbeLauncher
         internal int Session;
     }
 
+    // Run immediately after Add-Type, before building or installing the app.
+    // Exercise the same token queries/selection as Start without creating a process.
+    public static void Preflight()
+    {
+        RequireRunner();
+        IntPtr currentToken = IntPtr.Zero;
+        IntPtr linkedToken = IntPtr.Zero;
+        try
+        {
+            if (!OpenProcessToken(GetCurrentProcess(), TokenQuery | TokenDuplicate, out currentToken))
+                throw Win32Failure("OPEN_CURRENT_TOKEN");
+            TokenEvidence current = ReadToken(currentToken);
+            WriteParentEvidence(current);
+            IntPtr sourceToken = MediumSourceToken(currentToken, current, out linkedToken);
+            TokenEvidence source = ReadToken(sourceToken);
+            Console.WriteLine("WINDOWS_UPGRADE_TOKEN_PREFLIGHT {\"targetIntegrityRid\":"
+                + source.Rid.ToString(CultureInfo.InvariantCulture)
+                + ",\"targetElevationType\":" + source.ElevationType.ToString(CultureInfo.InvariantCulture)
+                + ",\"targetElevated\":" + (source.Elevated ? "true" : "false") + ",\"sameUserSid\":true}");
+        }
+        finally { Close(linkedToken); Close(currentToken); }
+    }
+
     public static UpgradeProbeLaunchResult Start(string exe, string cwd,
         string expectedLocalAppData, string expectedUserProfile, string requestedArgs)
     {
-        Require(String.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.Ordinal)
-            && String.Equals(Environment.GetEnvironmentVariable("RUNNER_OS"), "Windows", StringComparison.Ordinal), "ISOLATED_WINDOWS_CI_REQUIRED");
-        Require(Environment.OSVersion.Platform == PlatformID.Win32NT, "WINDOWS_REQUIRED");
+        RequireRunner();
         Require(String.Equals(requestedArgs, BrowserArguments, StringComparison.Ordinal), "EXACT_LOOPBACK_ARGUMENTS_REQUIRED");
         Require(Environment.GetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER") == null
             && Environment.GetEnvironmentVariable("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER") == null, "PROFILE_OR_RUNTIME_OVERRIDE_DENIED");
@@ -92,27 +113,8 @@ public static class UpgradeProbeLauncher
                 throw Win32Failure("OPEN_CURRENT_TOKEN");
             TokenEvidence current = ReadToken(currentToken);
             // Preserve the parent evidence even when the linked-token query fails.
-            Console.WriteLine("WINDOWS_UPGRADE_PARENT_TOKEN {\"currentIntegrityRid\":"
-                + current.Rid.ToString(CultureInfo.InvariantCulture)
-                + ",\"currentElevationType\":" + current.ElevationType.ToString(CultureInfo.InvariantCulture)
-                + ",\"currentElevated\":" + (current.Elevated ? "true" : "false") + "}");
-
-            IntPtr sourceToken;
-            if (current.Rid == MediumRid && !current.Elevated)
-            {
-                sourceToken = currentToken;
-            }
-            else
-            {
-                Require(current.Rid == HighRid && current.Elevated && current.ElevationType == FullElevation,
-                    "FULL_HIGH_OR_MEDIUM_TOKEN_REQUIRED");
-                linkedToken = LinkedToken(currentToken);
-                sourceToken = linkedToken;
-            }
-            TokenEvidence source = ReadToken(sourceToken);
-            Require(source.Sid == current.Sid && source.Session == current.Session,
-                "LINKED_TOKEN_USER_OR_SESSION_MISMATCH");
-            Require(source.Rid == MediumRid && !source.Elevated, "EXACT_MEDIUM_UNELEVATED_TOKEN_REQUIRED");
+            WriteParentEvidence(current);
+            IntPtr sourceToken = MediumSourceToken(currentToken, current, out linkedToken);
             if (!DuplicateTokenEx(sourceToken, TokenQuery | TokenDuplicate | TokenAssignPrimary,
                 IntPtr.Zero, 2, 1, out primaryToken))
                 throw Win32Failure("DUPLICATE_MEDIUM_PRIMARY_TOKEN");
@@ -186,6 +188,39 @@ public static class UpgradeProbeLauncher
         }
     }
 
+    private static void RequireRunner()
+    {
+        Require(String.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.Ordinal)
+            && String.Equals(Environment.GetEnvironmentVariable("RUNNER_OS"), "Windows", StringComparison.Ordinal), "ISOLATED_WINDOWS_CI_REQUIRED");
+        Require(Environment.OSVersion.Platform == PlatformID.Win32NT, "WINDOWS_REQUIRED");
+    }
+
+    private static void WriteParentEvidence(TokenEvidence current)
+    {
+        Console.WriteLine("WINDOWS_UPGRADE_PARENT_TOKEN {\"currentIntegrityRid\":"
+            + current.Rid.ToString(CultureInfo.InvariantCulture)
+            + ",\"currentElevationType\":" + current.ElevationType.ToString(CultureInfo.InvariantCulture)
+            + ",\"currentElevated\":" + (current.Elevated ? "true" : "false") + "}");
+    }
+
+    private static IntPtr MediumSourceToken(IntPtr currentToken, TokenEvidence current, out IntPtr linkedToken)
+    {
+        linkedToken = IntPtr.Zero;
+        IntPtr sourceToken = currentToken;
+        if (current.Rid != MediumRid || current.Elevated)
+        {
+            Require(current.Rid == HighRid && current.Elevated && current.ElevationType == FullElevation,
+                "FULL_HIGH_OR_MEDIUM_TOKEN_REQUIRED");
+            linkedToken = LinkedToken(currentToken);
+            sourceToken = linkedToken;
+        }
+        TokenEvidence source = ReadToken(sourceToken);
+        Require(source.Sid == current.Sid && source.Session == current.Session,
+            "LINKED_TOKEN_USER_OR_SESSION_MISMATCH");
+        Require(source.Rid == MediumRid && !source.Elevated, "EXACT_MEDIUM_UNELEVATED_TOKEN_REQUIRED");
+        return sourceToken;
+    }
+
     private static TokenEvidence ReadToken(IntPtr token)
     {
         IntPtr user = IntPtr.Zero;
@@ -216,14 +251,16 @@ public static class UpgradeProbeLauncher
 
     private static int TokenInt(IntPtr token, int informationClass)
     {
-        IntPtr data = TokenInformation(token, informationClass);
+        Require(informationClass == 12 || informationClass == 18 || informationClass == 20,
+            "FIXED_DWORD_TOKEN_CLASS_REQUIRED");
+        IntPtr data = FixedTokenInformation(token, informationClass, sizeof(int));
         try { return Marshal.ReadInt32(data); }
         finally { Marshal.FreeHGlobal(data); }
     }
 
     private static IntPtr LinkedToken(IntPtr token)
     {
-        IntPtr data = TokenInformation(token, 19);
+        IntPtr data = FixedTokenInformation(token, 19, IntPtr.Size);
         try
         {
             IntPtr linked = Marshal.ReadIntPtr(data);
@@ -233,8 +270,25 @@ public static class UpgradeProbeLauncher
         finally { Marshal.FreeHGlobal(data); }
     }
 
+    private static IntPtr FixedTokenInformation(IntPtr token, int informationClass, int size)
+    {
+        IntPtr data = Marshal.AllocHGlobal(size);
+        bool returned = false;
+        try
+        {
+            int length;
+            if (!GetTokenInformation(token, informationClass, data, size, out length))
+                throw Win32Failure("QUERY_FIXED_TOKEN_INFORMATION_" + informationClass.ToString(CultureInfo.InvariantCulture));
+            Require(length == size, "FIXED_TOKEN_INFORMATION_LENGTH_MISMATCH");
+            returned = true;
+            return data;
+        }
+        finally { if (!returned) Marshal.FreeHGlobal(data); }
+    }
+
     private static IntPtr TokenInformation(IntPtr token, int informationClass)
     {
+        Require(informationClass == 1 || informationClass == 25, "VARIABLE_TOKEN_CLASS_REQUIRED");
         int length;
         bool sized = GetTokenInformation(token, informationClass, IntPtr.Zero, 0, out length);
         int sizeError = Marshal.GetLastWin32Error();
