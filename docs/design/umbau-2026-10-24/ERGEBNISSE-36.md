@@ -1,8 +1,12 @@
-# Gemeinsame Dateivorschau und Plattformupdate .36
+# Gemeinsame Dateivorschau und öffentliche Version 1.0.36
 
-Stand: 25.10.2026, Umsetzung und Prüfung laufen. Android .35 bleibt unverändert
-veröffentlicht. Das Folgeupdate .36 ist für Android und Windows vorgesehen;
-die Veröffentlichung wird erst nach den Plattform- und Updateprüfungen bestätigt.
+Stand: 25.10.2026, Umsetzung und Prüfung laufen. Ziel ist die öffentliche
+Version **1.0.36** für Android und Windows, ohne Probeversions- oder Prerelease-
+Kennzeichnung. Android-VersionCode 36 und die bisherige technische App-Identität
+bleiben erhalten, damit vorhandene Installationen aktualisiert werden können.
+Die historische Android .35 bleibt unverändert veröffentlicht. Der Abschluss
+wird erst nach beiden tatsächlichen öffentlichen Downloads und den vollständigen
+Plattform- und Updateprüfungen bestätigt.
 
 ## Suche und Explorer
 
@@ -50,7 +54,7 @@ Fernprüfung der Dateien auf Klaus' SD-Karte.
 
 ## Windows
 
-Windows wird von der veröffentlichten .29 auf .36 gebracht. App-Kennung,
+Windows wird von der veröffentlichten .29 auf die öffentliche Version 1.0.36 gebracht. App-Kennung,
 Installationsziel pro Benutzer, Datenpfade und Passwortformat bleiben erhalten.
 Die neue Installationsprobe verwendet den gepinnten öffentlichen .29-Installer,
 prüft die Überinstallation, Originalbytes, Katalog, Einstellungen, verschlüsselte

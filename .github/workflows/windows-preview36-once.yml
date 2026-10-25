@@ -1,8 +1,8 @@
-# Temporary release request, included in the SAME PR as the Windows .36 versions.
+# Temporary release request, included in the SAME PR as the Windows 1.0.36 versions.
 # This workflow waits for the acceptance of its own main merge SHA. The existing
 # windows-release.yml requires inputs.commit == workflow head == current main.
-# Remove this file only after the public .36 Windows download is verified.
-name: Einmalige geprüfte Windows-Vorschau .36 anfordern
+# Remove this file only after the public 1.0.36 Windows download is verified.
+name: Öffentliche Windows-Version 1.0.36 einmalig anfordern
 on:
   push:
     branches: [main]
@@ -23,7 +23,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       SOURCE_SHA: ${{ github.sha }}
-      RELEASE_TAG: windows-v1.0.0-preview.36
+      RELEASE_TAG: windows-v1.0.36
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -40,7 +40,7 @@ jobs:
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$SOURCE_SHA" = "$GITHUB_SHA"
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
-          test "$RELEASE_TAG" = windows-v1.0.0-preview.36
+          test "$RELEASE_TAG" = windows-v1.0.36
           test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
           skip() {
             printf 'dispatch=false\n' >> "$GITHUB_OUTPUT"
@@ -62,7 +62,7 @@ jobs:
           python3 - <<'PY'
           import json, re
           from pathlib import Path
-          expected = '1.0.0-preview.36'
+          expected = '1.0.36'
           assert json.loads(Path('windows/package.json').read_text())['version'] == expected
           lock = json.loads(Path('windows/package-lock.json').read_text())
           assert lock['version'] == lock['packages']['']['version'] == expected

@@ -1,14 +1,19 @@
 # Private Brain Pro — Sitzungs-Anker
 
-Der Auftrag vom 25.10.2026 läuft weiter. Android .35 ist veröffentlicht.
-Klaus meldet danach gespeicherte Bildminiaturen in der Suche, aber fehlende
-Vorschauen im Explorer und widersprüchlich wirkende Originalmeldungen.
-Das Folgeupdate .36 vereinheitlicht Vorschauen und Dateistatus anhand desselben
-Inhalts-Hashs. Eine Miniatur bestätigt keinen Zugriff auf die vollständige Datei.
-App-Originale, verschlüsselter Speicherordner und zusätzliche Ablagekopien sind
-getrennt zu prüfen. Windows wird zugleich von .29 auf .36 aktualisiert.
-Erst nach beiden geprüften Downloads abschließen; der bestehende Freibrief
-für Umsetzung, Merge und Veröffentlichung gilt ohne erneute Rückfrage.
+Der Auftrag vom 25.10.2026 läuft weiter: Klaus verlangt eine öffentliche
+Veröffentlichung als **1.0.36**, keine Probeversion mehr. Android und Windows
+bekommen die Tags `v1.0.36` und `windows-v1.0.36`, ohne Prerelease-Kennzeichnung.
+Android-VersionCode 36, bisherige Paketkennung und ursprünglicher Signierer
+bleiben für die Aktualisierung vorhandener Installationen erhalten. Der technische
+Paketbestandteil `.preview` benennt keine weitere Probeausgabe für den Nutzer.
+Android .35 bleibt unverändert veröffentlicht; Windows wird von .29 aktualisiert.
+Das Update vereinheitlicht Bild-/PDF-Miniaturen und Originalstatus in Suche,
+Explorer und Kategorien anhand desselben Inhalts-Hashs. Eine Miniatur bestätigt
+keinen Zugriff auf die vollständige Datei. App-Originale, verschlüsselter
+Speicherordner und zusätzliche Ablagekopien bleiben getrennt zu prüfen.
+Erst nach beiden tatsächlich geprüften öffentlichen Downloads abschließen.
+Der bestehende Freibrief für Umsetzung, Merge und Veröffentlichung gilt weiter;
+keine erneute Rückfrage und keine Umbenennung der technischen App-Identität.
 
 Android .35 ist veröffentlicht (25.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk),
 VersionCode 35, Quelle `d5635b7af9614757b36e3157023d5b68008ddb7a`, PR #81 übernommen.

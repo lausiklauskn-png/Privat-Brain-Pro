@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {join,delimiter} from 'node:path';
 import {readFile,writeFile,rm} from 'node:fs/promises';
+import '../tools/test-version.mjs';
 const here=fileURLToPath(new URL('.',import.meta.url));
 const deps=JSON.parse(await readFile(join(here,'dependencies.json'),'utf8')).dependencies;
 const compileClasspath=[join(here,'build/classes'),...deps.map(d=>join(here,'build/lib',`${d.name}-${d.version}.jar`))].join(delimiter);

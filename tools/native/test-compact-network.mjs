@@ -29,7 +29,7 @@ try{
     const account={id:'11111111-1111-4111-8111-111111111111',email:'fixture@example.invalid',provider:'telekom'};
     window.Capacitor={isNativePlatform:()=>true,Plugins:{
       ProNetwork:{async getState(){return{offline:localStorage.getItem('fixture-offline')==='true'};},async setOffline({offline}){networkChanges.push(offline);localStorage.setItem('fixture-offline',String(offline));return{offline};}},
-      ProDevice:{async getInfo(){return{versionName:'fixture',nativeMail:true};}},
+      ProDevice:{async getInfo(){return{versionName:'1.0.36-debug',nativeMail:true};}},
       ProMail:{async accounts(){return{items:[account]};},async folders(){return{items:[{path:'INBOX',name:'INBOX',specialUse:'\\Inbox'},{path:'Sent',name:'Sent',specialUse:'\\Sent'}]};},async messages(){return{items:[{uid:7,subject:'Compact message',from:'fixture@example.invalid',flags:[],size:100}],validity:'123',total:1,next:null};},async message(){if(window.holdMail)await new Promise(resolve=>window.releaseMail=resolve);return{subject:'Compact message',from:'fixture@example.invalid',to:account.email,text:'Original message',html:'<h1>Original newsletter</h1><p>More room for the message.</p>',attachments:[]};},async action(args){mailCalls.push(args);return{ok:true};},async saved(){return{items:[]};},async addAccount(){return account;}}
     }};
   });
@@ -37,6 +37,7 @@ try{
   await page.click('[data-tab=mail]');await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('[data-live-uid="7"]').click();
   await page.locator('.live-mail .mail-html').waitFor();
   ok('320px touch: Pro name with version fits and the green offline information is removed',await page.locator('.brand h1').evaluate(e=>[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())==='Private Brain Pro'&&await page.locator('#pbVersion').isVisible()&&await page.locator('.badge-off').count()===0&&await page.locator('.brand h1').evaluate(e=>e.getBoundingClientRect().right<=document.querySelector('header .tools').getBoundingClientRect().left));
+  ok('The public version stays a plain app number in the actual debug build header',await page.locator('#pbVersion').textContent()==='v1.0.36'&&await page.locator('#pbVersion').getAttribute('aria-label')==='Private Brain Pro v1.0.36');
   // Klaus 2026-10-21: only the round Siegel floats (lamps not shown); tools/native/test-mycel.mjs covers drag, snap, ✕.
   ok('The round Siegel is mounted at the actual app origin and floats outside the toolbar',await page.locator('#sbkim-widget-slot-siegel').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget').count()===0&&await page.locator('#sbkim-widget').evaluate(w=>getComputedStyle(w).position==='fixed'));
   for(const width of [320,390,768,1280]){

@@ -1,6 +1,6 @@
 // Real private stdio process, including asynchronous protection callbacks.
 import {spawn} from 'node:child_process';
-import {mkdtemp,mkdir,copyFile,rm,writeFile} from 'node:fs/promises';
+import {mkdtemp,mkdir,copyFile,rm,writeFile,readFile} from 'node:fs/promises';
 import {createInterface} from 'node:readline';
 import {tmpdir} from 'node:os';
 import {join,resolve,delimiter} from 'node:path';
@@ -31,7 +31,10 @@ createInterface({input:child.stdout}).on('line',line=>{
 const call=(plugin,method,options={})=>new Promise((resolve,reject)=>{const id=String(++next);pending.set(id,{resolve,reject});send({id,plugin,method,options});});
 const deadline=setTimeout(()=>{console.error('Engine stdio timeout. '+diagnostic);child.kill();process.exitCode=1;for(const reply of pending.values())reply.reject(Error('Engine protocol timeout'));},15000);
 try{
-  assert.equal((await call('ProDevice','getInfo')).platform,'windows');
+  const device=await call('ProDevice','getInfo');assert.equal(device.platform,'windows');
+  const android=await readFile(join(root,'android/app/build.gradle'),'utf8');
+  assert.equal(device.versionName,/^\s*versionName "([^"]+)"/m.exec(android)?.[1],'actual child version name follows the shared Android source');
+  assert.equal(device.versionCode,Number(/^\s*versionCode (\d+)/m.exec(android)?.[1]),'actual child uses the explicit shared version code, including stable versions');
   assert.equal((await call('ProNetwork','setOffline',{offline:true})).offline,true);
   assert.equal((await call('ProNetwork','getState')).offline,true);
   const file=join(test,'share-proof.txt');await writeFile(file,'Private protocol share proof');

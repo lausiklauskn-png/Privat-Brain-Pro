@@ -1,7 +1,7 @@
 # Windows PowerShell 5.1 / STA, isolated Actions runner only.
 $ErrorActionPreference = 'Stop'
 if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows') { throw 'Installer upgrade probe requires the isolated GitHub Windows runner.' }
-if (!$env:RUNNER_TEMP -or !$env:LOCALAPPDATA -or $env:PB_SOURCE_COMMIT -notmatch '^[a-f0-9]{40}$') { throw 'Explicit runner and source context required.' }
+if (!$env:RUNNER_TEMP -or !$env:LOCALAPPDATA -or !$env:USERPROFILE -or $env:PB_SOURCE_COMMIT -notmatch '^[a-f0-9]{40}$') { throw 'Explicit runner and source context required.' }
 if ($env:WEBVIEW2_USER_DATA_FOLDER) { throw 'A WebView profile override would invalidate the same-profile upgrade test.' }
 if (Get-Process private-brain-pro -ErrorAction SilentlyContinue) { throw 'A previous app process is still running.' }
 $appDir = Join-Path $env:LOCALAPPDATA 'Private Brain Pro'
@@ -12,7 +12,7 @@ $setups = @(Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '
 if ($setups.Count -ne 1) { throw 'Exactly one current production installer required.' }
 $currentSetup = $setups[0].FullName
 $config = Get-Content windows/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-if ($config.version -ne '1.0.0-preview.36' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
+if ($config.version -ne '1.0.36' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
 if ((Get-AuthenticodeSignature -LiteralPath $currentSetup).Status -ne 'NotSigned') { throw 'Expected the chosen unsigned production installer.' }
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-upgrade-' + $token)
@@ -32,8 +32,7 @@ if (Test-Path $dataDir) {
   Remove-Item -LiteralPath $dataDir -Recurse -Force
 }
 if (Test-Path $dataDir) { throw 'Fresh legacy fixture root was not established.' }
-$beforeArgs = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
-$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9224 --remote-debugging-address=127.0.0.1'
+$requestedBrowserArgs = '--remote-debugging-port=9224 --remote-debugging-address=127.0.0.1'
 Remove-Item Env:PB_WINDOWS_TEST_FOLDER -ErrorAction SilentlyContinue
 Remove-Item Env:PB_WINDOWS_TEST_SAVE_FOLDER -ErrorAction SilentlyContinue
 $env:PB_WINDOWS_UPGRADE_CDP_PORT = '9224'
@@ -41,6 +40,7 @@ $env:PB_WINDOWS_UPGRADE_MARKER = $token
 $env:PB_WINDOWS_UPGRADE_REPORT_ROOT = $reports
 $env:PB_WINDOWS_UPGRADE_VAULT = $vault
 Add-Type -AssemblyName @('UIAutomationClient','UIAutomationTypes','System.Windows.Forms')
+Add-Type -Path (Join-Path $PSScriptRoot 'upgrade-launcher.cs')
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -121,13 +121,48 @@ function Select-ProbeFolder([int]$owner, [string]$path, $nodeProcess) {
   $invoke = $select.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
   $invoke.Invoke()
 }
+function Write-ProbeProcessEvidence($app, [string]$phaseName) {
+  if (!$app) { return }
+  try {
+    $app.Refresh()
+    $state = [ordered]@{ phase = $phaseName; processId = $app.Id; exited = $app.HasExited }
+    if ($app.HasExited) { $state.exitCode = $app.ExitCode }
+    else { $state.mainWindowTitle = $app.MainWindowTitle; $state.mainWindowHandle = $app.MainWindowHandle.ToInt64() }
+    $queue = [System.Collections.Generic.Queue[int]]::new()
+    $queue.Enqueue($app.Id)
+    $seen = [System.Collections.Generic.HashSet[int]]::new()
+    $descendants = @()
+    while ($queue.Count -gt 0 -and $seen.Count -lt 24) {
+      $ownerId = $queue.Dequeue()
+      if (!$seen.Add($ownerId)) { continue }
+      foreach ($child in @(Get-CimInstance Win32_Process -Filter ('ParentProcessId=' + $ownerId))) {
+        $queue.Enqueue([int]$child.ProcessId)
+        $entry = [ordered]@{ name = $child.Name; processId = $child.ProcessId; parentProcessId = $child.ParentProcessId }
+        if ($child.Name -eq 'msedgewebview2.exe') {
+          $entry.requestedPortPresent = [bool]($child.CommandLine -match '(?:^|\s)--remote-debugging-port=9224(?:\s|$)')
+          $entry.loopbackAddressPresent = [bool]($child.CommandLine -match '(?:^|\s)--remote-debugging-address=127\.0\.0\.1(?:\s|$)')
+          if ($child.ExecutablePath) { $entry.runtimeVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo($child.ExecutablePath).ProductVersion }
+        }
+        $descendants += $entry
+      }
+    }
+    $state.descendants = $descendants
+    Write-Output ('WINDOWS_UPGRADE_PROCESS ' + ($state | ConvertTo-Json -Depth 6 -Compress))
+  } catch { Write-Output ('WINDOWS_UPGRADE_PROCESS_DIAGNOSTIC_FAILED ' + $_.Exception.Message) }
+}
 function Phase([string]$name, [bool]$needsFolder) {
   $app = $null
   $node = $null
   $stdout = Join-Path $reports ($name + '-stdout.txt')
   $stderr = Join-Path $reports ($name + '-stderr.txt')
   try {
-    $app = Start-Process -FilePath $exe -PassThru
+    if (Get-Process private-brain-pro -ErrorAction SilentlyContinue) { throw 'Refusing a second-instance handoff to an uncontrolled existing app.' }
+    # WebView2 >=150 ignores environment browser arguments in elevated hosts.
+    # Run each unchanged production binary as this same user's linked Medium
+    # token. No policy, runtime, profile, installer or app-code change is used.
+    $launch = [UpgradeProbeLauncher]::Start($exe, (Get-Location).Path, $env:LOCALAPPDATA, $env:USERPROFILE, $requestedBrowserArgs)
+    $app = $launch.Process
+    $launch | Select-Object -Property @('ProcessId','CurrentIntegrityRid','CurrentElevationType','CurrentElevated','TargetIntegrityRid','TargetElevationType','TargetElevated','SameUserSid') | ConvertTo-Json -Compress | Write-Output
     $script = Join-Path (Get-Location) 'windows/pruefung/upgrade.mjs'
     $node = Start-Process -FilePath (Get-Command node).Source -ArgumentList ('"' + $script + '" ' + $name) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
     if ($needsFolder) { Select-ProbeFolder -owner $app.Id -path $vault -nodeProcess $node }
@@ -143,7 +178,9 @@ function Phase([string]$name, [bool]$needsFolder) {
     if (Test-Path $stderr) { Get-Content $stderr -Tail 80 }
     $phaseReport = Join-Path $reports ($name + '.json')
     if (Test-Path $phaseReport) { Get-Content $phaseReport -Tail 80 }
-    Stop-ProbeApp $app
+    Write-ProbeProcessEvidence $app $name
+    try { Stop-ProbeApp $app }
+    finally { if ($app) { $app.Dispose() } }
   }
 }
 $finished = $false
@@ -155,13 +192,11 @@ try {
   Install-Setup $currentSetup
   Phase 'verify' $false
   Phase 'verify-unlock' $false
-  $summary = [ordered]@{ from = '1.0.0-preview.29'; to = '1.0.0-preview.36'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
+  $summary = [ordered]@{ from = '1.0.0-preview.29'; to = '1.0.36'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
   Write-Output 'WINDOWS_INSTALLER_UPGRADE_29_TO_36_PASS'
 } finally {
-  if ($beforeArgs) { $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $beforeArgs }
-  else { Remove-Item Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue }
   foreach ($name in @('PB_WINDOWS_UPGRADE_CDP_PORT','PB_WINDOWS_UPGRADE_MARKER','PB_WINDOWS_UPGRADE_REPORT_ROOT','PB_WINDOWS_UPGRADE_VAULT')) { Remove-Item ('Env:' + $name) -ErrorAction SilentlyContinue }
   # Existing production.ps1 must subsequently start the exact new binary with
   # no externally enabled CDP endpoint and verify the ordinary production path.

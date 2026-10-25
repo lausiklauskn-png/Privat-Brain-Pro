@@ -1,4 +1,4 @@
-name: Signierte Android-Testversion oder stabile Version
+name: Signierte Android-Veröffentlichung
 on:
   push:
     tags: ['v*-preview.*']
@@ -7,11 +7,11 @@ on:
       channel:
         description: Veröffentlichungskanal
         required: true
-        default: test
+        default: public
         type: choice
-        options: [test, stable]
+        options: [test, public, stable]
       tag:
-        description: Neuer Versions-Tag, z. B. v0.1.0-preview.17
+        description: Neuer Versions-Tag, etwa v1.0.36 für public
         required: true
         type: string
       source_commit:
@@ -31,6 +31,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    # public retains the existing app's signing environment. Its production
+    # approval is enforced on publish, after the signed update has passed.
     environment: ${{ inputs.channel == 'stable' && 'android-production' || 'android-preview' }}
     outputs:
       sha: ${{ steps.source.outputs.sha }}
@@ -67,7 +69,11 @@ jobs:
           [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]
           git fetch origin main
           git merge-base --is-ancestor "$sha" origin/main
-          if [[ "$channel" == stable ]]; then [[ "$tag" != *-* ]]; else [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]]; fi
+          case "$channel" in
+            test) [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]+$ ]] ;;
+            public|stable) [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] ;;
+            *) echo 'Unbekannter Veröffentlichungskanal.' >&2; exit 1 ;;
+          esac
           if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
             test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$sha"
           fi
@@ -98,7 +104,10 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platform-tools' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
       - name: Verschlüsseltes Original-Paket ausschließlich in Actions freigeben
         env:
-          RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
+          # public updates the existing .preview application with the original
+          # pinned identity. Only this signing-CLI input maps to its test policy;
+          # the recorded build/publication channel remains public throughout.
+          RELEASE_CHANNEL: ${{ steps.source.outputs.channel == 'public' && 'test' || steps.source.outputs.channel }}
           PB_SIGNING_UNLOCK: ${{ secrets.PB_SIGNING_UNLOCK }}
           TMPDIR: ${{ runner.temp }}
         run: |
@@ -134,6 +143,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_CHANNEL: ${{ steps.source.outputs.channel }}
           RELEASE_TAG: ${{ steps.source.outputs.tag }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -euo pipefail
           variant=preview
@@ -152,23 +162,96 @@ jobs:
           grep -Fq "versionName='${RELEASE_TAG#v}'" "$RUNNER_TEMP/badging.txt"
           grep -Fxq "application-label:'Private Brain Pro'" "$RUNNER_TEMP/badging.txt"
           ! grep -q '^application-debuggable' "$RUNNER_TEMP/badging.txt"
-          if [[ "$RELEASE_CHANNEL" == test ]]; then
+          certificate=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/signature.txt")
+          current=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$RUNNER_TEMP/badging.txt")
+          if [[ "$RELEASE_CHANNEL" == test || "$RELEASE_CHANNEL" == public ]]; then
             expected=362ee70d28da9c4b51e37057c3519a3e6eb2c679059dfb9f56b4003f9374fa80
             test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/signature.txt")" = "$expected"
             test "$(grep -c '^Signer #[0-9]* certificate SHA-256 digest:' "$RUNNER_TEMP/signature.txt")" = 1
             gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
-            previous=$(jq -er '[.[][] | select(.draft == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+-preview\\.[0-9]+$")))] | sort_by(.published_at) | last | .tag_name' "$RUNNER_TEMP/releases.json")
-            gh release download "$previous" --pattern '*.apk' --dir upgrade-inputs
+            if [[ "$RELEASE_CHANNEL" == test ]]; then
+              previous=$(jq -er '[.[][] | select(.draft == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+-preview\\.[0-9]+$")))] | sort_by(.published_at) | last | .tag_name' "$RUNNER_TEMP/releases.json")
+            else
+              # Stable GitHub tags may also belong to the separate production
+              # package. Select only public receipts for THIS package/signer;
+              # older preview tags predate receipts and are verified below.
+              previous=''
+              previous_code_hint=0
+              jq -r '[.[][] | select(.draft == false and (.tag_name | test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-preview\\.[0-9]+)?$")))] | sort_by(.published_at) | reverse | .[] | [.tag_name, ([.assets[] | select(.name == "ANDROID-IDENTITY.json")] | length | tostring)] | @tsv' "$RUNNER_TEMP/releases.json" > "$RUNNER_TEMP/upgrade-candidates.tsv"
+              while IFS=$'\t' read -r candidate receipts; do
+                if [[ "$candidate" == *-preview.* ]]; then
+                  # Historical tags encode the expected Android versionCode.
+                  # This is only a selection hint; the selected APK must prove
+                  # exactly that code, package and original signer below.
+                  candidate_code="${candidate##*-preview.}"
+                  [[ "$candidate_code" =~ ^[0-9]{1,10}$ ]]
+                  candidate_code=$((10#$candidate_code))
+                  test "$candidate_code" -gt 0
+                  test "$candidate_code" -le 2147483647
+                  if test "$candidate_code" -gt "$previous_code_hint"; then
+                    previous="$candidate"
+                    previous_code_hint="$candidate_code"
+                    rm -f upgrade-inputs/previous-identity.json
+                  fi
+                  continue
+                fi
+                test "$receipts" -le 1
+                if [[ "$receipts" == 0 ]]; then continue; fi
+                mkdir -p "$RUNNER_TEMP/baseline-identity"
+                rm -f "$RUNNER_TEMP/baseline-identity/ANDROID-IDENTITY.json"
+                gh release download "$candidate" --pattern ANDROID-IDENTITY.json --dir "$RUNNER_TEMP/baseline-identity"
+                eligible=$(python3 - "$RUNNER_TEMP/baseline-identity/ANDROID-IDENTITY.json" "$candidate" "$package" "$expected" <<'PY'
+          import json, re, sys
+          from pathlib import Path
+          value = json.loads(Path(sys.argv[1]).read_text())
+          assert value['schema'] == 1
+          if value['applicationId'] != sys.argv[3]:
+              print('false')
+              sys.exit(0)
+          assert value['channel'] == 'public'
+          assert value['tag'] == sys.argv[2] and value['versionName'] == sys.argv[2][1:]
+          assert re.fullmatch(r'[a-f0-9]{40}', value['sourceCommit'])
+          assert value['apk'] == 'Private-Brain-Pro-' + value['versionName'] + '.apk'
+          assert re.fullmatch(r'[a-f0-9]{64}', value['apkSha256'])
+          assert type(value['versionCode']) is int and 0 < value['versionCode'] <= 2147483647
+          assert value['certificateSha256'] == sys.argv[4], 'Same package has a different signer'
+          print('true')
+          PY
+                )
+                if [[ "$eligible" == true ]]; then
+                  candidate_code=$(jq -er '.versionCode' "$RUNNER_TEMP/baseline-identity/ANDROID-IDENTITY.json")
+                  if test "$candidate_code" -gt "$previous_code_hint"; then
+                    previous="$candidate"
+                    previous_code_hint="$candidate_code"
+                    cp "$RUNNER_TEMP/baseline-identity/ANDROID-IDENTITY.json" upgrade-inputs/previous-identity.json
+                  fi
+                fi
+              done < "$RUNNER_TEMP/upgrade-candidates.tsv"
+              test -n "$previous"
+            fi
+            gh release download "$previous" --pattern "Private-Brain-Pro-${previous#v}.apk" --dir upgrade-inputs
             mapfile -t old < <(find upgrade-inputs -maxdepth 1 -name '*.apk')
             test "${#old[@]}" = 1
             mv "${old[0]}" upgrade-inputs/previous.apk
             "$signer" verify --print-certs upgrade-inputs/previous.apk > "$RUNNER_TEMP/previous-signature.txt"
             test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/previous-signature.txt")" = "$expected"
+            test "$(grep -c '^Signer #[0-9]* certificate SHA-256 digest:' "$RUNNER_TEMP/previous-signature.txt")" = 1
             "$aapt" dump badging upgrade-inputs/previous.apk > "$RUNNER_TEMP/previous-badging.txt"
             grep -Fq "package: name='$package'" "$RUNNER_TEMP/previous-badging.txt"
+            grep -Fq "versionName='${previous#v}'" "$RUNNER_TEMP/previous-badging.txt"
             current=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$RUNNER_TEMP/badging.txt")
             previous_code=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$RUNNER_TEMP/previous-badging.txt")
+            if [[ "$RELEASE_CHANNEL" == public ]]; then test "$previous_code" = "$previous_code_hint"; fi
             test "$current" -gt "$previous_code"
+            if [[ -f upgrade-inputs/previous-identity.json ]]; then
+              python3 - upgrade-inputs/previous-identity.json upgrade-inputs/previous.apk "$previous_code" <<'PY'
+          import hashlib, json, sys
+          from pathlib import Path
+          value = json.loads(Path(sys.argv[1]).read_text())
+          assert value['versionCode'] == int(sys.argv[3])
+          assert value['apkSha256'] == hashlib.sha256(Path(sys.argv[2]).read_bytes()).hexdigest()
+          PY
+            fi
             cp "$RUNNER_TEMP/upgrade-probe/build/outputs/apk/release/"*.apk upgrade-inputs/probe.apk
             "$signer" verify --print-certs upgrade-inputs/probe.apk > "$RUNNER_TEMP/probe-signature.txt"
             test "$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/probe-signature.txt")" = "$expected"
@@ -186,7 +269,23 @@ jobs:
           else
             cp android/app/build/outputs/bundle/release/app-release.aab release-files/Private-Brain-Pro.aab
           fi
-          (cd release-files; shopt -s nullglob; files=(./*.apk ./*.aab); sha256sum "${files[@]}" > SHA256SUMS)
+          if [[ "$RELEASE_CHANNEL" == public || "$RELEASE_CHANNEL" == stable ]]; then
+            [[ "$certificate" =~ ^[a-f0-9]{64}$ ]]
+            test "$(grep -c '^Signer #[0-9]* certificate SHA-256 digest:' "$RUNNER_TEMP/signature.txt")" = 1
+            export PB_PUBLIC_APK="$apk" PB_PUBLIC_CODE="$current" PB_PUBLIC_ID="$package" PB_PUBLIC_CERT="$certificate"
+            python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          apk = Path(os.environ['PB_PUBLIC_APK'])
+          value = {'schema': 1, 'channel': os.environ['RELEASE_CHANNEL'], 'applicationId': os.environ['PB_PUBLIC_ID'],
+                   'certificateSha256': os.environ['PB_PUBLIC_CERT'],
+                   'sourceCommit': os.environ['SOURCE_SHA'], 'tag': os.environ['RELEASE_TAG'],
+                   'versionName': os.environ['RELEASE_TAG'][1:], 'versionCode': int(os.environ['PB_PUBLIC_CODE']),
+                   'apk': apk.name, 'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest()}
+          Path('release-files/ANDROID-IDENTITY.json').write_text(json.dumps(value, indent=2) + '\n')
+          PY
+          fi
+          (cd release-files; shopt -s nullglob; files=(./*.apk ./*.aab ./*.json); sha256sum "${files[@]}" > SHA256SUMS)
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: signed-release
@@ -194,7 +293,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@v7.0.2
-        if: steps.source.outputs.channel == 'test'
+        if: steps.source.outputs.channel == 'test' || steps.source.outputs.channel == 'public'
         with:
           name: signed-upgrade-inputs
           path: upgrade-inputs/
@@ -205,7 +304,7 @@ jobs:
         run: rm -f "$RUNNER_TEMP/private-brain.jks"
   signed-upgrade:
     needs: build
-    if: needs.build.outputs.channel == 'test'
+    if: needs.build.outputs.channel == 'test' || needs.build.outputs.channel == 'public'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -246,6 +345,9 @@ jobs:
           retention-days: 14
   publish:
     needs: [build, signed-upgrade]
+    # A public release must pass the production environment protection with
+    # concrete signed artifacts and a successful update probe already available.
+    environment: ${{ needs.build.outputs.channel == 'test' && 'android-preview' || 'android-production' }}
     if: >-
       always() && needs.build.result == 'success' &&
       (needs.signed-upgrade.result == 'success' ||
@@ -270,14 +372,14 @@ jobs:
           set -euo pipefail
           (cd release-files; sha256sum -c SHA256SUMS)
           options=()
-          if [[ "$RELEASE_CHANNEL" == test ]]; then options+=(--prerelease); fi
+          if [[ "$RELEASE_CHANNEL" == test ]]; then options+=(--prerelease); else options+=(--prerelease=false); fi
           # Draft first: never make an incomplete upload publicly visible.
           gh release create "$RELEASE_TAG" release-files/* --draft --target "$SOURCE_SHA" \
             --title "Private Brain Pro $RELEASE_TAG" --generate-notes "${options[@]}"
           gh release edit "$RELEASE_TAG" --draft=false
           mkdir public-download
           shopt -s nullglob
-          for apk in release-files/*.apk release-files/*.aab; do
+          for apk in release-files/*.apk release-files/*.aab release-files/*.json release-files/SHA256SUMS release-files/SIGNATUR.txt; do
             name=$(basename "$apk")
             curl --fail --location --retry 5 --retry-all-errors \
               "https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/$name" -o "public-download/$name"
