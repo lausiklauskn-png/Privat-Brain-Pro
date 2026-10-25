@@ -213,10 +213,10 @@ try {
   $summary = [ordered]@{ from = '1.0.37'; to = '1.0.38'; oldSource = '015c9a1266a64f44a1896ead56349094c64e2f9a'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
-  Write-Output 'WINDOWS_INSTALLER_UPGRADE_36_TO_37_PASS'
+  Write-Output 'WINDOWS_INSTALLER_UPGRADE_37_TO_38_PASS'
 } finally {
   foreach ($name in @('PB_WINDOWS_UPGRADE_CDP_PORT','PB_WINDOWS_UPGRADE_MARKER','PB_WINDOWS_UPGRADE_REPORT_ROOT','PB_WINDOWS_UPGRADE_VAULT')) { Remove-Item ('Env:' + $name) -ErrorAction SilentlyContinue }
   # Existing production.ps1 must subsequently start the exact new binary with
   # no externally enabled CDP endpoint and verify the ordinary production path.
-  if (!$finished) { Write-Output 'WINDOWS_INSTALLER_UPGRADE_36_TO_37_FAIL' }
+  if (!$finished) { Write-Output 'WINDOWS_INSTALLER_UPGRADE_37_TO_38_FAIL' }
 }
