@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {buildVersion} from './version.mjs';
+const metadata=(version,code)=>`android {\n defaultConfig {\n versionCode ${code}\n versionName "${version}"\n }\n}\n`;
+assert.deepEqual(buildVersion('1.0.36',metadata('1.0.36',36)),{version:'1.0.36',code:36});
+assert.deepEqual(buildVersion('2.0.0',metadata('2.0.0',9009)),{version:'2.0.0',code:9009},'a future stable minor/major release retains its explicit increasing code');
+assert.deepEqual(buildVersion('1.0.0-preview.29',metadata('1.0.0-preview.29',29)),{version:'1.0.0-preview.29',code:29});
+assert.throws(()=>buildVersion('1.0.36',metadata('1.0.35',36)),/must match/);
+assert.throws(()=>buildVersion('1.0.0-preview.36',metadata('1.0.0-preview.36',35)),/version code/);
+assert.throws(()=>buildVersion('1.0.36',metadata('1.0.36',2147483648)),/version code/);
+assert.throws(()=>buildVersion('1.0.36',metadata('1.0.36',36)+'versionCode 37\n'),/must match/);
+for(const version of ['01.0.36','1.0.36-beta.1','1.0.36-preview.01','1.0.36\n','1.0.36/../other'])assert.throws(()=>buildVersion(version,metadata(version,36)),/distribution version/);
+console.log('PASS explicit shared version codes, stable/legacy metadata and invalid build rejection');

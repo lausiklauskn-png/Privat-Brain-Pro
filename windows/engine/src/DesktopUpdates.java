@@ -28,9 +28,9 @@ final class DesktopUpdates {
     static JSONObject select(JSONArray releases,String installed){
         boolean preview=installed.contains("-preview.");String best="v"+installed,url=null;
         for(int i=0;i<releases.length();i++){
-            JSONObject release=releases.optJSONObject(i);if(release==null||release.optBoolean("draft",true)||!release.has("prerelease")||release.optBoolean("prerelease")!=preview)continue;
+            JSONObject release=releases.optJSONObject(i);if(release==null||release.optBoolean("draft",true)||!release.has("prerelease"))continue;
             String tag=release.optString("tag_name");if(!tag.startsWith("windows-v"))continue;
-            String common=tag.substring("windows-".length());if(!UpdatePolicy.newer(common,best,preview))continue;
+            String common=tag.substring("windows-".length());if(!UpdatePolicy.releaseAllowed(common,release.optBoolean("prerelease"),preview)||!UpdatePolicy.newer(common,best,preview))continue;
             JSONArray assets=release.optJSONArray("assets");if(assets==null)continue;
             String filename="Private-Brain-Pro-Windows-"+common.substring(1)+"-x64-setup.exe";
             String expected="https://github.com/"+UpdatePolicy.REPOSITORY+"/releases/download/"+tag+"/"+filename;

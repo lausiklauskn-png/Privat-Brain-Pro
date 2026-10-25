@@ -42,7 +42,7 @@
   // Klaus 2026-10-22: "die App-Version muss immer sichtbar irgendwo stehen … gleich auf den ersten Seiten".
   // Small, next to the name in the header on every page; a tap leads to "Auf Updates prüfen".
   if (version) {
-    const name = version.slice(3), tag = document.createElement('button');
+    const name = version.slice(3).replace(/-debug$/, ''), tag = document.createElement('button');
     // Klaus 2026-10-22: "eine echte App-Nummer … nicht Vorschau": 1.0.0-preview.28 reads as v1.0.28.
     const m = /^(\d+)\.(\d+)\.\d+-preview\.(\d+)(?:-[a-z]+)?$/.exec(name);   // "-debug" builds read the same
     const shown = 'v' + (m ? m[1] + '.' + m[2] + '.' + m[3] : name);
