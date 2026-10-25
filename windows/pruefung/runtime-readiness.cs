@@ -43,6 +43,15 @@ public static class RuntimeReadiness
         try
         {
             Need(args.Length == 0 && Environment.OSVersion.Platform == PlatformID.Win32NT, "WINDOWS_DIAGNOSTIC_WITHOUT_ARGUMENTS_REQUIRED");
+            // .NET Framework creates its redirected-input writer during Start
+            // from Console.InputEncoding and AutoFlush may emit its preamble.
+            Stage = "console-input-encoding";
+            Console.InputEncoding = new UTF8Encoding(false);
+            Emit("helper-stdin-encoding", "codePage", Console.InputEncoding.CodePage,
+                "preambleBytes", Console.InputEncoding.GetPreamble().Length);
+            Need(Console.InputEncoding.CodePage == 65001 && Console.InputEncoding.GetPreamble().Length == 0,
+                "BOM_FREE_UTF8_PROCESS_INPUT_REQUIRED");
+            Stage = "identity";
             using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
             {
                 bool admin = new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
@@ -363,7 +372,7 @@ public static class RuntimeReadiness
             Emit("AssignProcessToJobObject", "success", assigned, "win32", assignError, "childAlive", !child.HasExited);
             if (!assigned) throw new Win32Exception(assignError);
             ReportJob(child.Handle, "java-after-own-job");
-            input = new StreamWriter(child.StandardInput.BaseStream, new UTF8Encoding(false));
+            input = child.StandardInput;
             input.AutoFlush = true;
             input.WriteLine("{\"id\":\"legacy-ready\",\"plugin\":\"ProDevice\",\"method\":\"getInfo\",\"options\":{}}");
             DateTime deadline = DateTime.UtcNow.AddSeconds(15);
