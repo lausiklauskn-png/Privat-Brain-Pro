@@ -167,6 +167,8 @@ export async function preparePages(directory=join(ROOT,'www')){
   const badge=/<button\b(?=[^>]*\bid=["']pbVersion["'])[^>]*>[\s\S]*?<\/button>/g;
   const badges=[...html.matchAll(badge)];if(badges.length>1)throw Error('Multiple native version badges');html=html.replace(badge,'');
   html=html.replace('<script src="native.js"></script>','<script src="pages-runtime.js"></script>');
+  // Klaus 2026-10-25: „Pro“ heißt nur die native App (APK/Windows); die Browserfassung heißt „Private Brain“.
+  html=html.replace(/<title>Private Brain Pro\b/g,'<title>Private Brain').replace(/(<meta name="apple-mobile-web-app-title" content=")Private Brain Pro"/,'$1Private Brain"').replace(/<h1>Private Brain Pro(?=[\s<])/,'<h1>Private Brain');
   // The inherited explicit reload control also needs the new scope ownership;
   // otherwise it would delete code caches of the independent older PWA.
   for(const [before,after]of[
