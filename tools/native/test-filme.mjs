@@ -46,23 +46,21 @@ try{
   const FPV='https://videos.probe.invalid';
   await ctx.addInitScript(base=>{window.PB_FILME_BASIS=base;window.__opened=[];window.Capacitor={Plugins:{ProLinks:{async open(o){window.__opened.push(o.url);return{ok:true};}}}};},FPV+'/fpv/');
   await ctx.route('**/*',r=>{const u=r.request().url();if(u.startsWith(FPV)){const m=mock(new URL(u).pathname);return r.fulfill({status:m.status,contentType:m.type,headers:{'access-control-allow-origin':'*'},body:m.body});}return u.startsWith(url)?r.continue():r.abort();});
+  // Eingebautes Video: der Testbrowser spielt kein H.264, deshalb antwortet die Probe unter derselben Adresse mit dem VP9-Film.
+  await ctx.route(url+'filme/private-brain-pro-handbuch.mp4',r=>r.fulfill({status:200,contentType:'video/webm',body:film}));
   const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url);await page.waitForFunction(()=>window.PBFilme&&document.getElementById('pbFilme')?.dataset.wired);
-  ok('The button sits next to the gear in the navigation row, has a tooltip and is not covered by the Siegel',await page.evaluate(()=>{const b=document.getElementById('pbFilme');const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return b.parentElement?.matches('.native-toolbar-quick')&&b.previousElementSibling?.matches('[data-tab="settings"]')&&!b.closest('.native-options')&&/Anleitungsvideo/.test(b.getAttribute('aria-label'))&&b.contains(hit);}));
-  ok('Nothing is loaded before the tap',served===0);
+  ok('The button sits next to the gear in the navigation row, is a play symbol with a tooltip and is not covered by the Siegel',await page.evaluate(()=>{const b=document.getElementById('pbFilme');const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return b.parentElement?.matches('.native-toolbar-quick')&&b.previousElementSibling?.matches('[data-tab="settings"]')&&!b.closest('.native-options')&&/Anleitungsvideo/.test(b.getAttribute('aria-label'))&&/M10 8\.5v7l6-3\.5Z/.test(b.querySelector('path')?.getAttribute('d')||'')&&b.contains(hit);}));
+  ok('The manual video is built into the app bundle (checked file, poster, list)',await page.evaluate(async()=>{const j=await (await fetch('filme/filme.json')).json();const f=j.filme[0];return j.filme.length===1&&f.id==='private-brain-pro-handbuch'&&f.video==='filme/private-brain-pro-handbuch.mp4'&&(await fetch(f.poster)).ok;}));
+  ok('Nothing is loaded from the video page before the tap',served===0);
   await page.click('#pbFilme');
   await page.waitForFunction(()=>document.querySelector('.pb-filme')?.open);
-  ok('The dialog shows only the manual video, no promo film and no film choice',await page.evaluate(()=>/Anleitungsvideo/.test(document.getElementById('pbFilmeTitel').textContent)&&!document.querySelector('.pb-filme-wahl').checkVisibility()&&!document.querySelector('.pb-filme [data-film=private-brain-pro-film]')&&!/Werbefilm/.test(document.querySelector('.pb-filme').textContent)));
-  // Beschädigter Teil zuerst (noch nichts geholt): ehrlicher Satz, kein Abspielen.
-  broken=true;await page.click('.pb-filme-start');
-  await page.waitForFunction(()=>/beschädigt/.test(document.querySelector('.pb-filme-status').textContent),null,{timeout:20000});
-  ok('A damaged part is not played; the message says so',!(await page.locator('.pb-filme video').count()));
-  broken=false;await page.click('.pb-filme .primary:has-text("Schließen")');await page.waitForFunction(()=>!document.querySelector('.pb-filme'));
-  await page.click('#pbFilme');await page.waitForFunction(()=>document.querySelector('.pb-filme')?.open);
-  const servedBefore=served;
-  await page.click('.pb-filme-start');
-  await page.waitForFunction(()=>document.querySelector('.pb-filme video[data-filme-video]')?.readyState>=1,null,{timeout:20000});
-  ok('App path: all parts fetched, checked by SHA-256 and played in the window',served-servedBefore===3&&await page.evaluate(()=>{const v=document.querySelector('.pb-filme video');return v.src.startsWith('blob:')&&/Geprüft/.test(document.querySelector('.pb-filme-status').textContent);}));
+  await page.waitForSelector('.pb-filme-poster img');
+  ok('The dialog shows only the manual video: poster with a big play button, no promo film and no film choice',await page.evaluate(()=>/Anleitungsvideo/.test(document.getElementById('pbFilmeTitel').textContent)&&!document.querySelector('.pb-filme-wahl').checkVisibility()&&!/Werbefilm/.test(document.querySelector('.pb-filme').textContent)&&document.querySelector('.pb-filme-poster .pb-filme-play').getBoundingClientRect().width>=70&&document.querySelector('.pb-filme-poster img').naturalWidth>0));
+  if(process.env.PB_SHOT)await page.screenshot({path:process.env.PB_SHOT.replace(/\.png$/,'-poster.png')});
+  await page.click('.pb-filme-poster');
+  await page.waitForFunction(()=>document.querySelector('.pb-filme video[data-filme-lokal]')?.readyState>=1,null,{timeout:20000});
+  ok('Play starts the built-in video right away, without fetching anything from the video page',served===0&&await page.evaluate(()=>{const v=document.querySelector('.pb-filme video');return /filme\/private-brain-pro-handbuch\.mp4$/.test(v.src)&&v.controls;}));
   if(process.env.PB_SHOT)await page.screenshot({path:process.env.PB_SHOT});
   await page.click('[data-filme-laden]');
   ok('Download opens the video page with ?laden= (in the app via the browser)',await page.evaluate(()=>window.__opened.some(u=>/index\.html\?laden=private-brain-pro-handbuch#video-private-brain-pro-handbuch$/.test(u))));
@@ -71,6 +69,19 @@ try{
   ok('Closing removes the dialog',await page.waitForFunction(()=>!document.querySelector('.pb-filme'),null,{timeout:5000}).then(()=>true,()=>false));
   ok('No unhandled page errors',errors.length===0||console.log(errors));
   await ctx.close();
+  // Ohne eingebautes Video (z. B. ein Bau ohne filme/): die Teile kommen von der Videoseite, jeder wird geprüft.
+  const bare2=await browser.newContext();
+  await bare2.addInitScript(base=>{window.PB_FILME_BASIS=base;window.Capacitor={Plugins:{ProLinks:{async open(){return{ok:true};}}}};},FPV+'/fpv/');
+  await bare2.route('**/*',r=>{const u=r.request().url();if(u.endsWith('/filme/filme.json'))return r.fulfill({status:404,body:''});if(u.startsWith(FPV)){const m=mock(new URL(u).pathname);return r.fulfill({status:m.status,contentType:m.type,headers:{'access-control-allow-origin':'*'},body:m.body});}return u.startsWith(url)?r.continue():r.abort();});
+  const p3=await bare2.newPage();await p3.goto(url);await p3.waitForFunction(()=>document.getElementById('pbFilme')?.dataset.wired);
+  await p3.click('#pbFilme');await p3.waitForSelector('.pb-filme-start');
+  broken=true;await p3.click('.pb-filme-start');
+  await p3.waitForFunction(()=>/beschädigt/.test(document.querySelector('.pb-filme-status').textContent),null,{timeout:20000});
+  ok('Without the built-in video: a damaged part is not played; the message says so',!(await p3.locator('.pb-filme video').count()));
+  broken=false;const servedBefore=served;await p3.click('.pb-filme-start');
+  await p3.waitForFunction(()=>document.querySelector('.pb-filme video[data-filme-video]')?.readyState>=1,null,{timeout:20000});
+  ok('Without the built-in video: all parts fetched, checked by SHA-256 and played in the window',served-servedBefore===3&&await p3.evaluate(()=>document.querySelector('.pb-filme video').src.startsWith('blob:')));
+  await bare2.close();
   // Browserfassung: derselbe Ursprung wie die Videoseite → deren Spieler streamt im Fenster.
   const web=await browser.newContext();
   await web.addInitScript(base=>{window.PB_FILME_BASIS=base;},url+'fpv/');

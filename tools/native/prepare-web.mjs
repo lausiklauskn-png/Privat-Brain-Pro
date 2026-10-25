@@ -3,6 +3,7 @@ import { adaptSearch } from './adapt-search.mjs';
 import { prerenderShell } from './prerender-shell.mjs';
 import { bundleSemanticModel } from './fetch-semantic-model.mjs';
 import { bundleOcrAssets } from './fetch-ocr-assets.mjs';
+import { bundleFilms } from './fetch-films.mjs';
 import { cp, mkdir, readFile, rm, writeFile, lstat, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -122,6 +123,7 @@ await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITO
 await bundleSemanticModel(out);
 // Required local OCR: engine, language data and licenses ship with every native app.
 await bundleOcrAssets(out);
+await bundleFilms(out);   // Anleitungsvideo fest in der App (filme/), geprüft gegen film-pins.json
 for (const name of ['native-ocr.js', 'native-ocr.css', 'ocr-notices.html']) await cp(join(root, 'native', name), join(out, name));
 await cp(join(root, 'native/ocr-licenses'), join(out, 'ocr-licenses'), { recursive: true });
 // The same fixed hashes and sources for loading the model with the switch in the app.

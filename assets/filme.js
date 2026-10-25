@@ -2,7 +2,9 @@
    entsprechenden Version von der App“. Ein Knopf in der Kopfleiste öffnet das Anleitungsvideo (Klaus: nur die Erklärung, nicht den Werbefilm, sonst wird es überladen).
    Die Filme liegen auf der Family-Projekt-Videoseite (Family-Projekt.de-Video, je Film EINE Fassung, Teile mit SHA-256):
    - Browserfassung auf github.io: derselbe Ursprung wie die Videoseite → deren Spieler (abspielen.html) streamt im Fenster.
-   - App (Android, Windows): die Teile werden geholt, Größe und SHA-256 je Teil geprüft, dann spielt der Film im Fenster.
+   - App (Android, Windows): das Anleitungsvideo steckt fest in der App (filme/filme.json, beim Bau gegen SHA-256 geprüft);
+     Vorschaubild mit großem ▶, Abspielen sofort, auch ohne Internet (Klaus: „Hauptsache, es funktioniert auch auf fremden
+     Rechnern oder Android-Geräten“). Fehlt es, werden die Teile von der Videoseite geholt und je Teil geprüft.
    - „Herunterladen“ öffnet die Videoseite mit ?laden= (prüft und speichert die ganze Datei); in der App im Browser.
    Nichts wird vor dem Tipp geladen. Dieselbe Datei steht in Privat-Brain-Pro-V3 und Privat-Brain-Pro. */
 (() => {
@@ -16,27 +18,27 @@
       play: 'Abspielen', download: 'Herunterladen', close: 'Schließen', loading: 'Film wird geladen und geprüft …',
       part: 'Teil {i} von {n} · {a} von {b}', ready: 'Geprüft. Der Film läuft.', offline: 'Ohne Internet lässt sich der Film nicht laden. Er liegt auf der Family-Projekt-Videoseite und wird nicht auf dem Gerät gespeichert.',
       failed: 'Der Film ließ sich nicht laden: {e}', bad: 'Ein Teil kam beschädigt an. Bitte noch einmal versuchen.', browser: 'Im Browser abspielen',
-      note: 'Das Video liegt auf der Family-Projekt-Videoseite; jeder Teil wird geprüft. Herunterladen speichert die ganze Datei in voller Qualität.' },
+      note: 'Herunterladen speichert das Video in voller Qualität auf dem Gerät.' },
     en: { button: 'Films', title: 'Manual video: what Private Brain can do', film: 'Promo film', handbuch: 'Manual video',
       play: 'Play', download: 'Download', close: 'Close', loading: 'Loading and checking the film …',
       part: 'Part {i} of {n} · {a} of {b}', ready: 'Checked. The film is playing.', offline: 'Without internet the film cannot load. It lives on the Family-Projekt video page and is not stored on the device.',
       failed: 'The film could not be loaded: {e}', bad: 'A part arrived damaged. Please try again.', browser: 'Play in the browser',
-      note: 'The video lives on the Family-Projekt video page; every part is checked. Download saves the whole file in full quality.' },
+      note: 'Download saves the video in full quality on the device.' },
     ru: { button: 'Фильмы', title: 'Видеоинструкция: что умеет Private Brain', film: 'Рекламный ролик', handbuch: 'Видеоинструкция',
       play: 'Смотреть', download: 'Скачать', close: 'Закрыть', loading: 'Фильм загружается и проверяется …',
       part: 'Часть {i} из {n} · {a} из {b}', ready: 'Проверено. Фильм воспроизводится.', offline: 'Без интернета фильм не загрузится.',
       failed: 'Не удалось загрузить фильм: {e}', bad: 'Часть пришла повреждённой. Попробуйте ещё раз.', browser: 'Смотреть в браузере',
-      note: 'Видео хранится на странице Family-Projekt; каждая часть проверяется. «Скачать» сохраняет весь файл в полном качестве.' },
+      note: '«Скачать» сохраняет видео в полном качестве на устройстве.' },
     pl: { button: 'Filmy', title: 'Wideo-instrukcja: co potrafi Private Brain', film: 'Film reklamowy', handbuch: 'Wideo-instrukcja',
       play: 'Odtwórz', download: 'Pobierz', close: 'Zamknij', loading: 'Film jest ładowany i sprawdzany …',
       part: 'Część {i} z {n} · {a} z {b}', ready: 'Sprawdzono. Film jest odtwarzany.', offline: 'Bez internetu filmu nie można załadować.',
       failed: 'Nie udało się załadować filmu: {e}', bad: 'Część dotarła uszkodzona. Spróbuj ponownie.', browser: 'Odtwórz w przeglądarce',
-      note: 'Wideo jest na stronie Family-Projekt; każda część jest sprawdzana. „Pobierz” zapisuje cały plik w pełnej jakości.' }
+      note: '„Pobierz” zapisuje wideo w pełnej jakości na urządzeniu.' }
   };
   const t = k => (W[document.documentElement.lang] || W.de)[k];
   const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
   const mb = n => (n / 1e6).toLocaleString(document.documentElement.lang || 'de', { maximumFractionDigits: 1 }) + ' MB';
-  const ICON = 'M3 5h18v14H3Z M3 9h18 M3 15h18 M7 5v4 M12 5v4 M17 5v4 M7 15v4 M12 15v4 M17 15v4';
+  const ICON = 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z M10 8.5v7l6-3.5Z';   // ▶ im Kreis: ein Abspiel-Knopf wie bei Workflow PDF
   const NS = 'http://www.w3.org/2000/svg';
   const sameOrigin = (() => { try { return new URL(BASE).origin === location.origin; } catch { return false; } })();
 
@@ -54,6 +56,9 @@
       .catch(e => { listPromise = null; throw e; });
     return listPromise;
   }
+  // Fest eingebaute Filme (nur APK/Windows); in der Browserfassung fehlt filme/ und es bleibt beim Streamen.
+  let localPromise = null;
+  const local = () => (localPromise ||= fetch('filme/filme.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => new Map((j?.filme || []).map(f => [f.id, f]))).catch(() => new Map()));
   const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
   const blobs = new Map();   // je Sitzung: ein geprüfter Film wird nicht zweimal geholt
 
@@ -95,6 +100,10 @@
       + '.pb-filme-buehne{position:relative;width:100%;aspect-ratio:16/9;max-height:62vh;background:#000;border-radius:10px;overflow:hidden;display:grid;place-items:center}'
       + '.pb-filme-buehne video,.pb-filme-buehne iframe{width:100%;height:100%;border:0;display:block;background:#000}'
       + '.pb-filme-balken{height:6px;border-radius:3px;background:var(--line,#ddd);overflow:hidden;margin:8px 0 0}.pb-filme-balken>i{display:block;height:100%;width:0;background:var(--acc,#2b62c4);transition:width .2s}'
+      + '.pb-filme-poster{all:unset;position:absolute;inset:0;cursor:pointer;display:block}.pb-filme-poster img{width:100%;height:100%;object-fit:contain;display:block}'
+      + '.pb-filme-poster .pb-filme-play{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:rgba(0,0,0,.55);box-shadow:0 0 0 3px rgba(255,255,255,.85);display:grid;place-items:center}'
+      + '.pb-filme-poster .pb-filme-play::before{content:"";margin-left:8px;border-style:solid;border-width:18px 0 18px 30px;border-color:transparent transparent transparent #fff}'
+      + '.pb-filme-poster:hover .pb-filme-play,.pb-filme-poster:focus-visible .pb-filme-play{background:var(--acc,#2b62c4)}'
       + '.pb-filme-status{min-height:1.2em;margin:6px 0 0}.pb-filme .btnrow{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}.pb-filme .pb-filme-wahl{justify-content:flex-start}';
     document.head.append(st);
   }
@@ -122,9 +131,19 @@
     let current = FILME[0].id, ctrl = null;
     const offline = navigator.onLine === false;
     const stop = () => { ctrl?.abort(); ctrl = null; stage.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); }); stage.replaceChildren(); };
+    let seq = 0;
     async function show(id, start) {
-      current = id; stop(); bar.hidden = true;
+      current = id; stop(); bar.hidden = true; const my0 = ++seq;
       pick.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.film === id)));
+      const built = sameOrigin ? null : (await local()).get(id);   // die PWA auf github.io streamt von der Videoseite
+      if (my0 !== seq) return;
+      if (built) {   // App: eingebautes Video, Vorschaubild mit großem ▶, startet sofort
+        status.textContent = '';
+        const play = () => { stage.replaceChildren(); const v = make('video'); v.controls = true; v.playsInline = true; v.preload = 'auto'; v.poster = built.poster; v.src = built.video; v.dataset.filmeVideo = id; v.dataset.filmeLokal = '1'; stage.append(v); v.play().catch(() => {}); };
+        if (start) return play();
+        const b = make('button', 'pb-filme-poster'); b.type = 'button'; b.setAttribute('aria-label', t('play') + ': ' + t(FILME.find(x => x.id === id).key));
+        const img = make('img'); img.alt = ''; img.src = built.poster; b.append(img, make('span', 'pb-filme-play')); b.onclick = play; stage.append(b); return;
+      }
       if (offline) { status.textContent = t('offline'); return; }
       if (sameOrigin) {   // Browserfassung: der erprobte Spieler der Videoseite streamt (Service Worker der Videoseite)
         const f = make('iframe', 'pb-filme-rahmen'); f.title = t(FILME.find(x => x.id === id).key);
@@ -142,6 +161,7 @@
       } catch (e) {
         if (my !== ctrl || e?.name === 'AbortError') return;
         bar.hidden = true; status.textContent = e?.bad ? t('bad') : fill(t('failed'), { e: e?.message || e });
+        const again = make('button', 'primary pb-filme-start', '▶ ' + t('play')); again.type = 'button'; again.onclick = () => show(id, true); stage.append(again);   // noch einmal versuchen
       }
     }
     for (const f of FILME) {
