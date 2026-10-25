@@ -1,0 +1,234 @@
+# Scratch-only branch dispatcher; 015c9a1266a64f44a1896ead56349094c64e2f9a and legacy-transition stay unresolved.
+# Install only on release-request/windows37-v2 as one direct child of the frozen main source.
+# The only changed path must be this newly added workflow. Do not merge the helper into main.
+# Existing windows-release.yml is dispatched with ref=main and commit=SOURCE_SHA;
+# it still requires its own workflow head == source == current main before publication.
+name: Öffentliche Windows-Version 1.0.37 über getrennte Anforderungsbranch
+on:
+  push:
+    branches: [release-request/windows37-v2]
+    paths: ['.github/workflows/windows-preview37-request-branch.yml']
+permissions:
+  contents: read
+  checks: read
+  actions: write
+concurrency:
+  group: windows-preview37-one-shot
+  cancel-in-progress: false
+jobs:
+  request-windows37:
+    if: github.repository == 'lausiklauskn-png/Privat-Brain-Pro' && github.ref == 'refs/heads/release-request/windows37-v2'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 015c9a1266a64f44a1896ead56349094c64e2f9a
+      REQUEST_BRANCH: release-request/windows37-v2
+      HELPER_PATH: .github/workflows/windows-preview37-request-branch.yml
+      RELEASE_TAG: windows-v1.0.37
+      SOURCE_CHECK_MODE: legacy-transition
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Einzelnen Helper-Kindcommit und eingefrorenes Main prüfen
+        id: preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GH_REPO" = lausiklauskn-png/Privat-Brain-Pro
+          test "$REQUEST_BRANCH" = release-request/windows37-v2
+          test "$HELPER_PATH" = .github/workflows/windows-preview37-request-branch.yml
+          test "$GITHUB_REF" = "refs/heads/$REQUEST_BRANCH"
+          test "$GITHUB_REF_NAME" = "$REQUEST_BRANCH"
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse "$SOURCE_SHA^{commit}")" = "$SOURCE_SHA"
+          # A single direct parent forbids merge commits and intermediate helper edits.
+          test "$(git rev-list --parents -n 1 HEAD)" = "$GITHUB_SHA $SOURCE_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" HEAD
+          test "$(git diff --no-ext-diff --no-textconv --no-renames --name-only "$SOURCE_SHA" HEAD --)" = "$HELPER_PATH"
+          test "$(git diff --no-ext-diff --no-textconv --no-renames --name-status "$SOURCE_SHA" HEAD --)" = "$(printf 'A\t%s' "$HELPER_PATH")"
+          test "$RELEASE_TAG" = windows-v1.0.37
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$REQUEST_BRANCH" --jq .object.sha)" = "$GITHUB_SHA"
+          skip() {
+            printf 'dispatch=false\n' >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" > "$RUNNER_TEMP/windows37-artifacts.json"
+          if jq -e '[.[].artifacts[] | select(.name == "windows37-dispatch-intent" and .expired == false)] | length > 0' "$RUNNER_TEMP/windows37-artifacts.json" >/dev/null; then
+            skip 'Für diesen Lauf wurde eine Windows-.37-Anforderung bereits vorgemerkt. Bestehenden Release-Lauf prüfen; nicht erneut anfordern.'
+          fi
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows37-releases.json"
+          if jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length > 0' "$RUNNER_TEMP/windows37-releases.json" >/dev/null; then
+            skip 'Windows .37 besitzt bereits eine Veröffentlichung oder einen Entwurf. Nichts überschreiben oder erneut anfordern.'
+          fi
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo 'Windows-.37-Tag besteht bereits. Keine automatische neue Anforderung.' >&2
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          expected = '1.0.37'
+          assert json.loads(Path('windows/package.json').read_text())['version'] == expected
+          lock = json.loads(Path('windows/package-lock.json').read_text())
+          assert lock['version'] == lock['packages']['']['version'] == expected
+          config = json.loads(Path('windows/src-tauri/tauri.conf.json').read_text())
+          assert config['version'] == expected
+          assert config['identifier'] == 'de.familyprojekt.privatebrain.pro'
+          assert config['bundle']['windows']['nsis']['installMode'] == 'currentUser'
+          assert config['bundle'].get('createUpdaterArtifacts', False) is False
+          cargo = Path('windows/src-tauri/Cargo.toml').read_text()
+          assert re.search(r'^version = "' + re.escape(expected) + r'"$', cargo, re.M)
+          cargo_lock = Path('windows/src-tauri/Cargo.lock').read_text()
+          assert 'name = "private-brain-pro"\nversion = "' + expected + '"' in cargo_lock
+          gradle = Path('android/app/build.gradle').read_text()
+          assert re.findall(r'^\s*versionName\s+"([^"\n]+)"\s*$', gradle, re.M) == [expected]
+          assert re.findall(r'^\s*versionCode\s+(\d+)\s*$', gradle, re.M) == ['37']
+          assert len(re.findall(r'^\s*applicationId\b', gradle, re.M)) == 1, 'Exactly one base applicationId declaration required'
+          base_ids = re.findall(r'^\s*applicationId\s+"([^"\n]+)"\s*$', gradle, re.M)
+          assert base_ids == ['de.familyprojekt.privatebrain.pro'], 'Original Android base applicationId required'
+          assert len(re.findall(r'^\s*preview\s*\{', gradle, re.M)) == 1, 'Exactly one preview declaration required'
+          preview_blocks = re.findall(r'^\s*preview\s*\{([^{}]*)\}', gradle, re.M)
+          assert len(preview_blocks) == 1, 'Exactly one preview buildType required'
+          assert len(re.findall(r'^\s*applicationIdSuffix\b', preview_blocks[0], re.M)) == 1, 'Exactly one preview suffix declaration required'
+          preview_suffixes = re.findall(r'^\s*applicationIdSuffix\s+"([^"\n]+)"\s*$', preview_blocks[0], re.M)
+          assert preview_suffixes == ['.preview'], 'Original preview applicationIdSuffix required'
+          assert base_ids[0] + preview_suffixes[0] == 'de.familyprojekt.privatebrain.pro.preview', 'Original public Android package required'
+          PY
+          printf 'dispatch=true\n' >> "$GITHUB_OUTPUT"
+      - name: Ausschließlich vollständige normale Abnahme der eingefrorenen Quelle abwarten
+        if: steps.preflight.outputs.dispatch == 'true'
+        id: acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          # There is NO own request check on SOURCE_SHA: this job belongs to the
+          # separate helper branch. Select 10 or 13 actual normal source checks.
+          # Unresolved mode, unknown checks, skipped Pages or failures stop closed.
+          case "$SOURCE_CHECK_MODE" in
+            workflow-only) legacy='[]' ;;
+            legacy-transition) legacy='["build","deploy","report-build-status"]' ;;
+            *) echo 'Exact Pages/source check contract has not been selected.' >&2; exit 1 ;;
+          esac
+          required=$(jq -cn --argjson legacy "$legacy" '
+            ["Responsive Oberfläche (firefox)","Responsive Oberfläche (webkit)",
+             "validate","native-smoke","upgrade-probe-smoke","windows",
+             "encrypted-signing","shared-engine","pages-build","pages-deploy"] + $legacy')
+          ready=false
+          for attempt in {1..90}; do
+            test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+            gh api --paginate --slurp "repos/$GH_REPO/commits/$SOURCE_SHA/check-runs?filter=latest&per_page=100" > "$RUNNER_TEMP/windows37-checks.json"
+            if jq -e --arg sha "$SOURCE_SHA" '[.[].check_runs[] | select(.app.slug == "github-actions" and .head_sha == $sha and .status == "completed" and .conclusion != "success")] | length > 0' "$RUNNER_TEMP/windows37-checks.json" >/dev/null; then
+              echo 'Ein Source-Check ist nicht erfolgreich. Anhalten und Ursache prüfen; keinen Release anfordern.' >&2
+              exit 1
+            fi
+            if jq -e --arg sha "$SOURCE_SHA" --argjson required "$required" '
+              [.[].check_runs[]] as $all
+              | (($all | length) == ($required | length))
+                and all(.[]; .total_count == ($all | length))
+                and (($all | map(.id) | unique | length) == ($all | length))
+                and all($all[]; .app.slug == "github-actions" and .head_sha == $sha)
+                and (($all | map(.name) | sort) == ($required | sort))
+                and all($all[]; .status == "completed" and .conclusion == "success")
+            ' "$RUNNER_TEMP/windows37-checks.json" >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 30
+          done
+          test "$ready" = true
+          # Both existing release gates must see successful Main-PUSH runs of
+          # exactly this head; a PR-only result is never substituted.
+          for workflow in android.yml windows-app.yml; do
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/$workflow/runs?head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows37-$workflow.json"
+            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .event == "push" and .status == "completed" and .conclusion == "success")] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows37-$workflow.json")
+            [[ "$run_id" =~ ^[0-9]+$ ]]
+            if test "$workflow" = windows-app.yml; then printf 'acceptance_run=%s\n' "$run_id" >> "$GITHUB_OUTPUT"; fi
+          done
+      - name: Einmalige Anforderung vorbereiten und erneut gegen Main prüfen
+        if: steps.preflight.outputs.dispatch == 'true'
+        shell: bash
+        env:
+          ACCEPTANCE_RUN: ${{ steps.acceptance.outputs.acceptance_run }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows37-runs.json"
+          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows37-runs.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows37-releases-final.json"
+          jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RUNNER_TEMP/windows37-releases-final.json" >/dev/null
+          remote_tag=$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")
+          test -z "$remote_tag"
+          mkdir -p "$RUNNER_TEMP/windows37-one-shot"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP']) / 'windows37-one-shot'
+          request = {'ref':'main','inputs':{'commit':os.environ['SOURCE_SHA'],'tag':os.environ['RELEASE_TAG']}}
+          checks = Path(os.environ['RUNNER_TEMP']) / 'windows37-checks.json'
+          intent = {'release_tag':os.environ['RELEASE_TAG'],'source_commit':os.environ['SOURCE_SHA'],'dispatcher_commit':os.environ['GITHUB_SHA'],'dispatcher_ref':os.environ['GITHUB_REF'],'dispatcher_branch':os.environ['REQUEST_BRANCH'],'target_workflow_ref':'main','helper_path':os.environ['HELPER_PATH'],'dispatcher_run_id':os.environ['GITHUB_RUN_ID'],'source_checks_mode':os.environ['SOURCE_CHECK_MODE'],'source_checks_sha256':hashlib.sha256(checks.read_bytes()).hexdigest(),'windows_acceptance_run':os.environ['ACCEPTANCE_RUN'],'state':'intent recorded before request; acceptance is not yet confirmed'}
+          (folder/'request.json').write_text(json.dumps(request)+'\n')
+          (folder/'intent.json').write_text(json.dumps(intent)+'\n')
+          PY
+      - name: Absicht vor dem nicht wiederholten Request dauerhaft sichern
+        if: steps.preflight.outputs.dispatch == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows37-dispatch-intent
+          path: ${{ runner.temp }}/windows37-one-shot/intent.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Gesicherte öffentliche Anforderungsabsicht im Joblog belegen
+        if: steps.preflight.outputs.dispatch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          payload = (Path(os.environ['RUNNER_TEMP']) / 'windows37-one-shot/intent.json').read_bytes()
+          assert 0 < len(payload) <= 16384, 'Bounded public intent required'
+          intent = json.loads(payload)
+          expected = {'release_tag','source_commit','dispatcher_commit','dispatcher_ref',
+                      'dispatcher_branch','target_workflow_ref','helper_path','dispatcher_run_id',
+                      'source_checks_mode','source_checks_sha256','windows_acceptance_run','state'}
+          assert set(intent) == expected, 'Only reviewed public intent fields may be logged'
+          assert intent['dispatcher_branch'] == 'release-request/windows37-v2'
+          assert intent['target_workflow_ref'] == 'main'
+          print('REQUEST37_INTENT_JSON ' + json.dumps(intent, ensure_ascii=False, sort_keys=True, separators=(',',':')))
+          PY
+      - name: Unveränderten Windows-Release genau einmal anfordern
+        if: steps.preflight.outputs.dispatch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)" = "$SOURCE_SHA"
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$REQUEST_BRANCH" --jq .object.sha)" = "$GITHUB_SHA"
+          gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?per_page=100" > "$RUNNER_TEMP/windows37-runs-final.json"
+          jq -e --arg sha "$SOURCE_SHA" 'all(.[].workflow_runs[]; .status == "completed" and (.event != "workflow_dispatch" or .head_sha != $sha))' "$RUNNER_TEMP/windows37-runs-final.json" >/dev/null
+          gh api --paginate --slurp "repos/$GH_REPO/releases?per_page=100" > "$RUNNER_TEMP/windows37-releases-after-intent.json"
+          jq -e --arg tag "$RELEASE_TAG" '[.[][] | select(.tag_name == $tag)] | length == 0' "$RUNNER_TEMP/windows37-releases-after-intent.json" >/dev/null
+          remote_tag=$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")
+          test -z "$remote_tag"
+          # No retry for this non-idempotent request. Existing windows-release.yml
+          # independently checks current Main, both acceptance chains and bytes.
+          gh api --silent --method POST "repos/$GH_REPO/actions/workflows/windows-release.yml/dispatches" --input "$RUNNER_TEMP/windows37-one-shot/request.json"
+          for attempt in {1..10}; do
+            gh api --paginate --slurp "repos/$GH_REPO/actions/workflows/windows-release.yml/runs?event=workflow_dispatch&head_sha=$SOURCE_SHA&per_page=100" > "$RUNNER_TEMP/windows37-observed.json"
+            run_id=$(jq -r --arg sha "$SOURCE_SHA" '[.[].workflow_runs[] | select(.event == "workflow_dispatch" and .head_sha == $sha)] | sort_by(.id) | last | .id // empty' "$RUNNER_TEMP/windows37-observed.json")
+            if [[ "$run_id" =~ ^[0-9]+$ ]]; then
+              printf 'Windows-Release angefordert: https://github.com/%s/actions/runs/%s\nQuelle: `%s`, Tag: `%s`. Veröffentlichung und öffentlicher Download sind separat abzuwarten.\n' "$GH_REPO" "$run_id" "$SOURCE_SHA" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'Request angenommen, aber noch keine Lauf-ID beobachtet. Nicht erneut anfordern; bestehende Windows-Actions und Intent prüfen.' >&2
+          exit 1
