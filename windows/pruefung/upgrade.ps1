@@ -41,6 +41,7 @@ $env:PB_WINDOWS_UPGRADE_REPORT_ROOT = $reports
 $env:PB_WINDOWS_UPGRADE_VAULT = $vault
 Add-Type -AssemblyName @('UIAutomationClient','UIAutomationTypes','System.Windows.Forms')
 Add-Type -Path (Join-Path $PSScriptRoot 'upgrade-launcher.cs')
+. (Join-Path $PSScriptRoot 'native-output.ps1')
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
@@ -72,11 +73,12 @@ function Stop-ProbeApp($app) {
   while ((Test-ProbePort) -and [DateTime]::UtcNow -lt $portDeadline) { Start-Sleep -Milliseconds 200 }
   if (Test-ProbePort) { throw 'The previous app CDP listener survived app shutdown.' }
 }
-function Select-ProbeFolder([int]$owner, [string]$path, $nodeProcess) {
+function Select-ProbeFolder([int]$owner, [string]$path, $nodeProcess, [string]$nativeCapture) {
   $deadline = [DateTime]::UtcNow.AddSeconds(150)
   $dialog = $null
   $processCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $owner)
   do {
+    Assert-ProbeNativeOutputBound $nativeCapture
     $nodeProcess.Refresh()
     if ($nodeProcess.HasExited) { throw 'Seed exited before a real folder dialog could be selected.' }
     $windows = [System.Windows.Automation.AutomationElement]::RootElement.FindAll([System.Windows.Automation.TreeScope]::Children, $processCondition)
@@ -155,18 +157,26 @@ function Phase([string]$name, [bool]$needsFolder) {
   $node = $null
   $stdout = Join-Path $reports ($name + '-stdout.txt')
   $stderr = Join-Path $reports ($name + '-stderr.txt')
+  $nativeCapture = Join-Path $work ('native-' + $name)
+  New-Item -ItemType Directory -Path $nativeCapture | Out-Null
   try {
     if (Get-Process private-brain-pro -ErrorAction SilentlyContinue) { throw 'Refusing a second-instance handoff to an uncontrolled existing app.' }
     # WebView2 >=150 ignores environment browser arguments in elevated hosts.
     # Run each unchanged production binary as this same user's linked Medium
     # token. No policy, runtime, profile, installer or app-code change is used.
-    $launch = [UpgradeProbeLauncher]::Start($exe, $appDir, $env:LOCALAPPDATA, $env:USERPROFILE, $requestedBrowserArgs)
+    $launch = [UpgradeProbeLauncher]::Start($exe, $appDir, $env:LOCALAPPDATA, $env:USERPROFILE, $requestedBrowserArgs, $nativeCapture)
     $app = $launch.Process
     $launch | Select-Object -Property @('ProcessId','CurrentIntegrityRid','CurrentElevationType','CurrentElevated','TargetIntegrityRid','TargetElevationType','TargetElevated','SameUserSid') | ConvertTo-Json -Compress | Write-Output
     $script = Join-Path (Get-Location) 'windows/pruefung/upgrade.mjs'
     $node = Start-Process -FilePath (Get-Command node).Source -ArgumentList ('"' + $script + '" ' + $name) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
-    if ($needsFolder) { Select-ProbeFolder -owner $app.Id -path $vault -nodeProcess $node }
-    if (!$node.WaitForExit(240000)) { Stop-Process -Id $node.Id -Force; throw 'Upgrade data phase timed out.' }
+    if ($needsFolder) { Select-ProbeFolder -owner $app.Id -path $vault -nodeProcess $node -nativeCapture $nativeCapture }
+    $phaseDeadline = [DateTime]::UtcNow.AddSeconds(240)
+    while (!$node.WaitForExit(250)) {
+      Assert-ProbeNativeOutputBound $nativeCapture
+      $app.Refresh()
+      if ($app.HasExited) { throw 'The installed app exited during the upgrade data phase; inspect its bounded native output.' }
+      if ([DateTime]::UtcNow -ge $phaseDeadline) { throw 'Upgrade data phase timed out.' }
+    }
     if ($node.ExitCode -ne 0) { throw ('Upgrade phase failed: ' + $name) }
     $report = Get-Content (Join-Path $reports ($name + '.json')) -Raw | ConvertFrom-Json
     if ($report.success -ne $true) { throw ('No successful exact report for phase ' + $name) }
@@ -180,7 +190,10 @@ function Phase([string]$name, [bool]$needsFolder) {
     if (Test-Path $phaseReport) { Get-Content $phaseReport -Tail 80 }
     Write-ProbeProcessEvidence $app $name
     try { Stop-ProbeApp $app }
-    finally { if ($app) { $app.Dispose() } }
+    finally {
+      if ($app) { $app.Dispose() }
+      Export-ProbeNativeOutput $nativeCapture $reports $name
+    }
   }
 }
 $finished = $false

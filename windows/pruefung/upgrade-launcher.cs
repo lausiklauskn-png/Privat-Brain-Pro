@@ -52,6 +52,7 @@ public static class UpgradeProbeLauncher
     private const uint LuaToken = 0x0004;
     private const uint CreateSuspended = 0x00000004;
     private const uint CreateUnicodeEnvironment = 0x00000400;
+    private const uint ExtendedStartupInfoPresent = 0x00080000;
     private const uint LogonWithProfile = 0x00000001;
     private const uint InvalidResume = 0xffffffff;
 
@@ -103,7 +104,7 @@ public static class UpgradeProbeLauncher
     }
 
     public static UpgradeProbeLaunchResult Start(string exe, string cwd,
-        string expectedLocalAppData, string expectedUserProfile, string requestedArgs)
+        string expectedLocalAppData, string expectedUserProfile, string requestedArgs, string captureDirectory)
     {
         RequireRunner();
         Require(String.Equals(requestedArgs, BrowserArguments, StringComparison.Ordinal), "EXACT_LOOPBACK_ARGUMENTS_REQUIRED");
@@ -114,6 +115,11 @@ public static class UpgradeProbeLauncher
         cwd = FullPath(cwd);
         Require(File.Exists(exe) && Directory.Exists(cwd), "EXACT_EXECUTABLE_AND_WORKING_DIRECTORY_REQUIRED");
         Require(SamePath(cwd, Path.GetDirectoryName(exe)), "INSTALLED_APP_WORKING_DIRECTORY_REQUIRED");
+        captureDirectory = FullPath(captureDirectory);
+        string runnerTemp = FullPath(Environment.GetEnvironmentVariable("RUNNER_TEMP")).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        Require(captureDirectory.StartsWith(runnerTemp, StringComparison.OrdinalIgnoreCase)
+            && Directory.Exists(captureDirectory)
+            && (File.GetAttributes(captureDirectory) & FileAttributes.ReparsePoint) == 0, "FRESH_RUNNER_CAPTURE_DIRECTORY_REQUIRED");
         Require(SamePath(Environment.GetEnvironmentVariable("LOCALAPPDATA"), expectedLocalAppData)
             && SamePath(Environment.GetEnvironmentVariable("USERPROFILE"), expectedUserProfile), "PARENT_PROFILE_PATH_MISMATCH");
 
@@ -124,6 +130,9 @@ public static class UpgradeProbeLauncher
         IntPtr nativeEnvironment = IntPtr.Zero;
         IntPtr launchEnvironment = IntPtr.Zero;
         IntPtr desktopName = IntPtr.Zero;
+        IntPtr stdin = IntPtr.Zero, stdout = IntPtr.Zero, stderr = IntPtr.Zero;
+        IntPtr attributes = IntPtr.Zero, handleList = IntPtr.Zero, security = IntPtr.Zero;
+        bool attributesInitialized = false;
         int launchEnvironmentChars = 0;
         Process managedProcess = null;
         ProcessInformation child = new ProcessInformation();
@@ -161,6 +170,7 @@ public static class UpgradeProbeLauncher
                 && SamePath(variables["LOCALAPPDATA"], expectedLocalAppData)
                 && SamePath(variables["USERPROFILE"], expectedUserProfile), "SAME_USER_ENVIRONMENT_PROFILE_MISMATCH");
             variables["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = BrowserArguments;
+            variables["RUST_BACKTRACE"] = "1";
             StringBuilder environment = new StringBuilder();
             foreach (KeyValuePair<string, string> variable in variables)
                 environment.Append(variable.Key).Append('=').Append(variable.Value).Append('\0');
@@ -183,8 +193,39 @@ public static class UpgradeProbeLauncher
                 // Microsoft's documented path for a restricted copy of our
                 // own primary token. The same user's profile is already loaded.
                 Console.WriteLine("WINDOWS_UPGRADE_PROCESS_API CreateProcessAsUserW-own-restricted");
-                if (!CreateProcessAsUserW(primaryToken, exe, command, IntPtr.Zero, IntPtr.Zero, false,
-                    CreateSuspended | CreateUnicodeEnvironment, launchEnvironment, cwd, ref startup, out child))
+                SecurityAttributes sa = new SecurityAttributes { Length = Marshal.SizeOf(typeof(SecurityAttributes)), Inherit = 1 };
+                security = Marshal.AllocHGlobal(sa.Length);
+                Marshal.StructureToPtr(sa, security, false);
+                stdin = CreateFile("NUL", 0x80000000, 3, security, 3, 0x80, IntPtr.Zero);
+                RequireValidFileHandle(stdin, "OPEN_CAPTURE_STDIN");
+                stdout = CreateFile(Path.Combine(captureDirectory, "stdout.txt"), 0x40000000, 1, security, 1, 0x80, IntPtr.Zero);
+                RequireValidFileHandle(stdout, "CREATE_NATIVE_STDOUT");
+                stderr = CreateFile(Path.Combine(captureDirectory, "stderr.txt"), 0x40000000, 1, security, 1, 0x80, IntPtr.Zero);
+                RequireValidFileHandle(stderr, "CREATE_NATIVE_STDERR");
+                IntPtr bytes = IntPtr.Zero;
+                bool sized = InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref bytes);
+                int sizeError = Marshal.GetLastWin32Error();
+                Require(!sized && sizeError == 122 && bytes.ToInt64() > 0 && bytes.ToInt64() <= 65536, "HANDLE_ATTRIBUTE_SIZE_QUERY_FAILED");
+                attributes = Marshal.AllocHGlobal(bytes);
+                if (!InitializeProcThreadAttributeList(attributes, 1, 0, ref bytes)) throw Win32Failure("INITIALIZE_HANDLE_ATTRIBUTE_LIST");
+                attributesInitialized = true;
+                handleList = Marshal.AllocHGlobal(IntPtr.Size * 3);
+                Marshal.WriteIntPtr(handleList, 0, stdin);
+                Marshal.WriteIntPtr(handleList, IntPtr.Size, stdout);
+                Marshal.WriteIntPtr(handleList, IntPtr.Size * 2, stderr);
+                if (!UpdateProcThreadAttribute(attributes, 0, new IntPtr(0x20002), handleList,
+                    new IntPtr(IntPtr.Size * 3), IntPtr.Zero, IntPtr.Zero)) throw Win32Failure("SET_EXACT_STD_HANDLE_LIST");
+                StartupInformationEx extended = new StartupInformationEx();
+                extended.Startup = startup;
+                extended.Startup.cb = Marshal.SizeOf(typeof(StartupInformationEx));
+                extended.Startup.dwFlags = 0x100; // STARTF_USESTDHANDLES.
+                extended.Startup.hStdInput = stdin;
+                extended.Startup.hStdOutput = stdout;
+                extended.Startup.hStdError = stderr;
+                extended.Attributes = attributes;
+                Console.WriteLine("WINDOWS_UPGRADE_NATIVE_CAPTURE {\"handles\":3,\"explicitHandleList\":true,\"rustBacktrace\":true}");
+                if (!CreateProcessAsUserW(primaryToken, exe, command, IntPtr.Zero, IntPtr.Zero, true,
+                    CreateSuspended | CreateUnicodeEnvironment | ExtendedStartupInfoPresent, launchEnvironment, cwd, ref extended, out child))
                     throw Win32Failure("CREATE_AS_USER_SUSPENDED_PRODUCTION_PROCESS");
             }
             else if (!CreateProcessWithTokenW(primaryToken, LogonWithProfile, exe, command,
@@ -225,6 +266,11 @@ public static class UpgradeProbeLauncher
             Close(child.hThread);
             Close(child.hProcess);
             if (desktopName != IntPtr.Zero) Marshal.FreeHGlobal(desktopName);
+            if (attributesInitialized) DeleteProcThreadAttributeList(attributes);
+            if (handleList != IntPtr.Zero) Marshal.FreeHGlobal(handleList);
+            if (attributes != IntPtr.Zero) Marshal.FreeHGlobal(attributes);
+            if (security != IntPtr.Zero) Marshal.FreeHGlobal(security);
+            CloseFile(stdin); CloseFile(stdout); CloseFile(stderr);
             if (launchEnvironment != IntPtr.Zero)
             {
                 for (int i = 0; i < launchEnvironmentChars; i++) Marshal.WriteInt16(launchEnvironment, i * 2, 0);
@@ -663,6 +709,17 @@ public static class UpgradeProbeLauncher
     }
 
     private static void Close(IntPtr handle) { if (handle != IntPtr.Zero) CloseHandle(handle); }
+    private static void CloseFile(IntPtr handle) { if (handle != IntPtr.Zero && handle != new IntPtr(-1)) CloseHandle(handle); }
+    private static void RequireValidFileHandle(IntPtr handle, string reason)
+    {
+        if (handle == IntPtr.Zero || handle == new IntPtr(-1)) throw Win32Failure(reason);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SecurityAttributes { internal int Length; internal IntPtr Descriptor; internal int Inherit; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct StartupInformationEx { internal StartupInformation Startup; internal IntPtr Attributes; }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SidAndAttributes { internal IntPtr Sid; internal uint Attributes; }
@@ -697,6 +754,12 @@ public static class UpgradeProbeLauncher
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess,
         out IntPtr target, uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint options);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool InitializeProcThreadAttributeList(IntPtr list, int count, uint flags, ref IntPtr size);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UpdateProcThreadAttribute(IntPtr list, uint flags, IntPtr attribute,
+        IntPtr value, IntPtr size, IntPtr previous, IntPtr returnedSize);
+    [DllImport("kernel32.dll")] private static extern void DeleteProcThreadAttributeList(IntPtr list);
     [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetProcessWindowStation();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetThreadDesktop(uint thread);
@@ -753,5 +816,5 @@ public static class UpgradeProbeLauncher
     private static extern bool CreateProcessAsUserW(IntPtr token, string applicationName, StringBuilder commandLine,
         IntPtr processAttributes, IntPtr threadAttributes, [MarshalAs(UnmanagedType.Bool)] bool inheritHandles,
         uint creationFlags, IntPtr environment, string currentDirectory,
-        ref StartupInformation startup, out ProcessInformation process);
+        ref StartupInformationEx startup, out ProcessInformation process);
 }

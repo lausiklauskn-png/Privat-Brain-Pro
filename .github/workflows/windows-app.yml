@@ -52,6 +52,18 @@ jobs:
           Add-Type -Path (Join-Path (Get-Location) 'windows/pruefung/upgrade-launcher.cs')
           [UpgradeProbeLauncher]::Preflight()
           Write-Output 'PASS CI-only medium-integrity launcher compiles and its unchanged-user context is valid'
+      - name: Unveränderten veröffentlichten .29-Installer vor dem App-Bau starten
+        timeout-minutes: 8
+        run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File windows/pruefung/legacy-startup.ps1
+        env:
+          PB_SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-legacy-startup
+          path: windows/pruef-out/legacy-startup/
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Gemeinsamer Kern auf dem Windows-Dateisystem
         run: node windows/engine/test.mjs
       - name: Eigene Windows-Laufzeit ohne zusätzliche Nutzerinstallation
