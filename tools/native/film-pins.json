@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "quelle": "https://lausiklauskn-png.github.io/Family-Projekt.de-Video/",
+  "hinweis": "Nur zum Bau: das Anleitungsvideo kommt fest in APK und Windows-App (Klaus 2026-10-25). Werte aus videos.json von Family-Projekt.de-Video; ändert sich das Video dort, hier neu eintragen.",
+  "filme": [
+    {
+      "id": "private-brain-pro-handbuch",
+      "datei": "private-brain-pro-handbuch.mp4",
+      "type": "video/mp4",
+      "dauer": 223,
+      "groesse": 42109427,
+      "sha256": "e38a44a5f1e779cfef97e27fa76443902f0bf627759c92adb67bccd0dcdcf3e8",
+      "teile": [
+        {
+          "groesse": 2000000,
+          "sha256": "71700f43d85fb26c765a6481ecb4212efd15a0d5f413fa6c2eddc7f4d8ae531d"
+        },
+        {
+          "groesse": 4000000,
+          "sha256": "a70db1c4a596504485391c2bfcabd124a5f442be18e6d896afb827ea968a7c43"
+        },
+        {
+          "groesse": 8000000,
+          "sha256": "c7e0e4b8f2861e0f3959fdcef8345cb66843a141c1345b35d2009bc101cf4263"
+        },
+        {
+          "groesse": 14000000,
+          "sha256": "df79dd68708d1c838da1782a555615f5684cd87ea5c915d99f5e153d5a9cf01e"
+        },
+        {
+          "groesse": 14000000,
+          "sha256": "dafb5b33ce97fc6524146caf095ad44b2c82ee85b0885486454e1a6f44411c63"
+        },
+        {
+          "groesse": 109427,
+          "sha256": "1b4c660232306b9cb47242162abaa6c2aacabd166bb575f921e364a62baf337c"
+        }
+      ],
+      "vorschau": {
+        "pfad": "videos/private-brain-pro-handbuch/vorschau.jpg",
+        "groesse": 61777,
+        "sha256": "5e512131f5b0af0c7415ded066fa30a920e2ddfcbe17cdaf37a89a36c29409e0"
+      }
+    }
+  ]
+}

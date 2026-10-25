@@ -1,6 +1,6 @@
 // Browser/PWA delivery of the already prepared Pro interface. Native builds do
 // not run this step. The original manifest identity and user stores stay intact.
-import {readFile,writeFile,cp,readdir,lstat} from 'node:fs/promises';
+import {readFile,writeFile,cp,readdir,lstat,rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {join,resolve,sep} from 'node:path';
@@ -158,6 +158,8 @@ export async function preparePages(directory=join(ROOT,'www')){
   const manifestBytes=await readFile(join(ROOT,'app-manifest.json'));
   const manifest=JSON.parse(manifestBytes);
   if(manifest.start_url!=='./index.html'||manifest.scope!=='./'||Object.hasOwn(manifest,'id'))throw Error('Review the original PWA identity before changing Pages');
+  // Das fest eingebaute Anleitungsvideo gehört nur in APK/Windows; die PWA streamt es von der Videoseite.
+  await rm(join(dir,'filme'),{recursive:true,force:true});
   const input=await filesIn(dir);
   const fingerprints=[];
   for(const path of input){if(path.startsWith('.')||path.split('/').some(part=>['.git','node_modules'].includes(part)))throw Error('Nonpublic Pages input');fingerprints.push([path,digest(await readFile(join(dir,path)))]);}
