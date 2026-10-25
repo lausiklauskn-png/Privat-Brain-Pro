@@ -1,5 +1,13 @@
 # Eigenständiger Designumbau · 24.10.2026
 
+**Aktuell: Android und Windows 1.0.37 sowie die gebaute PWA sind veröffentlicht.**
+[Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) · [PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
+Gemeinsame Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`, [übernommener PR #85](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/85).
+[Startdarstellung und Grenzen](STARTDARSTELLUNG-37.md), [Android](android-1.0.37-pruefung.json),
+[Windows](windows-1.0.37-pruefung.json), [PWA](pwa-1.0.37-pruefung.json).
+
+## Vorheriger Stand 1.0.36
+
 **Android und Windows 1.0.36 sind veröffentlicht:** [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
 Gemeinsame Quelle: `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, [übernommener PR #82](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/82).
 

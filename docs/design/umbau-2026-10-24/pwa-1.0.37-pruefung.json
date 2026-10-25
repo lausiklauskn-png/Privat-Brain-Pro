@@ -1,0 +1,75 @@
+{
+  "version": "1.0.37",
+  "source_commit": "015c9a1266a64f44a1896ead56349094c64e2f9a",
+  "page_url": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/",
+  "generation_hash": "691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44",
+  "public_build_proof": {
+    "schema": 1,
+    "verified": true,
+    "pageUrl": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/",
+    "sourceCommit": "015c9a1266a64f44a1896ead56349094c64e2f9a",
+    "build": "691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44",
+    "expectedSha256": {
+      "index.html": "08833ad54adb64b83e45058397d3d1a03245e53b76c0a93d9bba1a9dfd4c385d",
+      "sw.js": "c39235e6dba1bd4e0421204134554b1902078861031de30e30bf27ea5b5e33fe",
+      "app-manifest.json": "ee389fb7c3aaa9684d2c1195bbdf7636435555302ac5d07e18379c944471582d",
+      "pwa-build.json": "213d9dd53f33bf1b4994d217e5ffaf24516b13490d389fb9ac82ab52074ae379"
+    },
+    "attempts": [
+      {
+        "attempt": 1,
+        "files": {
+          "index.html": {
+            "url": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/index.html?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "finalUrl": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/index.html?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "expectedSha256": "08833ad54adb64b83e45058397d3d1a03245e53b76c0a93d9bba1a9dfd4c385d",
+            "actualSha256": "08833ad54adb64b83e45058397d3d1a03245e53b76c0a93d9bba1a9dfd4c385d",
+            "bytes": 264848,
+            "matches": true
+          },
+          "sw.js": {
+            "url": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/sw.js?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "finalUrl": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/sw.js?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "expectedSha256": "c39235e6dba1bd4e0421204134554b1902078861031de30e30bf27ea5b5e33fe",
+            "actualSha256": "c39235e6dba1bd4e0421204134554b1902078861031de30e30bf27ea5b5e33fe",
+            "bytes": 41158,
+            "matches": true
+          },
+          "app-manifest.json": {
+            "url": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/app-manifest.json?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "finalUrl": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/app-manifest.json?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "expectedSha256": "ee389fb7c3aaa9684d2c1195bbdf7636435555302ac5d07e18379c944471582d",
+            "actualSha256": "ee389fb7c3aaa9684d2c1195bbdf7636435555302ac5d07e18379c944471582d",
+            "bytes": 926,
+            "matches": true
+          },
+          "pwa-build.json": {
+            "url": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/pwa-build.json?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "finalUrl": "https://lausiklauskn-png.github.io/Privat-Brain-Pro/pwa-build.json?pb-verify=691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44&attempt=1",
+            "expectedSha256": "213d9dd53f33bf1b4994d217e5ffaf24516b13490d389fb9ac82ab52074ae379",
+            "actualSha256": "213d9dd53f33bf1b4994d217e5ffaf24516b13490d389fb9ac82ab52074ae379",
+            "bytes": 41899,
+            "matches": true
+          }
+        },
+        "errors": [],
+        "generationMatches": true
+      }
+    ],
+    "verifiedAt": "2026-10-25T18:49:14.120266Z"
+  },
+  "main_pages_run": "40222186331",
+  "main_pages_deploy_job": "121258534134",
+  "public_proof_canonical_sha256": "371c8762484f66f6bfeb9ecf298f3e743bf8d8a95faa090fa968481a98909cba",
+  "public_bytes_verified_in_ci": true,
+  "local_public_download": false,
+  "native_index_sha256": "7ede3ac7f11e90ca9242bfca60918742cbe0cc3c8002d27b1d6d58a909fd18ed",
+  "pwa_index_sha256": "08833ad54adb64b83e45058397d3d1a03245e53b76c0a93d9bba1a9dfd4c385d",
+  "source_check_mode": "branch-legacy-transition",
+  "source_checks": 13,
+  "post_windows_publication_checks": 15,
+  "final_source_publication_checks": 18,
+  "verification_scope": "Four actual unauthenticated HTTPS public GET byte digests and HTML/receipt generation verified in the successful same-source Pages deploy job; complete printed JSON matches the saved proof and actual standalone log marker. This finalizer neither downloads nor executes the hosted PWA. Native and PWA HTML are different prepared bytes; the PWA identity is unchanged and its version is a generation hash.",
+  "physical_samsung_dex_tested": false,
+  "physical_tab_s6_speed_measured": false
+}

@@ -1,4 +1,16 @@
-# Aktueller Windows-Installer 1.0.36
+# Aktueller Windows-Installer 1.0.37
+
+[Windows 1.0.37 herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe). Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`,
+58.666.944 Bytes, SHA-256 `8452d322b2ebbbc8ef9de11ab548a61f0e129d94503354812db1abdc4ca4b71a`. Unsigniertes Setup wie bisher;
+die echte Aktualisierung 1.0.36 → 1.0.37 ist mit erhaltenen Daten geprüft.
+[Prüfstand](BAUSTAND-WINDOWS.md), [Downloadnachweis](design/umbau-2026-10-24/windows-1.0.37-pruefung.json).
+[PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/) verwendet die Browserfunktionen; direkte
+Geräte-Mail gehört zur nativen App. Das Geschenk-ZIP unten bleibt die historische
+.29-Ausgabe. Kein aktualisiertes 1.0.37-ZIP wird behauptet.
+
+---
+
+# Historischer Windows-Installer 1.0.36
 
 [Windows 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
 Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, 58.666.597 Bytes, SHA-256 `138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091`.

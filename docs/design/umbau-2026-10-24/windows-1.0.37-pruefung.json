@@ -1,0 +1,192 @@
+{
+  "version": "1.0.37",
+  "prerelease": false,
+  "source_commit": "015c9a1266a64f44a1896ead56349094c64e2f9a",
+  "windows_acceptance_run": "40222186337",
+  "release_run": "40224745892",
+  "tag": "windows-v1.0.37",
+  "installer": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe",
+  "bytes": 58666944,
+  "sha256": "8452d322b2ebbbc8ef9de11ab548a61f0e129d94503354812db1abdc4ca4b71a",
+  "independent_download": true,
+  "public_asset_digests_match": [
+    "Private-Brain-Pro-Windows-1.0.37-x64-setup.exe",
+    "SHA256SUMS",
+    "windows-build.json",
+    "shared-source.json"
+  ],
+  "published_checksums_match": [
+    "Private-Brain-Pro-Windows-1.0.37-x64-setup.exe",
+    "shared-source.json",
+    "windows-build.json"
+  ],
+  "release_tag_and_target_match_source": true,
+  "build_and_source_commit_match": true,
+  "architecture": "x64",
+  "signing": "unsigned",
+  "test_endpoint": false,
+  "source_identifier": "de.familyprojekt.privatebrain.pro",
+  "install_mode": "currentUser",
+  "all_five_windows_version_files_match": true,
+  "android_version_matches": true,
+  "shared_sources_count": 24,
+  "shared_dependencies_count": 5,
+  "shared_sources_original_and_generated_fingerprints_match": true,
+  "shared_sources_byte_identical_count": 14,
+  "shared_sources_adapted_count": 10,
+  "shared_source_verification_scope": "Original source bytes and all generated Java fingerprints independently reconstructed from the exact commit, including explicit platform adapters and extracted entries/routes; no requirement that adapted sources be byte-identical.",
+  "first_paint_source_configuration_checked": true,
+  "first_paint_source_files": [
+    {
+      "path": "tools/native/prepare-web.mjs",
+      "sha256": "8fa460707892d921cc103e27ad1c2a88fb5ad6ca58fb2676eb8647f4ae1ed3de"
+    },
+    {
+      "path": "tools/native/prerender-shell.mjs",
+      "sha256": "9da4ead775164b225eb5f8d05d0f9341d83bb449ea447dfda6d4879a481257a2"
+    },
+    {
+      "path": "native/native-theme-early.js",
+      "sha256": "48b310525cc1626f72c075bae6758eba3faa7fdd92b749ffb49fc970476a1277"
+    },
+    {
+      "path": "native/native.css",
+      "sha256": "5673d1cf99e5a616cd935cc9cf7da94b565764da69fbdcc8aa26f98409764695"
+    }
+  ],
+  "packaged_first_paint_bytes_locally_verified": false,
+  "first_paint_verification_scope": "The exact release source configures prerendering and inline early-theme initialization. This verifier does not extract the NSIS UI payload or execute the installer; packaged first-frame behavior and the genuine .36-to-.37 data upgrade require separate Windows CI evidence.",
+  "local_authenticode_verified": false,
+  "local_installer_execution": false,
+  "installer_verification_scope": "Independent public EXE and metadata byte digests and immutable source mapping. Unsigned production/no-test-endpoint metadata are checked; Windows CI must separately prove actual installation, .36-to-.37 data upgrade, process behavior and Authenticode NotSigned.",
+  "pull_request": 85,
+  "public_stable_release": true,
+  "github_prerelease": false,
+  "completion_metadata_verified": true,
+  "main_checks_mode": "branch-legacy-transition",
+  "normal_main_checks_passed": 13,
+  "main_checks_passed": 13,
+  "main_post_release_check_runs_passed": 18,
+  "windows_dispatch_check_passed": false,
+  "windows_dispatch_check_present_in_app_source": false,
+  "windows_publication_check_runs_passed": 2,
+  "windows_publication_check_run_ids": [
+    "121263625158",
+    "121263688060"
+  ],
+  "windows_publication_check_suite_id": "109022120985",
+  "post_windows_publication_check_runs_passed": 15,
+  "android_publication_check_runs_passed": 3,
+  "android_publication_check_run_ids": [
+    "121264703313",
+    "121267493238",
+    "121268027864"
+  ],
+  "android_publication_check_suite_id": "109023061466",
+  "main_android_run": "40222186336",
+  "main_windows_run": "40222186337",
+  "main_signing_run": "40222186327",
+  "main_pages_run": "40222186331",
+  "main_android_native_job": "121255957083",
+  "main_validate_job": "121255956911",
+  "main_windows_job": "121255957350",
+  "native_tests": {
+    "executed": 60,
+    "failed": 0,
+    "skipped": 0
+  },
+  "first_paint_browser_checks": 38,
+  "release_jobs_succeeded": true,
+  "release_jobs": {
+    "pruefen": "121263625158",
+    "veroeffentlichen": "121263688060"
+  },
+  "release_published_at": "2026-10-25T19:10:46Z",
+  "completion_public_verification_sha256": "4de81191ea82b965ae9e37f789f689f67cbbc086f641504c9054398839ca3ea1",
+  "same_source_public_pwa_verified_in_ci": true,
+  "pwa_generation": "691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44",
+  "completion_metadata_scope": "Actual saved raw GitHub runs/jobs/checks, CI markers and independently verified native public downloads; hosted PWA bytes checked by unauthenticated public HTTPS requests in its real Pages deployment job. Local finalizer makes no network or signature/installer execution claim.",
+  "physical_samsung_dex_tested": false,
+  "physical_tab_s6_speed_measured": false,
+  "separate_branch_dispatchers": {
+    "windows": {
+      "run": "40224725312",
+      "job": "121263562170",
+      "check_run_id": "121263562170",
+      "check_suite_id": "109022067914",
+      "head_sha": "92076cc6a6803841448a31bd8c4c4463f74bc917",
+      "branch": "release-request/windows37-v2",
+      "template_sha256": "3e085e32b8d7fafd91b9765f9823d0354e11b79b0bc4705364cf69c91d1e7d0e",
+      "executed_helper_sha256": "d106fadab51ed6df76b790d536ea43432e9cdb44431915bc7dc25ff6cbff34b8",
+      "helper_git_blob_sha": "94c8e98ec6ad5411915e2168263481236e2d8bbc",
+      "parent_dag_added_file_verified": true,
+      "app_compare_api_verified": true,
+      "intent": {
+        "dispatcher_branch": "release-request/windows37-v2",
+        "dispatcher_commit": "92076cc6a6803841448a31bd8c4c4463f74bc917",
+        "dispatcher_ref": "refs/heads/release-request/windows37-v2",
+        "dispatcher_run_id": "40224725312",
+        "helper_path": ".github/workflows/windows-preview37-request-branch.yml",
+        "release_tag": "windows-v1.0.37",
+        "source_checks_mode": "legacy-transition",
+        "source_checks_sha256": "6580c555a6dc9ef554b1769d4a526f9f99c316195e889c41143dfbd7605ebe61",
+        "source_commit": "015c9a1266a64f44a1896ead56349094c64e2f9a",
+        "state": "intent recorded before request; acceptance is not yet confirmed",
+        "target_workflow_ref": "main",
+        "windows_acceptance_run": "40222186337"
+      },
+      "actual_target_release_run": "40224745892",
+      "release_run_created_before_dispatch_job_finished": true,
+      "scope": "Actual raw commit parents/files and exact approved helper blobs; optional compare API responses only when supplied. Successful separate push run/jobs/full printed public intent; dispatch API run creation may complete after its requesting job. CI-recorded raw-check digest retained without claiming byte equality to reformatted local API JSON."
+    },
+    "android": {
+      "run": "40225079643",
+      "job": "121264625875",
+      "check_run_id": "121264625875",
+      "check_suite_id": "109022996873",
+      "head_sha": "dca28c5c4c3ca2afa91ceb4ed0ec2e43ee1d0efe",
+      "branch": "release-request/android37",
+      "template_sha256": "ce7672305526c1f91ae6d0a0ccaca340b3a34f7953f4ba3f607ffac6b44be7f9",
+      "executed_helper_sha256": "dd042112aac42face0b3c31d8c2dc479d479eff3afddd181a151616d8cbe716a",
+      "helper_git_blob_sha": "9bd68c518ee1fb7a4c502f4a9a8ac3dfcd15d22b",
+      "parent_dag_added_file_verified": true,
+      "app_compare_api_verified": true,
+      "intent": {
+        "dispatcher_branch": "release-request/android37",
+        "dispatcher_commit": "dca28c5c4c3ca2afa91ceb4ed0ec2e43ee1d0efe",
+        "dispatcher_ref": "refs/heads/release-request/android37",
+        "dispatcher_run_id": "40225079643",
+        "helper_path": ".github/workflows/android-preview37-request-branch.yml",
+        "release_tag": "v1.0.37",
+        "source_checks_mode": "legacy-transition",
+        "source_checks_sha256": "ba6978dd489c9975e5c40312ca668260a3f13c50ee9781b99d1362b7b99d78bf",
+        "source_commit": "015c9a1266a64f44a1896ead56349094c64e2f9a",
+        "state": "intent recorded before request; acceptance is not yet confirmed",
+        "target_workflow_ref": "main",
+        "windows_dispatcher_commit": "92076cc6a6803841448a31bd8c4c4463f74bc917",
+        "windows_helper_path": ".github/workflows/windows-preview37-request-branch.yml",
+        "windows_release_check_run_ids": [
+          121263625158,
+          121263688060
+        ],
+        "windows_release_check_suite_id": 109022120985,
+        "windows_release_run_id": 40224745892
+      },
+      "actual_target_release_run": "40225104221",
+      "release_run_created_before_dispatch_job_finished": true,
+      "scope": "Actual raw commit parents/files and exact approved helper blobs; optional compare API responses only when supplied. Successful separate push run/jobs/full printed public intent; dispatch API run creation may complete after its requesting job. CI-recorded raw-check digest retained without claiming byte equality to reformatted local API JSON.",
+      "windows_to_android_compare_api_verified": true
+    }
+  },
+  "installer_upgrade": {
+    "from": "1.0.36",
+    "to": "1.0.37",
+    "seed": true,
+    "verify": true,
+    "verify_unlock": true,
+    "same_data_path": true,
+    "profile_override": false,
+    "production_binaries": true,
+    "old_installer_sha256": "138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091"
+  }
+}

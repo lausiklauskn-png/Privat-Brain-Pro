@@ -1,6 +1,12 @@
 # So veröffentlicht jede Sitzung (Claude oder Codex)
 
-Stand: 2026-10-25. Die öffentliche Version 1.0.36 aktualisiert die bestehende
+Android und Windows 1.0.37 sind veröffentlicht. Die gebaute PWA ist unter
+[PWA öffnen](https://lausiklauskn-png.github.io/Privat-Brain-Pro/) erreichbar; der Pages-Workflow muss das vorbereitete
+`www` veröffentlichen. Seine vier öffentlichen Kontroll-Dateien werden erst nach
+Deployment gegen die Build-Hashes und dieselbe Generation geprüft. Eine erfolgreiche
+Deployment-API-Antwort allein ist kein Inhaltsnachweis. [Aktueller Nachweis](design/umbau-2026-10-24/pwa-1.0.37-pruefung.json).
+
+Stand: 2026-10-25. Die öffentliche Version 1.0.37 aktualisiert die bestehende
 App. Die technische Kennung `de.familyprojekt.privatebrain.pro.preview` und genau
 der bisherige Signierer bleiben erhalten. [Historische Schlüsselwiederherstellung](UEBERGABE-VORSCHAU-17.md).
 
@@ -33,7 +39,7 @@ Die drei Workflowkanäle sind getrennt zu behandeln:
 
 | Kanal | Zweck und Identität |
 |---|---|
-| `public` | Öffentliches stabiles Update der vorhandenen `.preview`-App, ursprünglicher Signierer, Tag wie `v1.0.36`, GitHub `prerelease=false`, signierte Updateprobe verpflichtend. Build/Signierung in `android-preview`; erst Publish wird in `android-production` freigegeben. |
+| `public` | Öffentliches stabiles Update der vorhandenen `.preview`-App, ursprünglicher Signierer, Tag wie `v1.0.37`, GitHub `prerelease=false`, signierte Updateprobe verpflichtend. Build/Signierung in `android-preview`; erst Publish wird in `android-production` freigegeben. |
 | `test` | Historische Prereleaseausgaben derselben App mit `v…-preview.N`; ursprünglicher Signierer und signierte Updateprobe, Umgebung `android-preview`. |
 | `stable` | Separates `.pro`-Produktionspaket mit anderer Kennung und eigener geprüfter Identität; kein Update der vorhandenen App. Seine Signierkonfiguration wird durch den Originalschlüssel für `public` nicht bereitgestellt. |
 
@@ -48,7 +54,7 @@ veröffentlichte App heißt Private Brain Pro und hat keinen Probeversionszusatz
 3. Die fachlichen Prüfungen desselben tatsächlichen main-Quellstands erfolgreich
    abschließen. Keine Tags auf einen ungeprüften oder anderen Quellstand verschieben.
 4. **Signierte Android-Veröffentlichung** auf `main` mit `channel=public`, dem zur
-   `versionName` passenden neuen Tag (z. B. `v1.0.36`) und dem geprüften vollständigen
+   `versionName` passenden neuen Tag (z. B. `v1.0.37`) und dem geprüften vollständigen
    `source_commit` starten. `dry_run=true` erzeugt nur einen prüfbaren Bau.
 5. APK-Signatur, ursprüngliche Identität, steigenden VersionCode und echte signierte
    Überinstallation ohne Deinstallation bestehen lassen. Erst danach den getrennten

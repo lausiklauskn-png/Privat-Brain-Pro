@@ -1,7 +1,8 @@
 # Neue Oberfläche ab dem ersten sichtbaren Bild
 
-Stand 25.10.2026: Umsetzung und Prüfungen für 1.0.37 laufen. Die bisherige
-öffentliche Android-/Windows-Version 1.0.36 bleibt unverändert verfügbar.
+Stand 25.10.2026: **Android und Windows 1.0.37 sowie die gebaute PWA sind veröffentlicht.**
+[Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) · [PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
+Die vorherige 1.0.36 und ihre Nachweise bleiben unverändert erhalten.
 
 Klaus meldet, dass beim Öffnen kurz die alte Oberfläche erscheint, bevor die
 neue darüber aufgebaut wird. Der Fehler ist im Browser nachgestellt: Beim
@@ -43,6 +44,18 @@ Vorhandene Bedienungs-, Plattform- und installierte Updateprüfungen bleiben nö
 
 Windows wird mit dem echten öffentlichen Installer 1.0.36 auf 1.0.37 aktualisiert;
 Android behält Paketkennung, ursprünglichen Signierer und Versionsfortschritt.
-CI-Läufe, Veröffentlichungen und öffentliche Downloadbelege werden erst nach
-ihrem tatsächlichen Abschluss ergänzt. Physisches Samsung DeX und Klaus' Tab S6
-sind damit noch nicht direkt vermessen.
+13 reguläre main-Checks; die Anforderung erfolgte separat auf geprüften Dispatcherbranches (13 tatsächliche Sourcechecks; bestätigter Legacy-Übergang); zwei Windows-Veröffentlichungschecks sind getrennt gebunden.
+60 native Fälle ohne Fehler/Skips und 38 Start-/Übernahmeprüfungen
+sind erfolgreich. Android-Release [40225104221](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40225104221), Windows-Release
+[40224745892](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40224745892); Android: signierte Updateprobe mit Seed/Baseline/Verify bestanden;
+Windows: echte Aktualisierung 1.0.36 → 1.0.37 bestanden.
+Die öffentlichen APK-/Setup-Bytes wurden unabhängig heruntergeladen und geprüft.
+Der [Pages-Deployjob](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186331/job/121258534134) bestätigt vier tatsächlich ausgelieferte
+PWA-Dateien gegen die geprüften Hashes, Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a` und dieselbe Generation
+`691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44`. Native HTML-Prüfsumme `7ede3ac7f11e90ca9242bfca60918742cbe0cc3c8002d27b1d6d58a909fd18ed`
+und vorbereitete PWA-HTML-Prüfsumme `08833ad54adb64b83e45058397d3d1a03245e53b76c0a93d9bba1a9dfd4c385d`
+sind ausdrücklich getrennte Belege.
+
+[Android](android-1.0.37-pruefung.json), [Windows](windows-1.0.37-pruefung.json),
+[PWA](pwa-1.0.37-pruefung.json). Physisches Samsung DeX und Klaus' Tab S6 sowie
+reale Gerätegeschwindigkeit sind damit noch nicht direkt vermessen.
