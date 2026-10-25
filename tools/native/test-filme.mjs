@@ -66,7 +66,8 @@ try{
   ok('A damaged part is not played; the message says so',!(await page.locator('.pb-filme video').count()));
   broken=false;
   await page.click('.pb-filme .primary:has-text("Schließen")');
-  ok('Closing removes the dialog',await page.locator('.pb-filme').count()===0);
+  // Das close-Ereignis des Dialogs kommt asynchron; erst danach ist das Fenster entfernt.
+  ok('Closing removes the dialog',await page.waitForFunction(()=>!document.querySelector('.pb-filme'),null,{timeout:5000}).then(()=>true,()=>false));
   ok('No unhandled page errors',errors.length===0||console.log(errors));
   await ctx.close();
   // Browserfassung: derselbe Ursprung wie die Videoseite → deren Spieler streamt im Fenster.
