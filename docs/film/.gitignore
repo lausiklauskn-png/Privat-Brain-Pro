@@ -1,0 +1,11 @@
+# Arbeitsdateien und fremde Medien, nie ins Repo (Musik, Bilder, Bilder je Film-Bild, Ergebnis)
+bilder
+assets
+fp/
+musik/
+_roh/
+stand/
+*.mp4
+*.m4a
+*.wav
+toene*.json

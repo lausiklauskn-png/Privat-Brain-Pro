@@ -29,6 +29,16 @@ for(const t of T.tipp)add(t,.08,(x)=>Math.sin(2*Math.PI*2400*x)*Math.exp(-90*x),
 const buf=Buffer.alloc(44+N*4);buf.write('RIFF',0);buf.writeUInt32LE(36+N*4,4);buf.write('WAVEfmt ',8);buf.writeUInt32LE(16,16);buf.writeUInt16LE(1,20);buf.writeUInt16LE(2,22);buf.writeUInt32LE(SR,24);buf.writeUInt32LE(SR*4,28);buf.writeUInt16LE(4,32);buf.writeUInt16LE(16,34);buf.write('data',36);buf.writeUInt32LE(N*4,40);
 for(let i=0;i<N;i++){buf.writeInt16LE(Math.max(-32767,Math.min(32767,Math.round(L[i]*32767*.8))),44+i*4);buf.writeInt16LE(Math.max(-32767,Math.min(32767,Math.round(R[i]*32767*.8))),46+i*4);}
 writeFileSync(join(here,'effekte.wav'),buf);
+// One version per film (Klaus 2026-10-25): the timeline is unchanged, so the finished soundtrack of the previous film
+// (DJ mix + effects, time-locked to the same timeline) can be laid under the new pictures:
+//   node mix.mjs --ton=/pfad/alter-film.mp4 [--ziel=…]
+if (arg('ton')) {
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '30', '-i', join(here, '_roh', 'b%05d.jpg'), '-i', arg('ton'),
+    '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', arg('crf') || '20', '-profile:v', 'high', '-level', '4.1', '-pix_fmt', 'yuv420p',
+    '-r', '30', '-movflags', '+faststart', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-t', String(DAUER), join(here, arg('ziel') || 'private-brain-pro-film.mp4')], { stdio: 'inherit' });
+  console.log('fertig (mit vorhandener Tonspur):', join(here, arg('ziel') || 'private-brain-pro-film.mp4'));
+  process.exit(0);
+}
 // DJ mix (Klaus 2026-10-23): Family Projekt (F major, 128 BPM) carries the film; "Risk" from the security film (E major,
 // 117.5 BPM) is lifted one semitone and sped up to 128, "Friends" from the Workflow PDF film (C major, 112.3 BPM) is
 // sped up to 128 (C is a neighbour key of F). Cross-fades over two bars; Family Projekt footage stays on its own music.

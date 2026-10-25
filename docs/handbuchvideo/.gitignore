@@ -1,0 +1,6 @@
+# Arbeitsdateien, Musik und Ergebnis nie ins Repo
+_roh/
+*.mp4
+*.wav
+*.m4a
+*.mp3

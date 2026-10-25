@@ -4,7 +4,13 @@
 import fs from 'node:fs'; import path from 'node:path'; import { execFileSync } from 'node:child_process'; import { fileURLToPath } from 'node:url';
 const HIER = path.dirname(fileURLToPath(import.meta.url)), NAME = process.argv[2] || 'probe', ROH = path.join(HIER, '_roh', NAME);
 const MUSIK = process.env.MUSIK && fs.existsSync(process.env.MUSIK) ? process.env.MUSIK : null;
-const Z = JSON.parse(fs.readFileSync(path.join(ROH, 'zeiten.json'), 'utf8')), b = Z.bilder, t0 = b[0].t;
+const Z = JSON.parse(fs.readFileSync(path.join(ROH, 'zeiten.json'), 'utf8'));
+// Zeitspannen ohne Aufnahme (z. B. das Warten aufs Einlesen) herausschneiden: alle Zeiten danach rücken nach vorn
+const S = (Z.schnitte || []).filter(([a, e]) => e > a).sort((x, y) => x[0] - y[0]);
+const zieh = t => { let d = 0; for (const [a, e] of S) { if (t >= e) d += e - a; else if (t > a) d += t - a; } return t - d; };
+for (const x of Z.bilder) x.t = zieh(x.t);
+Z.klicks = (Z.klicks || []).map(zieh); Z.puzzle = (Z.puzzle || []).map(zieh);
+const b = Z.bilder, t0 = b[0].t;
 const dauer = b[b.length - 1].t - t0 + 0.04, liste = [];
 b.forEach((x, i) => liste.push(`file '${path.join(ROH, 'bilder', x.datei)}'`, `duration ${Math.max(0.001, i + 1 < b.length ? b[i + 1].t - x.t : 0.04).toFixed(4)}`));
 liste.push(`file '${path.join(ROH, 'bilder', b[b.length - 1].datei)}'`); fs.writeFileSync(path.join(ROH, 'liste.txt'), liste.join('\n'));

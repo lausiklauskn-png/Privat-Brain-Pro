@@ -10,7 +10,7 @@ const server=createServer(async(req,res)=>{const p=resolve(root,'.'+new URL(req.
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url=`http://127.0.0.1:${server.address().port}/`;
 const browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM,args:['--no-sandbox']});
-const W=+process.env.W||1440,H=+process.env.H||900;
+const W=+process.env.W||1440,H=+process.env.H||810;   // the film shows every screen at 1440×810
 const page=await browser.newPage({viewport:{width:W,height:H},deviceScaleFactor:1.5});
 page.on('dialog',d=>d.dismiss());
 await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
@@ -21,8 +21,16 @@ await page.addInitScript(()=>{
     ['Ihre Rechnung Oktober','Stadtwerke Musterstadt',1],['Termin bestätigt: Zahnarzt Dr. Weiß','Praxis Dr. Weiß',3],['Fotos vom Wochenende 📷','Anna',5],
     ['Ihr Paket ist unterwegs','Paketdienst',8],['Angebot Ferienwohnung Ostsee','Ferienhof Sonnenblick',20],['Protokoll Elternabend','Grundschule am Park',26],
     ['Versicherungsschein 2027','Hausrat Plus',30],['Einladung Grillfest','Familie Berger',50],['Newsletter Oktober','Gartencenter Grün',60]];
+  // Original copies of the example files live "in app storage": the stub serves their real bytes, so the cards show
+  // „Lokale Kopie“ and real previews (Fotos, PDF), never „Original fehlt“. Filled after the catalog is built.
+  const demo=new Map();let ready;window.__demoFiles=demo;window.__demoReady=new Promise(r=>ready=r);window.__demoDone=()=>ready();
+  const b64=u=>{let v='';for(let n=0;n<u.length;n+=8192)v+=String.fromCharCode(...u.subarray(n,n+8192));return btoa(v);};
   window.Capacitor={isNativePlatform:()=>true,Plugins:{
-    ProDevice:{async getInfo(){return{platform:'android',versionName:'1.0.0-preview.28',nativeMail:true};}},
+    ProFiles:{async listOriginals(){await window.__demoReady;return{items:[...demo.keys()]};},
+      async originalInfo({hash}){const f=demo.get(hash);return f?{hash,size:f.bytes.length,name:f.name,type:f.type}:{missing:true};},
+      async readOriginal({hash,offset}){const f=demo.get(hash);return{data:b64(f.bytes.subarray(offset,offset+256*1024))};},
+      async beginImport(){return{ticket:'t',stored:true};},async finishImport(){return{};},async abortImport(){return{};},async appendImport(){return{};}},
+    ProDevice:{async getInfo(){return{platform:'android',versionName:'1.0.0-preview.35',nativeMail:true};}},
     ProNetwork:{async getState(){return{offline:false};},async setOffline({offline}){return{offline};}},
     ProMail:{
       async accounts(){return{items:[acc]};},
@@ -35,9 +43,20 @@ await page.addInitScript(()=>{
 });
 await page.goto(url);
 await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db);
-await page.evaluate(async()=>{
+const BSP=resolve(new URL('.',import.meta.url).pathname,'../handbuchvideo/beispiel');
+const fsx=await import('node:fs');
+const bytes=n=>fsx.readFileSync(join(BSP,n)).toString('base64');
+// two more invented PDFs: the example PDFs with a distinct trailing comment (other fingerprint, reads the same)
+const tail=(n,tag)=>Buffer.concat([fsx.readFileSync(join(BSP,n)),Buffer.from('\n%'+tag+'\n')]).toString('base64');
+const DEMO={'Rechnung-Zahnarzt-2026-09.pdf':bytes('Rechnung-Zahnarzt-2026-09.pdf'),'Preisliste-Sommer.pdf':tail('Mietvertrag-Wohnung.pdf','preisliste'),
+  'Strand-Binz.jpg':bytes('Strand-Binz.jpg'),'Sonnenuntergang.jpg':bytes('Sonnenuntergang.jpg'),'Mietvertrag.pdf':bytes('Mietvertrag-Wohnung.pdf'),
+  'Hausrat-Versicherungsschein.pdf':tail('Rechnung-Zahnarzt-2026-09.pdf','hausrat'),'Einkaufsliste.txt':bytes('Einkaufsliste.txt'),'Rezept-Apfelkuchen.txt':bytes('Rezept-Apfelkuchen.txt')};
+await page.evaluate(async(DEMO)=>{
   const day=864e5;let n=0;
-  const add=async(name,path,extra={})=>{const toks=tokens(name+' '+(extra.snippet||'')+' '+(extra.mailBody||''));const r={hash:await sha256(new TextEncoder().encode(path).buffer),name,path,type:'',ext:name.split('.').pop(),date:Date.now()-(n++)*day*3,size:180000+n*9000,snippet:'',via:'demo',vector:buildVector(toks),tf:termFreq(toks),summary:'',category:'',dirId:null,nameTokens:tokens(name),dupes:[],tags:[],...extra};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);return r;};
+  const add=async(name,path,extra={})=>{const toks=tokens(name+' '+(extra.snippet||'')+' '+(extra.mailBody||''));
+    let buf=new TextEncoder().encode(path).buffer,size=180000+n*9000;
+    if(DEMO[name]){const u=Uint8Array.from(atob(DEMO[name]),c=>c.charCodeAt(0));buf=u.buffer;size=u.length;window.__demoFiles.set(await sha256(u.buffer),{bytes:u,name,type:extra.type||'text/plain'});extra={pruefung:{stand:'sauber'},...extra};}
+    const r={hash:await sha256(buf),name,path,type:'',ext:name.split('.').pop(),date:Date.now()-(n++)*day*3,size,snippet:'',via:'demo',vector:buildVector(toks),tf:termFreq(toks),summary:'',category:'',dirId:null,nameTokens:tokens(name),dupes:[],tags:[],...extra};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);return r;};
   const m=await add('Termin bestätigt: Zahnarzt Dr. Weiß','Mail/Praxis Dr. Weiß/Termin bestätigt',{mail:{from:'Praxis Dr. Weiß <post@example.invalid>',subject:'Termin bestätigt: Zahnarzt Dr. Weiß'},mailBody:'Termin Dienstag 9:30 Zahnarzt Kontrolle Versichertenkarte',snippet:'Wir bestätigen Ihren Termin am Dienstag um 9:30 Uhr.'});
   await add('Rechnung-Zahnarzt-2026-09.pdf','Mail-Anhang/Praxis Dr. Weiß/Rechnung-Zahnarzt-2026-09.pdf',{fromMail:m.hash,type:'application/pdf',snippet:'Rechnung Zahnreinigung und Kontrolle, Betrag 89,40 Euro',pruefung:{stand:'sauber'}});
   const o=await add('Angebot Ferienwohnung Ostsee','Mail/Ferienhof Sonnenblick/Angebot Ferienwohnung',{mail:{from:'Ferienhof Sonnenblick <info@example.invalid>',subject:'Angebot Ferienwohnung Ostsee'},mailBody:'Ferienwohnung Ostsee Meerblick Juli Urlaub',snippet:'Gerne bieten wir Ihnen die Wohnung mit Meerblick an.'});
@@ -48,8 +67,9 @@ await page.evaluate(async()=>{
   await add('Hausrat-Versicherungsschein.pdf','Unterlagen/Versicherung/Hausrat-Versicherungsschein.pdf',{type:'application/pdf',snippet:'Versicherungsschein Hausrat 2027'});
   await add('Einkaufsliste.txt','Notizen/Einkaufsliste.txt',{snippet:'Milch Brot Äpfel Kaffee'});
   await add('Rezept-Apfelkuchen.txt','Notizen/Rezept-Apfelkuchen.txt',{snippet:'Apfelkuchen Rezept Zimt Butter'});
-  rebuildIndex();refreshAll();
-});
+  rebuildIndex();refreshAll();window.__demoDone();
+},DEMO);
+await page.waitForTimeout(1500);
 
 // Every screen is taken twice: the full picture and a "skeleton" with all small parts hidden (cards, bars and
 // panels stay). The film cuts the parts out of these two pictures and lets them fly into place.
@@ -61,7 +81,8 @@ const shot=async name=>{
   await page.screenshot({path:join(out,pre+name+'.png')});
   const info=await page.evaluate(()=>{
     const vw=innerWidth,vh=innerHeight,leafTags=new Set(['BUTTON','INPUT','SELECT','TEXTAREA','IMG','SVG','CANVAS','H1','H2','H3','H4','P','LABEL','A','STRONG','B','SMALL','CODE','LI','SUMMARY','TD','TH']);
-    const vis=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>6&&r.height>6&&r.bottom>0&&r.right>0&&r.top<vh&&r.left<vw&&s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity>0.05;};
+    const seen=e=>{for(let a=e;a&&a!==document.body;a=a.parentElement){const s=getComputedStyle(a);if(+s.opacity<0.05||s.display==='none')return false;}return true;};   // closed menus (opacity 0 on a parent) are not parts
+    const vis=e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>6&&r.height>6&&r.bottom>0&&r.right>0&&r.top<vh&&r.left<vw&&s.visibility!=='hidden'&&s.display!=='none'&&seen(e);};
     const R=e=>{const r=e.getBoundingClientRect();return{x:Math.max(0,r.left),y:Math.max(0,r.top),w:Math.min(vw,r.right)-Math.max(0,r.left),h:Math.min(vh,r.bottom)-Math.max(0,r.top)};};
     const all=[...document.querySelectorAll('body *')].filter(vis);
     const ownText=e=>[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
@@ -70,7 +91,8 @@ const shot=async name=>{
       if(e.closest('dialog:not([open])'))continue;
       let a=e.parentElement,inside=false;while(a){if(chosen.has(a)){inside=true;break;}a=a.parentElement;}
       if(inside)continue;
-      const isLeaf=leafTags.has(e.tagName.toUpperCase())||(ownText(e)&&e.getBoundingClientRect().height<80)||e.classList.contains('chip')||e.classList.contains('pill');
+      const big=['LI','TD'].includes(e.tagName.toUpperCase())&&e.getBoundingClientRect().height>=80;   // a whole result card is built from its own parts
+      const isLeaf=(leafTags.has(e.tagName.toUpperCase())&&!big)||(ownText(e)&&e.getBoundingClientRect().height<80)||e.classList.contains('chip')||e.classList.contains('pill');
       if(isLeaf){const r=R(e);if(r.w*r.h>80&&r.w<vw*0.98){chosen.add(e);leaves.push({...r,tag:e.tagName.toLowerCase(),text:(e.innerText||e.value||e.placeholder||'').trim().slice(0,40)});}}
     }
     const containers=[];
@@ -97,6 +119,7 @@ const shot=async name=>{
 // 1 search
 await page.locator('[data-tab="search"]').click();
 await page.fill('#q','Rechnung vom Zahnarzt');await page.press('#q','Enter');
+console.log('Ziele Suche',JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll('#mode button,#mode [role=switch],#mode label,#mic,#q')].map(e=>{const b=e.getBoundingClientRect();return[e.id||e.textContent.trim().slice(0,20),Math.round(b.x),Math.round(b.y),Math.round(b.width),Math.round(b.height)];}))));
 await shot('suche');
 // 2 explorer tree
 await page.locator('[data-tab="explorer"]').click();
@@ -108,6 +131,8 @@ await page.waitForTimeout(1200);
 await shot('postfach');
 await page.locator('#mailWorkspace [data-live-uid="99"]').click().catch(()=>{});
 await shot('mail-offen');
+console.log('Ziele',JSON.stringify(await page.evaluate(()=>{const r=e=>{if(!e)return null;const b=e.getBoundingClientRect();return[Math.round(b.x),Math.round(b.y),Math.round(b.width),Math.round(b.height)];};
+  return{mail:r(document.querySelector('#mailWorkspace [data-live-uid="99"]')),lesen:r(document.querySelector('#mailWorkspace .mail-reader, #mailWorkspace [data-live-reader], #mailWorkspace article'))};})));
 // 4 intake
 await page.locator('[data-tab="intake"]').click();
 await shot('einlesen');

@@ -269,11 +269,11 @@ const PLAN = [
   { key: 'mail-offen', seed: 9, base: [37.5, 37.6], cont: [37.5, 37.7], leaf: [37.6, 39.8], zack: 40.0, hold: [40.0, 45.2], out: [44.6, 45.6], pos: { cx: 960, cy: 628, sc: .99 } },
 ];
 let SCREENS = [];
-const CALLS = {
-  suche: [[/^Rechnung vom Zahnarzt/, 'Suchfeld', -220, -120], [/^Bedeutungssuche/, 'Suche nach Bedeutung', -40, -130], [/^📦 Rechnung-Zahnarzt/, 'Treffer mit Fundstelle', -120, 95], [/^✓ Geprüft/, 'Jede Datei geprüft', 120, 90], [/^🎤/, 'Spracheingabe', 40, -150]],
-  explorer: [[/^📁 Alle Dateien/, 'Ordnerbaum', -60, -140], [/^✉️ E-Mails \(/, 'Mails nach Absender', 160, -60], [/^↕ Neueste oben/, 'Sortieren', -40, -110], [/^🔎 auch im Inhalt/, 'Suche im Inhalt', 60, -120]],
-  postfach: [[/^📥 Posteingang/, 'Ungelesen auf einen Blick', -60, -120], [/^🗑 Papierkorb/, 'Papierkorb', 160, 40], [/^🚫 Spam/, 'Spam aussortiert', 180, -20], [/^S\nIhre Rechnung/, 'Neue Mails', 260, -110]],
-  'mail-offen': [[/^🛡 Schutz/, 'Mail geprüft', 60, -110]],
+const CALLS = {   // labels for the new design (Android .35): matched against the visible text of the parts
+  suche: [[/^Rechnung vom Zahnarzt/, 'Suchfeld', -220, -120], [/^Bedeutung$/, 'Suche nach Bedeutung', -150, 110], [/^Rechnung-Zahnarzt-2026-09/, 'Treffer mit Fundstelle', 520, -30], [/^Geprüft · kein Fund/, 'Jede Datei geprüft', 140, 90], [/^🎤/, 'Spracheingabe', -90, -150]],
+  explorer: [[/^Dokumente \(2\)/, 'Ordnerbaum', 300, 20], [/^Praxis Dr\. Weiß \(2\)/, 'Mails nach Absender', 330, -40], [/^Sortieren/, 'Sortieren', -60, -110], [/^auch im Inhalt/, 'Suche im Inhalt', 60, -120], [/^Lokale Kopie/, 'Original sicher kopiert', 200, 60]],
+  postfach: [[/^Alle Konten/, 'Alle Konten in einer Liste', 260, -70], [/^Posteingang/, 'Ungelesen auf einen Blick', 300, -10], [/^Papierkorb/, 'Papierkorb', 200, 40], [/^Spam/, 'Spam aussortiert', 220, -20], [/^Ihre Rechnung Oktober/, 'Neue Mails', 300, -110]],
+  'mail-offen': [[/^Schutz: nichts aufgefallen/, 'Mail geprüft', 60, -110], [/^Übersetzen/, 'Übersetzen auf dem Gerät', 120, -90]],
 };
 const callEls = [];
 const SX = x => 960 + (x - 720) * .99, SY = y => 628 + (y - 405) * .99;   // app pixel → film pixel
@@ -306,7 +306,7 @@ const capEls = CAPS.map(([a, b, top, lab, html], n) => {
 });
 const blase = el('div', 'sprech', null, '<span class="mic">🎤</span>„Rechnung vom Zahnarzt“');
 function drawBlase(t) { const x = fade(t, 19.2, 19.6, 22.3, 22.7), k = eBack(lin(t, 19.2, 19.75));
-  blase.style.opacity = x; blase.style.transform = `translate(-30%,-100%) scale(${.3 + .7 * k})`; blase.style.left = SX(470) + 'px'; blase.style.top = SY(95) + 'px'; }
+  blase.style.opacity = x; blase.style.transform = `translate(-30%,-100%) scale(${.3 + .7 * k})`; blase.style.left = SX(470) + 'px'; blase.style.top = SY(135) + 'px'; }
 function drawCaps(t) {
   drawBlase(t);
   for (const c of capEls) {
@@ -444,17 +444,17 @@ async function render(t) {
   const zackFlash = Math.max(0, ...PLAN.map(p => t >= p.zack - .04 && t < p.zack + .4 ? (1 - (t - p.zack) / .4) * .85 : 0));
   $('flash').style.opacity = zackFlash; $('flash').style.setProperty('--fx', '50%');
 
-  // hand taps the search button (21) and a mail (36.6)
+  // hand taps the meaning search (21) and a mail (36.9)
   const h1 = fade(t, 20.5, 20.9, 22.0, 22.4), h2 = fade(t, 36.0, 36.4, 37.3, 37.6);
   if (h1 > 0 || h2 > 0) {
-    const tgt = h1 > 0 ? { x: SX(1310), y: SY(180), tap: 21.2 } : { x: SX(520), y: SY(322), tap: 36.9 };
+    const tgt = h1 > 0 ? { x: SX(1369), y: SY(168), tap: 21.2 } : { x: SX(362), y: SY(429), tap: 36.9 };   // „Bedeutung“ and the mail from the dentist
     const k = eOut(lin(t, tgt.tap - .7, tgt.tap)), press = Math.max(0, 1 - Math.abs(t - tgt.tap) / .12);
     hand.style.opacity = Math.max(h1, h2); hand.style.left = lerp(tgt.x + 260, tgt.x - 30, k) + 'px'; hand.style.top = lerp(tgt.y + 300, tgt.y - 12, k) + 'px'; hand.style.transform = `scale(${1 - .1 * press}) rotate(${-8 + 8 * k}deg)`;
     if (t > tgt.tap && t < tgt.tap + .6) { const a = (t - tgt.tap) / .6; f.save(); f.strokeStyle = `rgba(94,234,212,${1 - a})`; f.lineWidth = 4; f.beginPath(); f.arc(tgt.x, tgt.y, 10 + 60 * eOut(a), 0, 7); f.stroke(); f.restore(); }
   } else hand.style.opacity = 0;
 
   // scan beam over the open mail and the stamp
-  if (t > 41.8 && t < 44.2) { const k = eIO(lin(t, 42, 43.8)); const x0 = SX(560), x1 = SX(1440), y0 = SY(95), y1 = SY(300); const y = lerp(y0, y1, k); const gr = f.createLinearGradient(0, y - 40, 0, y + 6); gr.addColorStop(0, 'rgba(94,234,212,0)'); gr.addColorStop(1, 'rgba(94,234,212,.75)'); f.fillStyle = gr; f.fillRect(x0, y - 40, x1 - x0, 46); f.fillStyle = 'rgba(200,255,250,.95)'; f.fillRect(x0, y, x1 - x0, 3); }
+  if (t > 41.8 && t < 44.2) { const k = eIO(lin(t, 42, 43.8)); const x0 = SX(505), x1 = SX(1420), y0 = SY(225), y1 = SY(540); /* over the open mail */ const y = lerp(y0, y1, k); const gr = f.createLinearGradient(0, y - 40, 0, y + 6); gr.addColorStop(0, 'rgba(94,234,212,0)'); gr.addColorStop(1, 'rgba(94,234,212,.75)'); f.fillStyle = gr; f.fillRect(x0, y - 40, x1 - x0, 46); f.fillStyle = 'rgba(200,255,250,.95)'; f.fillRect(x0, y, x1 - x0, 3); }
   const st = lin(t, 43.95, 44.25); stamp.style.opacity = fade(t, 43.95, 44.05, 45.0, 45.4); stamp.style.left = '1080px'; stamp.style.top = '700px'; stamp.style.transform = `rotate(-8deg) scale(${lerp(2.4, 1, eOut(st))})`;
 
   // ring of finished screens (45–52.5)
