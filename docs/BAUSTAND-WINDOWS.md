@@ -1,4 +1,20 @@
-# Windows 1.0.36 veröffentlicht — 2026-10-25
+# Windows 1.0.37 veröffentlicht — 2026-10-25
+
+Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`, PR #85 übernommen. [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) über
+die vorhandene App installieren. Kennung, Datenpfade und Passwortformat bleiben erhalten.
+
+- [Windows-main 40222186337](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186337/job/121255957350) erfolgreich: installierte Grundfunktionen, Neustart/Neuinstallation, echtes öffentliches 1.0.36-Setup → 1.0.37 mit erhaltenen Daten und abschließender normaler Produktionsstart ohne Prüfzugang.
+- Originalbytes, Katalog/Tags, RU-/Dunkelwahl, Offlinezustand, PBV1-Katalog, DPAPI-Merken und Passwortentsperren nach Kaltstart sind in der tatsächlichen Updateprobe bestätigt. Zwischen alter und neuer App wurden die synthetischen Daten nicht gelöscht.
+- Release [40224745892](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40224745892) erfolgreich: Prüfung `121263625158`, Veröffentlichung `121263688060`. Der abgenommene Installer wurde unverändert veröffentlicht.
+- Öffentlicher Download unabhängig geprüft: 58.666.944 Bytes, SHA-256 `8452d322b2ebbbc8ef9de11ab548a61f0e129d94503354812db1abdc4ca4b71a`. API-Digests, veröffentlichte Prüfsummen, Tag/Quelle und Bauquittung stimmen; alle 24 ursprünglichen/erzeugten Java-Fingerabdrücke und fünf Abhängigkeiten gegen Quelle geprüft.
+- Windows x64, NSIS pro Benutzer, weiterhin unsigniert, kein Prüfendpunkt. Der lokale Byteprüfer führt das Setup nicht aus und extrahiert nicht dessen UI; die Prerender-Bauverdrahtung wurde gegen die Quelle geprüft. Tatsächliche Installation lief im Windows-CI-Runner.
+
+[Windows-Nachweis](design/umbau-2026-10-24/windows-1.0.37-pruefung.json).
+Klaus' eigener Windows-PC und physisches Samsung DeX wurden damit nicht geprüft.
+
+---
+
+# Historisch: Windows 1.0.36 veröffentlicht — 2026-10-25
 
 Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, PR #82 übernommen. [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe)
 über die vorhandene Installation installieren; Kennung `de.familyprojekt.privatebrain.pro`,

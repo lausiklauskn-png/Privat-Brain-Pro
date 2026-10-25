@@ -192,24 +192,30 @@
   // Keep the original buttons and their existing navigation handlers.
   for(const page of ['dash','order','dupes']){const button=secondary.querySelector('[data-tab="'+page+'"]');if(button)main.append(button);}
   let primaryPage='';
-  const row=make('div','native-toolbar-row'),quick=make('div','native-toolbar-quick');main.before(row);row.append(main,quick);
+  const row=document.querySelector('.native-toolbar-row')||make('div','native-toolbar-row');
+  const quick=row.querySelector(':scope>.native-toolbar-quick')||make('div','native-toolbar-quick');
+  if(!row.isConnected){main.before(row);row.append(main,quick);}
   const settings=secondary.querySelector('[data-tab="settings"]');if(settings)quick.append(settings);
   const tools=document.querySelector('header .tools');
-  const options=make('details','native-options'),optionsTitle=make('summary','ghost'),optionsPanel=make('div','native-options-panel');
-  for(const node of [...tools.children])if(!node.classList.contains('native-navigation'))optionsPanel.append(node);
-  const views=make('section','native-menu-views'),viewsTitle=make('p','native-menu-heading');
+  const options=tools.querySelector(':scope>.native-options')||make('details','native-options');
+  const optionsTitle=options.querySelector(':scope>summary')||make('summary','ghost');
+  const optionsPanel=options.querySelector(':scope>.native-options-panel')||make('div','native-options-panel');
+  for(const node of [...tools.children])if(!node.matches('.native-navigation,.native-net-lamp,.native-options'))optionsPanel.append(node);
+  const views=optionsPanel.querySelector('.native-menu-views')||make('section','native-menu-views');
+  const viewsTitle=views.querySelector(':scope>.native-menu-heading')||make('p','native-menu-heading');
   views.hidden=true;
-  views.append(viewsTitle,secondary);optionsPanel.prepend(views);
-  options.append(optionsTitle,optionsPanel);tools.append(options);
-  const offlineButton=make('button','ghost native-offline-switch');offlineButton.type='button';
+  if(!views.isConnected){views.append(viewsTitle,secondary);optionsPanel.prepend(views);}
+  if(!options.isConnected){options.append(optionsTitle,optionsPanel);tools.append(options);}
+  const offlineButton=optionsPanel.querySelector('.native-offline-switch')||make('button','ghost native-offline-switch');offlineButton.type='button';
   offlineButton.setAttribute('role','switch');
-  const offlineError=make('p','native-network-error');offlineError.setAttribute('role','status');offlineError.hidden=true;
-  optionsPanel.append(offlineButton,offlineError);
+  const offlineError=optionsPanel.querySelector('.native-network-error')||make('p','native-network-error');offlineError.setAttribute('role','status');offlineError.hidden=true;
+  if(!offlineButton.isConnected)optionsPanel.append(offlineButton);
+  if(!offlineError.isConnected)optionsPanel.append(offlineError);
   // Klaus 2026-10-21: a small lamp up in the bar, green = internet allowed, red = app cut off.
   // Tap toggles; the tooltip says what a tap will do. The menu entry stays.
-  const lamp=make('button','native-net-lamp compact-tool');lamp.type='button';lamp.setAttribute('role','switch');
-  const dot=make('span','native-net-dot');dot.setAttribute('aria-hidden','true');lamp.append(dot);
-  const nav=tools.querySelector('.native-navigation');if(nav)nav.before(lamp);else options.before(lamp);
+  const lamp=tools.querySelector(':scope>.native-net-lamp')||make('button','native-net-lamp compact-tool');lamp.type='button';lamp.setAttribute('role','switch');
+  if(!lamp.isConnected){const dot=make('span','native-net-dot');dot.setAttribute('aria-hidden','true');lamp.append(dot);
+    const nav=tools.querySelector('.native-navigation');if(nav)nav.before(lamp);else options.before(lamp);}
   function networkLabel(){
     const off=Boolean(window.PBNetwork?.offline),label=offText(off?1:0);
     if(offlineButton.textContent!==label)offlineButton.textContent=label;

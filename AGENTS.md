@@ -1,4 +1,34 @@
-# Private Brain Pro — veröffentlichter Stand
+# Private Brain Pro — veröffentlichter Stand 1.0.37
+
+Android und Windows **1.0.37** sowie die gebaute PWA sind veröffentlicht (25.10.2026); PR #85 übernommen.
+[Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) · [PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
+Gemeinsame unveränderliche Appquelle `015c9a1266a64f44a1896ead56349094c64e2f9a`. Die kompakte Oberfläche steht
+bereits im ausgelieferten HTML; gespeicherte Farben und Eingabesprache gelten
+vor dem ersten sichtbaren Aufbau. Die Laufzeit übernimmt dieselben Bedienelemente.
+Die PWA behält ihre Installationsidentität und verwendet isolierte, vollständig
+geprüfte Offline-Dateigenerationen. Es gibt keinen Ladevorhang und keine Löschung
+von Katalog, Konten, Originalen oder fremden App-Caches.
+13 reguläre main-Checks; die Anforderung erfolgte separat auf geprüften Dispatcherbranches (13 tatsächliche Sourcechecks; bestätigter Legacy-Übergang); zwei Windows-Veröffentlichungschecks sind getrennt gebunden.
+[60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186336/job/121255957083) ohne Fehler/Skips und
+[38 Start-/Laufzeitübernahmeprüfungen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186336/job/121255956911) erfolgreich.
+Android: signierte Updateprobe mit Seed/Baseline/Verify, Code 37, ursprüngliche Kennung/Signatur;
+Release `40225104221`, 18.674.232 Bytes, SHA-256 `ce013e4693101983fe12f0d5d4c41bc4e1a98d49250709815af64d0859664d98`.
+Windows: echte installierte Übernahme 1.0.36 → 1.0.37 einschließlich Originalen,
+PBV1-Sicherung, DPAPI und Entsperren; Release `40224745892`,
+58.666.944 Bytes, SHA-256 `8452d322b2ebbbc8ef9de11ab548a61f0e129d94503354812db1abdc4ca4b71a`. Setup weiterhin unsigniert.
+Beide öffentlichen Downloads unabhängig geprüft. Vier öffentliche PWA-Dateien
+wurden im tatsächlichen [Pages-Job](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186331/job/121258534134) ohne Anmeldung gegen den geprüften
+Bau verglichen; Generation `691368c910961ae3ab643606eb096bfea4237047063a79ee4bfae8110ac19a44`. Das ist ein öffentlicher
+CI-Bytecheck und kein behaupteter lokaler Download vom hier gesperrten Pages-Host.
+[Umfang und Grenzen](docs/design/umbau-2026-10-24/STARTDARSTELLUNG-37.md),
+[Android-Beleg](docs/design/umbau-2026-10-24/android-1.0.37-pruefung.json),
+[Windows-Beleg](docs/design/umbau-2026-10-24/windows-1.0.37-pruefung.json),
+[PWA-Beleg](docs/design/umbau-2026-10-24/pwa-1.0.37-pruefung.json).
+Physisches Samsung DeX/Tab S6 und reale Gerätegeschwindigkeit bleiben ungemessen.
+Diese Veröffentlichungen sind abgeschlossen und dürfen nicht erneut ausgelöst werden.
+Der bestehende Freibrief für weitere beauftragte Arbeit gilt weiter.
+
+## Vorherige Veröffentlichung: 1.0.36
 
 Android und Windows 1.0.36 sind öffentlich verfügbar (25.10.2026); PR #82 übernommen.
 [Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
@@ -190,8 +220,8 @@ Der bestehende Freibrief für weitere beauftragte Arbeit bleibt erhalten.
 - Gleiche App-Oberfläche, unveränderte geschützte Module und dieselben Mail-/Tresor-
   Verträge. Tauri 2/WebView2, NSIS pro Benutzer, unsigniert wie Workflow PDF Pro.
   Keine fremden Schlüssel oder Identitäten übernehmen; Android-Identität erhalten.
-- Android ist bei `1.0.36`, Code 36 veröffentlicht; Windows ebenfalls
-  bei `1.0.36`. Originale Android-Identität und Windows-Datenpfade bleiben erhalten.
+- Android ist bei `1.0.37`, Code 37 veröffentlicht; Windows ebenfalls
+  bei `1.0.37`. Originale Android-Identität und Windows-Datenpfade bleiben erhalten.
   Der Auslieferungsbau ohne `messprobe` ist installiert geprüft.
 - Geschützte Kanon-Module bleiben bytegleich; `node tools/drift-guard.mjs` muss
   grün bleiben. `native/*.js` sind gemeinsam: Android bei Änderungen mitprüfen.

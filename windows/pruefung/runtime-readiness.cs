@@ -362,7 +362,7 @@ public static class RuntimeReadiness
             if (job == IntPtr.Zero) throw NativeFailure("CreateJobObjectW");
             Emit("CreateJobObjectW", "success", true);
             ExtendedLimits limits = new ExtendedLimits();
-            limits.Basic.LimitFlags = 0x2000; // Same KILL_ON_JOB_CLOSE as published .29.
+            limits.Basic.LimitFlags = 0x2000; // Same KILL_ON_JOB_CLOSE as published 1.0.36.
             if (!SetJobLimits(job, 9, ref limits, (uint)Marshal.SizeOf(typeof(ExtendedLimits))))
                 throw NativeFailure("SetInformationJobObject-KILL_ON_JOB_CLOSE");
             Emit("SetInformationJobObject-KILL_ON_JOB_CLOSE", "success", true);
@@ -409,8 +409,8 @@ public static class RuntimeReadiness
                     }
                     Dictionary<string, object> result = message.ContainsKey("result") ? message["result"] as Dictionary<string, object> : null;
                     ready = result != null && Convert.ToString(result["platform"]) == "windows"
-                        && Convert.ToString(result["versionName"]) == "1.0.0-preview.29" && Convert.ToInt32(result["versionCode"]) == 29;
-                    Emit("ProDevice-getInfo", "success", ready, "expectedVersion", "1.0.0-preview.29");
+                        && Convert.ToString(result["versionName"]) == "1.0.36" && Convert.ToInt32(result["versionCode"]) == 36;
+                    Emit("ProDevice-getInfo", "success", ready, "expectedVersion", "1.0.36");
                     Need(ready, "EXACT_LEGACY_DEVICE_REPLY_REQUIRED");
                     break;
                 }

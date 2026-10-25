@@ -1,14 +1,15 @@
 /* Switch the existing appearance profiles in place, without leaving the page. */
 (() => {
   'use strict';
+  let mounted=false;
   function mount() {
-    if (document.getElementById('pb-palette-button')) return true;
+    if (mounted) return true;
     const host = document.querySelector('.native-toolbar-quick'), theme = window.PBTheme;
     if (!host || !theme?.current() || !window.PBIcons?.has('palette')) return false;
     const source = () => document.getElementById('pb-theme-settings');
-    const trigger = document.createElement('button');
+    const trigger = document.getElementById('pb-palette-button') || document.createElement('button');
     trigger.id = 'pb-palette-button'; trigger.type = 'button'; trigger.className = 'ghost compact-tool compact-icon-only';
-    trigger.append(window.PBIcons.create('palette'));
+    if (!trigger.querySelector('.compact-icon')) trigger.append(window.PBIcons.create('palette'));
     trigger.setAttribute('aria-haspopup', 'dialog'); trigger.setAttribute('aria-expanded', 'false'); trigger.setAttribute('aria-controls', 'pb-palette');
     const popup = document.createElement('section');
     popup.id = 'pb-palette'; popup.hidden = true; popup.setAttribute('role', 'dialog'); popup.setAttribute('aria-labelledby', 'pb-palette-heading');
@@ -31,7 +32,7 @@
       });
       choices.append(button);
     }
-    popup.append(heading, choices, status); host.append(trigger); document.body.append(popup);
+    popup.append(heading, choices, status); if (!trigger.isConnected) host.append(trigger); document.body.append(popup);
     const buttons = () => [...choices.querySelectorAll('[data-pb-palette-choice]')];
     function position() {
       if (popup.hidden) return;
@@ -87,7 +88,7 @@
     window.visualViewport?.addEventListener('resize', position); window.visualViewport?.addEventListener('scroll', position);
     new MutationObserver(() => queueMicrotask(sync)).observe(document.documentElement, {attributes:true,attributeFilter:['lang']});
     if (typeof ResizeObserver === 'function') { const size = new ResizeObserver(position); size.observe(trigger); size.observe(popup); }
-    sync(); return true;
+    sync(); mounted=true; return true;
   }
   function start() {
     if (mount()) return;

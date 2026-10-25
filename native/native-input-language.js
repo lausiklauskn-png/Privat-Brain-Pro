@@ -92,15 +92,17 @@
     if(focus)quickButton.focus({preventScroll:true});
   }
   function mountQuick(searchbox) {
-    quickMenu=document.createElement('details');quickMenu.id='pb-input-language-quick';quickMenu.className='pb-input-language-quick';
-    quickButton=document.createElement('summary');quickButton.id='pb-search-language';quickButton.className='compact-tool';
-    quickPopup=document.createElement('div');quickPopup.id='pb-search-language-menu';quickPopup.className='pb-input-language-menu';quickPopup.setAttribute('role','group');
+    quickMenu=document.getElementById('pb-input-language-quick')||document.createElement('details');quickMenu.id='pb-input-language-quick';quickMenu.className='pb-input-language-quick';
+    quickButton=quickMenu.querySelector('#pb-search-language')||document.createElement('summary');quickButton.id='pb-search-language';quickButton.className='compact-tool';
+    quickPopup=quickMenu.querySelector('#pb-search-language-menu')||document.createElement('div');quickPopup.id='pb-search-language-menu';quickPopup.className='pb-input-language-menu';quickPopup.setAttribute('role','group');
     quickButton.setAttribute('aria-controls',quickPopup.id);
     for(const item of languages){
-      const button=document.createElement('button');button.type='button';button.dataset.inputLanguage=item.code;button.lang=item.code;button.textContent=item.name;
-      button.addEventListener('click',()=>{choose(item.code);closeQuick(true);});quickPopup.append(button);
+      const button=quickPopup.querySelector('[data-input-language="'+item.code+'"]')||document.createElement('button');button.type='button';button.dataset.inputLanguage=item.code;button.lang=item.code;button.textContent=item.name;
+      button.addEventListener('click',()=>{choose(item.code);closeQuick(true);});if(!button.isConnected)quickPopup.append(button);
     }
-    quickMenu.append(quickButton,quickPopup);const mode=searchbox.querySelector('#mode');if(mode)mode.before(quickMenu);else searchbox.append(quickMenu);
+    if(!quickButton.parentNode)quickMenu.append(quickButton);
+    if(!quickPopup.parentNode)quickMenu.append(quickPopup);
+    if(!quickMenu.isConnected){const mode=searchbox.querySelector('#mode');if(mode)mode.before(quickMenu);else searchbox.append(quickMenu);}
     quickMenu.addEventListener('toggle',()=>{quickButton.setAttribute('aria-expanded',String(quickMenu.open));positionQuick();});
     quickMenu.addEventListener('keydown',event=>{
       if(event.key==='Escape'&&quickMenu.open){event.preventDefault();closeQuick(true);return;}
@@ -118,7 +120,7 @@
   }
   function mount() {
     const searchbox = document.querySelector('#panel-search .searchbox');
-    if (searchbox && !document.getElementById('pb-input-language-quick')) {
+    if (searchbox && !quickMenu) {
       mountQuick(searchbox);
     }
     const panel = document.getElementById('panel-settings');

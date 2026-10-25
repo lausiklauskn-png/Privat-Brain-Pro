@@ -1,15 +1,24 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
-[Windows 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).**
-Android und Windows 1.0.36 zeigen dieselben Bild-/PDF-Miniaturen auch im Explorer
-und in Kategorien. Gespeicherte Miniatur und vollständige Originaldatei bleiben
-klar unterschieden; tatsächliche Doppelmeldungen entfallen.
-[Bedienung und Nachweise](docs/design/umbau-2026-10-24/ERGEBNISSE-36.md).
-Android ist signiert; das Windows-x64-Setup bleibt wie bisher unsigniert.
-Beide Updates über die vorhandene Installation installieren. Für diesen Wechsel
-von Android .35 beziehungsweise Windows .29 die direkten Downloads oben verwenden.
+**[Android 1.0.37 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk).
+[Windows 1.0.37 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe).**
+[PWA öffnen und installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
+
+1.0.37 liefert die neue Oberfläche bereits beim ersten sichtbaren Aufbau;
+Farben und Suchsprache werden vorab aus den gespeicherten Einstellungen gelesen.
+Die PWA veröffentlicht dieselbe vorbereitete Oberfläche mit eigener, unveränderter
+Browseridentität. Vollständige Offline-Dateigenerationen verhindern gemischte
+Versionsstände; fremde Caches und Nutzerdaten bleiben erhalten.
+[Bedienung und Belege](docs/design/umbau-2026-10-24/STARTDARSTELLUNG-37.md).
+
+Android ist signiert, das Windows-x64-Setup bleibt unsigniert. Updates über die
+vorhandene App installieren, ohne sie zu deinstallieren. Die Browserfassung bietet
+die Möglichkeiten des Browsers; direkte Geräte-Mail und native Gerätefunktionen
+gehören zur Android-/Windows-App. Physisches Samsung DeX/Tab S6 bleibt ungemessen.
+Die Funktionen aus [1.0.36](docs/design/umbau-2026-10-24/ERGEBNISSE-36.md) bleiben erhalten.
+
+## Frühere Funktionsschritte
 
 Android .35 strafft Trefferkarten mit lokalen Bild-/PDF-Vorschauen und einer
 kompakten Typ-/Tag-/Pfadzeile. Der ganze Pfad erscheint bei Hover, Fokus oder Tippen.
@@ -69,7 +78,7 @@ einen hellen Hintergrund.
 
 GitHub Actions prüft den Code und erstellt Android-Build-Artefakte. Der Ablauf
 „Signierte Android-Veröffentlichung“ veröffentlicht die vorhandene App mit
-`channel=public` und einem Tag wie `v1.0.36` als öffentliches Update, mit ursprünglichem
+`channel=public` und einem Tag wie `v1.0.37` als öffentliches Update, mit ursprünglichem
 Signierer und verpflichtender signierter Updateprobe. Build und Signierung nutzen
 `android-preview` mit der bisherigen Identität; die öffentliche Veröffentlichung erhält ihre
 Freigabe getrennt in `android-production`. Historische `test`-Präreleases und der
@@ -94,8 +103,9 @@ cd android
 
 `www/` und die Android-Webressourcen werden aus einer ausdrücklichen Liste
 öffentlicher Dateien erzeugt; Repository, Mailserver, lokale Daten und Schlüssel
-werden nicht pauschal in die App gepackt. Native Assets aktualisiert Android,
-kein PWA-Service-Worker. Für Release-Builds Web-Debugging deaktiviert, Klartext-HTTP
+werden nicht pauschal in die App gepackt. Native App-Assets verwenden keinen PWA-Service-Worker. Die getrennte
+Browserfassung wird aus `www` gebaut, installierbar gemacht und über den
+Pages-Workflow mit tatsächlichem öffentlichem Bytevergleich ausgeliefert. Für Release-Builds Web-Debugging deaktiviert, Klartext-HTTP
 und beliebige Navigation mit Plugin-Zugriff nicht freigegeben. Der Mailadapter erlaubt benannte Konto-/Postfachoperationen; Dateizugriff ist auf ausdrücklich freigegebene Originale und Android-SAF-Ordner begrenzt.
 
 Herkunft: [Ausgangsbasis](docs/PRO-AUSGANGSBASIS.md).

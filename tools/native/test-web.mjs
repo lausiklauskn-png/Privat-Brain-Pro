@@ -34,7 +34,7 @@ try {
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
   await page.goto(url);await page.waitForFunction(()=>window.PBWorkspace && typeof db!=='undefined' && db);
-  ok('Native bundle starts on search',await page.locator('#q').isVisible() && await page.locator('.brand h1').textContent()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
+  ok('Native bundle starts on search',await page.locator('#q').isVisible() && (await page.locator('.brand h1').textContent()).trim()==='Private Brain Pro' && (await page.title()).startsWith('Private Brain Pro —'));
   ok('Native limitations visible in settings',await page.locator('.native-status').textContent().then(s=>s.includes('Private Brain Pro') && s.includes('Direkte Mailverbindung')));
   // Search starts with its controls; no welcome copy returns after clearing,
   // dictating, restoring a saved query or returning through navigation.

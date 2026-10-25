@@ -1,4 +1,4 @@
-// CI-only draft: real production .29 -> .36 data/installer acceptance.
+// CI-only acceptance: real production 1.0.36 -> 1.0.37 data/installer update.
 // Run from the repository root after npm ci. It never chooses the OS folder;
 // the companion PowerShell helper must select PB_WINDOWS_UPGRADE_VAULT.
 import assert from 'node:assert/strict';
@@ -26,10 +26,10 @@ const PASSWORD='CI-only Windows Upgrade ä Ж 2026';
 const NAME='windows-upgrade-proof-Ж.txt';
 const FIXTURE_PATH='Upgradeprobe/'+NAME;
 const STAMP=1792886400000;
-const bytes=Buffer.from('Private Brain Windows installer upgrade 29 to 36. Fixture only. ä Ж\n'+marker+'\n','utf8');
+const bytes=Buffer.from('Private Brain Windows installer upgrade 36 to 37. Fixture only. ä Ж\n'+marker+'\n','utf8');
 const hash=sha256(bytes);
-const expectedVersion=phase==='seed'?'1.0.0-preview.29':'1.0.36';
-const expectedCode=phase==='seed'?29:36;
+const expectedVersion=phase==='seed'?'1.0.36':'1.0.37';
+const expectedCode=phase==='seed'?36:37;
 const report={phase,expectedVersion,source:process.env.PB_SOURCE_COMMIT||'',marker,fixture:{name:NAME,hash,bytes:bytes.length},checks:[],errors:[],success:false};
 let browser,page;
 function required(name){const value=process.env[name];assert.ok(value,name+' is required');return value;}
@@ -119,7 +119,7 @@ async function persistentState(){
   const record=await page.evaluate(hash=>idbGet('catalog',hash),hash);
   ok('The committed IndexedDB catalog record and tag survived',record?.hash===hash&&record.name===NAME&&record.path===FIXTURE_PATH&&record.size===bytes.length&&record.snippet.includes(marker)&&record.tags.includes(marker));
   const state=await page.evaluate(()=>({lang:localStorage.getItem('pb_lang'),theme:localStorage.getItem('pb_theme'),marker:localStorage.getItem('pb_windows_upgrade_probe_v1'),documentLang:document.documentElement.lang,profile:window.PBTheme?.current?.()}));
-  ok('Locale and dark appearance survive the installed version change',state.lang==='ru'&&state.theme==='dunkel'&&state.marker===marker&&state.documentLang==='ru'&&(phase==='seed'||state.profile==='nachtblau'));
+  ok('Locale and dark appearance survive the installed version change',state.lang==='ru'&&state.theme==='dunkel'&&state.marker===marker&&state.documentLang==='ru'&&state.profile==='nachtblau');
   const network=await call('ProNetwork','getState');
   ok('The non-default native offline preference survives',network.offline===true&&await page.evaluate(()=>PBNetwork.ready&&PBNetwork.offline));
 }
@@ -140,7 +140,7 @@ try{
     await page.evaluate(()=>{window.__windowsUpgradeVaultResult={done:false};Capacitor.Plugins.ProVault.choose().then(result=>window.__windowsUpgradeVaultResult={done:true,result},e=>window.__windowsUpgradeVaultResult={done:true,error:e.code||e.message});});
     console.log('WINDOWS_UPGRADE_FOLDER_REQUESTED');
     // Companion PowerShell must select exactly PB_WINDOWS_UPGRADE_VAULT in the
-    // real Windows folder picker. The .29 production binary ignores test flags.
+    // real Windows folder picker. The published production binary ignores test flags.
     await passwordDialog(true);const selected=await waitVaultResult();
     ok('The old production app creates and remembers a real password vault',selected.created===true&&selected.state?.configured&&selected.state.unlocked&&selected.state.remembered);
     const migration=await call('ProVault','migrate');
@@ -155,12 +155,12 @@ try{
     ok('The old app commits and decrypts the exact encrypted catalog fixture',info.exists===true&&(await catalogBytes(info.version,info.size)).equals(expected));
     await writeFile(join(reportRoot,'catalog-plaintext-fixture.json'),expected);
     report.catalog={version:info.version,size:info.size,sha256:sha256(expected),cipher:await cipherEvidence(info.version,expected)};
-    await page.evaluate(()=>{document.querySelector('[data-lang="ru"]').click();if(document.documentElement.dataset.theme!=='dunkel')document.querySelector('#themeToggle').click();});
+    await page.evaluate(()=>{document.querySelector('[data-lang="ru"]').click();if(!PBTheme.choose('nachtblau'))throw Error('The published appearance profile could not be selected');});
     await page.evaluate(marker=>localStorage.setItem('pb_windows_upgrade_probe_v1',marker),marker);
     await persistentState();
   }else{
     const seed=JSON.parse(await readFile(join(reportRoot,'seed.json'),'utf8'));
-    assert.ok(seed.success&&seed.device?.versionName==='1.0.0-preview.29'&&seed.marker===marker&&seed.fixture.hash===hash,'Successful exact old-version seed proof required');
+    assert.ok(seed.success&&seed.device?.versionName==='1.0.36'&&seed.device?.versionCode===36&&seed.marker===marker&&seed.fixture.hash===hash,'Successful exact old-version seed proof required');
     const expected=await readFile(join(reportRoot,'catalog-plaintext-fixture.json'));
     assert.equal(sha256(expected),seed.catalog.sha256);
     const state=await call('ProVault','state');

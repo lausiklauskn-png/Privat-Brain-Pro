@@ -1,4 +1,25 @@
-# Aktueller Prüfstand: veröffentlichte 1.0.36 — 2026-10-25
+# Aktueller Prüfstand: veröffentlichte 1.0.37 — 2026-10-25
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk).
+
+Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`, PR #85 übernommen; Android-VersionCode 37, ursprüngliche
+Paketkennung und ursprünglicher Signierer erhalten.
+
+- 13 reguläre main-Checks; die Anforderung erfolgte separat auf geprüften Dispatcherbranches (13 tatsächliche Sourcechecks; bestätigter Legacy-Übergang); zwei Windows-Veröffentlichungschecks sind getrennt gebunden.
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186336/job/121255957083) ohne Fehler/Skips und [38 Start-/Laufzeitübernahmeprüfungen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40222186336/job/121255956911) bestanden.
+- Release [40225104221](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40225104221) erfolgreich: Build `121264703313`, signierte Updateprobe mit Seed/Baseline/Verify `121267493238`, Veröffentlichung `121268027864`; Seed/Baseline/Verify bestanden.
+- Öffentliche APK unabhängig geprüft: 18.674.232 Bytes, SHA-256 `ce013e4693101983fe12f0d5d4c41bc4e1a98d49250709815af64d0859664d98`; API-Digests, veröffentlichte Prüfsummen/Identität und Signaturbericht passen. Die tatsächliche kryptographische Signatur- und Überinstallationsprüfung lief in CI, nicht im lokalen Byteprüfer.
+- 45 ausgewählte vorhandene native Dateien einschließlich `native.js` und `native.css`, drei geteilte Mail-/Explorerressourcen, 39 OCR-Dateien, 29 Lizenztexte und 22 geschützte Module gegen Quelle/Pins geprüft. Das größere Inventar ist ein erweiterter Prüfumfang, kein behauptetes zusätzliches Bundlemodul.
+- Gepackte native Startseite `7ede3ac7f11e90ca9242bfca60918742cbe0cc3c8002d27b1d6d58a909fd18ed` entspricht exakt dem separat browsergeprüften Bau. Prerender-Struktur und frühe Theme-Quellbytes sind geprüft; PWA-HTML besitzt wegen Manifest/Browseradaptern einen anderen Hash.
+
+[Android-Nachweis](design/umbau-2026-10-24/android-1.0.37-pruefung.json),
+[Windows-Nachweis](design/umbau-2026-10-24/windows-1.0.37-pruefung.json),
+[PWA-Nachweis](design/umbau-2026-10-24/pwa-1.0.37-pruefung.json).
+Physisches Samsung DeX/Tab S6 und echte SD-Karten-Zugriffe bleiben ungemessen.
+
+---
+
+# Veröffentlichte 1.0.36 — 2026-10-25
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
 

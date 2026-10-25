@@ -1,8 +1,12 @@
 # Android-Grundversion
 
+Aktuelle öffentliche Version **1.0.37**: [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk).
+[Startkorrektur und Grenzen](design/umbau-2026-10-24/STARTDARSTELLUNG-37.md),
+[öffentlicher Nachweis](design/umbau-2026-10-24/android-1.0.37-pruefung.json).
+
 ## Varianten, Veröffentlichungskanäle und Daten
 
-Die öffentliche Version 1.0.36 aktualisiert die bereits installierte Android-App.
+Die öffentliche Version 1.0.37 aktualisiert die bereits installierte Android-App.
 Der technische Paketname bleibt `de.familyprojekt.privatebrain.pro.preview`;
 er ist kein Produktzusatz und wird für die Daten- und Updatekompatibilität erhalten.
 
@@ -48,7 +52,7 @@ getrennte Kanäle:
 
 | Kanal | App-Identität und Veröffentlichung |
 |---|---|
-| `public` | Stabiles öffentliches Update der vorhandenen `.preview`-Paketkennung, z. B. `v1.0.36`, ursprünglicher Signierer, verpflichtende signierte Updateprobe und GitHub-Release ohne Prerelease-Kennzeichnung. |
+| `public` | Stabiles öffentliches Update der vorhandenen `.preview`-Paketkennung, z. B. `v1.0.37`, ursprünglicher Signierer, verpflichtende signierte Updateprobe und GitHub-Release ohne Prerelease-Kennzeichnung. |
 | `test` | Historische Prerelease-Updateausgaben derselben Paketkennung mit `v…-preview.N`; ebenfalls ursprünglicher Signierer und signierte Updateprobe. |
 | `stable` | Separates Produktionspaket `.pro` mit anderer Identität. Kein Update der bestehenden `.preview`-App; eigene geprüfte Signierkonfiguration erforderlich. |
 
@@ -66,7 +70,7 @@ keinen neuen App-Signierschlüssel für ein Update erzeugen.
 [Signieridentität und gesicherter Veröffentlichungsweg](VEROEFFENTLICHEN.md).
 
 Öffentliche Updates werden auf `main` manuell mit `channel=public`, passendem
-`tag` wie `v1.0.36` und optionalem vollständigem `source_commit` gestartet.
+`tag` wie `v1.0.37` und optionalem vollständigem `source_commit` gestartet.
 `dry_run=true` baut, signiert und prüft, veröffentlicht aber nichts. Automatische
 Vorschau-Versions-Tags bleiben dem historischen `test`-Kanal vorbehalten.
 Vor jedem neuen Release `versionName` und `versionCode` anpassen; alle fachlichen
@@ -134,6 +138,14 @@ Oberfläche und unveränderte Prüfmodule bleiben für spätere iOS-Adapter verw
 
 ## Aktueller Prüfstand
 
+Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`: 60 native Fälle ohne Fehler/Skips sowie
+38 gezielte Start-/Laufzeitübernahmeprüfungen erfolgreich.
+Android: signierte Updateprobe mit Seed/Baseline/Verify bestanden. Der öffentliche APK-Bytevergleich ist
+bestanden. [Vollständiger aktueller Prüfstand](PRUEFSTAND-ANDROID.md).
+Die Browserprüfung ersetzt keine Messung auf Klaus' Samsung-Gerät.
+
+### Historischer Grundbau
+
 Der bisherige gepackte Webteil besteht 37 eigene Browserprüfungen; der native
 Mailadapter ergänzt 24 Oberflächenprüfungen mit simulierter Java-Brücke. Acht visuelle Vergleiche
 (16 Screenshots in [design](design/README.md)) bestätigen die ausgewählten
@@ -172,7 +184,7 @@ Details zu Versandzuständen, Größenlimits und Bibliotheksrechten:
 
 ## Erste direkte Geräte-Mail testen
 
-Aktueller [APK-Download (1.0.36)](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
+Aktueller [APK-Download (1.0.37)](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk).
 Über die vorhandene App installieren, ohne sie zu deinstallieren.
 Postfach → Mailkonto verbinden → Telekom / T-Online oder Hetzner.
 Die E-Mail-Adresse und das separate Passwort für E-Mail-Programme nur im nativen

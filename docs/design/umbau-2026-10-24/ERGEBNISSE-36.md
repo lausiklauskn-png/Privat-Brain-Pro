@@ -1,5 +1,8 @@
 # Gemeinsame Dateivorschau und öffentliche Version 1.0.36
 
+Diese Seite dokumentiert die unverändert veröffentlichte 1.0.36.
+Aktuell: [Startkorrektur 1.0.37 mit Android, Windows und PWA](STARTDARSTELLUNG-37.md).
+
 Stand: 25.10.2026, **Android und Windows 1.0.36 sind veröffentlicht**.
 [Signierte Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
 Die vorherige Android .35 bleibt unverändert veröffentlicht.
