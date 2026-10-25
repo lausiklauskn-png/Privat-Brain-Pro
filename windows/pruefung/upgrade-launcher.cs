@@ -69,6 +69,8 @@ public static class UpgradeProbeLauncher
         internal int EnabledOtherPrivileges;
     }
 
+    private sealed class DesktopContext { internal string Station, Name; internal string FullName { get { return Station + "\\" + Name; } } }
+
     // Run immediately after Add-Type, before building or installing the app.
     // Exercise the same token queries/selection as Start without creating a process.
     public static void Preflight()
@@ -84,9 +86,10 @@ public static class UpgradeProbeLauncher
             TokenEvidence current = ReadToken(currentToken);
             WriteParentEvidence(current);
             WriteCallerPrivileges(currentToken);
-            WriteDesktopEvidence(current.Session);
+            DesktopContext desktop = WriteDesktopEvidence(current.Session);
             IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             TokenEvidence source = ReadToken(sourceToken);
+            ProbeDesktopAccess(sourceToken, desktop);
             Console.WriteLine("WINDOWS_UPGRADE_TOKEN_PREFLIGHT {\"targetIntegrityRid\":"
                 + source.Rid.ToString(CultureInfo.InvariantCulture)
                 + ",\"targetElevationType\":" + source.ElevationType.ToString(CultureInfo.InvariantCulture)
@@ -120,6 +123,7 @@ public static class UpgradeProbeLauncher
         IntPtr targetToken = IntPtr.Zero;
         IntPtr nativeEnvironment = IntPtr.Zero;
         IntPtr launchEnvironment = IntPtr.Zero;
+        IntPtr desktopName = IntPtr.Zero;
         int launchEnvironmentChars = 0;
         Process managedProcess = null;
         ProcessInformation child = new ProcessInformation();
@@ -133,7 +137,7 @@ public static class UpgradeProbeLauncher
             // Preserve the parent evidence even when the linked-token query fails.
             WriteParentEvidence(current);
             WriteCallerPrivileges(currentToken);
-            WriteDesktopEvidence(current.Session);
+            DesktopContext desktop = WriteDesktopEvidence(current.Session);
             IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             bool duplicated = IsDefaultHigh(current)
                 ? DuplicateHandle(GetCurrentProcess(), sourceToken, GetCurrentProcess(), out primaryToken,
@@ -168,10 +172,11 @@ public static class UpgradeProbeLauncher
 
             StartupInformation startup = new StartupInformation();
             startup.cb = Marshal.SizeOf(typeof(StartupInformation));
-            // NULL inherits the caller's actual desktop/window station. Do not
-            // invent an interactive desktop or alter any access-control list.
-            Require(startup.lpDesktop == IntPtr.Zero, "INHERITED_DESKTOP_REQUIRED");
-            ProbeTargetAccess(primaryToken, current.Sid, exe, cwd, expectedLocalAppData, expectedUserProfile);
+            // Bind to the measured, existing caller context after verifying
+            // target access. Do not create a desktop or modify any ACL.
+            ProbeTargetAccess(primaryToken, current.Sid, exe, cwd, expectedLocalAppData, expectedUserProfile, desktop);
+            desktopName = Marshal.StringToHGlobalUni(desktop.FullName);
+            startup.lpDesktop = desktopName;
             StringBuilder command = new StringBuilder("\"" + exe + "\"");
             if (IsDefaultHigh(current))
             {
@@ -197,6 +202,7 @@ public static class UpgradeProbeLauncher
                 + target.OtherPrivileges.ToString(CultureInfo.InvariantCulture) + ",\"sameUserSid\":true}");
             Require(child.dwProcessId <= Int32.MaxValue, "PROCESS_ID_OUT_OF_RANGE");
             managedProcess = Process.GetProcessById((int)child.dwProcessId);
+            Require(managedProcess.Handle != IntPtr.Zero, "RETAIN_CREATED_PROCESS_HANDLE");
             uint priorSuspendCount = ResumeThread(child.hThread);
             if (priorSuspendCount == InvalidResume) throw Win32Failure("RESUME_VALIDATED_PRODUCTION_PROCESS");
             Require(priorSuspendCount == 1, "UNEXPECTED_PRIMARY_THREAD_SUSPEND_COUNT");
@@ -218,6 +224,7 @@ public static class UpgradeProbeLauncher
             Close(targetToken);
             Close(child.hThread);
             Close(child.hProcess);
+            if (desktopName != IntPtr.Zero) Marshal.FreeHGlobal(desktopName);
             if (launchEnvironment != IntPtr.Zero)
             {
                 for (int i = 0; i < launchEnvironmentChars; i++) Marshal.WriteInt16(launchEnvironment, i * 2, 0);
@@ -279,12 +286,14 @@ public static class UpgradeProbeLauncher
         return current.Rid == HighRid && current.Elevated && current.ElevationType == DefaultElevation;
     }
 
-    private static void WriteDesktopEvidence(int session)
+    private static DesktopContext WriteDesktopEvidence(int session)
     {
         string station = UserObjectName(GetProcessWindowStation());
         string desktop = UserObjectName(GetThreadDesktop(GetCurrentThreadId()));
         Console.WriteLine("WINDOWS_UPGRADE_DESKTOP {\"session\":" + session.ToString(CultureInfo.InvariantCulture)
-            + ",\"station\":\"" + JsonEscape(station) + "\",\"desktop\":\"" + JsonEscape(desktop) + "\",\"inherit\":true}");
+            + ",\"station\":\"" + JsonEscape(station) + "\",\"desktop\":\"" + JsonEscape(desktop) + "\",\"explicitMeasuredContext\":true}");
+        Require(station.Length > 0 && desktop.Length > 0 && !station.Contains("\\") && !desktop.Contains("\\"), "MEASURED_DESKTOP_NAME_REQUIRED");
+        return new DesktopContext { Station = station, Name = desktop };
     }
 
     private static string UserObjectName(IntPtr handle)
@@ -301,7 +310,7 @@ public static class UpgradeProbeLauncher
     private static string JsonEscape(string value) { return value.Replace("\\", "\\\\").Replace("\"", "\\\""); }
 
     private static void ProbeTargetAccess(IntPtr token, string expectedSid, string exe, string cwd,
-        string localAppData, string userProfile)
+        string localAppData, string userProfile, DesktopContext desktop)
     {
         if (!ImpersonateLoggedOnUser(token)) throw Win32Failure("IMPERSONATE_SAME_USER_ACCESS_PROBE");
         bool allowed = false;
@@ -311,11 +320,12 @@ public static class UpgradeProbeLauncher
             bool directory = ReadAccess("installed-working-directory", cwd, true);
             bool data = ReadAccess("default-local-app-data", localAppData, true);
             bool profile = ReadAccess("default-user-profile", userProfile, true);
+            bool desktopAllowed = ReadDesktopAccess(desktop);
             bool hive;
             using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.Users.OpenSubKey(expectedSid, false))
                 hive = key != null;
             Console.WriteLine("WINDOWS_UPGRADE_TARGET_ACCESS {\"label\":\"same-user-loaded-profile-hive\",\"allowed\":" + (hive ? "true" : "false") + "}");
-            allowed = executable && directory && data && profile && hive;
+            allowed = executable && directory && data && profile && hive && desktopAllowed;
         }
         finally
         {
@@ -325,6 +335,40 @@ public static class UpgradeProbeLauncher
         }
         AssertNoThreadToken("after-access-revert");
         Require(allowed, "TARGET_ACCESS_OR_LOADED_PROFILE_DENIED");
+    }
+
+    private static void ProbeDesktopAccess(IntPtr token, DesktopContext desktop)
+    {
+        if (!ImpersonateLoggedOnUser(token)) throw Win32Failure("IMPERSONATE_DESKTOP_ACCESS_PROBE");
+        bool allowed;
+        try { allowed = ReadDesktopAccess(desktop); }
+        finally { if (!RevertToSelf()) Environment.FailFast("UPGRADE_LAUNCH_REVERT_DESKTOP_PROBE_FAILED"); }
+        AssertNoThreadToken("after-desktop-revert");
+        Require(allowed, "TARGET_MEASURED_DESKTOP_ACCESS_DENIED");
+    }
+
+    private static bool ReadDesktopAccess(DesktopContext desktop)
+    {
+        IntPtr station = IntPtr.Zero, target = IntPtr.Zero;
+        try
+        {
+            Require(UserObjectName(GetProcessWindowStation()) == desktop.Station, "CALLER_WINDOW_STATION_CHANGED");
+            station = OpenWindowStation(desktop.Station, false, 0x37F);
+            int stationError = station == IntPtr.Zero ? Marshal.GetLastWin32Error() : 0;
+            target = OpenDesktop(desktop.Name, 0, false, 0x1FF);
+            int desktopError = target == IntPtr.Zero ? Marshal.GetLastWin32Error() : 0;
+            bool allowed = station != IntPtr.Zero && target != IntPtr.Zero;
+            Console.WriteLine("WINDOWS_UPGRADE_DESKTOP_ACCESS {\"allowed\":" + (allowed ? "true" : "false")
+                + ",\"stationAccessMask\":\"0x37F\",\"desktopAccessMask\":\"0x1FF\""
+                + ",\"stationWin32\":" + stationError.ToString(CultureInfo.InvariantCulture)
+                + ",\"desktopWin32\":" + desktopError.ToString(CultureInfo.InvariantCulture) + "}");
+            return allowed;
+        }
+        finally
+        {
+            if (target != IntPtr.Zero) CloseDesktop(target);
+            if (station != IntPtr.Zero) CloseWindowStation(station);
+        }
     }
 
     private static bool ReadAccess(string label, string path, bool directory)
@@ -656,6 +700,12 @@ public static class UpgradeProbeLauncher
     [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetProcessWindowStation();
     [DllImport("user32.dll", SetLastError = true)] private static extern IntPtr GetThreadDesktop(uint thread);
+    [DllImport("user32.dll", EntryPoint = "OpenWindowStationW", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr OpenWindowStation(string name, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint access);
+    [DllImport("user32.dll", EntryPoint = "OpenDesktopW", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr OpenDesktop(string name, uint flags, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint access);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CloseWindowStation(IntPtr station);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool CloseDesktop(IntPtr desktop);
     [DllImport("user32.dll", EntryPoint = "GetUserObjectInformationW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetUserObjectInformation(IntPtr handle, int index, StringBuilder buffer, uint length, out uint needed);

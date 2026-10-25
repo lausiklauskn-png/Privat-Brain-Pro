@@ -294,14 +294,21 @@ public class NativeStartupTest {
     @Test public void googleChoiceUsesConsentAndHidesPasswordFields() throws Exception {
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
             awaitTrue(scenario,"Boolean(window.PBMailDevice)");
-            evaluate(scenario,"window.__googleCancelled=false;PBMailDevice.addAccount().then(value=>window.__googleCancelled=value===null);true");
+            // Record only completion/type information: never account values or error text.
+            evaluate(scenario,"window.__googleCancelled=false;window.__googleChoiceOutcome={settled:false,state:'pending'};PBMailDevice.addAccount().then(value=>{window.__googleCancelled=value===null;window.__googleChoiceOutcome={settled:true,state:'fulfilled',isNull:value===null,valueType:value===null?'null':typeof value};},error=>{window.__googleChoiceOutcome={settled:true,state:'rejected',errorType:typeof error};});true");
             onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog()).perform(click());
             androidx.test.espresso.Espresso.onData(org.hamcrest.Matchers.equalTo("Google / Gmail"))
                 .inRoot(androidx.test.espresso.matcher.RootMatchers.isPlatformPopup()).perform(click());
             onView(withText("Mit Google anmelden")).inRoot(isDialog()).check(matches(isDisplayed()));
             onView(withText("Passwort für E-Mail-Programme")).inRoot(isDialog()).check(matches(org.hamcrest.Matchers.not(isDisplayed())));
             onView(withText("Abbrechen")).inRoot(isDialog()).perform(click());
-            awaitTrue(scenario,"window.__googleCancelled===true");
+            try {
+                awaitTrue(scenario,"window.__googleChoiceOutcome.settled===true");
+            } catch (AssertionError pending) {
+                fail("Google account cancellation did not settle: " + evaluate(scenario,"JSON.stringify(window.__googleChoiceOutcome)"));
+            }
+            assertEquals("Google cancellation must fulfill with null: " + evaluate(scenario,"JSON.stringify(window.__googleChoiceOutcome)"),
+                "true",evaluate(scenario,"window.__googleCancelled===true && window.__googleChoiceOutcome.state==='fulfilled' && window.__googleChoiceOutcome.isNull===true"));
         }
     }
 
