@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Security.AccessControl;
 using System.Text;
 
 public sealed class UpgradeProbeLaunchResult
@@ -91,6 +92,7 @@ public static class UpgradeProbeLauncher
             IntPtr sourceToken = MediumSourceToken(currentToken, current, out ownedSourceToken);
             TokenEvidence source = ReadToken(sourceToken);
             ProbeDesktopAccess(sourceToken, desktop);
+            ProbeDefaultCreatorAccess(sourceToken);
             Console.WriteLine("WINDOWS_UPGRADE_TOKEN_PREFLIGHT {\"targetIntegrityRid\":"
                 + source.Rid.ToString(CultureInfo.InvariantCulture)
                 + ",\"targetElevationType\":" + source.ElevationType.ToString(CultureInfo.InvariantCulture)
@@ -309,7 +311,7 @@ public static class UpgradeProbeLauncher
             {
                 // This exact runner state was measured in the early preflight.
                 // Only reduce its authority; never manufacture another user/profile.
-                ownedSourceToken = RestrictedMediumToken(currentToken);
+                ownedSourceToken = RestrictedMediumToken(currentToken, current);
             }
             else
             {
@@ -417,6 +419,27 @@ public static class UpgradeProbeLauncher
         }
     }
 
+    private static void ProbeDefaultCreatorAccess(IntPtr token)
+    {
+        if (!ImpersonateLoggedOnUser(token)) throw Win32Failure("IMPERSONATE_CREATOR_ACCESS_PROBE");
+        IntPtr read, write;
+        bool created = false;
+        try
+        {
+            created = CreatePipe(out read, out write, IntPtr.Zero, 0);
+            int error = created ? 0 : Marshal.GetLastWin32Error();
+            try
+            {
+                Console.WriteLine("WINDOWS_UPGRADE_DEFAULT_PIPE_ACCESS {\"success\":" + (created ? "true" : "false")
+                    + ",\"win32\":" + error.ToString(CultureInfo.InvariantCulture) + "}");
+                Require(created, "TARGET_DEFAULT_PIPE_CREATION_DENIED");
+            }
+            finally { if (created) { Close(read); Close(write); } }
+        }
+        finally { if (!RevertToSelf()) Environment.FailFast("UPGRADE_LAUNCH_REVERT_CREATOR_PROBE_FAILED"); }
+        AssertNoThreadToken("after-creator-revert");
+    }
+
     private static bool ReadAccess(string label, string path, bool directory)
     {
         IntPtr handle = CreateFile(path, directory ? 0xA0u : 0xA0000000u, 7, IntPtr.Zero, 3,
@@ -435,8 +458,9 @@ public static class UpgradeProbeLauncher
         if (reduced) Require(value.AdminDenyOnly && value.OtherPrivileges == 0, "RESTRICTED_TOKEN_AUTHORITY_MISMATCH");
     }
 
-    private static IntPtr RestrictedMediumToken(IntPtr currentToken)
+    private static IntPtr RestrictedMediumToken(IntPtr currentToken, TokenEvidence current)
     {
+        byte[] originalDefaultAcl = ReadDefaultAcl(currentToken);
         IntPtr restricted = IntPtr.Zero, adminSid = IntPtr.Zero;
         IntPtr disabledGroup = IntPtr.Zero, label = IntPtr.Zero;
         bool returned = false;
@@ -460,6 +484,15 @@ public static class UpgradeProbeLauncher
             Marshal.Copy(sidBytes, 0, sidInLabel, sidBytes.Length);
             Marshal.StructureToPtr(new SidAndAttributes { Sid = sidInLabel, Attributes = 0x20 }, label, false);
             if (!SetTokenInformation(restricted, 25, label, labelSize)) throw Win32Failure("SET_REDUCED_MEDIUM_INTEGRITY");
+            TokenEvidence reduced = ReadToken(restricted);
+            Require(reduced.Sid == current.Sid && reduced.Session == current.Session && reduced.Type == 1
+                && reduced.Rid == MediumRid && !reduced.Elevated, "DEFAULT_DACL_TARGET_IDENTITY_MISMATCH");
+            RequireNoAdminAuthority(reduced, true);
+            AddSameUserDefaultDacl(restricted, current.Sid);
+            bool originalUnchanged = EqualBytes(originalDefaultAcl, ReadDefaultAcl(currentToken));
+            Console.WriteLine("WINDOWS_UPGRADE_DEFAULT_DACL {\"sameUserCreatorAccess\":true,\"existingAcesPreserved\":true,\"originalTokenUnchanged\":"
+                + (originalUnchanged ? "true" : "false") + "}");
+            Require(originalUnchanged, "ORIGINAL_TOKEN_DEFAULT_DACL_CHANGED");
             Console.WriteLine("WINDOWS_UPGRADE_TOKEN_REDUCTION {\"flags\":5,\"sameUser\":true,\"requestedIntegrityRid\":8192}");
             returned = true;
             return restricted;
@@ -471,6 +504,72 @@ public static class UpgradeProbeLauncher
             if (adminSid != IntPtr.Zero) Marshal.FreeHGlobal(adminSid);
             if (!returned) Close(restricted);
         }
+    }
+
+    private static byte[] ReadDefaultAcl(IntPtr token)
+    {
+        int length;
+        IntPtr information = TokenInformation(token, 6, out length);
+        try
+        {
+            Require(length >= IntPtr.Size, "DEFAULT_DACL_HEADER_BOUNDS");
+            IntPtr acl = Marshal.ReadIntPtr(information);
+            Require(acl != IntPtr.Zero, "NON_NULL_DEFAULT_DACL_REQUIRED");
+            long offset = acl.ToInt64() - information.ToInt64();
+            Require(offset >= IntPtr.Size && offset + 8 <= length, "DEFAULT_DACL_POINTER_BOUNDS");
+            int size = unchecked((ushort)Marshal.ReadInt16(acl, 2));
+            Require(size >= 8 && size <= UInt16.MaxValue && offset + size <= length, "DEFAULT_DACL_BOUNDS");
+            byte[] bytes = new byte[size];
+            Marshal.Copy(acl, bytes, 0, size);
+            return bytes;
+        }
+        finally { Marshal.FreeHGlobal(information); }
+    }
+
+    private static void AddSameUserDefaultDacl(IntPtr restricted, string validatedUserSid)
+    {
+        RawAcl previous = new RawAcl(ReadDefaultAcl(restricted), 0);
+        Require(previous.Count < 4096, "DEFAULT_DACL_ACE_COUNT_BOUNDS");
+        RawAcl changed = new RawAcl(previous.Revision, previous.Count + 1);
+        for (int i = 0; i < previous.Count; i++) changed.InsertAce(changed.Count, previous[i]);
+        changed.InsertAce(changed.Count, new CommonAce(AceFlags.None, AceQualifier.AccessAllowed,
+            0x10000000, new SecurityIdentifier(validatedUserSid), false, null));
+        Require(changed.BinaryLength <= UInt16.MaxValue, "NEW_DEFAULT_DACL_SIZE_BOUNDS");
+        byte[] bytes = new byte[changed.BinaryLength];
+        changed.GetBinaryForm(bytes, 0);
+        IntPtr acl = IntPtr.Zero, header = IntPtr.Zero;
+        try
+        {
+            acl = Marshal.AllocHGlobal(bytes.Length);
+            Marshal.Copy(bytes, 0, acl, bytes.Length);
+            header = Marshal.AllocHGlobal(IntPtr.Size);
+            Marshal.WriteIntPtr(header, acl);
+            if (!SetTokenInformation(restricted, 6, header, IntPtr.Size)) throw Win32Failure("SET_NEW_RESTRICTED_TOKEN_DEFAULT_DACL");
+        }
+        finally
+        {
+            if (header != IntPtr.Zero) Marshal.FreeHGlobal(header);
+            if (acl != IntPtr.Zero) Marshal.FreeHGlobal(acl);
+        }
+        RawAcl actual = new RawAcl(ReadDefaultAcl(restricted), 0);
+        Require(actual.Revision == previous.Revision && actual.Count == previous.Count + 1, "ACTUAL_DEFAULT_DACL_STRUCTURE_MISMATCH");
+        for (int i = 0; i < previous.Count; i++)
+        {
+            byte[] before = new byte[previous[i].BinaryLength], after = new byte[actual[i].BinaryLength];
+            previous[i].GetBinaryForm(before, 0); actual[i].GetBinaryForm(after, 0);
+            Require(EqualBytes(before, after), "EXISTING_DEFAULT_DACL_ACE_CHANGED");
+        }
+        CommonAce added = actual[actual.Count - 1] as CommonAce;
+        Require(added != null && added.AceFlags == AceFlags.None && added.AceQualifier == AceQualifier.AccessAllowed
+            && added.AccessMask == 0x10000000 && added.SecurityIdentifier.Value == validatedUserSid,
+            "SAME_USER_DEFAULT_DACL_ACE_MISMATCH");
+    }
+
+    private static bool EqualBytes(byte[] a, byte[] b)
+    {
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+        return true;
     }
 
     private static IntPtr SidBuffer(string value)
@@ -643,7 +742,7 @@ public static class UpgradeProbeLauncher
 
     private static IntPtr TokenInformation(IntPtr token, int informationClass, out int length)
     {
-        Require(informationClass == 1 || informationClass == 2 || informationClass == 3 || informationClass == 25, "VARIABLE_TOKEN_CLASS_REQUIRED");
+        Require(informationClass == 1 || informationClass == 2 || informationClass == 3 || informationClass == 6 || informationClass == 25, "VARIABLE_TOKEN_CLASS_REQUIRED");
         bool sized = GetTokenInformation(token, informationClass, IntPtr.Zero, 0, out length);
         int sizeError = Marshal.GetLastWin32Error();
         if (!sized && sizeError != 122) // ERROR_INSUFFICIENT_BUFFER is the expected size query.
@@ -754,6 +853,8 @@ public static class UpgradeProbeLauncher
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess,
         out IntPtr target, uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint options);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreatePipe(out IntPtr read, out IntPtr write, IntPtr security, uint size);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool InitializeProcThreadAttributeList(IntPtr list, int count, uint flags, ref IntPtr size);
     [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]

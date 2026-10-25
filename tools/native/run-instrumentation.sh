@@ -6,10 +6,11 @@ focus_diagnostics() {
   echo "--- Android focus/keyguard/power ($1) ---"
   # awk consumes the complete stream even after its output limit, avoiding
   # head/SIGPIPE failures with pipefail. Each adb query ends within four seconds.
-  timeout -k 1s 3s adb shell dumpsys window windows 2>/dev/null |
+  # AOSP prints mCurrentFocus/mFocusedApp in DisplayContent, not the window list.
+  timeout -k 1s 3s adb shell dumpsys window displays 2>/dev/null |
     LC_ALL=C awk '/mCurrentFocus=|mFocusedApp=|mObscuringWindow=|mInputMethodWindow=/ {if(n++<12)print substr($0,1,400)}' || true
   timeout -k 1s 3s adb shell dumpsys window policy 2>/dev/null |
-    LC_ALL=C awk '/mShowingLockscreen|mKeyguard|isKeyguard|keyguardShowing|keyguardOccluded|mScreenOn|screenOn|screenState/ {if(n++<20)print substr($0,1,400)}' || true
+    LC_ALL=C awk '/mShowingLockscreen|mKeyguard|isKeyguard|keyguardShowing|keyguardOccluded|mScreenOn|screenOn|screenState|^[[:space:]]*(showing|inputRestricted|occluded)=/ {if(n++<20)print substr($0,1,400)}' || true
   timeout -k 1s 3s adb shell dumpsys power 2>/dev/null |
     LC_ALL=C awk '/mWakefulness=|mInteractive=|mHoldingDisplaySuspendBlocker=|Display Power: state=|mDisplayPowerRequest=|mScreenOffTimeoutSetting=|mStayOn=/ {if(n++<16)print substr($0,1,400)}' || true
 }
