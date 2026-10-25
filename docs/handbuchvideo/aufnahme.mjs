@@ -38,7 +38,7 @@ await ctx.addInitScript(() => {
   const inbox2 = [['Fotos vom Wochenende', 'Anna', 4], ['Einladung Grillfest', 'Familie Berger', 9], ['Zeugnis Schuljahr', 'Grundschule am Park', 30], ['Ihre Rechnung Oktober', 'Stadtwerke Musterstadt', 33], ['Reiseplan Ostsee', 'Ferienhof Sonnenblick', 70]];
   window.__mail = { T: { INBOX: 128, Spam: 2, Trash: 6 } };
   window.Capacitor = { isNativePlatform: () => true, Plugins: {
-    ProDevice: { async getInfo() { return { platform: 'android', versionName: '1.0.0-preview.28', nativeMail: true }; } },
+    ProDevice: { async getInfo() { return { platform: 'android', versionName: '1.0.0-preview.35', nativeMail: true }; } },
     ProVault: new Proxy({ async state() { return { configured: true, unlocked: true, location: 'sdcard', folder: 'Private Brain', reachable: true, attachments: 3, attachmentBytes: 4.2e6 }; },
       async volumes() { return { items: [] }; } }, { get: (o, k) => o[k] || (async () => ({ items: [], ok: true })) }),
     ProNetwork: { async getState() { return { offline: false }; }, async setOffline({ offline }) { return { offline }; } },
@@ -83,7 +83,8 @@ const warte = ms => page.waitForTimeout(ms >= 1200 ? ms * .7 : ms);   // Ruhepau
 const text = async html => { await page.evaluate(h => B.text(h), html); await warte(250); };
 const kapitel = (n, t) => page.evaluate(([n, t]) => B.kapitel(n, t), [n, t]);
 const rect = sel => page.evaluate(s => B.rect(s), sel);
-const szenen = [];
+const szenen = [], schnitte = [];   // schnitte: Zeitspannen ohne Aufnahme, schnitt.mjs schneidet sie heraus
+const jetzt = () => page.evaluate(() => (performance.timeOrigin + performance.now()) / 1000);
 const szene = async n => { szenen.push({ n, t: await page.evaluate(() => (performance.timeOrigin + performance.now()) / 1000) }); };
 const standbild = async n => { if (dev) await page.screenshot({ path: path.join(ZIEL, `stand-${n}.jpg`), type: 'jpeg', quality: 70 }); };
 async function warteAuf(sel, ms = 30000) { await app.waitForSelector(sel, { state: 'visible', timeout: ms }); }
@@ -128,6 +129,13 @@ async function tippeText(sel, wort) {
   await app.evaluate(s => { const e = document.querySelector(s); e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); }, sel);
   for (const z of wort) { await page.keyboard.type(z); await warte(55); }
   await warte(450);
+}
+async function ziehe(sel, dx) {   // Spalte ziehen: die Hand hält den Griff und zieht (echte Maus)
+  await warteAuf(sel); const r = await rect(sel); const x = r.x + r.w / 2, y = r.y + r.h / 2;
+  await page.evaluate(([x, y]) => B.handZu(x, y), [x, y]); await warte(300);
+  await page.mouse.move(x, y); await page.evaluate(() => B.druck()); await page.mouse.down();
+  for (let i = 1; i <= 24; i++) { const xx = x + dx * i / 24; await page.mouse.move(xx, y); await page.evaluate(([x, y]) => B.handZu(x, y, 30, true), [xx, y]); }
+  await page.mouse.up(); await warte(500);
 }
 const karte = (html, rein, raus, halten, klasse) => page.evaluate(a => B.karte(...a), [html, rein, raus, halten, klasse]);
 const kartenWeg = raus => page.evaluate(r => B.kartenWeg(r), raus);
@@ -197,7 +205,11 @@ async function szeneDateien() {
   await wahl.setFiles(DATEIEN);
   await handWeg();
   await text('Jede Datei wird <b>einmal gelesen und geprüft</b>');
-  await app.waitForFunction(n => typeof CATALOG !== 'undefined' && CATALOG.length >= n && !window.signing, DATEIEN.length, { timeout: 90000 });
+  await warte(3200);
+  // Lesen, Texterkennung und Prüfung dauern im Browser fast eine Minute: diese Wartezeit wird nicht aufgenommen (Schnitt)
+  { const war = laeuft; laeuft = false; const von = await jetzt();
+    try { await app.waitForFunction(n => typeof CATALOG !== 'undefined' && CATALOG.length >= n && !window.signing, DATEIEN.length, { timeout: 180000 }); await app.waitForSelector('#pbImportDone', { state: 'visible', timeout: 120000 }).catch(() => {}); await warte(400); }
+    finally { schnitte.push([von, await jetzt()]); laeuft = war; } }
   await insBild('#pbImportDone');
   await text('Danach steht da, <b>wo alles hingekommen ist</b>');
   await zoom('#pbImportDone', 1.4);
@@ -215,15 +227,17 @@ async function szeneSuchen() {
   await page.keyboard.press('Enter');
   await handWeg();
   await warte(1200);
-  await text('Oder klassisch nach dem <b>Namen</b>: ein Tipp schaltet um');
-  const nm = await markiere('#mode button, #mode *', 'Namenssuche', 'namens');
-  await zeige(nm, { halten: 1400 });
+  // neue Suche (Android .34/.35): ein Schalter „Bedeutung“ neben der Lupe, das Sprachkürzel neben dem Mikrofon
+  await text('Der Schalter <b>Bedeutung</b> findet auch, was anders heißt');
+  await zeige('#mode [data-m="mean"]', { halten: 1600 });
   await zeige('#mic', { halten: 400 });
-  await text('Mit 🎤 einfach <b>sprechen</b> statt tippen');
-  await warte(1600);
+  await text('Mit dem Mikrofon einfach <b>sprechen</b> statt tippen');
+  await warte(1400);
+  const kuerzel = await markiere('summary', 'DE', 'kuerzel').catch(() => null);
+  if (kuerzel) { await zeige(kuerzel, { halten: 400 }); await text('Daneben das Kürzel: <b>in welcher Sprache</b> du sprichst'); await warte(1500); }
   await handWeg();
   await zoom('#results', 1.3);
-  await text('Die Suche nach <b>Bedeutung</b> findet auch, was anders heißt');
+  await text('Jeder Treffer zeigt, <b>warum</b> er gefunden wurde');
   await warte(3400);
   await standbild('suchen');
   await zoom(null);
@@ -292,6 +306,11 @@ async function szeneMail() {
   await warte(2600);
   if (hoch) return;   // am Handy liegt „Alle Konten“ hinter der Ordnerliste; das Querformat zeigt es
   if (gezoomt) { await zoom(null); await warte(1150); }   // sonst liegt „Abrufen“ außerhalb des Bildes
+  // neu seit .31/.32: Übersetzen auf dem Gerät und Spalten, die sich ziehen lassen
+  const ue = await markiere('#mailWorkspace button', 'Übersetzen', 'uebersetzen').catch(() => null);
+  if (ue) { await text('Mail in einer anderen Sprache? <b>Übersetzen</b> läuft auf dem Gerät'); await zeige(ue, { halten: 1600 }); }
+  await app.evaluate(() => { const g = [...document.querySelectorAll('#mailWorkspace .pb-pane-splitter')].filter(e => e.getClientRects().length).sort((a, b) => b.getBoundingClientRect().x - a.getBoundingClientRect().x)[0]; if (g) g.dataset.film = 'spalte'; });
+  if (await app.$('[data-film="spalte"]')) { await text('Die Spalten lassen sich <b>breiter ziehen</b>'); await ziehe('[data-film="spalte"]', 170); await warte(500); await ziehe('[data-film="spalte"]', -170); await standbild('spalten'); }
   const alle = await markiere('#mailWorkspace button, #mailWorkspace a, #mailWorkspace li', 'Alle Konten', 'alle');
   await tippe(alle, { nachher: 1000 });
   const abruf = await markiere('#mailWorkspace button', 'abrufen', 'abruf');
@@ -334,7 +353,7 @@ async function szeneWerkzeuge() {
   const menue = await markiere('summary', 'App-Menü', 'menue');
   await seitenwechsel(menue, { faktor: 2.2 });
   await standbild('werkzeuge');
-  await warte(2600);
+  await warte(1700);
   if (hoch) {   // am Handy schließt das Menü beim Sprachwechsel; die Knöpfe stehen im selben Menü
     await text('Im selben Menü: <b>vier Sprachen</b> und <b>hell oder dunkel</b>');
     await warte(2600);
@@ -343,18 +362,22 @@ async function szeneWerkzeuge() {
   }
   const auf = async () => { if (!await app.evaluate(() => [...document.querySelectorAll('details')].some(d => d.open && d.textContent.includes('Mycel')))) await tippe(menue, { nachher: 900 }); };
   await text('Vier Sprachen: <b>Deutsch, English, Русский, Polski</b>');
-  await tippe('button[data-lang="en"]', { nachher: 2200, lesen: 2.2 });
+  await tippe('button[data-lang="en"]', { nachher: 900, lesen: 2.2 });
+  await zoom(null); await warte(1300);   // die ganze Seite auf Englisch zeigen, nicht nur die Ecke
   await standbild('englisch');
   await auf();
   await tippe('button[data-lang="de"]', { nachher: 1200 });
-  await auf();
-  await text('Hell oder <b>dunkel</b>, wie es deinen Augen guttut');
-  await tippe('#themeToggle', { nachher: 2400 });
-  await standbild('dunkel');
-  await auf();
-  await tippe('#themeToggle', { nachher: 1000 });
   if (await app.evaluate(() => [...document.querySelectorAll('details')].some(d => d.open && d.textContent.includes('Mycel')))) await tippe(menue, { nachher: 600 });
-
+  // Farbthemen (#76): die Palette oben rechts, vier Themen
+  await text('Vier <b>Farbthemen</b>: Klarblau, Graphit, Petrol und Nachtblau');
+  const thema = async (name, halten) => {
+    await tippe('#pb-palette-button', { nachher: 700, lesen: 2.0 });
+    await tippe(`[data-pb-palette-choice="${name}"]`, { nachher: 500 });
+    await zoom(null); await handWeg(); await warte(halten);
+  };
+  await thema('petrol', 1200); await standbild('petrol');
+  await thema('nachtblau', 1500); await standbild('nachtblau');
+  await thema('klarblau', 300);
 }
 async function szeneSchluss() {
   await szene('Schluss');
@@ -379,6 +402,6 @@ if (probe) { await karte(`<div class="floh"></div><h1 class="auf">Private Brain 
 await stop();
 const klicks = await page.evaluate(() => (window.__klicks || []).map(k => performance.timeOrigin + k));
 const puzzle = await page.evaluate(() => (window.__puzzleTon || []).map(k => (performance.timeOrigin + k) / 1000));
-fs.writeFileSync(path.join(ZIEL, 'zeiten.json'), JSON.stringify({ W, H, bilder, klicks: klicks.map(k => k / 1000), puzzle, szenen }, null, 1));
+fs.writeFileSync(path.join(ZIEL, 'zeiten.json'), JSON.stringify({ W, H, bilder, klicks: klicks.map(k => k / 1000), puzzle, szenen, schnitte }, null, 1));
 console.log(`${NAME}: ${bilder.length} Bilder, ${klicks.length} Klicks → ${ZIEL}`);
 await browser.close(); srv.close();
