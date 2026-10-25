@@ -1,4 +1,22 @@
-# Windows-Bau von Private Brain Pro
+# Windows 1.0.36 veröffentlicht — 2026-10-25
+
+Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, PR #82 übernommen. [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe)
+über die vorhandene Installation installieren; Kennung `de.familyprojekt.privatebrain.pro`,
+Installationsziel pro Benutzer, Datenpfade und Passwortformat bleiben erhalten.
+
+- [Windows-main 40195090159](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195090159/job/121174098778) erfolgreich: Grundfunktionen, Neustart/Neuinstallation, echte Produktionsüberinstallation .29 → 1.0.36 und abschließende normale Installation ohne Prüfzugang.
+- Die Updateprobe bestätigt vollständige Originalbytes, Katalog/Tags, RU-/Dunkel-Einstellung, Offlinezustand, PBV1-Katalogsicherung, DPAPI-Merken und Passwort-Entsperren nach Kaltstart. Zwischen alter und neuer Installation wurden die Testdaten nicht zurückgesetzt.
+- Release [40196030462](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40196030462) erfolgreich: Prüfung `121176929493`, Veröffentlichung `121177007769`. Der bereits abgenommene Installer wird unverändert veröffentlicht.
+- Öffentlicher Download unabhängig geprüft: **58.666.597 Bytes**, SHA-256 `138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091`. API-Asset-Digests, veröffentlichte Prüfsummen, Tag/Quelle und Bauquittung stimmen.
+- Alle 24 ursprünglichen und erzeugten Java-Fingerabdrücke sowie fünf Abhängigkeiten gegen denselben Quellstand geprüft. Ausdrückliche Plattformadapter werden als solche geprüft und nicht fälschlich als bytegleich behauptet.
+- Windows x64, NSIS pro Benutzer, `signing=unsigned`, `testEndpoint=false`. Keine Authenticode-Signatur behauptet; die lokale Byteprüfung führt den Installer nicht aus. Die tatsächliche Installation lief auf dem GitHub-Windows-Runner.
+
+Klaus' eigener Windows-Rechner, gesprochenes Diktat und physisches Samsung DeX
+gehören nicht zu diesen Nachweisen. [Maschinenlesbarer Nachweis](design/umbau-2026-10-24/windows-1.0.36-pruefung.json).
+
+---
+
+# Historischer Windows-Bau von Private Brain Pro
 
 Stand: 2026-10-23. Klaus hat die erneute Prüfung der veröffentlichten V28,
 Fehlerkorrekturen und eine zusätzliche native Windows-Version beauftragt.

@@ -1,23 +1,32 @@
 # Android-Grundversion
 
-## Varianten und Daten
+## Varianten, Veröffentlichungskanäle und Daten
 
-- `debug`: Entwicklung, Kennung `de.familyprojekt.privatebrain.pro.preview.debug`.
-  Debugsignierung; keine dauerhafte öffentliche Update-Linie.
-- `preview`: installierbare, extern signierte App **Private Brain Pro**, Kennung
-  `de.familyprojekt.privatebrain.pro.preview`. Kein Web-Debugging.
-- `release`: spätere stabile App, Kennung `de.familyprojekt.privatebrain.pro`.
+Die öffentliche Version 1.0.36 aktualisiert die bereits installierte Android-App.
+Der technische Paketname bleibt `de.familyprojekt.privatebrain.pro.preview`;
+er ist kein Produktzusatz und wird für die Daten- und Updatekompatibilität erhalten.
 
-Vorschau- und stabile Update-Linie sind getrennte Installationen und übernehmen einander nicht
-automatisch die Daten. Für Updates innerhalb einer Linie müssen Kennung und
-Signierschlüssel gleich bleiben und `versionCode` steigen. Der Katalog liegt im
-privaten WebView-Speicher. Updates löschen ihn nicht absichtlich; die signierte Updateprobe ist im
-[Prüfstand](PRUEFSTAND-ANDROID.md) dokumentiert. Vollständige Nutzerdatenmigration
-am Tablet bleibt gesondert zu prüfen. Deinstallieren löscht Appdaten.
-Die Daten einer Browser-PWA werden nicht automatisch in die native App übernommen.
-Android-Backup ist zunächst ausgeschaltet, damit spätere Kontogeheimnisse nicht
-unbeabsichtigt in Gerätesicherungen gelangen. Vor Produktionsreife ist ein explizites,
-verschlüsseltes Sicherungs- und Wiederherstellungskonzept erforderlich.
+- `debug`: Entwicklungsbau mit `de.familyprojekt.privatebrain.pro.preview.debug`;
+  Debugsignierung, kein öffentlicher Nutzerupdatekanal.
+- `preview`: technische Bauvariante für die vorhandene App mit unveränderter Kennung
+  `de.familyprojekt.privatebrain.pro.preview` und ursprünglichem Signierer.
+  Daraus stammen historische `test`-Ausgaben und die öffentliche `public`-Ausgabe.
+- `release`: separates Produktionspaket `de.familyprojekt.privatebrain.pro` für den
+  Workflowkanal `stable`. Es ersetzt die vorhandene App nicht und braucht eine
+  eigene geprüfte Signieridentität; deren Einrichtung wird hier nicht behauptet.
+
+Für ein Update müssen Paketkennung und Signierer gleich bleiben und `versionCode`
+steigen. Die signierte Updateprobe ist im [Prüfstand](PRUEFSTAND-ANDROID.md)
+dokumentiert. Die beiden Paketkennungen sind getrennte Installationen; eine
+Übernahme zwischen ihnen geschieht nicht automatisch. Der Katalog liegt im privaten
+WebView-Speicher. Deinstallieren löscht Appdaten; ein Update wird über die vorhandene
+Installation installiert. Eine vollständige Prüfung von Klaus' realen Nutzerdaten
+auf dem Tablet bleibt von den synthetischen CI-Belegen getrennt.
+
+Daten einer Browser-PWA werden nicht automatisch in die native App übernommen.
+Android-Backup ist ausgeschaltet, damit Kontogeheimnisse nicht unbeabsichtigt in
+Gerätesicherungen gelangen. Die App besitzt einen eigenen verschlüsselten
+Speicherordner und Katalogsicherungen; [Einrichtung und Wiederherstellung](SPEICHERORT-UND-TRESOR.md).
 
 Ab Version .13 heißt die App ohne „Test“ **Private Brain Pro**. Die technische
 Update-Linie bleibt erhalten. [Namensänderung und Google](APP-NAME.md).
@@ -34,29 +43,41 @@ Es wird nicht als Nutzerupdate verteilt. Die vollständigen Browserproben nutzen
 mitgelieferte öffentliche PDF-Testdateien und brauchen keinen Zugriff auf weitere
 private Repositories.
 
-Für verteilbare Testversionen: GitHub-Umgebung `android-preview`, später getrennt
-`android-production`, mit folgenden **Secrets** (Werte niemals in Chat/Commit):
+Der Ablauf **Signierte Android-Veröffentlichung** besitzt drei ausdrücklich
+getrennte Kanäle:
 
-- `ANDROID_KEYSTORE_BASE64`
-- `ANDROID_KEYSTORE_PASSWORD`
-- `ANDROID_KEY_ALIAS`
-- `ANDROID_KEY_PASSWORD`
+| Kanal | App-Identität und Veröffentlichung |
+|---|---|
+| `public` | Stabiles öffentliches Update der vorhandenen `.preview`-Paketkennung, z. B. `v1.0.36`, ursprünglicher Signierer, verpflichtende signierte Updateprobe und GitHub-Release ohne Prerelease-Kennzeichnung. |
+| `test` | Historische Prerelease-Updateausgaben derselben Paketkennung mit `v…-preview.N`; ebenfalls ursprünglicher Signierer und signierte Updateprobe. |
+| `stable` | Separates Produktionspaket `.pro` mit anderer Identität. Kein Update der bestehenden `.preview`-App; eigene geprüfte Signierkonfiguration erforderlich. |
 
-Der Schlüssel ist dauerhaft und unabhängig von der Cloud-Maschine sicher zu sichern;
-vor öffentlicher Verteilung muss die Wiederherstellung geprüft sein. Für Produktion
-keinen flüchtigen Debugschlüssel verwenden. Ein lokal erstellter Vorschau-Schlüssel
-ist ausschließlich für Tests und kein nachgewiesenes langfristiges Backup.
+`public` baut und signiert in der bisherigen Identitätsumgebung `android-preview`.
+Der Originalschlüssel bleibt dort; es werden keine Secrets kopiert. Erst der
+Veröffentlichungsjob benötigt die geschützte Freigabe von `android-production`.
+Damit liegen APK und bestandene Updateprobe vor einer möglichen Freigabeprüfung
+bereits konkret vor. `test` bleibt bei `android-preview`; der getrennte Kanal
+`stable` behält seine eigene Produktionskonfiguration.
 
-Der Ablauf **Signierte Android-Testversion oder stabile Version** kann für
-Vorschauen durch einen Versions-Tag auf einem geprüften main-Commit ausgelöst
-werden. Signatur- und Versionsprüfung sowie signierte Emulator-Updateprobe müssen
-vor der Veröffentlichung bestehen. [Vollständige Anleitung für beide Sitzungen](VEROEFFENTLICHEN.md).
-Manueller Start auf `main` bleibt verfügbar:
-`test` + Tag passend zur `versionName` (z. B. `v0.1.0-preview.1`). Die APK wird als
-GitHub-Prerelease bereitgestellt, mit überprüfter Signatur und SHA-256. Stabile Tags
-haben keinen Vorschauzusatz. `versionName` und `versionCode` vor jeder neuen Version
-anpassen. Produktion baut zusätzlich ein AAB zur Vorbereitung auf Google Play;
-keine Store-Veröffentlichung und keine Kostenfreigabe sind damit verbunden.
+Der bisherige Originalschlüssel ist ausschließlich verschlüsselt im Repository
+gesichert. Seine Freigabe `PB_SIGNING_UNLOCK` bleibt im zuständigen GitHub-
+Environment. Schlüsselwerte gehören niemals in Chat, Checkout oder Commit;
+keinen neuen App-Signierschlüssel für ein Update erzeugen.
+[Signieridentität und gesicherter Veröffentlichungsweg](VEROEFFENTLICHEN.md).
+
+Öffentliche Updates werden auf `main` manuell mit `channel=public`, passendem
+`tag` wie `v1.0.36` und optionalem vollständigem `source_commit` gestartet.
+`dry_run=true` baut, signiert und prüft, veröffentlicht aber nichts. Automatische
+Vorschau-Versions-Tags bleiben dem historischen `test`-Kanal vorbehalten.
+Vor jedem neuen Release `versionName` und `versionCode` anpassen; alle fachlichen
+Prüfungen und die signierte Updateprobe müssen bestehen.
+
+Der öffentliche Release enthält `ANDROID-IDENTITY.json` mit Paketkennung,
+Signierer-Pin, Quellcommit, Version, APK-Dateiname und APK-SHA-256. Die Baseline-
+Auswahl prüft diese Identität und bei älteren Ausgaben die tatsächliche APK,
+statt einen gleich benannten Release einer anderen Paketlinie zu übernehmen.
+Der Workflow erstellt gegebenenfalls zusätzlich ein App Bundle; dadurch werden
+weder eine Store-Veröffentlichung noch Kosten freigegeben.
 
 Bei direkter APK-Installation bestätigt der Nutzer Androids Installationsdialog und
 gegebenenfalls die Freigabe der Download-App.
@@ -67,8 +88,24 @@ GitHub-Release-API und überträgt keine Dokumente, Mailkonten oder Zugriffstoke
 GitHub sieht dabei technisch die Netzwerkadresse des Geräts. Offline und bei
 API-Limits erscheint eine verständliche Meldung; die App bleibt nutzbar.
 
-Die native Schnittstelle vergleicht numerische Versions-Tags getrennt für
-Vorschau und Produktion. Entwürfe und unpassende Kanäle werden ausgelassen.
+Die native Schnittstelle vergleicht numerische Versionen innerhalb der installierten
+Paketlinie. Historische `-preview.N`-Angebote werden nur berücksichtigt, solange
+auch die installierte Version noch eine solche Versionskennung hat. Nach dem
+Wechsel auf 1.0.36 werden keine Prereleases mehr angeboten, auch nicht mit einer
+höheren Hauptversion. Entwürfe und unpassende Veröffentlichungsflags werden verworfen.
+
+Öffentliche Angebote benötigen `ANDROID-IDENTITY.json` mit passendem Paket,
+installiertem einzelnen Signierer, Tag/Versionsname, ausdrücklich höherem
+VersionCode, erwartetem APK-Namen und vollständiger SHA-256-Angabe. Ein vorhandener
+GitHub-Assetdigest muss dazu passen. Die APK-Bytes werden dabei nicht vorab geladen.
+`public` gehört zur bisherigen
+`.preview`-Paketkennung; das separate `stable`-Paket `.pro` ersetzt sie nicht.
+Die Quittung ist auf 16 KiB und feste GitHub-Releaseadressen begrenzt.
+
+Die bereits veröffentlichte Android .35 erkennt die neuen öffentlichen Tags noch
+nicht. Für die erste Aktualisierung auf 1.0.36 den oben verlinkten APK-Download
+verwenden und über die vorhandene App installieren. Danach unterstützt die neue
+Version die öffentlichen Folgeupdates.
 Es werden die letzten 30 öffentlichen Releases betrachtet. Nur ein Release mit
 passend benannter hochgeladener APK wird angeboten. Entwicklungsbuilds erhalten
 keine Nutzerupdates. Der Download-Link wird fest aus Repository, geprüftem Tag und
@@ -135,8 +172,8 @@ Details zu Versandzuständen, Größenlimits und Bibliotheksrechten:
 
 ## Erste direkte Geräte-Mail testen
 
-Aktueller [APK-Download (.35)](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
-Über die vorhandene Test-App installieren, ohne sie zu deinstallieren.
+Aktueller [APK-Download (1.0.36)](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
+Über die vorhandene App installieren, ohne sie zu deinstallieren.
 Postfach → Mailkonto verbinden → Telekom / T-Online oder Hetzner.
 Die E-Mail-Adresse und das separate Passwort für E-Mail-Programme nur im nativen
 Dialog eingeben. Bei gleichem Benutzernamen darf dieses Feld leer bleiben.

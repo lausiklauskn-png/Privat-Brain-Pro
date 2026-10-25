@@ -1,4 +1,26 @@
-# Aktueller Prüfstand: veröffentlichte .35 — 2026-10-25
+# Aktueller Prüfstand: veröffentlichte 1.0.36 — 2026-10-25
+
+[APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
+
+- Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, PR #82 übernommen; Android-VersionCode 36, ursprüngliche Kennung und Signatur erhalten.
+- Elf fachliche main-Prüfungen und separater Windows-Anforderungscheck erfolgreich: [android](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195090154), [windows](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195090159), [signing](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195090179), [pages](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195089234).
+- [60 native Fälle](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40195090154/job/121174098673) ohne Fehler oder Skips.
+- Android-Release [40196553168](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40196553168) vollständig erfolgreich: Build `121178509345`, signiertes Update .35 → 1.0.36 `121180739384`, Veröffentlichung `121181249305`. Seed/Baseline/Verify bestanden.
+- Öffentliche APK unabhängig geladen: **18.671.196 Bytes**, SHA-256 `e32b9975c8c3b67749d182b79c618b92bc1741240d67e1ba3743aab9cbdaa9ad`. API-Digests, Tag/Quelle, öffentliche Identitätsquittung und ursprüngliche Zertifikatskennung im veröffentlichten Signaturbericht stimmen. Die kryptographische Signatur- und installierte Updateprüfung lief in CI; der lokale Prüfer vergleicht Bericht und Bytes.
+- 44 native Dateien einschließlich des vorhandenen `native.js`-Versionsadapters, drei Mail-/Explorerressourcen, 39 OCR-Dateien, 29 OCR-Lizenztexte und 22 geschützte Module gegen Quelle/Pins geprüft.
+- Die gebündelte Impressums-/Datenschutzseite entspricht ebenfalls der Quelle; veraltete Probeversions- und Browser-only-Aussagen sind entfernt.
+- Gepackte native Startseite entspricht dem separat browsergeprüften Stand: `415f0c2abe9f5bf76e4fb321f48caa6ba769e9fced437a859ec39dd3fd11cc24`.
+- Windows 1.0.36 ist zusätzlich veröffentlicht: [Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe), echte installierte Übernahme .29 → 1.0.36 geprüft; der Installer bleibt unsigniert.
+
+Physisches Samsung DeX, Klaus' Tab S6 und reale SD-Zugriffe bleiben ungemessen.
+
+[Android-Nachweis](design/umbau-2026-10-24/android-1.0.36-pruefung.json),
+[Windows-Nachweis](design/umbau-2026-10-24/windows-1.0.36-pruefung.json),
+[Bedienung und Grenzen](design/umbau-2026-10-24/ERGEBNISSE-36.md).
+
+---
+
+# Veröffentlichte .35 — 2026-10-25
 
 [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
 PR #81 übernommen; Tag `v1.0.0-preview.35` zeigt exakt auf `d5635b7af9614757b36e3157023d5b68008ddb7a`,

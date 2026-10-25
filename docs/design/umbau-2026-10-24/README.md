@@ -1,7 +1,7 @@
 # Eigenständiger Designumbau · 24.10.2026
 
-**Android .35 ist veröffentlicht:** [APK über die vorhandene App installieren](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
-Quelle: `d5635b7af9614757b36e3157023d5b68008ddb7a`, [übernommener PR #81](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/81).
+**Android und Windows 1.0.36 sind veröffentlicht:** [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
+Gemeinsame Quelle: `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, [übernommener PR #82](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/82).
 
 Die vier positiv bewerteten Farbwelten bleiben Grundlage. Klaus hat anschließend
 die selbstständige Umsetzung, PR-Übernahmen und die Veröffentlichung einer
@@ -108,6 +108,20 @@ Die OCR gehört zum Funktionsumfang von .33; historische .32-Nachweise bleiben e
   [Bedienung und Grenzen](ERGEBNISSE-35.md),
   [Download- und Quellnachweis](android-preview35-pruefung.json),
   [Release 40171548476](https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40171548476).
+
+## Siebter umgesetzter App-Schritt (1.0.36)
+
+- Dieselben kleinen Bild-/PDF-Vorschauen in Suche, Explorer und Kategorien;
+  gemeinsame hashbasierte Zuordnung, Warteschlange und begrenzter Cache.
+- Miniatur und vollständige Originaldatei klar unterscheiden; nur tatsächlich
+  doppelte Fehlanzeigen entfallen. Wiederimport bekannter Inhalte speichert
+  fehlende vollständige Bytes erneut und erhält einen Katalogeintrag.
+- Android: signiertes Update .35 → 1.0.36. Windows: echte Produktionsüberinstallation
+  .29 → 1.0.36 mit erhaltenen Daten, verschlüsselter Sicherung und Passwortprüfung.
+- Beide öffentlichen Downloads unabhängig gegen Prüfsummen und Quelle geprüft.
+  [Bedienung und Grenzen](ERGEBNISSE-36.md),
+  [Android-Nachweis](android-1.0.36-pruefung.json),
+  [Windows-Nachweis](windows-1.0.36-pruefung.json).
 
 ## Stand der weiteren Funktionsvorschläge
 

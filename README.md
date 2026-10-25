@@ -1,8 +1,16 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android .35 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk).
-[Windows .29 veröffentlicht](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.0-preview.29).**
+**[Android 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk).
+[Windows 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).**
+Android und Windows 1.0.36 zeigen dieselben Bild-/PDF-Miniaturen auch im Explorer
+und in Kategorien. Gespeicherte Miniatur und vollständige Originaldatei bleiben
+klar unterschieden; tatsächliche Doppelmeldungen entfallen.
+[Bedienung und Nachweise](docs/design/umbau-2026-10-24/ERGEBNISSE-36.md).
+Android ist signiert; das Windows-x64-Setup bleibt wie bisher unsigniert.
+Beide Updates über die vorhandene Installation installieren. Für diesen Wechsel
+von Android .35 beziehungsweise Windows .29 die direkten Downloads oben verwenden.
+
 Android .35 strafft Trefferkarten mit lokalen Bild-/PDF-Vorschauen und einer
 kompakten Typ-/Tag-/Pfadzeile. Der ganze Pfad erscheint bei Hover, Fokus oder Tippen.
 Das Suchintro entfällt, Maus-/DeX-Buttons bleiben auch in schmalen Fenstern flach,
@@ -60,11 +68,14 @@ einen hellen Hintergrund.
 ## Entwicklung ohne eigenen PC
 
 GitHub Actions prüft den Code und erstellt Android-Build-Artefakte. Der Ablauf
-„Signierte Android-Testversion oder stabile Version“ veröffentlicht nach manuellem
-Start oder einem Vorschau-Versions-Tag und nur mit dem sicher in GitHub
-hinterlegten bisherigen Signierschlüssel. Kein automatisches Verteilen jedes
-Commits. [Gemeinsamer Veröffentlichungsweg für Claude und Codex](docs/VEROEFFENTLICHEN.md),
-[Android-Build und Signierung](docs/ANDROID.md).
+„Signierte Android-Veröffentlichung“ veröffentlicht die vorhandene App mit
+`channel=public` und einem Tag wie `v1.0.36` als öffentliches Update, mit ursprünglichem
+Signierer und verpflichtender signierter Updateprobe. Build und Signierung nutzen
+`android-preview` mit der bisherigen Identität; die öffentliche Veröffentlichung erhält ihre
+Freigabe getrennt in `android-production`. Historische `test`-Präreleases und der
+andere Paketname des Kanals `stable` bleiben getrennt. Kein automatisches Verteilen
+jedes Commits. [Veröffentlichungsweg für Claude und Codex](docs/VEROEFFENTLICHEN.md),
+[Android-Build, Kanäle und Signierung](docs/ANDROID.md).
 
 Für eine Build-Umgebung mit Node 22+, JDK 21 und Android SDK 36:
 

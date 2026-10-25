@@ -1,19 +1,29 @@
 # Private Brain Pro — Sitzungs-Anker
 
-Der Auftrag vom 25.10.2026 läuft weiter: Klaus verlangt eine öffentliche
-Veröffentlichung als **1.0.36**, keine Probeversion mehr. Android und Windows
-bekommen die Tags `v1.0.36` und `windows-v1.0.36`, ohne Prerelease-Kennzeichnung.
-Android-VersionCode 36, bisherige Paketkennung und ursprünglicher Signierer
-bleiben für die Aktualisierung vorhandener Installationen erhalten. Der technische
-Paketbestandteil `.preview` benennt keine weitere Probeausgabe für den Nutzer.
-Android .35 bleibt unverändert veröffentlicht; Windows wird von .29 aktualisiert.
-Das Update vereinheitlicht Bild-/PDF-Miniaturen und Originalstatus in Suche,
-Explorer und Kategorien anhand desselben Inhalts-Hashs. Eine Miniatur bestätigt
-keinen Zugriff auf die vollständige Datei. App-Originale, verschlüsselter
-Speicherordner und zusätzliche Ablagekopien bleiben getrennt zu prüfen.
-Erst nach beiden tatsächlich geprüften öffentlichen Downloads abschließen.
-Der bestehende Freibrief für Umsetzung, Merge und Veröffentlichung gilt weiter;
-keine erneute Rückfrage und keine Umbenennung der technischen App-Identität.
+Android und Windows 1.0.36 sind öffentlich verfügbar (25.10.2026); PR #82 übernommen.
+[Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.36/Private-Brain-Pro-1.0.36.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
+Gemeinsame Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`. Suche, Explorer und Kategorien verwenden dieselben
+hashbasierten Bild-/PDF-Miniaturen und denselben Originalstatus. Eine gespeicherte
+Miniatur ist kein Beleg für eine vollständige Datei; tatsächliche Doppelmeldungen
+entfallen. Der bekannte Dateiinhalt wird beim Wiederimport erneut gespeichert.
+Alle elf fachlichen main-Prüfungen und der getrennte Windows-Anforderungscheck
+sind erfolgreich; 60 native Fälle ohne Fehler/Skips.
+Android-VersionCode 36, bisherige Paketkennung und ursprünglicher Signierer erhalten.
+Android: signiertes Update .35 → 1.0.36 mit Seed/Baseline/Verify erfolgreich,
+Release `40196553168`, 18.671.196 Bytes, SHA-256 `e32b9975c8c3b67749d182b79c618b92bc1741240d67e1ba3743aab9cbdaa9ad`.
+Windows: echte Überinstallation .29 → 1.0.36 mit gleichem Datenpfad, Originalbytes,
+Einstellungen, PBV1-Sicherung und Entsperren nach Kaltstart erfolgreich;
+Release `40196030462`, 58.666.597 Bytes, SHA-256 `138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091`.
+Der Windows-Installer ist wie bisher unsigniert; der Auslieferungsbau besitzt
+keinen Prüfzugang. Beide öffentlichen Downloads wurden unabhängig geprüft.
+[Bedienung und Grenzen](docs/design/umbau-2026-10-24/ERGEBNISSE-36.md),
+[Android-Nachweis](docs/design/umbau-2026-10-24/android-1.0.36-pruefung.json),
+[Windows-Nachweis](docs/design/umbau-2026-10-24/windows-1.0.36-pruefung.json).
+Physisches Samsung DeX/Tab S6 und reale Reaktionszeiten bleiben ungemessen.
+Beide Veröffentlichungen sind erledigt; diese Version nicht erneut auslösen.
+Der bestehende Freibrief für weitere beauftragte Arbeit bleibt erhalten.
+
+## Frühere Veröffentlichungen
 
 Android .35 ist veröffentlicht (25.10.2026): [Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.0-preview.35/Private-Brain-Pro-1.0.0-preview.35.apk),
 VersionCode 35, Quelle `d5635b7af9614757b36e3157023d5b68008ddb7a`, PR #81 übernommen.

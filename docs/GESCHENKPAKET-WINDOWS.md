@@ -1,4 +1,21 @@
-# Private Brain Pro für Windows — Übergabe an Claude Code
+# Aktueller Windows-Installer 1.0.36
+
+[Windows 1.0.36 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.36/Private-Brain-Pro-Windows-1.0.36-x64-setup.exe).
+Quelle `a1bd98f40b0186c5a9a148dbd04d19979e6262c4`, 58.666.597 Bytes, SHA-256 `138bf5e8b4635e12bd87c70148c54539684c36fc130b7693913c8e4397bde091`.
+Der Installer ist unsigniert wie bisher; .29 → 1.0.36 wurde mit erhaltenen Daten geprüft.
+Die erste Aktualisierung von .29 erfolgt über diesen direkten Setup-Download;
+die neue Version unterstützt danach die öffentlichen Windows-Folgeupdates.
+[Release und Belegdateien](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.36),
+[Prüfstand](BAUSTAND-WINDOWS.md),
+[maschinenlesbarer Downloadnachweis](design/umbau-2026-10-24/windows-1.0.36-pruefung.json).
+
+Das unten dokumentierte Geschenk-ZIP und seine Übergabe gehören weiterhin zur
+historischen .29. Für 1.0.36 wird hier nur der neue Installer mit seinen drei
+Belegdateien bestätigt; kein aktualisiertes 1.0.36-Geschenk-ZIP wird behauptet.
+
+---
+
+# Historische .29-Übergabe an Claude Code
 
 **Windows .29 ist veröffentlicht.** PR #69 und #67 sind übernommen; Quelle
 `7e6fbfd821c6c105661ff638045f6b41e1ffb75b`, Release 39920396303 erfolgreich.
