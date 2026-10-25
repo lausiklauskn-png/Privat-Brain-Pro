@@ -127,6 +127,9 @@
     const rec=state.record,stored=availability(rec)==='local';
     // A native hash opens the checked original in Android; no PDF byte copy
     // crosses the bridge. Non-native/session-only PDFs use the existing viewer.
+    // A known-large catalog size already rules out an automatic thumbnail.
+    // Do not probe native metadata (or its recovery path) for such a file.
+    if(Number.isSafeInteger(rec.size)&&rec.size>pdfLimit)return null;
     if(!stored||typeof api.originalInfo!=='function')return null;
     const info=await api.originalInfo({hash:rec.hash});
     if(info.missing||info.hash!==rec.hash||!Number.isSafeInteger(info.size)||info.size<1||info.size>pdfLimit||!active(state))return null;

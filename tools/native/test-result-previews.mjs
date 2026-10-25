@@ -71,10 +71,15 @@ try{
   await page.evaluate(()=>fixtureRender([fixtureRecord(4,'pdf','missing',{snippet:'/Subtype /Image /BitsPerComponent 8 /Width 1754 /Height 629 JFIF ICC_PROFILE\u0000\u0001\u0002'})]));await page.locator('.pb-result-preview[data-state="missing"]').waitFor();
   ok('A missing scanned PDF gets an honest compact placeholder, not a fake image or binary dump',await page.locator('.pb-result-preview img').count()===0&&await page.locator('.snip').isHidden()&&await page.evaluate(()=>fixtureCalls.length)===beforeCached);
   await page.waitForTimeout(120);ok('Unavailable originals do not create a hot retry loop',await page.evaluate(()=>fixtureCalls.length)===beforeCached);
+  const beforeLargePdf=await page.evaluate(()=>fixtureCalls.length);
   await page.evaluate(()=>{
     const rec=fixtureRecord(5,'pdf','local',{size:16*1024*1024+1});fixtureRender([rec]);
   });await page.locator('.pb-result-preview[data-state="unavailable"]').waitFor();
-  ok('A PDF larger than 16 MiB is rejected by actual native metadata before any automatic PDF open',await page.evaluate(()=>fixtureCalls.filter(c=>c.method==='openPdf').length)===initialOpen);
+  ok('A known-large catalog PDF starts neither a native metadata probe nor an automatic PDF open',await page.evaluate(()=>fixtureCalls.length)===beforeLargePdf);
+  const beforeMisleadingSize=await page.evaluate(()=>fixtureCalls.length);
+  await page.evaluate(()=>{const rec=fixtureRecord(55,'pdf','local',{size:1200});fixtureOriginals.set(rec.hash,{hash:rec.hash,size:16*1024*1024+1,name:rec.name,type:rec.type});fixtureRender([rec]);});
+  await page.locator('.pb-result-preview[data-state="unavailable"]').waitFor();
+  ok('A small catalog hint cannot bypass the actual native 16 MiB limit',await page.evaluate(before=>{const calls=fixtureCalls.slice(before);return calls.length===1&&calls[0].method==='originalInfo';},beforeMisleadingSize));
   const beforeLargeImage=await page.evaluate(()=>fixtureResolveCount);
   await page.evaluate(()=>fixtureRender([fixtureRecord(6,'image','local',{size:2*1024*1024+1})]));await page.locator('.pb-result-preview[data-state="unavailable"]').waitFor();
   ok('Oversized image metadata prevents a whole-image bridge read',await page.evaluate(()=>fixtureResolveCount)===beforeLargeImage);
