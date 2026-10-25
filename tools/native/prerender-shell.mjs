@@ -128,7 +128,9 @@ export async function prerenderShell(source, root, { version } = {}) {
   // reads the same preferences as the later authoritative input adapter, with
   // no storage writes, native calls, locale guessing or delayed repaint.
   const restoreLanguage = `<script data-pb-startup="input-language">(()=>{const languages=${scriptJson(languages.map(({code, name}) => ({code, name})))},labels=${scriptJson(inputLabels)},read=key=>{try{return localStorage.getItem(key);}catch{return null;}},valid=code=>languages.some(item=>item.code===code);let code=read('pb_input_language_v1');if(!valid(code)){const ui=read('pb_lang')||String(document.documentElement.lang||'de').slice(0,2);code=valid(ui)?ui:'de';}const current=languages.find(item=>item.code===code),button=document.getElementById('pb-search-language'),menu=document.getElementById('pb-search-language-menu');if(!button||!menu)return;const ui=String(read('pb_lang')||document.documentElement.lang||'de').slice(0,2),label=(labels[ui]||labels.de)+': '+current.name;button.textContent=code.toUpperCase();button.setAttribute('aria-label',label);button.title=label;menu.setAttribute('aria-label',labels[ui]||labels.de);for(const choice of menu.querySelectorAll('[data-input-language]'))choice.setAttribute('aria-pressed',String(choice.dataset.inputLanguage===code));const query=document.getElementById('q');if(query){const override=query.getAttribute('data-pb-input-language');query.lang=valid(override)?override:code;}})();</script>`;
-  swap('      <div class="toggle" id="mode">', `      ${languageMenu}\n      ${restoreLanguage}\n      <div class="toggle" id="mode">`, 'input language');
+  // Keep the existing direct language/meaning sibling contract. The parser
+  // bootstrap runs inside the completed picker before its closing details.
+  swap('      <div class="toggle" id="mode">', `      ${languageMenu.replace('</details>', restoreLanguage + '</details>')}\n      <div class="toggle" id="mode">`, 'input language');
 
   // Preserve hidden original decoration text for equality checks and translators.
   const saved = '<button id="fSave" class="ghost" title="Diese Suche als Knopf speichern">💾 merken</button>';
