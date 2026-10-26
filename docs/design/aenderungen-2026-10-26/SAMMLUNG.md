@@ -18,4 +18,4 @@ Sechs Varianten:
 
 | Nr. | Wo (Seite) | Was ändern | Varianten | Stand |
 |---|---|---|---|---|
-| – | – | noch keine Punkte | – | – |
+| 1 | Suche (Startseite) | Die Kacheln „12 E-Mails · 19 Dateien · 9 lokal verknüpft“ (über dem Suchfeld) ohne Kästen als schlichte Schrift in die Zeile von „Katalog: 31 Dateien · Prüfstand“ legen. Eine einzige Zeile: E-Mails · Dateien · lokal verknüpft · Katalog · Prüfstand. Schrift klein genug, dass alles in eine Reihe passt. Nichts doppelt anzeigen. V3: gleiche Zeile (dort fehlen die Zähler bisher; „Alle geprüft“ steht allein) – sinngemäß anpassen. Bild: `punkt-01-suche-zaehler.jpg` (links V3, rechts Pro) | alle 6 | gesammelt |
