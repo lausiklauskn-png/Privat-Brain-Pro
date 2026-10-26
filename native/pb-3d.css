@@ -1,0 +1,86 @@
+/* 3D-Knöpfe (Klaus 2026-10-26, Sitzung 5, Punkte 5 und 6a). Dieselbe Datei in Pro (native/) und V3 (assets/).
+   Die vier Katalog-Kacheln der Übersicht und die Kategorie-Kacheln sind Knöpfe mit einem Verlauf aus dem
+   gewählten Thema (var(--acc) über var(--card)), einem leichten Glanz, der dem Zeiger folgt, und einer kleinen
+   Neigung zum Zeiger (höchstens 3°). Vorbild: die Glas-Knöpfe auf family-projekt.de (assets/style.css, .btn),
+   hier dezent für eine Arbeits-App: der Text liegt unverändert auf der Kartenfarbe, die Tönung ist schwach.
+   Der farbige Streifen links entfällt. „Weniger Bewegung“ des Systems: keine Neigung, kein Eindrücken. */
+:is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d {
+  --pb-3d-tint: .16; --pb-3d-shine: .55;
+  position: relative; overflow: hidden; isolation: isolate; cursor: pointer;
+  background: var(--card); background-image: none;
+  border: 1px solid var(--line);
+  border-color: color-mix(in srgb, var(--acc) 30%, var(--line));
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), inset 0 -3px 7px rgba(0,0,0,.09), inset 0 0 0 1px rgba(255,255,255,.2),
+    0 3px 8px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.08);
+  transform: perspective(600px) rotateX(var(--pb-rx, 0deg)) rotateY(var(--pb-ry, 0deg));
+  transition: transform .14s ease, box-shadow .18s ease;
+}
+/* Tönung aus dem Thema: oben links am kräftigsten, nach unten rechts verlaufend. */
+.pb-3d::before {
+  content: ""; position: absolute; inset: 0; width: auto; height: auto; z-index: -1; pointer-events: none;
+  border-radius: inherit; opacity: var(--pb-3d-tint);
+  background: linear-gradient(150deg, var(--acc) 0%, var(--acc) 18%, transparent 78%);
+}
+/* Glanz: ein weicher Lichtfleck am Zeiger und ein heller Schliff oben. */
+.pb-3d::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+  opacity: .5; transition: opacity .22s;
+  background: radial-gradient(90px 60px at var(--pb-mx, 50%) var(--pb-my, 18%), rgba(255,255,255, var(--pb-3d-shine)), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 48%);
+}
+.pb-3d > * { position: relative; z-index: 1; }
+@media (hover:hover) {
+  :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:hover {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -3px 7px rgba(0,0,0,.1), inset 0 0 0 1px rgba(255,255,255,.22),
+      0 6px 14px rgba(0,0,0,.14), 0 2px 3px rgba(0,0,0,.08);
+  }
+}
+.pb-3d:hover::after, .pb-3d:focus-visible::after { opacity: 1; }
+/* Die Neigung gilt auch gegen ältere Regeln, die Kacheln still halten (transform:none!important). */
+:is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:hover,
+:is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:active,
+:is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:focus-visible {
+  transform: perspective(600px) rotateX(var(--pb-rx, 0deg)) rotateY(var(--pb-ry, 0deg)) !important;
+}
+/* Mit dem Finger: kurz eingedrückt statt geneigt. */
+:is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d.pb-3d-press {
+  transform: perspective(600px) scale(.985) !important;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.14), inset 0 0 0 1px rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.08);
+}
+/* Dunkle Themen: schwächerer Glanz, dunklerer Schliff. */
+:is(html[data-theme="dunkel"], html[data-pb-theme="nachtblau"]) :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d {
+  --pb-3d-tint: .22; --pb-3d-shine: .22;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), inset 0 -3px 7px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06),
+    0 3px 8px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+}
+:is(html[data-theme="dunkel"], html[data-pb-theme="nachtblau"]) .pb-3d::after {
+  background: radial-gradient(90px 60px at var(--pb-mx, 50%) var(--pb-my, 18%), rgba(255,255,255, var(--pb-3d-shine)), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 48%);
+}
+
+/* Übersicht: etwas kleiner als bisher (am Handy sonst nur vier große Kacheln), Text deutlich lesbar. */
+#panel-dash .tiles { gap: 8px; margin: 2px 0 12px; }
+#panel-dash .tile.pb-3d { padding: 9px 12px 8px; min-height: 0; text-align: left; }
+/* Lesbarkeit auf der Tönung: Nebentexte und die farbigen Zahlen etwas näher an der Textfarbe (gemessen in test-design-26). */
+#panel-dash .tile.pb-3d .k { font-size: .76rem; line-height: 1.3; letter-spacing: .02em; text-transform: none; font-weight: 650; color: var(--mut); color: color-mix(in srgb, var(--mut) 84%, var(--ink)); }
+#panel-dash .tile.pb-3d .v { font-size: 1.35rem; line-height: 1.2; margin: 3px 0 1px; font-weight: 700; color: var(--ink); }
+#panel-dash .tile.pb-3d.money .v { color: var(--good); color: color-mix(in srgb, var(--good) 72%, var(--ink)); }
+#panel-dash .tile.pb-3d.alert .v { color: var(--bad); color: color-mix(in srgb, var(--bad) 72%, var(--ink)); }
+#panel-dash .tile.pb-3d .u { font-size: .72rem; line-height: 1.4; color: var(--mut); color: color-mix(in srgb, var(--mut) 84%, var(--ink)); }
+@media (max-width: 650px) { #panel-dash .tile.pb-3d { padding: 8px 10px 7px; } }
+
+/* Kategorien: dieselben Knöpfe, die Kacheln bleiben in ihrem Raster. */
+#groups > .grp.pb-3d, .pb-overview-topics > .groups > .grp.pb-3d { text-align: left; }
+#groups > .grp.pb-3d .n, .pb-overview-topics > .groups > .grp.pb-3d .n { color: var(--ink); }
+#groups > .grp.pb-3d .c, .pb-overview-topics > .groups > .grp.pb-3d .c { color: var(--mut); color: color-mix(in srgb, var(--mut) 84%, var(--ink)); }
+
+/* „Weniger Bewegung“: keine Neigung, kein Eindrücken, nur Glanz und Rahmen. */
+@media (prefers-reduced-motion: reduce) {
+  .pb-3d,
+  :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:hover,
+  :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:active,
+  :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d:focus-visible,
+  :is(#panel-dash .tile, #groups > .grp, .pb-overview-topics > .groups > .grp).pb-3d.pb-3d-press { transform: none !important; transition: none !important; }
+  .pb-3d::after { transition: none; }
+}

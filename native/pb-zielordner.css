@@ -1,0 +1,17 @@
+/* Kategorien: Vorschau und Zielordner als Baum unter den Knöpfen (Klaus 2026-10-26, Sitzung 5, Punkt 6a).
+   Dieselbe Datei in Pro (native/) und V3 (assets/). Kein Kasten: eine Überschrift, eine Zeile, der Baum mit
+   feinen Führungslinien. */
+.pb-zielordner { margin: 10px 0 0; max-width: 100%; }
+.pb-zielordner[hidden] { display: none !important; }
+.pb-zielordner .pb-zo-title { margin: 0 0 2px; font-size: .92rem; line-height: 1.4; color: var(--ink); }
+.pb-zielordner .pb-zo-summary, .pb-zielordner .pb-zo-note, .pb-zielordner .pb-zo-more { margin: 0 0 6px; font-size: .84rem; line-height: 1.5; }
+.pb-zielordner .pb-zo-tree { list-style: none; margin: 4px 0 6px; padding: 0; }
+.pb-zielordner .pb-zo-tree .pb-zo-tree { margin: 0 0 0 9px; padding-left: 14px; border-left: 1px solid var(--line); }
+.pb-zielordner .pb-zo-node { display: flex; align-items: center; gap: 6px; min-height: 26px; padding: 1px 0; font-size: .88rem; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+.pb-zielordner .pb-zo-file .pb-zo-node { color: var(--mut); }
+.pb-zielordner .pb-zo-name { min-width: 0; }
+.pb-zielordner .pb-zo-count { flex: none; margin-left: 2px; font-size: .76rem; color: var(--mut); }
+.pb-zielordner .pb-zo-icon { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pb-zielordner .pb-zo-folder > .pb-zo-node .pb-zo-icon { color: var(--acc); }
+.pb-zielordner .pb-zo-close { min-height: 28px; margin: 4px 0 0; padding: 3px 12px; font-size: .84rem; }
+.pb-cats-why { display: inline; }

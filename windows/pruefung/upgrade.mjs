@@ -1,4 +1,4 @@
-// CI-only acceptance: real production 1.0.37 -> 1.0.38 data/installer update.
+// CI-only acceptance: real production 1.0.38 -> 1.0.39 data/installer update.
 // Run from the repository root after npm ci. It never chooses the OS folder;
 // the companion PowerShell helper must select PB_WINDOWS_UPGRADE_VAULT.
 import assert from 'node:assert/strict';
@@ -26,10 +26,10 @@ const PASSWORD='CI-only Windows Upgrade ä Ж 2026';
 const NAME='windows-upgrade-proof-Ж.txt';
 const FIXTURE_PATH='Upgradeprobe/'+NAME;
 const STAMP=1792886400000;
-const bytes=Buffer.from('Private Brain Windows installer upgrade 37 to 38. Fixture only. ä Ж\n'+marker+'\n','utf8');
+const bytes=Buffer.from('Private Brain Windows installer upgrade 38 to 39. Fixture only. ä Ж\n'+marker+'\n','utf8');
 const hash=sha256(bytes);
-const expectedVersion=phase==='seed'?'1.0.37':'1.0.38';
-const expectedCode=phase==='seed'?37:38;
+const expectedVersion=phase==='seed'?'1.0.38':'1.0.39';
+const expectedCode=phase==='seed'?38:39;
 const report={phase,expectedVersion,source:process.env.PB_SOURCE_COMMIT||'',marker,fixture:{name:NAME,hash,bytes:bytes.length},checks:[],errors:[],success:false};
 let browser,page;
 function required(name){const value=process.env[name];assert.ok(value,name+' is required');return value;}
@@ -160,7 +160,7 @@ try{
     await persistentState();
   }else{
     const seed=JSON.parse(await readFile(join(reportRoot,'seed.json'),'utf8'));
-    assert.ok(seed.success&&seed.device?.versionName==='1.0.37'&&seed.device?.versionCode===37&&seed.marker===marker&&seed.fixture.hash===hash,'Successful exact old-version seed proof required');
+    assert.ok(seed.success&&seed.device?.versionName==='1.0.38'&&seed.device?.versionCode===38&&seed.marker===marker&&seed.fixture.hash===hash,'Successful exact old-version seed proof required');
     const expected=await readFile(join(reportRoot,'catalog-plaintext-fixture.json'));
     assert.equal(sha256(expected),seed.catalog.sha256);
     const state=await call('ProVault','state');
