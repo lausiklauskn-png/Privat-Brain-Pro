@@ -52,6 +52,11 @@ public class ProSemanticPlugin extends Plugin {
             byte[] b = new byte[8192]; for (int n; (n = in.read(b)) > 0; ) all.write(b, 0, n);
             text = all.toString(StandardCharsets.UTF_8.name());
         }
+        return entries(text);
+    }
+
+    /** Parses a pin file (semantic-model.json or caption-model.json): library and model files with their sources. */
+    static List<SemanticModel.Entry> entries(String text) throws Exception {
         JSONObject pins = new JSONObject(text), lib = pins.getJSONObject("library"), mod = pins.getJSONObject("model");
         JSONObject sizes = pins.optJSONObject("sizes"), download = pins.getJSONObject("download");
         List<SemanticModel.Entry> list = new ArrayList<>();
@@ -68,6 +73,7 @@ public class ProSemanticPlugin extends Plugin {
             for (int i = 0; i < templates.length(); i++)
                 urls.add(templates.getString(i).replace("{version}", version).replace("{id}", id).replace("{revision}", revision).replace("{file}", name));
             long size = sizes == null ? 0 : sizes.optLong(prefix + name, 0);
+            if (files.getString(name).isEmpty()) { list.clear(); return; }   // a file without fingerprint: nothing is loaded at all
             list.add(new SemanticModel.Entry(prefix + name, files.getString(name), size, urls));
         }
     }

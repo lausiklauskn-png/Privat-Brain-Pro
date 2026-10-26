@@ -1,0 +1,35 @@
+/* Bildbeschreibung – Sitzung 4 (Klaus 2026-10-26). Dieselbe Datei in Pro (native/) und V3 (assets/). Flach, ohne Kasten,
+   Strichgrafiken; Knöpfe 28 px mit Maus, 44 px am Finger wie die übrigen Leisten. */
+.pb-bild { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:6px 0 2px; font-size:.84rem; line-height:1.35; }
+.pb-bild-label { display:inline-flex; align-items:center; gap:5px; color:var(--mut); white-space:nowrap; }
+.pb-bild-icon { flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.pb-bild-model { flex:1 1 100%; margin:0; color:var(--mut); overflow-wrap:anywhere; }
+.pb-bild-model[hidden] { display:none; }
+.pb-bild-own { flex:1 1 14rem; width:auto; min-width:0; box-sizing:border-box; min-height:28px; max-height:4.6em; margin:0; padding:4px 8px; resize:none; font:inherit; font-size:.86rem; line-height:1.3; border:1px solid var(--line); border-radius:6px; background:var(--field,var(--card2,var(--card))); color:var(--ink); }
+.pb-bild-own::placeholder { color:var(--mut); opacity:.75; }
+.pb-bild-own:focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+.pb-bild-state { flex:none; min-width:4.5em; color:var(--mut); font-size:.75rem; }
+.pb-bild-mic, .pb-bild-filter { display:inline-flex; align-items:center; justify-content:center; gap:5px; box-sizing:border-box; min-height:44px; min-width:44px; margin:0; padding:3px 8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font-size:.78rem; font-weight:600; line-height:1.2; white-space:nowrap; box-shadow:none; cursor:pointer; }
+.pb-bild-mic { color:var(--mut); }
+.pb-bild-mic[aria-pressed=true], .pb-bild-filter[aria-pressed=true] { color:var(--acc); border-color:var(--acc); background:var(--pb-selected,var(--card2,var(--card))); }
+.pb-bild-mic:hover, .pb-bild-filter:hover { border-color:var(--acc); }
+.pb-bild-filter .pb-bild-icon { width:16px; height:16px; }
+.pb-bild-help-toggle { align-self:center; }
+.pb-bild-row { display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin:4px 0 0; min-width:0; }
+.pb-bild-row > .pb-bild-help { flex:1 1 100%; margin:2px 0 4px; }
+.pb-bild-help[hidden] { display:none; }
+@media(any-pointer:fine) { .pb-bild-mic, .pb-bild-filter { min-height:28px; min-width:28px; } .pb-bild-mic { width:28px; padding:4px; } }
+/* in the explorer row: one quiet line under the file name */
+.explorer-row .pb-bild { margin:4px 0 0; font-size:.8rem; }
+.explorer-row .pb-bild-own { min-height:26px; font-size:.82rem; }
+/* in the full-screen view and the lightbox */
+#lightboxBg > .pb-bild { max-width:94vw; margin:8px auto 0; color:#fff; }
+#lightboxBg > .pb-bild .pb-bild-label, #lightboxBg > .pb-bild .pb-bild-model, #lightboxBg > .pb-bild .pb-bild-state { color:#ddd; }
+#lightboxBg > .pb-bild .pb-bild-own { background:rgba(255,255,255,.12); color:#fff; border-color:#777; }
+.native-file-body > .pb-bild { margin:10px 12px 4px; }
+/* dictation from the apps (native-speech.js) wraps the field: keep the row flat */
+.pb-bild > .pb-dictate-wrap { flex:1 1 14rem; width:auto; }
+.pb-bild > .pb-dictate { flex:none; }
+/* the model switch in the settings reuses the look of the meaning-model switch */
+.pb-bild-panel { margin-top:8px; }
+.pb-bild-settings label[hidden], .pb-bild-settings [hidden] { display:none!important; }

@@ -22,7 +22,7 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                     let Some(arguments)=arguments else{return Ok(())};
                     let request=arguments.Request()?;let mut raw=PWSTR::null();request.Uri(&mut raw)?;let value=take_pwstr(raw);
                     let Ok(url)=tauri::Url::parse(&value)else{return Ok(())};
-                    let remote_model=url.scheme()=="https"&&url.host_str()==Some("huggingface.co")&&url.path().starts_with("/Xenova/multilingual-e5-small/");
+                    let remote_model=url.scheme()=="https"&&url.host_str()==Some("huggingface.co")&&(url.path().starts_with("/Xenova/multilingual-e5-small/")||url.path().starts_with("/Xenova/vit-gpt2-image-captioning/"));
                     if remote_model{
                         let response=environment.CreateWebResourceResponse(None::<&IStream>,404,&HSTRING::from("Use the native model download"),&HSTRING::from("Cache-Control: no-store"))?;arguments.SetResponse(&response)?;return Ok(());
                     }
@@ -33,7 +33,7 @@ pub fn install(window:&tauri::WebviewWindow,host:Arc<Host>)->Result<(),String>{
                         let response=engine.and_then(|e|e.call("DesktopInternal","modelAsset",json!({"url":value})).ok());
                         if let Some(path)=response.as_ref().and_then(|r|r.get("path")).and_then(|p|p.as_str()){
                             let path=std::path::PathBuf::from(path);
-                            if path.starts_with(host.data.join("semantic"))&&win::no_links(&path).is_ok(){
+                            if (path.starts_with(host.data.join("semantic"))||path.starts_with(host.data.join("caption")))&&win::no_links(&path).is_ok(){
                                 if let Ok(stream)=SHCreateStreamOnFileEx(&HSTRING::from(path.to_string_lossy().as_ref()),(STGM_READ|STGM_SHARE_DENY_WRITE).0,0,false,None){
                                     let mime=match path.extension().and_then(|x|x.to_str()).unwrap_or(""){"js"=>"text/javascript","json"=>"application/json","wasm"=>"application/wasm",_=>"application/octet-stream"};
                                     let headers=format!("Content-Type: {}\r\nAccess-Control-Allow-Origin: *\r\nCache-Control: no-store",mime);

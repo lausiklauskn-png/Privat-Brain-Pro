@@ -1,7 +1,7 @@
 {
   "enabled": false,
   "enabledNote": "Sitzung 4 (Klaus 2026-10-26): das Bildmodell kommt nicht in den Bau. Es wird wie das Bedeutungs-Modell per Schalter in den App-Speicher geladen (ProCaption), mit denselben Fingerabdrücken wie hier.",
-  "comment": "Bildbeschreibung (Punkt 12, Sitzung 4). Dasselbe transformers.js wie beim Bedeutungs-Modell; das Modell beschreibt, was auf einem Bild zu sehen ist. Jede Datei ist per SHA-256 festgelegt. Die Werte stammen aus dem Lernlauf .github/workflows/caption-model-pins.yml (Hugging Face, Revision unten): erstes Vertrauen, seitdem fest. Leere Werte heißen: noch nicht gelernt — dann nennt der Lernlauf sie als CAPTION-PIN-Zeilen.",
+  "comment": "Bildbeschreibung (Punkt 12, Sitzung 4). Dasselbe transformers.js wie beim Bedeutungs-Modell; das Modell beschreibt, was auf einem Bild zu sehen ist. Jede Datei ist per SHA-256 festgelegt. Die Werte stammen aus dem Lernlauf .github/workflows/caption-model-pins.yml (Hugging Face, Revision unten): erstes Vertrauen, seitdem fest. Gelernt am 2026-10-26 (Lauf 40327837624, Revision 215b4edc…): erstes Vertrauen, seitdem fest.",
   "library": {
     "package": "@xenova/transformers",
     "version": "2.17.2",
@@ -15,15 +15,15 @@
   },
   "model": {
     "id": "Xenova/vit-gpt2-image-captioning",
-    "revision": "main",
+    "revision": "215b4edcb7ec1fad5905a18a03f7b2007f6fabd0",
     "files": {
-      "config.json": "",
-      "generation_config.json": "",
-      "preprocessor_config.json": "",
-      "tokenizer.json": "",
-      "tokenizer_config.json": "",
-      "onnx/encoder_model_quantized.onnx": "",
-      "onnx/decoder_model_merged_quantized.onnx": ""
+      "config.json": "f65c81039a672962d686f71ee0242f0c89dc020a0e3f193a989a696bf3f9515e",
+      "generation_config.json": "997e1f943576edcc46e1b93078ec0e72054a62b4c7f521da42a1eab43c4c1d0c",
+      "preprocessor_config.json": "76304e9a1deb0d5f78349a57ad9d8057f36476c29bd292e907e2e8c451c93e9d",
+      "tokenizer.json": "6e785cd4f004c9291dadeba7d8d1c2871318d368a1cfcd416c0571dcd8f11413",
+      "tokenizer_config.json": "5b477c376e81670409e943fc7c8233a0356c8488e05a8aa246082a1d29e8d609",
+      "onnx/encoder_model_quantized.onnx": "6f6e2e27c11303cf533682184543333e7ecb930a734197a0272a1e408aba2766",
+      "onnx/decoder_model_merged_quantized.onnx": "1f3ec53b5fc3614c0b54ee786755a7ec3007841f57543f8e241499edfadfa98f"
     }
   },
   "download": {
@@ -40,18 +40,33 @@
   "sizes": {
     "lib/transformers.min.js": 897938,
     "lib/ort-wasm-simd.wasm": 10014674,
-    "lib/ort-wasm.wasm": 9223228
+    "lib/ort-wasm.wasm": 9223228,
+    "model/config.json": 4888,
+    "model/generation_config.json": 184,
+    "model/preprocessor_config.json": 378,
+    "model/tokenizer.json": 2107928,
+    "model/tokenizer_config.json": 456,
+    "model/onnx/encoder_model_quantized.onnx": 87453213,
+    "model/onnx/decoder_model_merged_quantized.onnx": 158599996
   },
   "measured": {
-    "comment": "Vom Lernlauf gemessen (GitHub-Runner, headless Chromium), nicht am Tablet.",
-    "run": "",
-    "downloadBytes": 0,
-    "chromium": "",
-    "loadMs": 0,
-    "firstCaptionMs": 0,
-    "secondCaptionMs": 0,
-    "jsHeapMB": 0,
-    "rendererRssPeakMB": 0,
-    "caption": ""
+    "comment": "Vom Lernlauf gemessen (GitHub-Runner ubuntu-24.04, headless Chromium, zwei erfundene Bilder 640×480), nicht am Tablet. RSS = Arbeitsspeicher des Renderer-Prozesses, Spitze während Laden und Beschreiben.",
+    "run": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40327837624",
+    "date": "2026-10-26",
+    "downloadBytes": 268302883,
+    "downloadMB": 255.9,
+    "modelBytes": 248167043,
+    "libraryBytes": 20135840,
+    "chromium": "156.0.8078.4",
+    "loadMs": 3075,
+    "firstCaptionMs": 3232,
+    "secondCaptionMs": 2911,
+    "jsHeapLoadedMB": 169,
+    "jsHeapAfterMB": 33,
+    "rendererRssPeakMB": 1217,
+    "captions": [
+      "a green and white house with a green and white house",
+      "a coffee cup sitting on top of a white counter"
+    ]
   }
 }

@@ -7,7 +7,7 @@ if(process.platform!=='win32')throw Error('The bundled Windows runtime must be b
 execFileSync(process.execPath,[join(windows,'engine/build.mjs')],{stdio:'inherit'});
 await rm(runtime,{recursive:true,force:true});await mkdir(join(runtime,'engine'),{recursive:true});
 for(const name of ['classes','lib','shared-source.json'])await cp(join(windows,'engine/build',name),join(runtime,'engine',name),{recursive:true});
-for(const [from,to] of [['windows/gmail-desktop.json','gmail-desktop.json'],['tools/native/semantic-model.json','semantic-model.json']])await cp(join(root,from),join(runtime,to));
+for(const [from,to] of [['windows/gmail-desktop.json','gmail-desktop.json'],['tools/native/semantic-model.json','semantic-model.json'],['tools/native/caption-model.json','caption-model.json']])await cp(join(root,from),join(runtime,to));
 execFileSync(join(process.env.JAVA_HOME,'bin/jlink.exe'),['--add-modules','java.base,java.logging,java.desktop,java.naming,java.security.sasl,jdk.crypto.ec,jdk.charsets','--strip-debug','--no-header-files','--no-man-pages','--compress=2','--output',join(runtime,'jre')],{stdio:'inherit'});
 execFileSync('python',[join(windows,'tools/licenses.py')],{cwd:root,stdio:'inherit'});
 // ICO permits an unchanged PNG image. No redraw or image service is needed.

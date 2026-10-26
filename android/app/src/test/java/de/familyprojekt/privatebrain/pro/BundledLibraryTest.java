@@ -41,4 +41,18 @@ public class BundledLibraryTest {
         assertNull(BundledLibrary.modelPath("https://localhost/models/Xenova/other-model/config.json"));
         assertNull(BundledLibrary.modelPath("https://huggingface.co/Xenova/multilingual-e5-small/resolve/main/config.json"));
     }
+
+    /** Sitzung 4: the image model has its own folder under the same rules; the two folders never answer for each other. */
+    @Test public void captionModelAddressesHaveTheirOwnFolder() {
+        String C = BundledLibrary.CAPTION_MODEL_PREFIX;
+        assertTrue(BundledLibrary.coversCaptionModel(C + "config.json"));
+        assertFalse(BundledLibrary.coversModel(C + "config.json"));
+        assertFalse(BundledLibrary.coversCaptionModel(BundledLibrary.MODEL_PREFIX + "config.json"));
+        assertEquals("model/onnx/encoder_model_quantized.onnx", BundledLibrary.captionModelPath(C + "onnx/encoder_model_quantized.onnx?x=1"));
+        assertNull(BundledLibrary.captionModelPath(C + "../multilingual-e5-small/config.json"));
+        assertNull(BundledLibrary.captionModelPath(BundledLibrary.MODEL_PREFIX + "config.json"));
+        assertTrue(BundledLibrary.remoteModel("https://huggingface.co/Xenova/vit-gpt2-image-captioning/resolve/main/config.json"));
+        assertTrue(BundledLibrary.remoteModel("https://huggingface.co/Xenova/multilingual-e5-small/resolve/main/config.json"));
+        assertFalse(BundledLibrary.remoteModel("https://huggingface.co/Xenova/other/resolve/main/config.json"));
+    }
 }
