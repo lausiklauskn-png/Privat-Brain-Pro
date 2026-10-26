@@ -6,6 +6,9 @@ export function adaptSearch(source) {
     html = html.replace(before, after);
   }
   replace('    <div class="search-welcome"><h2 data-ws="find">Was möchtest du finden?</h2><p data-ws="findHelp">Durchsuche E-Mails, Dokumente und Bilder gemeinsam nach ihrer Bedeutung.</p></div>\n', '', 'redundant search introduction');
+  // Klaus 2026-10-26 (Sitzung 1, Punkt 1): counts as plain text in the one row with catalogue and Prüfstand.
+  replace('    <div class="search-totals"><span id="searchMailCount"></span><span id="searchDocCount"></span><span id="searchLocalCount"></span></div>\n', '', 'boxed search totals');
+  replace('<span id="corpusInfo"></span>', '<span id="searchMailCount" class="pb-meta-count"></span><span id="searchDocCount" class="pb-meta-count"></span><span id="searchLocalCount" class="pb-meta-count"></span><span id="corpusInfo" class="pb-meta-count"></span>', 'one status row');
   replace('<span id="searchInfo" data-i18n="searchInfo">Wirf zuerst Dateien hinein — dann finde alles nach Sinn, nicht nach Dateinamen.</span>',
     '<span id="searchInfo"></span>', 'initial search explanation');
   const emptyBlocks = [...html.matchAll(/<div class="empty" id="searchEmpty">[\s\S]*?<p data-i18n="searchEmpty">[\s\S]*?<\/p>\n    <\/div>/g)];

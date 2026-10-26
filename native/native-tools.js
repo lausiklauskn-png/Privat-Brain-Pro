@@ -15,7 +15,9 @@
     fpvideo: 'https://lausiklauskn-png.github.io/Family-Projekt.de-Video/',
     kimsync: 'https://lausiklauskn-png.github.io/Kim-sync/',
     dateipost: 'https://dateien.family-projekt.de/',
-    bookledgerpro: 'https://lausiklauskn-png.github.io/BookLedgerPro/'
+    bookledgerpro: 'https://lausiklauskn-png.github.io/BookLedgerPro/',
+    // Klaus 2026-10-26 (Sitzung 1, Punkt 10c): die Browserfassung Workflow PDF ist frei, Workflow PDF Pro bleibt gesperrt.
+    workflowpdf: 'https://lausiklauskn-png.github.io/Workflow-PDF/'
   };
   const APPLICATIONS = Object.freeze({workflowpdfpro:Object.freeze({
     android:'https://github.com/lausiklauskn-png/Workflow-PDF-Pro/releases/download/v1.0.3/Workflow-PDF-Pro-1.0.3.apk',
@@ -25,6 +27,8 @@
   const li = () => Math.max(0, L.indexOf(String(document.documentElement.lang || 'de').slice(0, 2)));
   const W = {
     head: ['🧰 Werkzeuge', '🧰 Tools', '🧰 Инструменты', '🧰 Narzędzia'],
+    workflowpdf: ['Workflow PDF', 'Workflow PDF', 'Workflow PDF', 'Workflow PDF'],
+    freeLink: ['Freie Browserfassung, öffnet im Browser', 'Free browser edition, opens in the browser', 'Бесплатная версия в браузере', 'Darmowa wersja w przeglądarce'],
     soon: ['kommt bald', 'coming soon', 'скоро', 'wkrótce'],
     lockedAsk: ['Dieses Werkzeug ist gesperrt. Den Freischalt-Code gibst du in den Einstellungen unter „🔑 Werkzeuge freischalten“ ein.', 'This tool is locked. Enter the unlock code in Settings under "🔑 Unlock tools".', 'Инструмент закрыт. Введите код в настройках: «🔑 Открыть инструменты».', 'Narzędzie zablokowane. Wpisz kod w Ustawieniach: „🔑 Odblokuj narzędzia”.'],
     back: ['← Zurück zu Private Brain Pro', '← Back to Private Brain Pro', '← Назад', '← Wróć'],
@@ -56,6 +60,11 @@
     if (typeof links?.open !== 'function') throw new Error('LINK_UNAVAILABLE');
     await links.open({url});
     closeMenu();
+  }
+  async function openFree(url) {
+    const links = window.Capacitor?.Plugins?.ProLinks;
+    if (typeof links?.open === 'function') { try { await links.open({url}); closeMenu(); return; } catch {} }
+    window.open(url, '_blank', 'noopener'); closeMenu();
   }
   function applicationNotice(tool, {download, android = false, failed = false} = {}) {
     applicationDialog?.close();
@@ -172,15 +181,16 @@
     if (!box) { box = make('div', null, 'pb-tools-menu'); panel.append(box); }
     const rows = [make('p', t('head'), 'pb-tools-head')];
     // Program icons stay separate from the functional toolbar's line symbols.
-    const entries = license.TOOLS.map(tool => ({ ...tool, name: license.toolName(tool) }));
+    const entries = [...license.TOOLS.map(tool => ({ ...tool, name: license.toolName(tool) })), { id: 'workflowpdf', img: 'tool-icons/workflowpdf.png', icon: '📄', name: t('workflowpdf'), free: true }];
     for (const e of entries) {
-      const ready = Boolean(PAGES[e.id] || LINKS[e.id] || APPLICATIONS[e.id]), open = license.unlocked(e.id);
+      const ready = Boolean(PAGES[e.id] || LINKS[e.id] || APPLICATIONS[e.id]), open = e.free || license.unlocked(e.id);
       const b = make('button', null, 'ghost pb-tools-item');
       b.append(make('span', open ? '' : '🔒', 'pb-tools-lock'), license.toolIcon(e), make('span', e.name + (ready ? (LINKS[e.id] ? ' ↗' : '') : ' · ' + t('soon')), 'pb-tools-name'));
       b.type = 'button'; b.dataset.tool = e.id; b.dataset.open = String(open); b.disabled = !ready && open;
-      if (LINKS[e.id]) b.title = t('link');
+      if (e.free) b.title = t('freeLink');
+      else if (LINKS[e.id]) b.title = t('link');
       else if (APPLICATIONS[e.id]) b.title = t('nativeApp');
-      b.onclick = () => { void openTool(e.id); };
+      b.onclick = () => { if (e.free) void openFree(LINKS[e.id]); else void openTool(e.id); };
       rows.push(b);
     }
     box.replaceChildren(...rows);
