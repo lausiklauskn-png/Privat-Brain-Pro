@@ -19,3 +19,12 @@
 .pb-dup-help>summary>svg{width:20px;height:20px}
 
 #panel-dupes>#pb-mail-dupes[hidden]{display:none!important}
+
+/* Klaus 2026-10-26, Sitzung 1, Punkt 8: ☐ Alle · Auswahl · Entfernen – flach wie im Postfach. */
+.pb-dup-all{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 10px 0 4px;font-size:.88rem;cursor:pointer;white-space:nowrap}
+.pb-dup-all input{width:18px;height:18px;margin:0}
+.pb-dup-short{align-items:center;gap:8px!important;flex-wrap:wrap}
+.pb-dup-short #dupRemove,.pb-dup-selection #pbDupDelete{display:inline-flex;align-items:center;gap:6px}
+.pb-dup-short #dupRemove svg,.pb-dup-selection #pbDupDelete svg{width:16px;height:16px;flex:none}
+.pb-dup-short #dupRemove{margin-left:auto}
+#dupClearSel[hidden],#pbDupClear[hidden]{display:none!important}

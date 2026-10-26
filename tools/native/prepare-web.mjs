@@ -66,6 +66,7 @@ html = html.replace('<script src="native-keys.js"></script>', '<script src="nati
 html = html.replace('<script src="native-originals.js"></script>', '<script src="native-activity.js"></script>\n<script src="native-originals.js"></script>');
 html = html.replace('</body>', '<script src="native-help.js"></script>\n<script src="native-panes.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-overview.js"></script>\n</body>');
+html = html.replace('</body>', '<script src="native-state.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-sort.js"></script>\n<script src="native-dupes.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-result-cards.js"></script>\n<script src="native-result-previews.js"></script>\n</body>');
 html = html.replace('</head>', '<link rel="stylesheet" href="result-cards.css">\n<link rel="stylesheet" href="result-previews.css">\n</head>');
@@ -115,7 +116,7 @@ for (const app of apps) {
 }
 for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-theme.js', 'design-tokens.css', 'design-layout.css', 'native-originals.js', 'native-record-status.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js', 'native-semantic.js', 'native-keys.js', 'native-check.js', 'native-license.js', 'native-tools.js', 'tool-gate.js', 'license-keys.json']) await cp(join(root, 'native', name), join(out, name));
 for (const name of ['native-input-language.js', 'native-text-input.js', 'native-translation-device.js', 'native-mail-translation.js', 'translation-worker.js', 'translation-notices.html']) await cp(join(root, 'native', name), join(out, name));
-for (const name of ['native-content-icons.css','native-help.js','help-layout.css','native-activity.js','activity-layout.css','native-panes.js','panes-layout.css','native-overview.js','native-sort.js','sort-layout.css','native-dupes.js','dupes-layout.css','mail-ai-layout.css','native-palette.js','palette-layout.css']) await cp(join(root,'native',name),join(out,name));
+for (const name of ['native-content-icons.css','native-help.js','help-layout.css','native-activity.js','activity-layout.css','native-panes.js','panes-layout.css','native-overview.js','native-state.js','native-sort.js','sort-layout.css','native-dupes.js','dupes-layout.css','mail-ai-layout.css','native-palette.js','palette-layout.css']) await cp(join(root,'native',name),join(out,name));
 for (const name of ['native-result-cards.js','result-cards.css','native-result-previews.js','result-previews.css','native-filme.js']) await cp(join(root,'native',name),join(out,name));
 await cp(join(root, 'tools/native/translation-models.json'), join(out, 'translation-models.json'));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));

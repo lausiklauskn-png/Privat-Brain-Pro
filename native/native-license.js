@@ -13,7 +13,7 @@
 (() => {
   'use strict';
   const TOOLS = [
-    { id: 'workflowpdfpro', img: 'tool-icons/workflowpdf.png', icon: '📄', name: ['Workflow PDF Pro', 'Workflow PDF Pro', 'Workflow PDF Pro', 'Workflow PDF Pro'] },
+    { id: 'workflowpdfpro', img: 'tool-icons/workflowpdfpro.png', icon: '📄', name: ['Workflow PDF Pro', 'Workflow PDF Pro', 'Workflow PDF Pro', 'Workflow PDF Pro'] },
     { id: 'pinnwand', img: 'tool-icons/pinnwand.png', icon: '📌', name: ['Pinnwand', 'Pin board', 'Доска', 'Tablica'] },
     { id: 'suche', img: 'tool-icons/suche.png', icon: '🔎', name: ['Such-Tool', 'Search tool', 'Поиск', 'Wyszukiwarka'] },
     { id: 'kimsync', img: 'tool-icons/kimsync.png', icon: '💬', name: ['Kim-Sync', 'Kim-Sync', 'Kim-Sync', 'Kim-Sync'] },
