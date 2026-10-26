@@ -5,9 +5,10 @@
 
 ## Ausgangsstand
 
-Sitzung 5 (3D-Knöpfe, Kategorien mit Ordnerbaum) liegt als Entwurfs-PRs vor (Pro #92, V3 #26) und wartet auf Klaus' Wort;
-prüfen, ob sie inzwischen auf main sind. Frisch von `origin/main` abzweigen. Android/Windows/PWA bleiben auf den veröffentlichten
-Ständen (Pro 1.0.38, V3 3.0.0-preview.7), **nichts veröffentlichen ohne Klaus' Wort.**
+Sitzung 5 (3D-Knöpfe, Kategorien mit Ordnerbaum) ist auf main (Pro #92, V3 #26) und veröffentlicht: Pro 1.0.39 und V3
+3.0.0-preview.8, je Android + Windows, PWAs über Pages, Geschenk für Jens Fassung 24
+([Veröffentlichung](docs/design/aenderungen-2026-10-26/VEROEFFENTLICHUNG-SITZUNG-05.md)). Frisch von `origin/main` abzweigen;
+**nichts veröffentlichen ohne Klaus' Wort.**
 Rückblick: [Abschluss Sitzung 5](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-05.md),
 [Forschung 1–5](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-05.md).
 

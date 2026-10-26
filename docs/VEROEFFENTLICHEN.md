@@ -1,6 +1,6 @@
 # So veröffentlicht jede Sitzung (Claude oder Codex)
 
-Android und Windows 1.0.37 sind veröffentlicht. Die gebaute PWA ist unter
+Android und Windows 1.0.39 sind veröffentlicht (26.10.2026, Sitzung 5; davor 1.0.38 am 25.10.). Die gebaute PWA ist unter
 [PWA öffnen](https://lausiklauskn-png.github.io/Privat-Brain-Pro/) erreichbar; der Pages-Workflow muss das vorbereitete
 `www` veröffentlichen. Seine vier öffentlichen Kontroll-Dateien werden erst nach
 Deployment gegen die Build-Hashes und dieselbe Generation geprüft. Eine erfolgreiche
