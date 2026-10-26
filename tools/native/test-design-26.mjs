@@ -1,5 +1,6 @@
 // Klaus 2026-10-26, Sitzung 1: Zählerzeile (1), Mail-Ordnerleiste (4), Doppelte kurz (8), Zustand mit Speicher (9c).
 // Sitzung 2: Explorer-Werkzeugzeile (3) und Anordnungs-Knopf in Explorer, Postfach und Kategorien (2).
+// Sitzung 3: ⓘ-Klapper überall, anfangs offen und gemerkt (7, 9a), Schutz (9b), Tresor-Inhalt im Tresor (9d).
 // Läuft gegen den gebauten Webteil (www/), den Android, Windows und die PWA gemeinsam verwenden.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -130,5 +131,41 @@ try{
   ok('Point 2: after the restart the explorer still has its tree switched off',!(await geo()).tree);
   ok('Point 2: no runtime errors',errors.length===0);
   await page.close();
+  // ---------- Sitzung 3 – Punkt 7, 9a, 9b, 9d: ⓘ-Klapper (anfangs offen, gemerkt), Schutz und Tresor ----------
+  ({page,errors}=await open(1000,800));
+  const tabTo=async name=>{await page.locator(`button[data-tab="${name}"]:visible`).first().click();await page.waitForTimeout(200);};
+  const help=key=>page.locator(`[data-pb-help-toggle="${key}"]`);
+  await tabTo('settings');
+  const fresh=await page.evaluate(()=>['tresor','offline','catalog','attachments'].map(k=>{const b=document.querySelector(`[data-pb-help-toggle="${k}"]`),c=b&&document.getElementById(b.getAttribute('aria-controls'));return !!b&&b.getAttribute('aria-expanded')==='true'&&!!c&&!c.hidden&&!/\p{Extended_Pictographic}/u.test(b.textContent);}));
+  ok('Point 7/9a: in the settings every explanation has an ⓘ and is open the first time',fresh.every(Boolean));
+  await help('catalog').click();
+  ok('Point 7: one tap on ⓘ closes the explanation',await help('catalog').getAttribute('aria-expanded')==='false');
+  const tresorBox=await page.evaluate(()=>{const t=document.getElementById('tresorNote'),l=document.getElementById('vaultList'),n=document.getElementById('vaultNote');return !!t&&!!l&&t.contains(l)&&(!n||n.hidden||!n.getClientRects().length);});
+  ok('Point 9d: the vault contents stand in the vault block right under its buttons, no separate box below',tresorBox);
+  await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBHelp);
+  await tabTo('settings');await page.waitForSelector('[data-pb-help-toggle="catalog"]');
+  ok('Point 7: after a restart closed stays closed and open stays open',await help('catalog').getAttribute('aria-expanded')==='false'&&await help('tresor').getAttribute('aria-expanded')==='true');
+  await help('catalog').click();
+  ok('Point 7: a second tap opens it again',await help('catalog').getAttribute('aria-expanded')==='true');
+  await tabTo('order');await page.waitForSelector('[data-pb-help-toggle="reorg"]');
+  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, open at first',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
+  ok('Point 7/9: no runtime errors',errors.length===0);
+  await page.close();
+  // 9b needs the protection card, which only the apps show: a minimal stand-in for the device side.
+  {
+    const p2=await browser.newPage({viewport:{width:1000,height:1400}}),e2=[],origin=`http://127.0.0.1:${server.address().port}/`;
+    p2.on('pageerror',e=>e2.push(e.message));
+    await p2.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
+    await p2.addInitScript(()=>{const state={configured:true,unlocked:true,auto:true,folder:'Schutzlisten',files:[{name:'liste.pbv'}],malware:{updated:Date.now(),count:5},links:{updated:Date.now(),count:7,servers:2},keys:{}};
+      window.Capacitor={Plugins:{ProProtect:{state:async()=>state,update:async()=>state,setAuto:async()=>state,setKey:async()=>state,checkHashes:async()=>({items:[]}),checkUrls:async()=>({items:[]}),virusTotal:async()=>({})}}};});
+    await p2.goto(origin);await p2.waitForFunction(()=>window.PBSchutz&&document.querySelector('#schutzPlace [data-pb-help-toggle="protection"]'));
+    await p2.locator('button[data-tab="settings"]:visible').first().click();await p2.waitForTimeout(300);
+    const prot=await p2.evaluate(()=>{const card=document.getElementById('schutzPlace'),c=card.querySelector('[data-pb-help-content="protection"]');const kids=[...c.children];
+      const words=s=>[...card.childNodes].filter(n=>!n.contains?.(c)&&!(n.closest&&n.closest('[data-pb-help-content]'))).map(n=>n.textContent).join(' ');
+      return {order:kids.map(k=>k.tagName+'.'+k.className),outside:words(),inside:c.textContent,buttons:card.querySelectorAll(':scope>.btnrow button').length};});
+    ok('Point 9b: „Abgelegt in“ and „kein vollständiger Virenscanner“ are only behind ⓘ, the controls stay visible',!/Abgelegt in|kein vollständiger Virenscanner|Kein vollständiger Virenscanner/.test(prot.outside)&&/Abgelegt in/.test(prot.inside)&&/Kein vollständiger Virenscanner/.test(prot.inside)&&prot.buttons>=3);
+    ok('Point 9b: inside ⓘ the important things come first, „Abgelegt in“ last',/^P/.test(prot.order[0])&&/^UL/.test(prot.order[1])&&/Abgelegt in/.test(await p2.evaluate(()=>document.querySelector('[data-pb-help-content="protection"]').lastElementChild.textContent)));
+    await p2.close();
+  }
   console.log(`${count} checks passed`);
 }finally{await browser?.close();server.close();}

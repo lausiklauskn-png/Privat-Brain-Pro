@@ -33,6 +33,9 @@ async function fixture(touch=false){
     if(!path.startsWith(root+'/'))return route.abort();
     try{return route.fulfill({contentType:types[extname(path)]||'application/octet-stream',body:await readFile(path)});}catch{return route.fulfill({status:404,body:''});}
   });
+  // Sitzung 3 (Klaus 2026-10-26): help opens by default and remembers its state. This older suite checks the
+  // behaviour from a closed start, so every load begins with all explanations stored as closed.
+  await page.addInitScript(()=>{try{localStorage.setItem('pb_help_open_v1',JSON.stringify(Object.fromEntries(['import-library','import-drop','input-language','vault','protection','tresor','offline','provider','key-instructions','image-model','attachments','folders','catalog','catalog-merge','mycel','diagnostics','ocr','vault-limits','protection-limits','reorg','categories-intro','dupes-intro'].map(k=>[k,false]))));}catch{}});
   await page.addInitScript(()=>{
     localStorage.setItem('pb_lang','de');localStorage.setItem('pb_fs_ok','1');
     window.fixtureFolderCalls=[];window.fixtureFolderFails=false;window.fixturePreferenceWritesFail=false;window.fixtureLinks=[];
@@ -115,14 +118,16 @@ try{
       providerIntro?.closest('[data-pb-help-content]')?.dataset.pbHelpContent==='key-instructions'&&keyRow.contains(providerIntro)&&keyRow.querySelectorAll('.pb-ai-key-hint').length===2&&
       !offline.querySelector(':scope>p:last-of-type').closest('[data-pb-help-content]')&&
       !document.querySelector('#pb-semantic [role=status]').closest('[data-pb-help-content]')&&
-      [...document.querySelectorAll('#schutzPlace .pb-schutz-line,#pb-ocr-settings [data-ocr=installed],#pb-ocr-settings [data-ocr=state]')].every(node=>!node.closest('[data-pb-help-content]'));
+      [...document.querySelectorAll('#schutzPlace>.pb-schutz-line,#pb-ocr-settings [data-ocr=installed],#pb-ocr-settings [data-ocr=state]')].every(node=>!node.closest('[data-pb-help-content]'));
   }));
   ok('Editable cards precede real statistics and vault contents without cloning controls',await page.locator('#panel-settings').evaluate(panel=>{
     const nodes=[...panel.children],stats=document.getElementById('stFiles').closest('.note'),contents=document.getElementById('vaultNote');
     const controls=['pb-input-language-settings','vaultPlace','schutzPlace','pb-ocr-settings','tresorNote','mycelPlace','pb-license'].map(id=>document.getElementById(id));
     return controls.every(node=>nodes.indexOf(node)>=0&&nodes.indexOf(node)<nodes.indexOf(stats))&&nodes.indexOf(contents)>nodes.indexOf(stats)&&document.querySelectorAll('#aiKey').length===1;
   }));
-  for(const key of ['ocr','vault-limits','protection-limits']){
+  // Sitzung 3 (Punkt 9b): the protection limits and „Abgelegt in“ moved into the protection ⓘ, important first.
+  ok('protection: limits, helper app and storage place sit inside its ⓘ, after the explanation',await page.evaluate(()=>{const c=document.querySelector('[data-pb-help-content=protection]');const kids=c?[...c.querySelectorAll(':scope p.hint, :scope ul, :scope .pb-schutz-line')]:[];return !document.querySelector('#schutzPlace .native-vault-limits')&&kids.length>=3&&kids[0].matches('p.hint')&&kids[1].matches('ul')&&kids[1].children.length>=4;}));
+  for(const key of ['ocr','vault-limits']){
     const summary=page.locator(`[data-pb-help-details="${key}"]`);
     ok(`${key}: existing closed disclosure shows a line information icon with its accessible name`,await summary.evaluate(node=>!node.parentElement.open&&!node.textContent.trim()&&Boolean(node.getAttribute('aria-label')?.trim())&&Boolean(node.querySelector('svg[aria-hidden=true]'))));
     await summary.click();
@@ -136,7 +141,7 @@ try{
   await toggle(page,'protection').click();
   await page.evaluate(async()=>{window.helpOldProtection=document.querySelector('[data-pb-help-toggle=protection]');await PBSchutz.refresh();});
   await page.waitForFunction(()=>{const button=document.querySelector('[data-pb-help-toggle=protection]');return button&&button!==helpOldProtection&&button.getAttribute('aria-expanded')==='true';});
-  ok('A real protection-card rebuild remounts connected help and preserves its requested open state',await region(page,'protection').isVisible()&&await toggle(page,'protection').evaluate(button=>button.closest('#schutzPlace')?.contains(document.getElementById(button.getAttribute('aria-controls'))))&&await page.locator('#schutzPlace .pb-schutz-line').evaluateAll(nodes=>nodes.length>=5&&nodes.every(node=>!node.closest('[data-pb-help-content]'))));
+  ok('A real protection-card rebuild remounts connected help and preserves its requested open state',await region(page,'protection').isVisible()&&await toggle(page,'protection').evaluate(button=>button.closest('#schutzPlace')?.contains(document.getElementById(button.getAttribute('aria-controls'))))&&await page.locator('#schutzPlace>.pb-schutz-line').evaluateAll(nodes=>nodes.length>=4&&nodes.every(node=>!node.closest('[data-pb-help-content]'))));
   await toggle(page,'protection').click();await layoutReady(page);
   ok('Repeated help refreshes make no child-list mutations once the settings order is stable',await page.evaluate(async()=>{
     let mutations=0;const observer=new MutationObserver(records=>{mutations+=records.filter(record=>record.type==='childList').length;});observer.observe(document.body,{childList:true,subtree:true});
