@@ -1,6 +1,6 @@
 {
   "name":"private-brain-pro-windows",
-  "version":"1.0.38",
+  "version":"1.0.39",
   "private":true,
   "type":"module",
   "scripts":{"tauri":"tauri","test:engine":"node engine/test.mjs"},
