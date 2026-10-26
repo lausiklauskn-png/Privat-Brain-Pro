@@ -58,5 +58,5 @@ V3 Erdton/petrol/schiefer), Kategorien mit Vorschau-Baum je Thema, `*-zielordner
 - Der Zielordner-Baum liest höchstens 300 Einträge und 6 Ebenen; mehr wird gezählt („… und N weitere“), nicht gezeigt.
 - Der Baum nach dem Kopieren ist eine **Ansicht**. Bearbeiten (löschen, verschieben, neue Ordner) ist Punkt 6b, Sitzung 6.
 - Die alte Vorschau im Fenster (`previewReorg`) bleibt im Code von `index.html`, wird aber nicht mehr aufgerufen.
-- **Nicht übernommen, nichts veröffentlicht.** Entwurfs-PRs Pro #PR-PRO und V3 #PR-V3 warten auf Klaus' Wort; Android/Windows/PWA
+- **Nicht übernommen, nichts veröffentlicht.** Entwurfs-PRs Pro #92 und V3 #26 warten auf Klaus' Wort; Android/Windows/PWA
   bleiben auf den veröffentlichten Ständen (Pro 1.0.38, V3 3.0.0-preview.7).
