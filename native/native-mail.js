@@ -28,7 +28,8 @@
     nativeLimit: ['Anhänge zusammen höchstens 5 MB, vollständige Nachricht höchstens 8 MB.', 'Attachments up to 5 MB total, complete message up to 8 MB.', 'Вложения до 5 МБ суммарно, письмо до 8 МБ.', 'Załączniki łącznie do 5 MB, całe wiadomości do 8 MB.'],
     oversized: ['Nachricht über 8 MB – bitte beim Anbieter öffnen', 'Message over 8 MB – open with provider', 'Письмо больше 8 МБ — откройте у провайдера', 'Wiadomość powyżej 8 MB — otwórz u dostawcy'],
     detailsPending: ['Details beim Öffnen laden', 'Load details when opening', 'Загрузить сведения при открытии', 'Pobierz szczegóły przy otwarciu'],
-    download: ['Original teilen / sichern', 'Share / save original', 'Поделиться / сохранить оригинал', 'Udostępnij / zapisz oryginał']
+    download: ['Original teilen / sichern', 'Share / save original', 'Поделиться / сохранить оригинал', 'Udostępnij / zapisz oryginał'],
+    bookledger: ['An BookLedgerPro teilen', 'Share with BookLedgerPro', 'Передать в BookLedgerPro', 'Udostępnij do BookLedgerPro']
   };
   const messages = {
     APP_OFFLINE: ['Die App ist vom Internet getrennt. Im App-Menü den Internetzugriff wieder erlauben.', 'The app is disconnected from the internet. Allow internet access again in the app menu.', 'Приложение отключено от интернета. Разрешите доступ в меню приложения.', 'Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu aplikacji.'],

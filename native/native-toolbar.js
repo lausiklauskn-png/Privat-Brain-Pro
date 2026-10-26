@@ -264,7 +264,7 @@
     const opened=options.open?options:null;
     if(opened){event.preventDefault();opened.open=false;opened.querySelector('summary').focus();}
   });
-  const keys={refresh:'refresh',compose:'compose',import:'intake',reply:'reply',forward:'forward',back:'back',tools:'more',messageTools:'more',
+  const keys={refresh:'refresh',compose:'compose',bookledger:'share',import:'intake',reply:'reply',forward:'forward',back:'back',tools:'more',messageTools:'more',
     trash:'trash',delete:'trash',permanent:'trash',selectAll:'all',all:'all',read:'read',star:'star',archive:'archive',save:'save',draft:'save',connect:'mail',account:'mail',saved:'save',disconnect:'close',removeAccount:'trash',local:'mail',remote:'mail',catalog:'order',catalogOne:'order',download:'download',send:'send',cancel:'close',check:'check',attach:'attach',attachments:'attach',folder:'folder',newFolder:'folder',restore:'undo',undo:'undo',edit:'compose',queue:'send',export:'external',copy:'share',notSpam:'read',notspam:'read',spam:'warning'};
   for(const [id,page] of [['kpiFiles','explorer'],['kpiCats','order'],['kpiDupes','dupes']]){
     const tile=document.getElementById(id)?.closest('.tile');if(!tile)continue;

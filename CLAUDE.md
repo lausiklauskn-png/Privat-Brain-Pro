@@ -6,6 +6,15 @@ Windows-Updateprobe jetzt 1.0.37 → 1.0.38. Veröffentlichung APK, Windows und 
 
 # Private Brain Pro — Sitzungs-Anker
 
+**📒 „An BookLedgerPro teilen" (Klaus 2026-10-26, Claude):** in jeder geöffneten Mail neben „Original teilen / sichern" ein eigener
+Knopf (`assets/live-mail.js`, Schlüssel `bookledger`, DE/EN/RU/PL; nativ Liniensymbol „share" in `native-toolbar.js`). Pro-App:
+derselbe enge `openOriginal`-Weg (ACTION_SEND `message/rfc822` über den FileProvider, Android-Auswahl zeigt die installierte
+BookLedgerPro-PWA). Web/PWA: Web Share mit der `.eml`-Datei; ohne Web Share wird die `.eml` gespeichert und der Weg genannt.
+BookLedgerPro legt die Mail als Beleg ab und liest Rechnungs-Anhänge aus (BookLedgerPro PR #358, `docs/MAIL-TEILEN.md` dort).
+Gemessen: `test-mail-device` 81 · `e2e-live-mail` 37 · `test-compact-controls` 60. Cache v92. ⚠ Kein Tablet, keine echte
+Teilen-Auswahl; `npm run build:web` scheitert im Behälter an der OCR-Beschaffung (Node 24, Netz) — Proben gegen das kopierte `www/`.
+Keine Veröffentlichung; der Knopf kommt mit der nächsten Version auf Klaus' Wort.
+
 Android und Windows **1.0.37** sowie die gebaute PWA sind veröffentlicht (25.10.2026); PR #85 übernommen.
 [Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) · [PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
 Gemeinsame unveränderliche Appquelle `015c9a1266a64f44a1896ead56349094c64e2f9a`. Die kompakte Oberfläche steht

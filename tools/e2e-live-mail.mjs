@@ -242,6 +242,27 @@ try {
     "Originalanhang ist herunterladbar",
     (await download).suggestedFilename() === "notiz.txt",
   );
+  await page.evaluate(() => {
+    window.__geteilt = [];
+    navigator.canShare = (d) => !!d?.files?.length;
+    navigator.share = async (d) => { window.__geteilt.push({ n: d.files.length, name: d.files[0].name, type: d.files[0].type, size: d.files[0].size }); };
+  });
+  await page.getByRole("button", { name: "An BookLedgerPro teilen", exact: true }).click();
+  await settled();
+  const geteilt = await page.evaluate(() => window.__geteilt);
+  ok(
+    "„An BookLedgerPro teilen“ gibt genau die Original-Mail als .eml-Datei (message/rfc822) an Web Share",
+    geteilt.length === 1 && geteilt[0].n === 1 && geteilt[0].type === "message/rfc822" && /\.eml$/.test(geteilt[0].name) && geteilt[0].size > 100,
+  );
+  await page.evaluate(() => { navigator.canShare = () => false; });
+  page.once("dialog", (d) => d.accept());
+  const emlDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "An BookLedgerPro teilen", exact: true }).click();
+  ok(
+    "Ohne Web Share wird die .eml gespeichert und der Weg (Belege hochladen) genannt",
+    /\.eml$/.test((await emlDownload).suggestedFilename()),
+  );
+  await settled();
   await page.getByRole("button", { name: "Antworten", exact: true }).click();
   await settled();
   ok(
