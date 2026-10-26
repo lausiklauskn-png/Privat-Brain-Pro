@@ -62,7 +62,8 @@ try{
   await page.fill('#explorerFilter','stadtwerke');
   ok('The explorer search also works inside a category',JSON.stringify(await names())===JSON.stringify(['Rechnung-Stadtwerke-Oktober.pdf']));
   await page.fill('#explorerFilter','');
-  await page.locator('#explorerHome').click();
+  // Sitzung 2: ⌂ is the choice of view.
+  await page.locator('#pb-explorer-view>summary').click();await page.locator('#pb-explorer-view [data-view-path=""]').click();
   await page.locator('[data-topic-suggest=salary]').getByRole('button',{name:'Nein danke'}).click();
   ok('"Nein danke" removes the suggestion for good',await page.locator('[data-topic-suggest]').count()===0);
   await page.evaluate(async()=>{await addDoc('Befund-Labor.pdf',2,'Befund Laborwerte, Diagnose, Praxis Dr. med. Muster');PBWorkspace.refresh();});

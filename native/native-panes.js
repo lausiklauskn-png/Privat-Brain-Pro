@@ -22,8 +22,10 @@
     return saved;
   }
   function schedule() {if(!pending){pending=true;requestAnimationFrame(()=>{pending=false;refresh();});}}
+  // Klaus 2026-10-26 (Sitzung 2): a chosen arrangement (pb-arrange.js) decides; without one the window size does.
   function wide(group) {
-    return !matchMedia('(orientation:portrait)').matches && innerWidth>(group.kind==='explorer'?650:900)
+    const chosen=group.layout.dataset.pbArrange;
+    return (chosen?chosen==='side':!matchMedia('(orientation:portrait)').matches && innerWidth>(group.kind==='explorer'?650:900))
       && group.layout.getBoundingClientRect().width>0
       && (group.kind!=='explorer'||!group.layout.closest('.explorer-tree-hidden'))
       && group.panes.every(pane=>getComputedStyle(pane).display!=='none');
@@ -121,7 +123,7 @@
       apply(group);
     }
   }
-  new MutationObserver(schedule).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','data-view','lang']});
+  new MutationObserver(schedule).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','data-view','lang','data-pb-arrange','data-pb-folders']});
   new MutationObserver(schedule).observe(document.documentElement,{attributes:true,attributeFilter:['lang','dir']});
   addEventListener('resize',schedule);
   addEventListener('blur',()=>finishDrag(true));

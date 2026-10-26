@@ -16,7 +16,7 @@
     noFolder:['Noch kein Ablageordner gewählt. Einzeln gewählte Dateien sind nur in dieser Sitzung verfügbar. Für dauerhaften Zugriff einen Ordner verbinden oder einen Ablageordner wählen.','No library folder selected. Individually selected files are available for this session only. Connect a folder or choose a library for lasting access.','Папка не выбрана. Отдельно выбранные файлы доступны только в этом сеансе. Подключите папку для постоянного доступа.','Nie wybrano folderu. Wybrane pliki są dostępne tylko w tej sesji. Połącz folder, aby zachować dostęp.'],
     unsupported:['Dieser Browser unterstützt keine direkte Ordnerablage. Dateiimport und Suche funktionieren; Dateien müssen nach einem Neustart erneut ausgewählt werden. Für lokale Ordner Chrome oder Edge auf einem unterstützten Desktop verwenden.','This browser does not support direct folder storage. File import and search work; select files again after restarting. For local folders use Chrome or Edge on a supported desktop.','Браузер не поддерживает прямую запись в папку. Импорт и поиск работают; после перезапуска выберите файлы снова. Для папок используйте Chrome или Edge на поддерживаемом компьютере.','Przeglądarka nie obsługuje zapisu do folderu. Import i wyszukiwanie działają; po ponownym uruchomieniu wybierz pliki jeszcze raz. Dostęp do folderów wymaga obsługiwanej przeglądarki Chrome lub Edge na komputerze.'],
     active:['Kopienablage aktiv','Copy storage active','Сохранение копий включено','Zapis kopii włączony'],open:['Öffnen','Open','Открыть','Otwórz'],local:['Lokale Datei','Local file','Локальный файл','Plik lokalny'],session:['Nur diese Sitzung','This session only','Только этот сеанс','Tylko ta sesja'],catalog:['Katalog / Mailtext','Catalog / email text','Каталог / текст письма','Katalog / treść wiadomości'],
-    empty:['Keine Dateien in dieser Ansicht. Füge Dateien hinzu oder wähle einen anderen Ordner.','No files in this view. Add files or choose another folder.','В этом разделе нет файлов. Добавьте файлы или выберите другую папку.','Brak plików. Dodaj pliki lub wybierz inny folder.'],filter:['Dateiliste filtern','Filter files','Фильтр файлов','Filtruj pliki'],
+    empty:['Keine Dateien in dieser Ansicht. Füge Dateien hinzu oder wähle einen anderen Ordner.','No files in this view. Add files or choose another folder.','В этом разделе нет файлов. Добавьте файлы или выберите другую папку.','Brak plików. Dodaj pliki lub wybierz inny folder.'],filter:['Dateiliste filtern','Filter files','Фильтр файлов','Filtruj pliki'],filterShort:['Suche','Search','Поиск','Szukaj'],pdf:['PDF','PDF','PDF','PDF'],
     permission:['Bitte gib den Zugriff auf den Ablageordner frei. Es wurde nichts kopiert.','Please grant access to the library folder. Nothing was copied.','Разрешите доступ к папке. Ничего не скопировано.','Zezwól na dostęp do folderu. Nic nie skopiowano.'],
     unavailable:['Datei nicht erreichbar. Prüfe den Ordner und seine Freigabe. Der Katalogeintrag bleibt erhalten.','File unavailable. Check the folder and permission. The catalog entry is preserved.','Файл недоступен. Проверьте папку и разрешение. Запись в каталоге сохранена.','Plik niedostępny. Sprawdź folder i uprawnienia. Wpis w katalogu pozostaje.'],
     emails:['E-Mails','Emails','Письма','Wiadomości'],
@@ -443,13 +443,35 @@
     info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view&&!view.category)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
     return row;
   }
-  let lastModel=null;
+  let lastModel=null,currentView=null;
+  // Klaus 2026-10-26 (Sitzung 2, Punkt 3): the explorer's choice of view also offers „PDF“; nothing is moved.
+  const isPdf=r=>/\.pdf$/i.test(String(r.name||''))||String(r.type||'')==='application/pdf'||String(r.ext||'').replace(/^\./,'').toLowerCase()==='pdf';
+  const PDF_VIEW={key:'type:pdf',get label(){return text('pdf');},category:true,filetype:true,match:r=>!r.mail&&isPdf(r)};
+  // Everything, the kinds and PDF with their counts, and what is shown right now (for the choice in the toolbar).
+  function explorerSections(){
+    const all=entries(),nodes=lastModel||buildModel(all),seen=new Set();
+    const pdf=all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&PDF_VIEW.match(e.r)).length;
+    const kind=k=>({path:'kind:'+k,key:k,label:text('kind_'+k),count:nodes.get('kind:'+k)?.tally?.n||0});
+    return [{path:'',key:'all',label:text('all'),count:nodes.get('')?.tally?.n||0},kind('mail'),{path:PDF_VIEW.key,key:'pdf',label:text('pdf'),count:pdf},kind('doc'),kind('photo'),kind('note')];
+  }
+  function explorerSection(){
+    if(currentView)return {path:folderPath,key:currentView===PDF_VIEW?'pdf':'view',label:currentView.label,deep:false};
+    const top=lastModel?chain(lastModel,folderPath)[1]:null;
+    return top?.kind?{path:top.path,key:top.kind,label:text('kind_'+top.kind),deep:top.path!==folderPath}:{path:'',key:'all',label:text('all'),deep:false};
+  }
+  // A view (category, PDF) keeps a way back over the path: „Alle Dateien › PDF“.
+  function viewCrumbs(nodes,label){
+    const box=el('explorerPath'),back=button('',()=>openFolder(''));nodeLabel(back,nodes.get(''));back.className='ghost explorer-crumb';
+    const sep=document.createElement('span');sep.className='explorer-crumb-sep';sep.textContent=' › ';
+    const here=document.createElement('span');here.className='explorer-crumb-here';here.textContent=label;
+    box.replaceChildren(back,sep,here);
+  }
   function renderExplorer() {
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
     const nodes=buildModel(all);lastModel=nodes;
     const topics=window.PBExplorerTopics, views=topics?.views()||[], categories=categoryViews(all);
-    const view=folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):categories.find(v=>v.key===folderPath)||null;
+    const view=folderPath===PDF_VIEW.key?PDF_VIEW:folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):categories.find(v=>v.key===folderPath)||null;currentView=view||null;
     if(!view){const real=resolvePath(nodes,folderPath);if(real!==folderPath){folderPath=real;revealSelectedPath=true;}}
     const here=view?null:nodes.get(folderPath);
     if(here&&revealSelectedPath)for(const n of chain(nodes,folderPath))openNodes.add(n.path);
@@ -465,12 +487,12 @@
     let toggle=el('explorerTreeToggle');
     if(!toggle){toggle=button('',()=>{treeHidden=!treeHidden;keep.put(TREE_HIDDEN,treeHidden);renderExplorer();});toggle.id='explorerTreeToggle';el('explorerHome').after(toggle);}
     toggle.textContent=treeHidden?'◧':'◨';toggle.title=toggle.ariaLabel=text(treeHidden?'showTree':'hideTree');toggle.setAttribute('aria-pressed',String(!treeHidden));
-    if(view){el('explorerPath').textContent=view.label;}else crumbs(nodes,folderPath);
+    if(view)viewCrumbs(nodes,view.label);else crumbs(nodes,folderPath);
     el('explorerUp').disabled=!folderPath;
     orderLabel();
     if(!folderPath)topics?.notice(files);
     if(view&&!view.category)topics.head(files,view.key);
-    else if(view){const help=document.createElement('p');help.className='hint';help.textContent=text('categoryHelp');files.append(help);}
+    else if(view&&!view.filetype){const help=document.createElement('p');help.className='hint';help.textContent=text('categoryHelp');files.append(help);}
     const words=foldText(el('explorerFilter').value).split(/\s+/).filter(Boolean);
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
     const typeKey=r=>String(r.ext||String(r.name||'').match(/\.([^./]+)$/)?.[1]||r.type||'').replace(/^\./,'').trim().toLocaleLowerCase();
@@ -495,7 +517,7 @@
   function refresh() {
     if(library && !DIR_HANDLES.has(libraryId)) {library=null;localStorage.setItem('pb_library_enabled','0');}
     for (const node of document.querySelectorAll('[data-ws]')) controlText(node,text(node.dataset.ws));
-    el('explorerFilter').placeholder=text('filter');el('explorerFilter').setAttribute('aria-label',text('filter'));
+    el('explorerFilter').placeholder=text('filterShort');el('explorerFilter').setAttribute('aria-label',text('filter'));
     syncNavigation();
     el('chooseLibrary').disabled=!window.showDirectoryPicker || signing;
     el('pauseLibrary').disabled=!library || signing;
@@ -519,7 +541,7 @@
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('pb-originals-change',refresh);
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,overview:overviewSummary};
+  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,explorerSections,explorerSection,overview:overviewSummary};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();

@@ -47,7 +47,7 @@ try{
   const path='category:'+encodeURIComponent('Rechnung / Verträge');
   await page.locator('#groups [data-overview-path]').filter({hasText:'Rechnung / Verträge'}).click();
   await page.waitForFunction(path=>PBWorkspace.explorerState().path===path,path);
-  ok('Category names containing slashes open their real category view',await page.locator('#explorerFiles .explorer-row').count()===2&&(await page.locator('#explorerPath').textContent())==='Rechnung / Verträge');
+  ok('Category names containing slashes open their real category view',await page.locator('#explorerFiles .explorer-row').count()===2&&(await page.locator('#explorerPath .explorer-crumb-here').textContent())==='Rechnung / Verträge'&&await page.locator('#explorerPath .explorer-crumb').count()===1);
   ok('Category views do not offer the unrelated semantic-topic removal action',await page.locator('#explorerFiles [data-topic-not]').count()===0);
   await page.locator('.main-pages [data-tab="dupes"]').click();
   ok('Duplicates remain directly reachable from their original primary button',await page.locator('#panel-dupes').evaluate(panel=>panel.classList.contains('on'))&&await page.locator('.main-pages [data-tab="dupes"]').count()===1);
