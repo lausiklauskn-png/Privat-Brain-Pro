@@ -161,6 +161,8 @@ try{
     await menuControl(page,`[data-lang="${code}"]`);
     await page.waitForFunction(code=>{const button=document.querySelector('[data-pb-help-toggle=input-language]'),heading=document.querySelector('[data-input-language-copy=title]');return document.documentElement.lang===code&&heading?.textContent.trim()&&button?.getAttribute('aria-label')?.includes(heading.textContent.trim());},code);
     ok(`${code}: translated help and preserved open state stay synchronized while the theme source remains hidden`,await toggle(page,'input-language').getAttribute('aria-expanded')==='true'&&await region(page,'input-language').isVisible()&&await page.locator('#pb-theme-settings').evaluate(panel=>panel.hidden));
+    // Der Umbau der Schutz-Karte nach dem Sprachwechsel ist asynchron; die CI war hier einmal schneller als der Umbau (pl).
+    await page.waitForFunction(()=>{const button=document.querySelector('[data-pb-help-toggle=protection]');return Boolean(button&&button.isConnected&&button.closest('#schutzPlace')?.contains(document.getElementById(button.getAttribute('aria-controls'))))&&document.querySelectorAll('#pb-ai-key-links .pb-ai-key-hint').length===2;},null,{timeout:10000}).catch(()=>{});
     ok(`${code}: protection help is remounted after its translated card rebuild`,await toggle(page,'protection').evaluate(button=>Boolean(button.isConnected&&button.closest('#schutzPlace')?.contains(document.getElementById(button.getAttribute('aria-controls')))))&&await page.locator('#pb-ai-key-links .pb-ai-key-hint').count()===2);
     translatedImportHelp.push(await page.locator('[data-ws=libraryHelp]').textContent());
     await navigateTo(page,'intake');
