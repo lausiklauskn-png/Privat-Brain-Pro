@@ -5,6 +5,12 @@ name: Bildmodell – Fingerabdrücke und Größe lernen
 # Arbeitsspeicher des Renderers. Nur auf Knopfdruck; die Werte wandern von Hand in tools/native/caption-model.json.
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - tools/native/caption-model.json
+      - tools/native/fetch-caption-model.mjs
+      - tools/native/measure-caption-model.mjs
+      - .github/workflows/caption-model-pins.yml
 permissions:
   contents: read
 concurrency:
