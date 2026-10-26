@@ -74,6 +74,9 @@ html = html.replace('</body>', '<script src="native-result-cards.js"></script>\n
 // Sitzung 4 (Klaus 2026-10-26): Bildbeschreibung – eigene Worte, Modell-Schalter, Suchfilter; dieselbe Datei wie in V3.
 html = html.replace('</body>', '<script src="pb-bildbeschreibung.js"></script>\n</body>');
 html = html.replace('</head>', '<link rel="stylesheet" href="pb-bildbeschreibung.css">\n</head>');
+// Sitzung 5 (Klaus 2026-10-26): 3D-Knöpfe in Übersicht und Kategorien, Vorschau/Zielordner als Baum; dieselben Dateien wie in V3.
+html = html.replace('</body>', '<script src="pb-3d.js"></script>\n<script src="pb-zielordner.js"></script>\n</body>');
+html = html.replace('</head>', '<link rel="stylesheet" href="pb-3d.css">\n<link rel="stylesheet" href="pb-zielordner.css">\n</head>');
 html = html.replace('</head>', '<link rel="stylesheet" href="result-cards.css">\n<link rel="stylesheet" href="result-previews.css">\n</head>');
 if (!html.includes('<script src="assets/live-mail.js')) throw new Error('Review native mail adapter injection after source changes');
 html = html.replace(/<script src="assets\/live-mail\.js/, '<script src="native-mail.js"></script>\n<script src="native-mail-view.js"></script>\n<script src="native-mail-folders.js"></script>\n<script src="assets/live-mail.js');
@@ -122,7 +125,7 @@ for (const app of apps) {
 for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'native-toolbar.js', 'native-theme.js', 'design-tokens.css', 'design-layout.css', 'native-originals.js', 'native-record-status.js', 'native-folders.js', 'native-vault.js', 'native-protect.js', 'native-navigation.js', 'native-pdf.js', 'native.css', 'native-mail.js', 'native-mail-view.js', 'native-mail-folders.js', 'native-categories.js', 'native-mycel.js', 'native-seal-place.js', 'native-mail-expiry.js', 'native-unsubscribe.js', 'native-mail-index.js', 'native-speech.js', 'native-share.js', 'native-mail-ai.js', 'native-semantic.js', 'native-keys.js', 'native-check.js', 'native-license.js', 'native-tools.js', 'tool-gate.js', 'license-keys.json']) await cp(join(root, 'native', name), join(out, name));
 for (const name of ['native-input-language.js', 'native-text-input.js', 'native-translation-device.js', 'native-mail-translation.js', 'translation-worker.js', 'translation-notices.html']) await cp(join(root, 'native', name), join(out, name));
 for (const name of ['native-content-icons.css','native-help.js','help-layout.css','native-activity.js','activity-layout.css','native-panes.js','panes-layout.css','native-overview.js','native-state.js','pb-arrange.js','pb-arrange.css','native-dupes.js','dupes-layout.css','mail-ai-layout.css','native-palette.js','palette-layout.css']) await cp(join(root,'native',name),join(out,name));
-for (const name of ['native-result-cards.js','result-cards.css','native-result-previews.js','result-previews.css','native-filme.js','pb-bildbeschreibung.js','pb-bildbeschreibung.css']) await cp(join(root,'native',name),join(out,name));
+for (const name of ['native-result-cards.js','result-cards.css','native-result-previews.js','result-previews.css','native-filme.js','pb-bildbeschreibung.js','pb-bildbeschreibung.css','pb-3d.js','pb-3d.css','pb-zielordner.js','pb-zielordner.css']) await cp(join(root,'native',name),join(out,name));
 await cp(join(root, 'tools/native/translation-models.json'), join(out, 'translation-models.json'));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.

@@ -1,6 +1,7 @@
 // Klaus 2026-10-26, Sitzung 1: Zählerzeile (1), Mail-Ordnerleiste (4), Doppelte kurz (8), Zustand mit Speicher (9c).
 // Sitzung 2: Explorer-Werkzeugzeile (3) und Anordnungs-Knopf in Explorer, Postfach und Kategorien (2).
 // Sitzung 3: ⓘ-Klapper überall, anfangs offen und gemerkt (7, 9a), Schutz (9b), Tresor-Inhalt im Tresor (9d).
+// Sitzung 5: 3D-Knöpfe in Übersicht und Kategorien (5), Vorschau und Zielordner als Baum unter den Knöpfen (6a).
 // Läuft gegen den gebauten Webteil (www/), den Android, Windows und die PWA gemeinsam verwenden.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -182,6 +183,86 @@ try{
   ok('Point 13: own words are searched (name search with the switch on finds „Palmen“)',await page.evaluate(()=>{window.PBBild.filter(true);MODE='name';const hits=search('Palmen',null).map(h=>h.r.name);window.PBBild.filter(false);MODE='mean';return hits.includes('Urlaub.jpg');}));
   ok('Sitzung 4: no runtime errors',errors.length===0);
   await page.close();
+  // ---------- Sitzung 5 – Punkt 5 und 6a: 3D-Knöpfe (Übersicht, Kategorien), Vorschau und Zielordner als Baum ----------
+  ({page,errors}=await open(1280,820));
+  await page.evaluate(()=>window.PBWorkspace.navigate('dash'));
+  await page.waitForFunction(()=>document.querySelectorAll('#panel-dash .tile.pb-3d').length===4,null,{timeout:8000}).catch(()=>{});
+  const measure=()=>page.evaluate(()=>{
+    const probe=document.createElement('span');probe.style.color='var(--acc)';document.body.append(probe);const acc=getComputedStyle(probe).color;probe.remove();
+    // Chromium meldet color-mix() als color(srgb r g b) mit Anteilen 0–1; eine unlesbare Farbe wird NaN, nie still Schwarz.
+    const rgb=s=>{let m=/rgba?\(([^)]+)\)/.exec(s);if(m)return m[1].split(/[\s,\/]+/).slice(0,3).map(Number);m=/color\(srgb ([^)]+)\)/.exec(s);if(m)return m[1].split(/[\s\/]+/).slice(0,3).map(x=>Math.round(Number(x)*255));return [NaN,NaN,NaN];};
+    const lum=([r,g,b])=>{const f=c=>{c/=255;return c<=.03928?c/12.92:((c+.055)/1.055)**2.4;};return .2126*f(r)+.7152*f(g)+.0722*f(b);};
+    const contrast=(a,b)=>{const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+.05)/(y+.05);};
+    const list=[...document.querySelectorAll('#panel-dash .tile')];
+    return list.map(t=>{const cs=getComputedStyle(t),before=getComputedStyle(t,'::before'),r=t.getBoundingClientRect();
+      const tint=parseFloat(before.opacity)||0,card=rgb(cs.backgroundColor),mix=rgb(acc).map((c,i)=>Math.round(card[i]+(c-card[i])*tint));
+      const col=sel=>rgb(getComputedStyle(t.querySelector(sel)).color);
+      return {pb:t.classList.contains('pb-3d'),stripe:parseFloat(before.width)<=6,tinted:before.backgroundImage.includes(acc.replace(/\s/g,''))||before.backgroundImage.includes(acc),height:r.height,
+        shadow:cs.boxShadow!=='none'&&/inset/.test(cs.boxShadow),k:contrast(col('.k'),mix),v:contrast(col('.v'),mix),u:contrast(col('.u'),mix),emoji:/\p{Extended_Pictographic}/u.test(t.textContent)};});
+  });
+  const tiles=await measure();
+  ok('Point 5: all four overview tiles are 3D buttons without the coloured stripe on the left',tiles.length===4&&tiles.every(t=>t.pb&&!t.stripe));
+  ok('Point 5: the gradient comes from the chosen theme (var(--acc)) and the buttons carry an inner bevel',tiles.every(t=>t.tinted&&t.shadow));
+  ok('Point 5: the tiles are smaller than before (≤ 92 px at 1280 px) and carry no emoji',tiles.every(t=>t.height<=92&&!t.emoji));
+  // Zahl in Textfarbe ≥ 4,5; die grüne und rote Zahl sind groß und fett (≥ 3 nach WCAG für große Schrift, hier ≥ 4 verlangt); Nebentexte ≥ 4,5.
+  ok(`Point 5: text stays readable on the tint – ink number ≥ 4.5, coloured numbers ≥ 4, title and note ≥ 4.5 (measured ${tiles.map(t=>[t.v,t.k,t.u].map(x=>x.toFixed(1)).join('/')).join(' · ')})`,tiles.every((t,i)=>(i===1||i===3?t.v>=4:t.v>=4.5)&&t.k>=4.5&&t.u>=4.5));
+  // Alle Themen: Verlauf aus dem jeweiligen Akzent, Text lesbar (Attribute am <html> wie native-theme.js/themes.js sie setzen).
+  const THEMES=[['klarblau',{'data-pb-theme':'klarblau'}],['graphit',{'data-pb-theme':'graphit'}],['petrol',{'data-pb-theme':'petrol'}],['nachtblau',{'data-pb-theme':'nachtblau','data-theme':'dunkel'}]];
+  const before=await page.evaluate(()=>['data-pb-theme','data-look','data-theme'].map(a=>[a,document.documentElement.getAttribute(a)]));
+  const perTheme=[];
+  for(const [name,attrs] of THEMES){
+    await page.evaluate(attrs=>{for(const a of ['data-pb-theme','data-look','data-theme'])document.documentElement.removeAttribute(a);for(const [a,v] of Object.entries(attrs))document.documentElement.setAttribute(a,v);},attrs);
+    await page.waitForTimeout(80);
+    const t=await measure();
+    perTheme.push({name,ok:t.length===4&&t.every((x,i)=>x.tinted&&x.shadow&&(i===1||i===3?x.v>=4:x.v>=4.5)&&x.k>=4.5&&x.u>=4.5),text:t.map(x=>[x.v,x.k,x.u].map(n=>n.toFixed(1)).join('/')).join(' · ')});
+  }
+  await page.evaluate(before=>{for(const [a,v] of before){if(v==null)document.documentElement.removeAttribute(a);else document.documentElement.setAttribute(a,v);}},before);
+  ok(`Point 5: in every theme the tint comes from that theme's accent and the text stays readable (${perTheme.map(p=>p.name+': '+p.text).join(' | ')})`,perTheme.every(p=>p.ok));
+  const second=page.locator('#panel-dash .tile').nth(1),box=await second.boundingBox();
+  await page.mouse.move(box.x+box.width*.2,box.y+box.height*.3);await page.waitForTimeout(250);
+  const moved=await page.evaluate(()=>{const t=document.querySelectorAll('#panel-dash .tile')[1];return {rx:t.style.getPropertyValue('--pb-rx'),transform:getComputedStyle(t).transform,tilt:window.PB3D?.maxTilt};});
+  ok('Point 5: a small tilt follows the pointer (at most 3°) and the glossy highlight moves with it',/deg/.test(moved.rx)&&Math.abs(parseFloat(moved.rx))<=3&&moved.transform!=='none'&&moved.tilt===3);
+  await page.mouse.move(5,400);await page.waitForTimeout(250);
+  // In Ruhe trägt jeder Knopf dieselbe Matrix (Perspektive ohne Drehung); „zurückgesetzt“ heißt: wie der unberührte Nachbar.
+  ok('Point 5: leaving the button resets the tilt',await page.evaluate(()=>{const [a,t]=document.querySelectorAll('#panel-dash .tile');return t.style.getPropertyValue('--pb-rx')===''&&getComputedStyle(t).transform===getComputedStyle(a).transform;}));
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.mouse.move(box.x+box.width*.2,box.y+box.height*.3);await page.waitForTimeout(250);
+  ok('Point 5: with „weniger Bewegung“ nothing tilts or presses',await page.evaluate(()=>{const t=document.querySelectorAll('#panel-dash .tile')[1];return t.style.getPropertyValue('--pb-rx')===''&&getComputedStyle(t).transform==='none';}));
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.mouse.move(5,400);
+  // 6a
+  await page.evaluate(()=>window.PBWorkspace.navigate('order'));
+  await page.waitForFunction(()=>document.querySelectorAll('#groups > .grp.pb-3d').length>=2&&document.querySelector('.pb-cats-why')?.textContent.includes('Explorer'),null,{timeout:8000}).catch(()=>{});
+  const cats=await page.evaluate(()=>{const g=[...document.querySelectorAll('#groups > .grp')];const why=document.querySelector('.pb-cats-why');return {n:g.length,pb:g.every(x=>x.classList.contains('pb-3d')&&/inset/.test(getComputedStyle(x).boxShadow)),why:why?.textContent||'',inHelp:!!why?.closest('[data-pb-help-static="categories-intro"]'),toggle:!!document.querySelector('#panel-order [data-pb-help-toggle="categories-intro"]')};});
+  ok('Point 6a: the category tiles are the same 3D buttons',cats.n>=2&&cats.pb);
+  ok('Point 6a: one sentence behind ⓘ tells Übersicht, Explorer and Kategorien apart',/Übersicht/.test(cats.why)&&/Explorer/.test(cats.why)&&/Kategorien/.test(cats.why)&&cats.inHelp&&cats.toggle);
+  await page.locator('#reorgPreview').click();
+  await page.waitForFunction(()=>document.querySelector('[data-pb-zielordner="preview"] .pb-zo-tree'),null,{timeout:8000}).catch(()=>{});
+  const prev=await page.evaluate(()=>{const b=document.querySelector('.pb-zielordner'),row=document.querySelector('#reorgNote .btnrow'),tree=b?.querySelector('.pb-zo-tree');
+    return {kind:b?.dataset.pbZielordner,modal:document.getElementById('modalBg')?.classList.contains('on'),below:!!b&&!!row&&b.getBoundingClientRect().top>=row.getBoundingClientRect().bottom,inside:!!b&&!!document.getElementById('reorgNote').contains(b),folders:tree?[...tree.querySelectorAll(':scope>li>.pb-zo-node>.pb-zo-name')].map(n=>n.textContent):[],counts:tree?[...tree.querySelectorAll(':scope>li>.pb-zo-node>.pb-zo-count')].map(n=>n.textContent):[],title:b?.querySelector('.pb-zo-title')?.textContent||''};});
+  ok('Point 6a: „Vorschau ansehen“ shows the future folders as a tree directly below the buttons, not in a window',prev.kind==='preview'&&!prev.modal&&prev.below&&prev.inside&&/Vorschau/.test(prev.title));
+  ok('Point 6a: the tree names every planned folder with its file count',prev.folders.length===2&&prev.folders.includes('Rechnung - Verträge')&&prev.folders.includes('E-Mail')&&prev.counts.some(c=>/^2 /.test(c))&&prev.counts.some(c=>/^1 /.test(c)));
+  await page.evaluate(()=>{
+    // Ein gestellter Zielordner: der vorhandene Kopierweg wählt ihn, danach wird er gelesen.
+    const file=name=>({kind:'file',name});const dir=(name,entries)=>({kind:'directory',name,async *values(){for(const e of entries)yield e;},async *keys(){},async getFileHandle(){return {async createWritable(){return {async write(){},async close(){}};}};},async getDirectoryHandle(n){return dir(n,[]);}});
+    window.showDirectoryPicker=async()=>dir('Neu geordnet',[dir('Rechnung - Verträge',[file('Rechnung.pdf'),file('Vertrag.pdf')]),dir('E-Mail',[file('Re Test.eml')]),file('company-brain-neuordnung.json')]);
+  });
+  await page.locator('#reorgStart').click();
+  await page.waitForFunction(()=>document.querySelector('[data-pb-zielordner="done"] .pb-zo-tree'),null,{timeout:8000}).catch(()=>{});
+  const done=await page.evaluate(()=>{const b=document.querySelector('.pb-zielordner'),tree=b?.querySelector('.pb-zo-tree');return {kind:b?.dataset.pbZielordner,title:b?.querySelector('.pb-zo-title')?.textContent||'',folders:tree?[...tree.querySelectorAll(':scope>li.pb-zo-folder>.pb-zo-node>.pb-zo-name')].map(n=>n.textContent):[],files:tree?[...tree.querySelectorAll('.pb-zo-file .pb-zo-name')].map(n=>n.textContent):[],modal:document.getElementById('modalBg')?.classList.contains('on')};});
+  ok('Point 6a: after copying the same place shows the real target folder as a tree (what was actually written)',done.kind==='done'&&/Neu geordnet/.test(done.title)&&done.folders.slice().sort().join()==='E-Mail,Rechnung - Verträge'&&done.files.includes('Rechnung.pdf')&&done.files.includes('Re Test.eml')&&!done.modal);
+  ok('Sitzung 5: no runtime errors',errors.length===0);
+  await page.close();
+  // Ohne Ordnerzugriff (Android-WebView) sagt dieselbe Stelle ehrlich, was fehlt.
+  {
+    const p3=await browser.newPage({viewport:{width:1000,height:800}}),origin=`http://127.0.0.1:${server.address().port}/`;
+    await p3.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
+    await p3.addInitScript(()=>{delete window.showDirectoryPicker;});
+    await p3.goto(origin);await p3.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBWorkspace&&window.PBZielordner);
+    await p3.evaluate(()=>window.PBWorkspace.navigate('order'));await p3.locator('#reorgStart').click();
+    await p3.waitForFunction(()=>document.querySelector('[data-pb-zielordner="note"]'),null,{timeout:8000}).catch(()=>{});
+    ok('Point 6a: without folder access the note says what is missing instead of staying silent',await p3.evaluate(()=>/Ordnerzugriff/.test(document.querySelector('[data-pb-zielordner="note"]')?.textContent||'')));
+    await p3.close();
+  }
   // 9b needs the protection card, which only the apps show: a minimal stand-in for the device side.
   {
     const p2=await browser.newPage({viewport:{width:1000,height:1400}}),e2=[],origin=`http://127.0.0.1:${server.address().port}/`;
