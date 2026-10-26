@@ -203,6 +203,18 @@
       "Скачать оригинал",
       "Pobierz oryginał",
     ],
+    bookledger: [
+      "An BookLedgerPro teilen",
+      "Share with BookLedgerPro",
+      "Передать в BookLedgerPro",
+      "Udostępnij do BookLedgerPro",
+    ],
+    bookledgerFallback: [
+      "Teilen ist hier nicht möglich – die Mail wurde als .eml gespeichert. In BookLedgerPro unter „Belege“ hochladen.",
+      "Sharing is not available here – the mail was saved as .eml. Upload it in BookLedgerPro under “Receipts”.",
+      "Передача здесь недоступна – письмо сохранено как .eml. Загрузите его в BookLedgerPro в разделе «Документы».",
+      "Udostępnianie nie jest tu możliwe – wiadomość zapisano jako .eml. Wgraj ją w BookLedgerPro w „Dowodach”.",
+    ],
     filter: [
       "Ordner filtern",
       "Filter folder",
@@ -1011,22 +1023,37 @@
           confirm(T("remove") + "?") ? action("delete") : null,
         ),
       );
+    // The original message as one .eml blob — for saving and for sharing (BookLedgerPro reads .eml, Klaus 2026-10-26).
+    const emlBlob = () =>
+      new Blob(
+        [
+          mail.sourceBase64
+            ? Uint8Array.from(atob(mail.sourceBase64), (c) =>
+                c.charCodeAt(0),
+              )
+            : mail.raw,
+        ],
+        { type: "message/rfc822" },
+      );
+    const emlName = () =>
+      ((mail.subject || "mail").replace(/[\\/:*?"<>|\x00-\x1f]/g, "_").trim().slice(0, 80) || "mail") + ".eml";
+    // Share with BookLedgerPro: natively the same system chooser as "share / save original" (BookLedgerPro is listed
+    // there once installed); in the browser the Web Share API with the .eml file; otherwise a download plus the hint.
+    async function shareBookLedger() {
+      if (native) return native.openOriginal({account,folder,validity,uid:item.uid});
+      const file = new File([emlBlob()], emlName(), { type: "message/rfc822" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: mail.subject || "" }); return; }
+        catch (e) { if (e?.name === "AbortError") return; }
+      }
+      downloadBlob(emlBlob(), emlName());
+      alert(T("bookledgerFallback"));
+    }
     actions.append(
       btn("download", () =>
-        native ? native.openOriginal({account,folder,validity,uid:item.uid}) : downloadBlob(
-          new Blob(
-            [
-              mail.sourceBase64
-                ? Uint8Array.from(atob(mail.sourceBase64), (c) =>
-                    c.charCodeAt(0),
-                  )
-                : mail.raw,
-            ],
-            { type: "message/rfc822" },
-          ),
-          "mail.eml",
-        ),
+        native ? native.openOriginal({account,folder,validity,uid:item.uid}) : downloadBlob(emlBlob(), "mail.eml"),
       ),
+      btn("bookledger", shareBookLedger),
       catalogButton,
     );
     if (native) {

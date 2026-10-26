@@ -130,6 +130,11 @@ try{
   await mail.locator('.mail-message-tools>summary').click();
   await button('download').first().click();
   ok('Original EML uses native share/export, not unsupported blob download',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7)));
+  await page.evaluate(()=>{window.mailCalls=window.mailCalls.filter(c=>c.method!=='openOriginal');});
+  await mail.locator('.mail-message-tools>summary').click();
+  ok('"An BookLedgerPro teilen" stands in the message actions with the native label',await button('bookledger').first().textContent()==='An BookLedgerPro teilen'&&await button('bookledger').first().locator('.compact-icon').count()===1);
+  await button('bookledger').first().click();
+  ok('"An BookLedgerPro teilen" opens the same scoped native share chooser for the original .eml (BookLedgerPro is listed there)',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7&&c.args.validity==='123')));
   await page.evaluate(()=>window.failMessage=true);
   await mail.locator('[data-live-uid="7"]').click();
   ok('Failed message opening removes previous subject and actions',await mail.locator('.live-mail [data-live-text=reply]').count()===0&&await mail.locator('.live-mail .mail-reader h3').count()===0);
