@@ -22,6 +22,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProSpeechPlugin.class);
         registerPlugin(ProSharePlugin.class);
         registerPlugin(ProSemanticPlugin.class);
+        registerPlugin(ProCaptionPlugin.class);
         registerPlugin(ProTranslationPlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);
@@ -49,6 +50,7 @@ public class MainActivity extends BridgeActivity {
                 // The view's process ended (for example out of memory while the meaning model starts).
                 // Remember it and open the app again instead of letting Android close it.
                 ProSemanticPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
+                ProCaptionPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
                 ProTranslationPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
                 android.util.Log.w("PrivateBrainPro", "WebView renderer gone: crash=" + detail.didCrash() + " priority=" + detail.rendererPriorityAtExit());
                 if (view.getParent() instanceof android.view.ViewGroup) ((android.view.ViewGroup) view.getParent()).removeView(view);
@@ -75,9 +77,10 @@ public class MainActivity extends BridgeActivity {
     private android.webkit.WebResourceResponse interceptAppRequest(android.webkit.WebResourceRequest request) {
         String address = request.getUrl().toString();
         if (TranslationModels.covers(address)) return TranslationAssets.respond(this, address);
-        if (BundledLibrary.covers(address)) return BundledLibrary.respond(getAssets(), ProSemanticPlugin.model(this), address);
+        if (BundledLibrary.covers(address)) return BundledLibrary.respond(getAssets(), address, ProSemanticPlugin.model(this), ProCaptionPlugin.model(this));
         if (BundledLibrary.coversModel(address)) return BundledLibrary.respondModel(ProSemanticPlugin.model(this), address);
-        if (address.startsWith(BundledLibrary.REMOTE_MODEL_PREFIX)) return BundledLibrary.missing();
+        if (BundledLibrary.coversCaptionModel(address)) return BundledLibrary.respondCaptionModel(ProCaptionPlugin.model(this), address);
+        if (BundledLibrary.remoteModel(address)) return BundledLibrary.missing();
         if (AppNetwork.isOffline() && AppNetwork.external(address))
             return new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "App offline",
                 java.util.Collections.emptyMap(), new java.io.ByteArrayInputStream(new byte[0]));

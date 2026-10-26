@@ -14,7 +14,9 @@ import java.util.Map;
  * The app answers exactly that address itself: from the model files loaded with the switch
  * (SemanticModel, Klaus 2026-10-21), otherwise from the APK if a build carries them. Any other
  * file under the address gets 404; nothing under it ever goes to the network. The same holds
- * for the model under the app's own address /models/Xenova/multilingual-e5-small/.
+ * for the model under the app's own address /models/Xenova/multilingual-e5-small/ and, since Sitzung 4
+ * (Klaus 2026-10-26, Bildbeschreibung), for the image model under /models/Xenova/vit-gpt2-image-captioning/,
+ * loaded with its own switch (ProCaption). The library is answered from whichever model folder has it.
  */
 final class BundledLibrary {
     static final String PREFIX = "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
@@ -22,6 +24,9 @@ final class BundledLibrary {
     static final String MODEL_PREFIX = "https://localhost/models/Xenova/multilingual-e5-small/";
     /** The same model at Hugging Face: never loaded inside the view (118 MB in the WebView); the switch loads it natively. */
     static final String REMOTE_MODEL_PREFIX = "https://huggingface.co/Xenova/multilingual-e5-small/";
+    /** Image model (Bildbeschreibung, Sitzung 4): same rule, own folder, own switch. */
+    static final String CAPTION_MODEL_PREFIX = "https://localhost/models/Xenova/vit-gpt2-image-captioning/";
+    static final String REMOTE_CAPTION_PREFIX = "https://huggingface.co/Xenova/vit-gpt2-image-captioning/";
     private static final Map<String, String> FILES = new HashMap<>();
     static {
         FILES.put("transformers.min.js", "application/javascript");
@@ -49,11 +54,16 @@ final class BundledLibrary {
     static String mime(String name) { return FILES.get(name); }
 
     static boolean coversModel(String url) { return url != null && url.startsWith(MODEL_PREFIX); }
+    static boolean coversCaptionModel(String url) { return url != null && url.startsWith(CAPTION_MODEL_PREFIX); }
+    /** Any remote address of the two models: never fetched by the view, the switches load them natively. */
+    static boolean remoteModel(String url) { return url != null && (url.startsWith(REMOTE_MODEL_PREFIX) || url.startsWith(REMOTE_CAPTION_PREFIX)); }
 
     /** "model/<file>" for an address under the model folder, or null. Only plain names, at most one folder deep. */
-    static String modelPath(String url) {
-        if (!coversModel(url)) return null;
-        String rest = url.substring(MODEL_PREFIX.length());
+    static String modelPath(String url) { return modelPath(url, MODEL_PREFIX); }
+    static String captionModelPath(String url) { return modelPath(url, CAPTION_MODEL_PREFIX); }
+    private static String modelPath(String url, String prefix) {
+        if (url == null || !url.startsWith(prefix)) return null;
+        String rest = url.substring(prefix.length());
         int cut = rest.indexOf('?'); if (cut >= 0) rest = rest.substring(0, cut);
         cut = rest.indexOf('#'); if (cut >= 0) rest = rest.substring(0, cut);
         if (rest.contains("..") || !rest.matches("[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?")) return null;
@@ -71,11 +81,15 @@ final class BundledLibrary {
         return new WebResourceResponse("text/plain", "UTF-8", 404, "Not available", headers(), new ByteArrayInputStream(new byte[0]));
     }
 
-    static WebResourceResponse respond(AssetManager assets, SemanticModel model, String url) {
+    static WebResourceResponse respond(AssetManager assets, SemanticModel model, String url) { return respond(assets, url, model); }
+
+    /** The library from the first complete model folder that carries it (meaning model, then image model), else from the APK. */
+    static WebResourceResponse respond(AssetManager assets, String url, SemanticModel... models) {
         String name = file(url);
         if (name != null) {
             try {
-                File loaded = model == null ? null : model.file("lib/" + name);
+                File loaded = null;
+                for (SemanticModel model : models) { loaded = model == null ? null : model.file("lib/" + name); if (loaded != null) break; }
                 InputStream in = loaded != null ? new FileInputStream(loaded) : assets.open(ASSET_DIR + name);
                 return new WebResourceResponse(mime(name), null, 200, "OK", headers(), in);
             } catch (Exception notThere) { /* not loaded and not in the APK: 404 */ }
@@ -83,8 +97,9 @@ final class BundledLibrary {
         return missing();
     }
 
-    static WebResourceResponse respondModel(SemanticModel model, String url) {
-        String path = modelPath(url);
+    static WebResourceResponse respondModel(SemanticModel model, String url) { return respondFile(model, modelPath(url)); }
+    static WebResourceResponse respondCaptionModel(SemanticModel model, String url) { return respondFile(model, captionModelPath(url)); }
+    private static WebResourceResponse respondFile(SemanticModel model, String path) {
         File f = path == null || model == null ? null : model.file(path);
         if (f == null) return missing();
         try {

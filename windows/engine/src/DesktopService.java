@@ -14,7 +14,7 @@ final class DesktopService {
     private final MailEngine mail;
     private final DesktopOAuth oauth;
     private final Protection protection;
-    private final DesktopModel model;
+    private final DesktopModel model,caption;
     private final DesktopPdf pdf=new DesktopPdf();
     private final DesktopFolders folders;
     private final ShareInbox inbox;
@@ -31,6 +31,7 @@ final class DesktopService {
         state.metered=()->{try{return host.call("metered",new JSONObject()).optBoolean("metered",true);}catch(Exception error){return true;}};
         protection=Protection.create(state);
         model=new DesktopModel(state,resources.resolve("semantic-model.json"));
+        caption=new DesktopModel(state,resources.resolve("caption-model.json"),"caption","ProCaption",BundledRoutes::captionModelPath);
         folders=new DesktopFolders(state);
         Path incoming=state.directory.resolve("cache/incoming");DesktopFiles.noLinks(incoming);Files.createDirectories(incoming);
         inbox=new ShareInbox(incoming.toFile());inbox.clear();
@@ -60,6 +61,7 @@ final class DesktopService {
             case "ProMail" -> mail(method,o);
             case "ProProtect" -> protect(method,o);
             case "ProSemantic" -> model.call(method);
+            case "ProCaption" -> caption.call(method);
             case "ProLinks" -> {
                 if(method.equals("prepare"))yield new JSONObject().put("tickets",BrowserLinks.prepare(o.getJSONArray("urls")));
                 if(!method.equals("open"))throw new MailFailure("INVALID_INPUT");
@@ -67,8 +69,8 @@ final class DesktopService {
                 yield host.call("external",new JSONObject().put("url",safe));
             }
             case "DesktopInternal" -> {
-                if(method.equals("modelAsset"))yield model.asset(required(o,"url"));
-                if(method.equals("rendererGone")){model.rendererGone();yield yes();}
+                if(method.equals("modelAsset")){JSONObject found=model.asset(required(o,"url"));yield found.optBoolean("missing",false)?caption.asset(required(o,"url")):found;}
+                if(method.equals("rendererGone")){model.rendererGone();caption.rendererGone();yield yes();}
                 if(method.equals("mailLink"))yield new JSONObject().put("url",BrowserLinks.resolve(required(o,"url")));
                 if(method.equals("receive"))yield receive(o.getJSONArray("paths"));
                 throw new MailFailure("INVALID_INPUT");

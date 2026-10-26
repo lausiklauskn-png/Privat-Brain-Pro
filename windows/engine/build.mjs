@@ -82,7 +82,7 @@ receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/
 const routesOriginal=await readFile(join(source,'BundledLibrary.java'),'utf8');
 const routesStart=routesOriginal.indexOf('    static final String PREFIX ='),routesEnd=routesOriginal.indexOf('    private static Map<String, String> headers()');
 if(routesStart<0||routesEnd<routesStart)throw Error('Review shared bundled asset routes');
-const routesSource='package de.familyprojekt.privatebrain.pro;\nimport java.util.*;\nfinal class BundledRoutes {\n'+routesOriginal.slice(routesStart,routesEnd).replace('https://localhost/models/','https://pbmodel.localhost/models/')+'}\n';
+const routesSource='package de.familyprojekt.privatebrain.pro;\nimport java.util.*;\nfinal class BundledRoutes {\n'+routesOriginal.slice(routesStart,routesEnd).replaceAll('https://localhost/models/','https://pbmodel.localhost/models/')+'}\n';
 await writeFile(join(generated,'BundledRoutes.java'),routesSource);
 receipt.push({path:'android/app/src/main/java/de/familyprojekt/privatebrain/pro/BundledLibrary.java#routes',sha256:hash(routesOriginal),generatedSha256:hash(routesSource),byteIdentical:false});
 const config=JSON.parse(await readFile(join(here,'../src-tauri/tauri.conf.json'),'utf8'));

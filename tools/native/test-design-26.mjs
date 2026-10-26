@@ -172,6 +172,15 @@ try{
   ok('No emojis on screen: bar, ☰ menu and every view use line icons'+(emojiLeft.length?' — still: '+emojiLeft.join(' ; '):''),emojiLeft.length===0);
   ok('Line icons stand where emojis were (menu lock, catalog tiles)',await page.locator('.pb-tools-lock svg').count()>0);
   ok('No emojis: no runtime errors',errors.length===0);
+  // ---------- Sitzung 4 – Punkte 12–14: Bildbeschreibung (eigene Worte, Filter), flach und ohne Emoji ----------
+  await page.evaluate(()=>{window.PBWorkspace.navigate('search');const q=document.getElementById('q');q.value='Urlaub';q.dispatchEvent(new Event('input',{bubbles:true}));});
+  await page.waitForSelector('#results > .card[data-hash="'+'d'.repeat(64)+'"] .pb-bild textarea.pb-bild-own');
+  const bild=await page.evaluate(()=>{const img=document.querySelector('#results > .card[data-hash="'+'d'.repeat(64)+'"]'),note=document.querySelector('#results > .card[data-hash="'+'e'.repeat(64)+'"]'),f=document.getElementById('pb-bild-filter');const own=img.querySelector('.pb-bild-own'),r=own.getBoundingClientRect();return {label:img.querySelector('.pb-bild-label-text').textContent,note:!!note&&!note.querySelector('.pb-bild'),flat:r.height<=34&&getComputedStyle(own).boxShadow==='none',filter:!!f&&f.textContent.trim()==='Bildbeschreibung'&&getComputedStyle(f).boxShadow==='none'&&f.getBoundingClientRect().height<=46,emoji:/\p{Extended_Pictographic}/u.test(img.querySelector('.pb-bild').innerText+f.textContent+f.title)};});
+  ok('Point 13: every image gets a flat field „Bildbeschreibung“, a note does not; no emoji',bild.label==='Bildbeschreibung'&&bild.note&&bild.flat&&!bild.emoji);
+  ok('Point 14: a flat switch „Bildbeschreibung“ stands in the search',bild.filter);
+  await page.evaluate(()=>window.PBBild.setOwn('d'.repeat(64),'Strand mit Palmen'));
+  ok('Point 13: own words are searched (name search with the switch on finds „Palmen“)',await page.evaluate(()=>{window.PBBild.filter(true);MODE='name';const hits=search('Palmen',null).map(h=>h.r.name);window.PBBild.filter(false);MODE='mean';return hits.includes('Urlaub.jpg');}));
+  ok('Sitzung 4: no runtime errors',errors.length===0);
   await page.close();
   // 9b needs the protection card, which only the apps show: a minimal stand-in for the device side.
   {

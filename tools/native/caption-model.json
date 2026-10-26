@@ -1,0 +1,72 @@
+{
+  "enabled": false,
+  "enabledNote": "Sitzung 4 (Klaus 2026-10-26): das Bildmodell kommt nicht in den Bau. Es wird wie das Bedeutungs-Modell per Schalter in den App-Speicher geladen (ProCaption), mit denselben Fingerabdrücken wie hier.",
+  "comment": "Bildbeschreibung (Punkt 12, Sitzung 4). Dasselbe transformers.js wie beim Bedeutungs-Modell; das Modell beschreibt, was auf einem Bild zu sehen ist. Jede Datei ist per SHA-256 festgelegt. Die Werte stammen aus dem Lernlauf .github/workflows/caption-model-pins.yml (Hugging Face, Revision unten): erstes Vertrauen, seitdem fest. Gelernt am 2026-10-26 (Lauf 40327837624, Revision 215b4edc…): erstes Vertrauen, seitdem fest.",
+  "library": {
+    "package": "@xenova/transformers",
+    "version": "2.17.2",
+    "tarball": "https://registry.npmjs.org/@xenova/transformers/-/transformers-2.17.2.tgz",
+    "integrity": "sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==",
+    "files": {
+      "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+      "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
+      "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    }
+  },
+  "model": {
+    "id": "Xenova/vit-gpt2-image-captioning",
+    "revision": "215b4edcb7ec1fad5905a18a03f7b2007f6fabd0",
+    "files": {
+      "config.json": "f65c81039a672962d686f71ee0242f0c89dc020a0e3f193a989a696bf3f9515e",
+      "generation_config.json": "997e1f943576edcc46e1b93078ec0e72054a62b4c7f521da42a1eab43c4c1d0c",
+      "preprocessor_config.json": "76304e9a1deb0d5f78349a57ad9d8057f36476c29bd292e907e2e8c451c93e9d",
+      "tokenizer.json": "6e785cd4f004c9291dadeba7d8d1c2871318d368a1cfcd416c0571dcd8f11413",
+      "tokenizer_config.json": "5b477c376e81670409e943fc7c8233a0356c8488e05a8aa246082a1d29e8d609",
+      "onnx/encoder_model_quantized.onnx": "6f6e2e27c11303cf533682184543333e7ecb930a734197a0272a1e408aba2766",
+      "onnx/decoder_model_merged_quantized.onnx": "1f3ec53b5fc3614c0b54ee786755a7ec3007841f57543f8e241499edfadfa98f"
+    }
+  },
+  "download": {
+    "comment": "Laden per Schalter in der App: Modell zuerst von Klaus' Server, sonst Hugging Face; die Bibliothek von jsDelivr, sonst unpkg. Jede Datei muss den Fingerabdruck oben tragen.",
+    "model": [
+      "https://family-projekt.de/models/{id}/{file}",
+      "https://huggingface.co/{id}/resolve/{revision}/{file}"
+    ],
+    "library": [
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@{version}/dist/{file}",
+      "https://unpkg.com/@xenova/transformers@{version}/dist/{file}"
+    ]
+  },
+  "sizes": {
+    "lib/transformers.min.js": 897938,
+    "lib/ort-wasm-simd.wasm": 10014674,
+    "lib/ort-wasm.wasm": 9223228,
+    "model/config.json": 4888,
+    "model/generation_config.json": 184,
+    "model/preprocessor_config.json": 378,
+    "model/tokenizer.json": 2107928,
+    "model/tokenizer_config.json": 456,
+    "model/onnx/encoder_model_quantized.onnx": 87453213,
+    "model/onnx/decoder_model_merged_quantized.onnx": 158599996
+  },
+  "measured": {
+    "comment": "Vom Lernlauf gemessen (GitHub-Runner ubuntu-24.04, headless Chromium, zwei erfundene Bilder 640×480), nicht am Tablet. RSS = Arbeitsspeicher des Renderer-Prozesses, Spitze während Laden und Beschreiben.",
+    "run": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/actions/runs/40327837624",
+    "date": "2026-10-26",
+    "downloadBytes": 268302883,
+    "downloadMB": 255.9,
+    "modelBytes": 248167043,
+    "libraryBytes": 20135840,
+    "chromium": "156.0.8078.4",
+    "loadMs": 3075,
+    "firstCaptionMs": 3232,
+    "secondCaptionMs": 2911,
+    "jsHeapLoadedMB": 169,
+    "jsHeapAfterMB": 33,
+    "rendererRssPeakMB": 1217,
+    "captions": [
+      "a green and white house with a green and white house",
+      "a coffee cup sitting on top of a white counter"
+    ]
+  }
+}
