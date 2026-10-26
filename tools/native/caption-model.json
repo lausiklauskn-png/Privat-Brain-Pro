@@ -1,0 +1,57 @@
+{
+  "enabled": false,
+  "enabledNote": "Sitzung 4 (Klaus 2026-10-26): das Bildmodell kommt nicht in den Bau. Es wird wie das Bedeutungs-Modell per Schalter in den App-Speicher geladen (ProCaption), mit denselben Fingerabdrücken wie hier.",
+  "comment": "Bildbeschreibung (Punkt 12, Sitzung 4). Dasselbe transformers.js wie beim Bedeutungs-Modell; das Modell beschreibt, was auf einem Bild zu sehen ist. Jede Datei ist per SHA-256 festgelegt. Die Werte stammen aus dem Lernlauf .github/workflows/caption-model-pins.yml (Hugging Face, Revision unten): erstes Vertrauen, seitdem fest. Leere Werte heißen: noch nicht gelernt — dann nennt der Lernlauf sie als CAPTION-PIN-Zeilen.",
+  "library": {
+    "package": "@xenova/transformers",
+    "version": "2.17.2",
+    "tarball": "https://registry.npmjs.org/@xenova/transformers/-/transformers-2.17.2.tgz",
+    "integrity": "sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==",
+    "files": {
+      "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+      "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
+      "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    }
+  },
+  "model": {
+    "id": "Xenova/vit-gpt2-image-captioning",
+    "revision": "main",
+    "files": {
+      "config.json": "",
+      "generation_config.json": "",
+      "preprocessor_config.json": "",
+      "tokenizer.json": "",
+      "tokenizer_config.json": "",
+      "onnx/encoder_model_quantized.onnx": "",
+      "onnx/decoder_model_merged_quantized.onnx": ""
+    }
+  },
+  "download": {
+    "comment": "Laden per Schalter in der App: Modell zuerst von Klaus' Server, sonst Hugging Face; die Bibliothek von jsDelivr, sonst unpkg. Jede Datei muss den Fingerabdruck oben tragen.",
+    "model": [
+      "https://family-projekt.de/models/{id}/{file}",
+      "https://huggingface.co/{id}/resolve/{revision}/{file}"
+    ],
+    "library": [
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@{version}/dist/{file}",
+      "https://unpkg.com/@xenova/transformers@{version}/dist/{file}"
+    ]
+  },
+  "sizes": {
+    "lib/transformers.min.js": 897938,
+    "lib/ort-wasm-simd.wasm": 10014674,
+    "lib/ort-wasm.wasm": 9223228
+  },
+  "measured": {
+    "comment": "Vom Lernlauf gemessen (GitHub-Runner, headless Chromium), nicht am Tablet.",
+    "run": "",
+    "downloadBytes": 0,
+    "chromium": "",
+    "loadMs": 0,
+    "firstCaptionMs": 0,
+    "secondCaptionMs": 0,
+    "jsHeapMB": 0,
+    "rendererRssPeakMB": 0,
+    "caption": ""
+  }
+}

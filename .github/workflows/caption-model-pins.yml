@@ -1,0 +1,39 @@
+name: Bildmodell – Fingerabdrücke und Größe lernen
+# Sitzung 4 (Klaus 2026-10-26, „Größe und Speicherbedarf vorher messen"): lädt das Bildmodell einmal von Hugging Face
+# und transformers.js von npm, druckt je Datei SHA-256 und Bytes (CAPTION-PIN) sowie die Revision, lässt das Modell
+# dann im headless Chromium zwei erfundene Bilder beschreiben und misst Ladezeit, Zeit je Bild, JS-Heap und den
+# Arbeitsspeicher des Renderers. Nur auf Knopfdruck; die Werte wandern von Hand in tools/native/caption-model.json.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: caption-model-pins-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  learn:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Browser installieren
+        run: npx playwright-core install --with-deps chromium
+      - name: Modell laden, Fingerabdrücke und Größen drucken
+        run: node tools/native/fetch-caption-model.mjs --learn "$RUNNER_TEMP/caption"
+      - name: Modell im Chromium laufen lassen und messen
+        run: node tools/native/measure-caption-model.mjs "$RUNNER_TEMP/caption"
+      - name: Ergebnis zusammenstellen
+        run: |
+          mkdir -p caption-audit
+          cp "$RUNNER_TEMP/caption/caption-pins-learned.json" "$RUNNER_TEMP/caption/caption-measured.json" caption-audit/
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: caption-model-audit
+          path: caption-audit/
+          if-no-files-found: error
+          retention-days: 30
