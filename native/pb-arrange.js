@@ -99,9 +99,10 @@
   const SECTION_ICON = { all: 'home', mail: 'mail', pdf: 'pdf', doc: 'file', photo: 'images', note: 'note', view: 'folder' };
   let view = null, sort = null, sortButtons = new Map(), dirButtons = [];
   const sortKeys = () => select ? [...new Set([...select.options].map(o => o.value.replace(/-r$/, '')))] : [];
+  // Like the old ⌂ and „Im Explorer zeigen“: a new view starts with an empty search field.
   function go(path) {
-    if (window.PBNavigation?.folder) window.PBNavigation.folder(path, false);
-    else ws.restoreExplorer({ ...ws.explorerState(), path });
+    if (window.PBNavigation?.folder) window.PBNavigation.folder(path, true);
+    else ws.restoreExplorer({ ...ws.explorerState(), path, filter: '' });
   }
   function buildExplorerBar() {
     if (!bar || !ws.explorerSections) return;
