@@ -53,3 +53,40 @@ Ergänzt [Forschung Sitzung 1](FORSCHUNG-SITZUNG-01.md), [2](FORSCHUNG-SITZUNG-0
     Responding: com.android.launcher3`, „Android folder picker did not open“) und war im nächsten Lauf grün; Pros WebKit-Jobs
     hingen 25 Minuten in „Browser-Engine installieren“ (abbrechen, `rerun_failed_jobs`, grün in 90 s). Ein Abbruch braucht
     bis zu zwei Minuten, bevor GitHub den Neustart annimmt („This workflow is already running“).
+
+## Nachtrag: Veröffentlichungsphase am Abend (Claude, 2026-10-26)
+
+15. **Das Windows-Release-Tor prüft den exakt aktuellen main-Commit.** `windows-release.yml` (Workflow-PDF-Pro) verlangt einen
+    grünen `windows-app.yml`-Lauf mit `head_sha == main`. Ein reiner Unterlagen-Commit (Anker #27) trifft die Pfadfilter von
+    `windows-app.yml` nicht, also gab es auf dem aktuellen main keinen Bau – das Tor hätte abgelehnt. Lösung: `windows-app.yml`
+    einmal per `workflow_dispatch` auf main starten (das Tor nimmt `push` oder `workflow_dispatch`), dann das Release. Android
+    war davon nicht betroffen: `native-acceptance.yml` läuft bei jedem Push auf main.
+16. **`workflow_dispatch` über die GitHub-API reicht; der Git-Brückenzweig `release-requests/…` war nicht nötig.** Alle sechs
+    Release-Läufe dieses Abends (Pro Android/Windows, V3 Android/Windows, Workflow-PDF-Pro Android/Windows) wurden direkt mit
+    `tag` + `commit` gestartet. Die Brücke bleibt für Sitzungen ohne Actions-Recht.
+17. **Ein Zweig, der nach einem Squash-Merge nicht auf main zurückgesetzt wurde, blockiert den nächsten Push.** In
+    Workflow-PDF-Pro stand `origin/ccr-2068cf6c-0u3a7n` noch auf dem Anker-Commit aus Sitzung 4 (als #27 squash-gemerged: gleicher
+    Inhalt, anderer Commit, kein Vorfahr von main). Der neu von main gestartete Zweig war darum kein Fast-Forward, und
+    `--force-with-lease` lehnt der Auto-Modus ab („Git Destructive“). Ohne Force ging es so: alten Remote-Stand per Merge
+    einziehen, Konflikte in `CLAUDE.md`/`PRODUKTSTAND.md` mit `--ours` auflösen, `git diff e56d6b6 HEAD` leer, dann gewöhnlich
+    pushen. Besser vermeiden: nach jedem Merge den Zweig sofort auf `origin/main` setzen und pushen (so in Pro und V3 geschehen).
+18. **Die WebKit-Jobs hängen auch auf Markdown-only-Commits.** V3 #27 (eine Zeile `CLAUDE.md`) blieb in beiden Läufen über 30 min
+    in „Responsive Oberfläche (webkit)“; Logs eines laufenden Jobs liefert die API nicht (404). Dasselbe Rezept wie in Punkt 14:
+    beide Läufe abbrechen, bis `completed/cancelled` warten (hier 7 × 15 s), `rerun_failed_jobs`, grün. Das ist kein Befund
+    dieses PRs, sondern der Playwright-WebKit-Installation im Runner; eine dauerhafte Lösung (Browser-Cache oder WebKit nur bei
+    Web-Änderungen) steht noch aus.
+19. **Der Shell-Arbeitsordner geht mitten im Befehl verloren.** Ein `cd /home/user/Privat-Brain-Pro && git add -A && git commit …`
+    lief einmal im zuvor aktiven Repo (Workflow-PDF-Pro, „nothing to commit“), weil der Behälter den Ordner zwischen zwei
+    Aufrufen zurückgesetzt hatte. Seitdem nur `git -C <Repo>` und absolute Pfade, auch bei `sed -i`.
+20. **Größen im Geschenk sagen, was im Paket steckt.** Workflow PDF Pro Android ist 83 MB (Texterkennung und Scanner-Modell im
+    APK), Windows nur 16 MB (lädt WebView2 nach, kein Modell); Private Brain Pro 61/101 MB, V3 50/91 MB (Bedeutungs- und
+    Bildmodell teils im Paket). Das Bildmodell der Bildbeschreibung (256 MB) ist in keinem Paket, es kommt erst auf Knopfdruck
+    in den Browser-Vorrat der App – der „Neu“-Kasten im Geschenk sagt das ausdrücklich.
+21. **„Neu in dieser Fassung“ im Geschenk** (Klaus: „dass man gleich weiß, was neu ist“): ein Kasten je App in der Farbe der App
+    (`.neu`, Rand `var(--tone)`), Titel in Versalien wie `.kind`, gemessen Hell `rgb(91,67,201)` auf Weiß und Dunkel
+    `rgb(169,155,255)` auf `rgb(28,34,39)`; der alte Satz „Neu auf Android: …“ in der Pro-Beschreibung wurde zu einem gewöhnlichen
+    Satz, damit nicht zwei „Neu“ konkurrieren. Nur im Repo (`docs/geschenk/geschenk-jens.html`, Pro #94); das Artefakt bleibt
+    auf Fassung 24 (Workflow PDF Pro dort noch 1.0.3), weil Klaus die Veröffentlichung zurückgestellt hat.
+22. **Codex' Prüf-Bot meldet auf jedem PR „Failed“ und „usage limits“.** Das sind keine Befunde, sondern das erschöpfte Kontingent;
+    Klaus' Regel „GitHub-Kommentare nicht beobachten, CI selbst prüfen“ gilt. Vier PRs an diesem Abend, viermal dieselben zwei
+    Kommentare, nie eine Zeile zum Inhalt.
