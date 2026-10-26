@@ -2,14 +2,16 @@
 
 Eine Claude-Sitzung hat die Designsitzungen 2 und 3 und danach den Emoji-Nachtrag umgesetzt, für Private Brain Pro
 und V3 (je Android, Windows, PWA über den gemeinsamen Webteil). **Nichts veröffentlicht, nichts nach main
-übernommen** – Klaus' Wort fehlt dafür (ein Merge in Pro würde die PWA ausliefern).
+übernommen bis zu Klaus' Wort** – am 2026-10-26 gab Klaus es: „Übernimm #88 und #23 nach main.“ Beide sind
+nach main übernommen; die Pro-PWA wird damit über Pages ausgeliefert. Android-/Windows-Releases sind **nicht**
+ausgelöst.
 
 ## Stand
 
 | | Pro | V3 |
 |---|---|---|
 | Zweig | `ccr-290780da-7hree6` | `ccr-290780da-7hree6` |
-| PR (Entwurf) | [#88](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/88) | [#23](https://github.com/lausiklauskn-png/Privat-Brain-Pro-V3/pull/23) |
+| PR (nach main übernommen) | [#88](https://github.com/lausiklauskn-png/Privat-Brain-Pro/pull/88) | [#23](https://github.com/lausiklauskn-png/Privat-Brain-Pro-V3/pull/23) |
 | CI auf letztem Stand | grün, ohne Konflikt | grün, ohne Konflikt (ein Maven-429 einmal neu gestartet) |
 
 ## Was drin ist
@@ -27,9 +29,8 @@ und V3 (je Android, Windows, PWA über den gemeinsamen Webteil). **Nichts veröf
 Gilt für alle sechs Private-Brain-Varianten **und** für **Workflow-PDF-Pro** und **Workflow-PDF** (Bildbeschreibung
 und Suche danach).
 
-**Wichtig für den Start:** Sitzungen 2 und 3 liegen noch nicht auf main. Sitzung 4 baut auf dem Zweig
-`ccr-290780da-7hree6` auf (in Pro und V3 jeweils von `origin/ccr-290780da-7hree6` abzweigen oder darauf
-weiterarbeiten), sonst fehlen ⓘ-Klapper, Anordnung und Strichgrafiken. Übernahme nach main erst auf Klaus' Wort.
+**Start:** Sitzungen 2 und 3 und der Emoji-Nachtrag sind auf main. Sitzung 4 zweigt in allen Repos frisch von
+`origin/main` ab.
 
 ## Offen / ehrlich
 

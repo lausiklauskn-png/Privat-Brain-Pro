@@ -6,8 +6,8 @@ was überall fehlt. In den Kameras.“). Die bisherige Sitzung 4 (3D-Knöpfe, Ka
 
 ## Ausgangsstand
 
-Sitzungen 2 und 3 und der Emoji-Nachtrag sind **nicht auf main**, sondern auf dem Zweig `ccr-290780da-7hree6`
-(Pro PR #88, V3 PR #23, beide grün). Darauf aufbauen: [Abschluss Sitzungen 2 und 3](BRIEF_ABSCHLUSS_2026-10-26_SITZUNGEN-02-03.md).
+Sitzungen 2 und 3 und der Emoji-Nachtrag sind auf **main** (Pro PR #88, V3 PR #23, übernommen 2026-10-26).
+Frisch von `origin/main` abzweigen. Rückblick: [Abschluss Sitzungen 2 und 3](BRIEF_ABSCHLUSS_2026-10-26_SITZUNGEN-02-03.md).
 
 ## Zuerst lesen
 
