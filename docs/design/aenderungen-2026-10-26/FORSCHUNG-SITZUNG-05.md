@@ -44,3 +44,12 @@ Ergänzt [Forschung Sitzung 1](FORSCHUNG-SITZUNG-01.md), [2](FORSCHUNG-SITZUNG-0
 12. **Bilder vom Zielordner ohne echten Ordner:** ein gestellter `FileSystemDirectoryHandle` (`values()`, `keys()`, `getFileHandle`
     mit `createWritable`, `getDirectoryHandle`) reicht für `startReorg` und den Baum. Dasselbe Muster trägt die Probe und das
     Bilder-Skript; in Sitzung 6 wird es die Grundlage für das Bearbeiten.
+13. **V3s PWA-Proben sehen die gemeinsamen Dateien, Pros nicht.** V3 bindet `assets/pb-zielordner.js` direkt in `index.html` ein,
+    darum lief `tools/e2e-advanced.mjs` (in `npm test`, CI-Job `validate`) gegen den Baum statt gegen das Fenster und war auf dem
+    PR rot; Pro bekommt die Dateien erst über `prepare-web.mjs` in `www/`, seine Webproben blieben unberührt. Wer eine
+    gemeinsame Datei baut, fährt in V3 auch `npm test`, nicht nur `test:native-web`. Lokal fällt `e2e-workspace.mjs` im Behälter
+    beim Neuladen mit offenem Ordnerzugriff um – auch mit dem main-Stand – und ist auf GitHub grün: Grenze des Behälters.
+14. **Zwei Flocken, beide benannt:** die Android-Updateprobe fiel einmal an einem hängenden Emulator-Launcher (`Application Not
+    Responding: com.android.launcher3`, „Android folder picker did not open“) und war im nächsten Lauf grün; Pros WebKit-Jobs
+    hingen 25 Minuten in „Browser-Engine installieren“ (abbrechen, `rerun_failed_jobs`, grün in 90 s). Ein Abbruch braucht
+    bis zu zwei Minuten, bevor GitHub den Neustart annimmt („This workflow is already running“).

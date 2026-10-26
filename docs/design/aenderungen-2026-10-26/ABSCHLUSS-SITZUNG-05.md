@@ -58,5 +58,9 @@ V3 Erdton/petrol/schiefer), Kategorien mit Vorschau-Baum je Thema, `*-zielordner
 - Der Zielordner-Baum liest höchstens 300 Einträge und 6 Ebenen; mehr wird gezählt („… und N weitere“), nicht gezeigt.
 - Der Baum nach dem Kopieren ist eine **Ansicht**. Bearbeiten (löschen, verschieben, neue Ordner) ist Punkt 6b, Sitzung 6.
 - Die alte Vorschau im Fenster (`previewReorg`) bleibt im Code von `index.html`, wird aber nicht mehr aufgerufen.
-- **Nicht übernommen, nichts veröffentlicht.** Entwurfs-PRs Pro #92 und V3 #26 warten auf Klaus' Wort; Android/Windows/PWA
-  bleiben auf den veröffentlichten Ständen (Pro 1.0.38, V3 3.0.0-preview.7).
+- **Übernommen und veröffentlicht (Klaus' Wort, 2026-10-26).** PRs Pro #92 und V3 #26 auf main; Android und Windows beider Apps
+  (Pro 1.0.39, V3 3.0.0-preview.8) und das Geschenk für Jens nachgezogen: [Veröffentlichung](VEROEFFENTLICHUNG-SITZUNG-05.md).
+  Beim Übernehmen gefunden: V3s Webprobe `tools/e2e-advanced.mjs` erwartete nach „Vorschau ansehen“ noch das Fenster (jetzt
+  der Baum); die Android-Updateprobe fiel einmal an einem hängenden Emulator-Launcher („Application Not Responding“) und war
+  im Wiederholungslauf grün; Pros WebKit-Oberflächenjobs hingen wie bekannt in „Browser-Engine installieren“ (abgebrochen,
+  einmal neu gestartet, grün).
