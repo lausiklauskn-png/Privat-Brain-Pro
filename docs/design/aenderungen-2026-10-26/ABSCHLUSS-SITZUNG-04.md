@@ -74,5 +74,7 @@ Workflow-PDF Bibliothek, Handy, Dialog).
   stoppen, was ganz geladen ist, bleibt im Browser-Vorrat (das steht im Dialog). Erst der eigene Server
   (family-projekt.de), sonst Hugging Face – ob das Modell dort liegt, ist nicht geprüft (Netz im Behälter gesperrt).
 - PWA von Pro/V3 (Browser ohne Capacitor): weiter Laden aus dem Netz wie bisher, jetzt mit den gemessenen Zahlen im Text.
-- **Nichts veröffentlicht.** Alle vier Repos auf dem Zweig `ccr-2068cf6c-0u3a7n`, Entwurfs-PRs: Pro #89, V3 #24,
-  Workflow-PDF #134, Workflow-PDF-Pro #26. Übernahme nur auf Klaus' Wort.
+- **Übernommen, keine App-Releases.** Pro #89, V3 #24, Workflow-PDF #134, Workflow-PDF-Pro #26 sind seit dem
+  2026-10-26 auf main (Klaus' Wort, nach grüner CI; bei Pro hing die Firefox-Oberflächenprüfung zweimal im
+  Firefox-Download des Prüfrechners, derselbe Job war im Parallellauf desselben Commits grün). Die PWAs von V3 und
+  Workflow-PDF liefert GitHub Pages aus; Android/Windows (Pro, V3, Workflow-PDF-Pro 1.0.5) sind **nicht** veröffentlicht.
