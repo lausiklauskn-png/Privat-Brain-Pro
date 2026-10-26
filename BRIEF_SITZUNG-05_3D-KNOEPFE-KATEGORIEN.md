@@ -5,11 +5,10 @@
 
 ## Ausgangsstand
 
-Sitzung 4 (Bildbeschreibung) liegt auf dem Zweig `ccr-2068cf6c-0u3a7n` in vier Repos mit Entwurfs-PRs: Pro #89,
-V3 #24, Workflow-PDF #134, Workflow-PDF-Pro #26. **Nichts davon ist übernommen oder
-veröffentlicht** – nur auf Klaus' Wort. Sind die PRs bei Sitzungsbeginn auf main: frisch von `origin/main` abzweigen.
-Sind sie es nicht: Klaus fragen, ob Sitzung 5 auf dem Sitzungs-4-Zweig aufsetzen oder warten soll (sonst gibt es später
-Konflikte in `pb-bildbeschreibung.*`, `native-help.js`, `test-design-26`).
+Sitzung 4 (Bildbeschreibung) ist auf main: Pro #89, V3 #24, Workflow-PDF #134, Workflow-PDF-Pro #26, übernommen
+2026-10-26 auf Klaus' Wort. Die PWAs (V3, Workflow-PDF) liefert GitHub Pages damit aus; **Android-/Windows-Releases
+wurden nicht ausgelöst** (Pro 1.0.38, V3 3.0.0-preview.7, Workflow-PDF-Pro 1.0.3 bleiben die veröffentlichten Stände).
+Frisch von `origin/main` abzweigen.
 Rückblick: [Abschluss Sitzung 4](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-04.md),
 [Forschung 1–4](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-04.md).
 

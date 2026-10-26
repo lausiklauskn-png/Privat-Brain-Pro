@@ -55,7 +55,7 @@ für Knöpfe, Überschriften, Menüs, Kacheln, leere Ansichten und Tooltips. Ech
 | 1 | 1 Zählerzeile · 4 Mail-Ordnerleiste · 8 Doppelte · 9c Zustand/Speicher · 10c Workflow PDF | erledigt, [Abschluss](ABSCHLUSS-SITZUNG-01.md) |
 | 2 | 3 Explorer-Werkzeugzeile · 2 Anordnungs-Knopf in allen Ordneransichten · Nachtrag Dateizeilen flach | erledigt, [Abschluss](ABSCHLUSS-SITZUNG-02.md) |
 | 3 | 7 ⓘ-Klapptexte überall · 9a/9b/9d Einstellungen aufräumen | erledigt, [Abschluss](ABSCHLUSS-SITZUNG-03.md) |
-| 4 | 12 Bilder verstehen überall · 13 eigene Worte (Text/Mikrofon) · 14 Workflow PDF Bildersuche – Name „Bildbeschreibung“ (Klaus 2026-10-26: vorgezogen) | erledigt, [Abschluss](ABSCHLUSS-SITZUNG-04.md) (PRs offen bis Klaus' Wort) |
+| 4 | 12 Bilder verstehen überall · 13 eigene Worte (Text/Mikrofon) · 14 Workflow PDF Bildersuche – Name „Bildbeschreibung“ (Klaus 2026-10-26: vorgezogen) | erledigt, [Abschluss](ABSCHLUSS-SITZUNG-04.md), auf main seit 2026-10-26 (keine App-Releases) |
 | 5 | 5 3D-Knöpfe Übersicht · 6a Kategorien (Kacheln, Ordnerbaum-Vorschau) | [Brief](../../../BRIEF_SITZUNG-05_3D-KNOEPFE-KATEGORIEN.md) |
 | 6 | 6b Zielordner echt bearbeiten (Android/Windows; PWA mit Verweis) | geplant |
 | 7 | 10a Video in V3 · 10b Mycel-Netz in V3 · 10d Siegel schweben/heften/ausblenden · 9e Freigaben prüfen · Workflow PDF Pro in V3 | geplant |
