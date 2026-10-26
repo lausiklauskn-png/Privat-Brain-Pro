@@ -17,7 +17,9 @@ final class DesktopModel {
     DesktopModel(DesktopState state,Path manifest)throws Exception { this(state,manifest,"semantic","ProSemantic",BundledRoutes::modelPath); }
     DesktopModel(DesktopState state,Path manifest,String name,String plugin,java.util.function.Function<String,String> modelPath)throws Exception {
         event=plugin+":progress";route=modelPath;
-        model=new SemanticModel(state.directory.resolve(name).toFile(),SemanticPins.entries(manifest),url->(HttpURLConnection)url.openConnection());
+        // A missing manifest (older runtime folder, protocol probe without the file) means "no pins": the model cannot be
+        // installed (NO_PINS), but the engine starts (measured: APP_RUNTIME_UNAVAILABLE in the shared-engine check).
+        model=new SemanticModel(state.directory.resolve(name).toFile(),java.nio.file.Files.isRegularFile(manifest)?SemanticPins.entries(manifest):java.util.List.of(),url->(HttpURLConnection)url.openConnection());
         prefs=state.getSharedPreferences(name,0);
         if(prefs.getBoolean("loading",false))save(prefs.edit().putBoolean("loading",false).putInt("crashes",prefs.getInt("crashes",0)+1).putString("lastGone","model start interrupted"));
     }

@@ -168,6 +168,14 @@ public final class EngineTests {
         ok(service.call("ProCaption","getState",new JSONObject()).getInt("crashes")==1&&service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==0,"a renderer loss while the image model starts is counted for the image model only");
         service.call("ProCaption","clearCrash",new JSONObject());
         ok(service.call("DesktopInternal","modelAsset",new JSONObject().put("url","https://pbmodel.localhost/models/Xenova/vit-gpt2-image-captioning/config.json")).optBoolean("missing",false),"an image-model file is not served before the model is loaded and checked");
+        // Ein Laufzeitordner ohne caption-model.json (älterer Stand, Protokollprobe): der Dienst startet, das Bildmodell ist nur nicht installierbar.
+        Path bare=Files.createDirectory(root.resolve("resources-ohne-bildmodell"));
+        Files.copy(repository.resolve("windows/gmail-desktop.json"),bare.resolve("gmail-desktop.json"));
+        Files.copy(repository.resolve("tools/native/semantic-model.json"),bare.resolve("semantic-model.json"));
+        DesktopService ohne=new DesktopService(new DesktopState(root.resolve("api-device-ohne"),new TestProtection()),bare,(method,options)->new JSONObject());
+        ok(!ohne.call("ProCaption","getState",new JSONObject()).getBoolean("installed"),"without caption-model.json the engine still starts and the image model is simply not installed");
+        String ohnePins="";try{ohne.call("ProCaption","install",new JSONObject());}catch(Exception error){ohnePins=String.valueOf(error.getMessage());}
+        ok(ohnePins.contains("NO_PINS"),"without caption-model.json installing the image model fails with NO_PINS instead of killing the engine");
     }
     static void tls(DesktopState state)throws Exception {
         AppNetwork.setOffline(state,false);
