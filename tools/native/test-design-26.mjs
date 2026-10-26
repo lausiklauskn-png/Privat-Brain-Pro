@@ -1,4 +1,6 @@
 // Klaus 2026-10-26, Sitzung 1: Zählerzeile (1), Mail-Ordnerleiste (4), Doppelte kurz (8), Zustand mit Speicher (9c).
+// Sitzung 2: Explorer-Werkzeugzeile (3) und Anordnungs-Knopf in Explorer, Postfach und Kategorien (2).
+// Sitzung 3: ⓘ-Klapper überall, anfangs offen und gemerkt (7, 9a), Schutz (9b), Tresor-Inhalt im Tresor (9d).
 // Läuft gegen den gebauten Webteil (www/), den Android, Windows und die PWA gemeinsam verwenden.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -57,5 +59,135 @@ try{
   ok('Point 4: every folder is fully visible, nothing cut off at the edge',strip.inside);
   ok('Point 4: every button keeps its words on one line and inside its own box',strip.one);
   ok('Point 4: no runtime errors',errors.length===0);
+  // ---------- Sitzung 2 – Punkt 3: Explorer-Werkzeugzeile ----------
+  ({page,errors}=await open(1000,800));
+  const tab=async name=>{await page.locator(`button[data-tab="${name}"]:visible`).first().click();await page.waitForTimeout(150);};
+  const pick=async path=>{await page.locator('#pb-explorer-view>summary').click();await page.locator(`#pb-explorer-view [data-view-path="${path}"]`).click();await page.waitForTimeout(100);};
+  await tab('explorer');
+  const bar=await page.evaluate(()=>{const b=document.querySelector('#panel-explorer .explorer-toolbar'),shown=[...b.children].filter(c=>c.getClientRects().length);const id=c=>c.id||(c.querySelector('#explorerFilter')?'explorerFilter':c.classList.contains('explorer-order')?'content':c.classList.contains('pb-check-all-button')?'check':c.classList.contains('pb-arrange')?'arrange':c.className);
+    const hidden=['explorerUp','explorerHome','explorerTreeToggle','explorerSort'].every(i=>!document.getElementById(i).getClientRects().length);
+    const tops=shown.map(c=>Math.round(c.getBoundingClientRect().top));return {order:shown.map(id),hidden,oneRow:Math.max(...tops)-Math.min(...tops)<=4,emoji:/\p{Extended_Pictographic}/u.test(shown.map(c=>c.innerText).join(" "))};});
+  ok('Point 3: toolbar order is choice · layout · search · sort · also in content · Prüfstand',bar.order.join()==='pb-explorer-view,arrange,explorerFilter,pb-explorer-sort,content,check');
+  ok('Point 3: the small ↑, the old ⌂/◨ buttons and the long sort field are no longer shown',bar.hidden);
+  ok('Point 3: at 1000 px the toolbar is one flat row without emojis',bar.oneRow&&!bar.emoji);
+  const field=await page.evaluate(()=>{const f=document.getElementById('explorerFilter'),cs=getComputedStyle(f);return {ph:f.placeholder,icon:cs.backgroundImage.includes('svg'),label:!!f.closest('.explorer-toolbar').querySelector('label[for=explorerFilter]')};});
+  ok('Point 3: the filter is a search icon and a field, at most a pale „Suche“',field.ph==='Suche'&&field.icon&&!field.label);
+  const sortText=()=>page.locator('#pb-explorer-sort>summary').innerText().then(s=>s.trim());
+  ok('Point 3: sorting shows its choice on the button, „D ↓“ = newest on top, with the meaning in the tooltip',await sortText()==='D ↓'&&(await page.locator('#pb-explorer-sort>summary').getAttribute('title')).includes('D Datum · N Name · G Größe · T Typ'));
+  await page.locator('#pb-explorer-sort>summary').click();await page.locator('#pb-explorer-sort [data-sort-key="name"]').click();
+  ok('Point 3: choosing Name shows „N ↑“ (A on top)',await sortText()==='N ↑'&&(await page.evaluate(()=>PBWorkspace.explorerState().sort))==='name');
+  await page.locator('#pb-explorer-sort>summary').click();await page.locator('#pb-explorer-sort [data-sort-key="type"]').click();
+  ok('Point 3: Typ is offered and shows „T ↑“',await sortText()==='T ↑'&&(await page.evaluate(()=>PBWorkspace.explorerState().sort))==='type');
+  const viewLabel=()=>page.locator('#pb-explorer-view .pb-view-label').innerText().then(s=>s.trim());
+  ok('Point 3: the choice shows what is shown, „Alle Dateien“ at the top, without repeating it in the path',await viewLabel()==='Alle Dateien'&&await page.locator('#explorerPath').isHidden());
+  await page.locator('#pb-explorer-view>summary').click();await page.waitForSelector('#pb-explorer-view [data-view-path="kind:doc"]');
+  const offered=await page.locator('#pb-explorer-view [data-view-path]').evaluateAll(b=>b.map(x=>x.dataset.viewPath));
+  ok('Point 3: the choice offers Alle Dateien, E-Mails, PDF and Dokumente',['','kind:mail','type:pdf','kind:doc'].every(p=>offered.includes(p)));
+  await page.keyboard.press('Escape');
+  await pick('type:pdf');
+  ok('Point 3: „PDF“ shows only PDF files and says so on the choice',await viewLabel()==='PDF'&&(await page.locator('#explorerFiles .explorer-row').count())===2);
+  ok('Point 3: the path is the way back („Alle Dateien › PDF“)',await page.locator('#explorerPath').isVisible()&&(await page.locator('#explorerPath .explorer-crumb-here').innerText()).trim()==='PDF');
+  await page.locator('#explorerPath .explorer-crumb').first().click();await page.waitForTimeout(100);
+  ok('Point 3: a tap on „Alle Dateien“ in the path goes back',(await page.evaluate(()=>PBWorkspace.explorerState().path))===''&&await viewLabel()==='Alle Dateien');
+  await pick('kind:mail');
+  ok('Point 3: „E-Mails“ is shown on the choice, also one level deeper',await viewLabel()==='E-Mails'&&(await page.evaluate(()=>{const n=document.querySelector('#explorerFiles .explorer-dir');n?.click();return true;}),await page.waitForTimeout(100),await viewLabel())==='E-Mails');
+  ok('Point 3: no runtime errors',errors.length===0);
+  await page.close();
+  // ---------- Sitzung 2 – Punkt 2: Anordnung in jeder Fenstergröße ----------
+  for(const [w,h] of [[1000,800],[1000,1300],[412,900]]){
+    ({page,errors}=await open(w,h));
+    const seen=[];
+    for(const view of ['explorer','mail','order']){
+      await page.locator(`button[data-tab="${view}"]:visible`).first().click().catch(()=>page.evaluate(v=>PBWorkspace.navigate(v),view));await page.waitForTimeout(150);
+      seen.push(await page.evaluate(v=>{const b=[...document.querySelectorAll(`.pb-arrange[data-arrange-view="${v}"]>summary`)].find(s=>s.getClientRects().length);if(!b)return false;const r=b.getBoundingClientRect();return r.width>=24&&r.right<=innerWidth+1&&!/\p{Extended_Pictographic}/u.test(b.textContent);},view));
+    }
+    ok(`Point 2: ${w}x${h}: the layout button is there in Explorer, Postfach and Kategorien`,seen.every(Boolean));
+    await page.close();
+  }
+  ({page,errors}=await open(1000,1300));
+  const arrange=async(view,key)=>{const s=page.locator(`.pb-arrange[data-arrange-view="${view}"]>summary:visible`).first();await s.click();await page.locator(`.pb-arrange[data-arrange-view="${view}"][open] [data-arrange="${key}"]`).click();await page.waitForTimeout(200);};
+  const geo=()=>page.evaluate(()=>{const t=document.getElementById('explorerTree'),f=document.getElementById('explorerFiles');if(!t.getClientRects().length)return {tree:false};const a=t.getBoundingClientRect(),b=f.getBoundingClientRect();return {tree:true,side:a.right<=b.left+2&&a.width>100,stack:a.bottom<=b.top+2&&a.width>b.width*.8};});
+  await tab('explorer');
+  await arrange('explorer','side');
+  ok('Point 2: tall split window: „nebeneinander“ puts the folder tree beside the files',(await geo()).side);
+  await arrange('explorer','stack');
+  ok('Point 2: „übereinander“ puts the folder tree above the files',(await geo()).stack);
+  ok('Point 2: before: the main folders of the tree are open',await page.locator('#explorerTree [data-toggle^="kind:"][aria-expanded="true"]').count()>0);
+  await arrange('explorer','collapse');
+  ok('Point 2: „alle Ordner einklappen“ closes the whole tree',await page.evaluate(()=>[...document.querySelectorAll('#explorerTree [data-toggle]')].every(t=>t.getAttribute('aria-expanded')==='false'||t.dataset.toggle==='')));
+  await arrange('explorer','tree');
+  ok('Point 2: the folder tree can be switched off',!(await geo()).tree);
+  await tab('mail');
+  await arrange('mail','side');
+  const mailSide=await page.evaluate(()=>{const l=[...document.querySelectorAll('#mailWorkspace .mail-layout')].find(x=>x.getClientRects().length),f=l.querySelector('.mail-folders').getBoundingClientRect(),li=l.querySelector('.mail-list').getBoundingClientRect(),r=l.querySelector('.mail-reader').getBoundingClientRect();return f.right<=li.left+2&&li.right<=r.left+2&&r.width>200;});
+  ok('Point 2: the mailbox can show folders, list and message side by side in a tall window',mailSide);
+  await tab('order');
+  await arrange('order','tree');
+  ok('Point 2: Kategorien can show its categories as a folder tree',await page.locator('#panel-order .pb-order-tree .pb-order-folder').count()>=2&&await page.locator('#panel-order .pb-order-tree').isVisible());
+  await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBArrange);
+  const kept=await page.evaluate(()=>({e:PBArrange.state('explorer').chosen,m:PBArrange.state('mail').chosen,o:PBArrange.state('order').chosen}));
+  ok('Point 2: the choice is kept after a restart, for each view on its own',kept.e.mode==='stack'&&kept.e.tree===false&&kept.m.mode==='side'&&kept.m.tree===true&&kept.o.tree===true);
+  await tab('explorer');
+  ok('Point 2: after the restart the explorer still has its tree switched off',!(await geo()).tree);
+  ok('Point 2: no runtime errors',errors.length===0);
+  await page.close();
+  // ---------- Sitzung 3 – Punkt 7, 9a, 9b, 9d: ⓘ-Klapper (anfangs offen, gemerkt), Schutz und Tresor ----------
+  ({page,errors}=await open(1000,800));
+  const tabTo=async name=>{await page.locator(`button[data-tab="${name}"]:visible`).first().click();await page.waitForTimeout(200);};
+  const help=key=>page.locator(`[data-pb-help-toggle="${key}"]`);
+  await tabTo('settings');
+  const fresh=await page.evaluate(()=>['tresor','offline','catalog','attachments'].map(k=>{const b=document.querySelector(`[data-pb-help-toggle="${k}"]`),c=b&&document.getElementById(b.getAttribute('aria-controls'));return !!b&&b.getAttribute('aria-expanded')==='true'&&!!c&&!c.hidden&&!/\p{Extended_Pictographic}/u.test(b.textContent);}));
+  ok('Point 7/9a: in the settings every explanation has an ⓘ and is open the first time',fresh.every(Boolean));
+  await help('catalog').click();
+  ok('Point 7: one tap on ⓘ closes the explanation',await help('catalog').getAttribute('aria-expanded')==='false');
+  const tresorBox=await page.evaluate(()=>{const t=document.getElementById('tresorNote'),l=document.getElementById('vaultList'),n=document.getElementById('vaultNote');return !!t&&!!l&&t.contains(l)&&(!n||n.hidden||!n.getClientRects().length);});
+  ok('Point 9d: the vault contents stand in the vault block right under its buttons, no separate box below',tresorBox);
+  await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBHelp);
+  await tabTo('settings');await page.waitForSelector('[data-pb-help-toggle="catalog"]');
+  ok('Point 7: after a restart closed stays closed and open stays open',await help('catalog').getAttribute('aria-expanded')==='false'&&await help('tresor').getAttribute('aria-expanded')==='true');
+  await help('catalog').click();
+  ok('Point 7: a second tap opens it again',await help('catalog').getAttribute('aria-expanded')==='true');
+  await tabTo('order');await page.waitForSelector('[data-pb-help-toggle="reorg"]');
+  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, open at first',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
+  ok('Point 7/9: no runtime errors',errors.length===0);
+  await page.close();
+  // ---------- Klaus 2026-10-26: keine Emojis, Strichgrafiken („kein Bilderbuch“) ----------
+  ({page,errors}=await open(1000,900));
+  await page.evaluate(async()=>{const t=tokens('Urlaub');for(const [l,name,type,category] of [['d','Urlaub.jpg','image/jpeg','Foto/Bild'],['e','Notiz.txt','text/plain','Text/Notiz']]){const r={hash:l.repeat(64),name,path:'Ablage/'+name,size:1000,category,type,ext:name.split('.').pop(),date:Date.now(),vector:buildVector(t),tf:termFreq(t),nameTokens:t,snippet:'',summary:'',tags:[],dupes:[],dirId:null,pruefung:{zeit:1,funde:[],angaben:[],hinweise:[],ungeprueft:false}};await idbPut('catalog',r);CATALOG.push(r);HASHSET.add(r.hash);}rebuildIndex();refreshAll();});
+  // Visible text with a pictographic sign; ↗ and © are plain signs, the canon Siegel/Mycel modules (byte-1:1) are not ours.
+  const shownEmojis=()=>page.evaluate(()=>{const found=[],walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+    while((n=walk.nextNode())){const v=n.nodeValue.replace(/[↗©™®↔↕↺↻]/g,'');if(!/\p{Extended_Pictographic}/u.test(v))continue;const e=n.parentElement;
+      if(!e||e.closest('[id^="sbkim-"],[class^="sbkim-"],.pb-icon-fallback,[hidden],script,style'))continue;const r=document.createRange();r.selectNodeContents(n);const b=r.getBoundingClientRect(),cs=getComputedStyle(e);
+      const own=e.getBoundingClientRect();if(b.width<1||b.height<1||own.width<=1||own.height<=1||/inset\(50%\)/.test(cs.clipPath)||cs.visibility==='hidden'||parseFloat(cs.opacity)===0)continue;found.push(v.trim().slice(0,30));}
+    const tips=[...document.querySelectorAll('[title],[aria-label]')].filter(e=>e.getClientRects().length&&!e.closest('[id^="sbkim-"]')).map(e=>(e.title||'')+' '+(e.getAttribute('aria-label')||'')).filter(s=>/\p{Extended_Pictographic}/u.test(s.replace(/[↗©™®↔↕↺↻]/g,'')));
+    return [...found,...tips.map(s=>'tip: '+s.trim().slice(0,30))];});
+  const emojiViews={};
+  for(const tab of ['search','intake','explorer','mail','overview','order','dupes','settings']){
+    await page.evaluate(t=>{window.PBWorkspace.navigate(t);document.querySelectorAll('#panel-'+t+' details').forEach(d=>d.open=true);},tab);await page.waitForTimeout(250);
+    emojiViews[tab]=await shownEmojis();
+  }
+  await page.evaluate(()=>{window.PBWorkspace.navigate('search');const d=document.querySelector('details.native-options');if(d)d.open=true;});await page.waitForTimeout(250);
+  emojiViews.menu=await shownEmojis();
+  const emojiLeft=Object.entries(emojiViews).filter(([,v])=>v.length).map(([k,v])=>k+': '+v.join(' | '));
+  ok('No emojis on screen: bar, ☰ menu and every view use line icons'+(emojiLeft.length?' — still: '+emojiLeft.join(' ; '):''),emojiLeft.length===0);
+  ok('Line icons stand where emojis were (menu lock, catalog tiles)',await page.locator('.pb-tools-lock svg').count()>0);
+  ok('No emojis: no runtime errors',errors.length===0);
+  await page.close();
+  // 9b needs the protection card, which only the apps show: a minimal stand-in for the device side.
+  {
+    const p2=await browser.newPage({viewport:{width:1000,height:1400}}),e2=[],origin=`http://127.0.0.1:${server.address().port}/`;
+    p2.on('pageerror',e=>e2.push(e.message));
+    await p2.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
+    await p2.addInitScript(()=>{const state={configured:true,unlocked:true,auto:true,folder:'Schutzlisten',files:[{name:'liste.pbv'}],malware:{updated:Date.now(),count:5},links:{updated:Date.now(),count:7,servers:2},keys:{}};
+      window.Capacitor={Plugins:{ProProtect:{state:async()=>state,update:async()=>state,setAuto:async()=>state,setKey:async()=>state,checkHashes:async()=>({items:[]}),checkUrls:async()=>({items:[]}),virusTotal:async()=>({})}}};});
+    await p2.goto(origin);await p2.waitForFunction(()=>window.PBSchutz&&document.querySelector('#schutzPlace [data-pb-help-toggle="protection"]'));
+    await p2.locator('button[data-tab="settings"]:visible').first().click();await p2.waitForTimeout(300);
+    const prot=await p2.evaluate(()=>{const card=document.getElementById('schutzPlace'),c=card.querySelector('[data-pb-help-content="protection"]');const kids=[...c.children];
+      const words=s=>[...card.childNodes].filter(n=>!n.contains?.(c)&&!(n.closest&&n.closest('[data-pb-help-content]'))).map(n=>n.textContent).join(' ');
+      return {order:kids.map(k=>k.tagName+'.'+k.className),outside:words(),inside:c.textContent,buttons:card.querySelectorAll(':scope>.btnrow button').length};});
+    ok('Point 9b: „Abgelegt in“ and „kein vollständiger Virenscanner“ are only behind ⓘ, the controls stay visible',!/Abgelegt in|kein vollständiger Virenscanner|Kein vollständiger Virenscanner/.test(prot.outside)&&/Abgelegt in/.test(prot.inside)&&/Kein vollständiger Virenscanner/.test(prot.inside)&&prot.buttons>=3);
+    ok('Point 9b: inside ⓘ the important things come first, „Abgelegt in“ last',/^P/.test(prot.order[0])&&/^UL/.test(prot.order[1])&&/Abgelegt in/.test(await p2.evaluate(()=>document.querySelector('[data-pb-help-content="protection"]').lastElementChild.textContent)));
+    await p2.close();
+  }
   console.log(`${count} checks passed`);
 }finally{await browser?.close();server.close();}

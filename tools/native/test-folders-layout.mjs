@@ -29,6 +29,8 @@ try{
   if(method==='readOriginal')return{data:saved.get(args.hash).bytes.subarray(args.offset,args.offset+262144).toString('base64')};
   throw new Error('Unknown fixture method '+method);
  });
+ // Sitzung 3 (Klaus 2026-10-26): help opens by default and remembers it; this suite checks the closed start.
+ await page.addInitScript(()=>{try{localStorage.setItem('pb_help_open_v1',JSON.stringify({'import-library':false,'import-drop':false}));}catch{}});
  await page.addInitScript(()=>{delete window.showDirectoryPicker;const methods=['state','pause','resume','chooseLibrary','chooseSource','readSource','finishSource','copyOriginal'],originals=['listOriginals','beginImport','appendImport','finishImport','abortImport','originalInfo','readOriginal'];const api=list=>Object.fromEntries(list.map(method=>[method,args=>window.folderFixture(method,args)]));window.Capacitor={Plugins:{ProFolders:api(methods),ProFiles:api(originals)}};});
  await page.goto(origin);await page.waitForFunction(()=>window.PBFolders&&typeof db!=='undefined'&&db);
  for(const [lang,labels,settingsName]of [

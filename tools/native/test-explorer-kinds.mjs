@@ -56,18 +56,23 @@ try{
   await tree.locator('[data-toggle="mail:erika erika@example.invalid"]').click();
   await node('loose:erika erika@example.invalid').click();
   ok('Attachments without a known mail stand together, with what to do',(await page.locator('#explorerPath').textContent()).endsWith('📎 Anhänge, Mail nicht zugeordnet')&&(await page.locator('.explorer-loose-hint').textContent()).includes('noch einmal ein'));
-  await page.locator('#explorerUp').click();
-  ok('↑ goes one level up',(await page.locator('#explorerPath').textContent())==='📁 Alle Dateien › ✉️ E-Mails › 👤 Erika erika@example.invalid');
-  await page.locator('#explorerHome').click();
+  // Sitzung 2 (Punkt 3): the small ↑ is gone; the path is the way back, and ⌂ is the choice of view.
+  const home=async()=>{await page.locator('#pb-explorer-view>summary').click();await page.locator('#pb-explorer-view [data-view-path=""]').click();};
+  ok('The old ↑ is no longer shown',await page.locator('#explorerUp').isHidden());
+  await page.locator('#explorerPath .explorer-crumb').last().click();
+  ok('The path goes one level up',(await page.locator('#explorerPath').textContent())==='📁 Alle Dateien › ✉️ E-Mails › 👤 Erika erika@example.invalid');
+  await home();
   await tree.locator('.explorer-collapse').click();
   ok('⊟ closes the whole tree: only the main folders stay',await node('mail:').count()===0&&await kind('mail').count()===1);
   await tree.locator('[data-toggle="kind:mail"]').click();
   ok('▸ opens one folder',await node('mail:').count()===1&&(await tree.locator('[data-toggle="kind:mail"]').getAttribute('aria-expanded'))==='true');
   await tree.locator('[data-toggle="kind:mail"]').click();
   ok('▾ closes it again',await node('mail:').count()===0&&(await tree.locator('[data-toggle="kind:mail"]').getAttribute('aria-expanded'))==='false');
-  await page.locator('#explorerTreeToggle').click();
-  ok('The tree can be hidden for more room, and comes back',await tree.isHidden()&&(await page.locator('#explorerTreeToggle').click(),await tree.isVisible()));
-  await page.locator('#explorerHome').click();
+  const toggleTree=async()=>{await page.locator('#panel-explorer .pb-arrange>summary').click();await page.locator('#panel-explorer .pb-arrange [data-arrange=tree]').click();};
+  await toggleTree();
+  ok('The tree can be hidden for more room, and comes back',await tree.isHidden()&&(await toggleTree(),await tree.isVisible()));
+  await page.evaluate(()=>PBArrange.reset('explorer'));
+  await home();
   await page.fill('#explorerFilter','preisliste');
   ok('A search looks through everything below',JSON.stringify(await rows.locator('strong').allTextContents())===JSON.stringify(['📎 Preisliste.pdf'])&&await dirs.count()===0);
   await page.fill('#explorerFilter','');
@@ -95,13 +100,13 @@ try{
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.locator('[data-tab="explorer"]').click();
   await page.waitForFunction(()=>document.querySelector('#explorerTree [data-kind="mail"]')?.textContent==='✉️ Emails (6)');
-  await page.locator('#explorerHome').click();
+  await home();
   ok('The tree follows the app language',(await node('').textContent())==='📁 All files'&&(await dirs.first().locator('.explorer-meta').textContent()).includes('files'));
   await page.waitForFunction(()=>document.querySelector('#explorerTree [data-pb-icon=person] > svg[data-icon-key=person]'));
   ok('Folder, email and sender decorations use the shared SVG line set',await tree.locator('[data-pb-icon=folder]>svg[data-icon-key=folder]').count()>0&&await tree.locator('[data-pb-icon=mail]>svg[data-icon-key=mail]').count()>0&&await tree.locator('[data-pb-icon=person]>svg[data-icon-key=person]').count()>0);
   ok('App emoji fallbacks in the tree and breadcrumb are hidden from rendering and accessibility',await page.locator('#explorerTree [data-pb-icon],#explorerPath [data-pb-icon]').evaluateAll(slots=>slots.every(slot=>{const fallback=slot.querySelector('.pb-icon-fallback'),svg=slot.querySelector('svg');return fallback?.hidden&&getComputedStyle(fallback).display==='none'&&svg?.getAttribute('aria-hidden')==='true';})));
   ok('The visible tree no longer mixes colored app glyphs with line icons',!/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u.test(await tree.innerText()));
-  ok('Content-search and check-status controls have line icons without duplicate captions',await page.locator('.explorer-content [data-pb-icon=search]>svg').count()===1&&(await page.locator('#pb-explorer-sort>summary').innerText()).trim()==='Sort'&&await page.locator('#explorerOrder').isHidden()&&await page.locator('.explorer-toolbar .pb-check-all-button>svg[data-icon-key=shield]').count()===1);
+  ok('Content-search and check-status controls have line icons without duplicate captions',await page.locator('.explorer-content [data-pb-icon=search]>svg').count()===1&&(await page.locator('#pb-explorer-sort>summary').innerText()).trim()==='D ↓'&&await page.locator('#explorerOrder').isHidden()&&await page.locator('.explorer-toolbar .pb-check-all-button>svg[data-icon-key=shield]').count()===1);
   await page.evaluate(async()=>{
     const add=async(name,path,extra={})=>{const toks=tokens(name);const r={hash:await sha256(new TextEncoder().encode(path).buffer),name,path,type:'',ext:name.split('.').pop(),date:Date.now(),size:1000,snippet:'',via:'icon-test',vector:buildVector(toks),tf:termFreq(toks),summary:'',category:'',dirId:null,nameTokens:tokens(name),dupes:[],tags:[],...extra};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);return r;};
     const unusual=await add('👤 Keep this name.weird','📁 Personal/👤 Keep this name.weird',{pruefung:{funde:[{k:'READER_INSTRUCTION'}],ungeprueft:false,zeit:Date.now()}});

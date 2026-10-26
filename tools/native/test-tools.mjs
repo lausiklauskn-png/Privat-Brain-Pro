@@ -27,7 +27,7 @@ try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   // ---------- a buyer without a code ----------
   let {page,errors}=await app(browser,null);
-  ok('Menu lists the tools, locked without a code',(await menuItem(page,'pinnwand').textContent()).replace(/\s/g,'').startsWith('🔒Pinnwand')&&(await menuItem(page,'kimsync').getAttribute('data-open'))==='false');
+  ok('Menu lists the tools, locked without a code',(await menuItem(page,'pinnwand').textContent()).replace(/\s/g,'').startsWith('Pinnwand')&&await menuItem(page,'pinnwand').locator('.pb-tools-lock svg').count()===1&&(await menuItem(page,'kimsync').getAttribute('data-open'))==='false');
   await page.waitForLoadState('load');
   ok('Only one pin board entry exists: the licensed tool, with no legacy floating board',await page.evaluate(()=>document.querySelectorAll('.native-options-panel [data-tool="pinnwand"]').length===1&&!document.getElementById('pbPinBtn')&&!document.getElementById('pbPinPanel')&&!document.querySelector('script[src="modules/pinnwand-widget.js"]')));
   // Klaus 2026-10-22: each program shows its own icon, and it really loads (no emoji fallback).
@@ -60,7 +60,7 @@ try{
         return items.length===10&&items.every((li,i)=>{
           const r=li.getBoundingClientRect(),name=li.querySelector('.pb-license-name'),status=li.querySelector('b');
           const range=document.createRange();range.selectNodeContents(name);
-          return (!i||r.top>=items[i-1].getBoundingClientRect().bottom-1)&&name.scrollWidth<=name.clientWidth+1&&range.getClientRects().length===1&&status.textContent==='🔒'&&Boolean(status.getAttribute('aria-label'));
+          return (!i||r.top>=items[i-1].getBoundingClientRect().bottom-1)&&name.scrollWidth<=name.clientWidth+1&&range.getClientRects().length===1&&status.textContent===''&&!!status.querySelector('svg')&&Boolean(status.getAttribute('aria-label'));
         });
       }));
       if(language==='de'&&process.env.PB_CAPTURE_LICENSE&&[360,2560].includes(width)){

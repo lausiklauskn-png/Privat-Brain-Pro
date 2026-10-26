@@ -113,8 +113,11 @@ try{
   await page.reload();await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db);await navigateTo(page,'explorer');await explorer.waitFor({state:'visible'});await settle(page);
   ok('The chosen Explorer width is restored after a real page reload',near(await width(page,'#explorerTree'),persisted));
   await seed(page);
-  await page.locator('#explorerTreeToggle').click();await settle(page);ok('Hiding the tree also hides its otherwise interactive separator',await explorer.isHidden()&&await page.locator('#explorerTree').isHidden()&&await noOverflow(page));
-  await page.locator('#explorerTreeToggle').click();await settle(page);ok('Showing the tree restores its width and separator',await explorer.isVisible()&&near(await width(page,'#explorerTree'),persisted));
+  // Sitzung 2: the tree is switched in the layout menu (◫); the old toggle stays as hidden state holder.
+  const toggleTree=async()=>{await page.locator('#panel-explorer .pb-arrange>summary').click();await page.locator('#panel-explorer .pb-arrange [data-arrange=tree]').click();};
+  await toggleTree();await settle(page);ok('Hiding the tree also hides its otherwise interactive separator',await explorer.isHidden()&&await page.locator('#explorerTree').isHidden()&&await noOverflow(page));
+  await toggleTree();await settle(page);ok('Showing the tree restores its width and separator',await explorer.isVisible()&&near(await width(page,'#explorerTree'),persisted));
+  await page.evaluate(()=>PBArrange.reset('explorer'));await settle(page);
   for(const size of [{width:1280,height:720},{width:960,height:540},{width:720,height:540}]){await page.setViewportSize(size);await settle(page);ok(`${size.width}x${size.height}: saved wide split is clamped without page overflow`,await explorer.isVisible()&&await width(page,'#explorerTree')>=120&&await width(page,'#explorerFiles')>=230&&await noOverflow(page));}
   for(const size of [{width:1024,height:1366},{width:768,height:1024},{width:360,height:800}]){await page.setViewportSize(size);await settle(page);ok(`${size.width}x${size.height}: portrait uses a full-width file pane with no active separator`,await explorer.isHidden()&&await page.locator('#explorerTree').isHidden()&&await width(page,'#explorerFiles')>size.width*.8&&await noOverflow(page));}
   await page.setViewportSize({width:1920,height:1080});await settle(page);ok('Returning from portrait restores the persisted wide split',near(await width(page,'#explorerTree'),persisted));

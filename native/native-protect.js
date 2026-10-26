@@ -30,8 +30,8 @@
     auto: ['Listen automatisch aktualisieren (große Gesamtliste nur im WLAN)', 'Update lists automatically (large complete list on Wi-Fi only)', 'Обновлять списки автоматически (полный список только по Wi-Fi)', 'Aktualizuj listy automatycznie (pełna lista tylko przez Wi-Fi)'],
     updateNow: ['Jetzt aktualisieren', 'Update now', 'Обновить сейчас', 'Aktualizuj teraz'],
     updating: ['Listen werden geladen …', 'Loading lists …', 'Загрузка списков …', 'Pobieranie list …'],
-    keyAbuse: ['🔑 abuse.ch-Schlüssel', '🔑 abuse.ch key', '🔑 ключ abuse.ch', '🔑 klucz abuse.ch'],
-    keyVt: ['🔑 VirusTotal-Schlüssel', '🔑 VirusTotal key', '🔑 ключ VirusTotal', '🔑 klucz VirusTotal'],
+    keyAbuse: ['abuse.ch-Schlüssel', 'abuse.ch key', 'ключ abuse.ch', 'klucz abuse.ch'],
+    keyVt: ['VirusTotal-Schlüssel', 'VirusTotal key', 'ключ VirusTotal', 'klucz VirusTotal'],
     getAbuse: ['Schlüssel bei abuse.ch holen', 'Get key at abuse.ch', 'Получить ключ на abuse.ch', 'Pobierz klucz z abuse.ch'],
     getVt: ['Schlüssel bei VirusTotal holen', 'Get key at VirusTotal', 'Получить ключ на VirusTotal', 'Pobierz klucz z VirusTotal'],
     checkAll: ['Alles prüfen', 'Check everything', 'Проверить всё', 'Sprawdź wszystko'],
@@ -393,7 +393,6 @@
     rows.push(line(t('malware'), listInfo('malware'), s.malware?.problem ? 'problem' : s.malware?.updated ? 'ok' : ''));
     rows.push(line(t('linksList'), listInfo('links', 'servers'), s.links?.problem ? 'problem' : s.links?.updated ? 'ok' : ''));
     rows.push(line(t('vt'), s.keys?.virustotal ? t('keySet') : t('keyMissing')));
-    rows.push(line(t('helper'), t('helperInfo')));
     if (s.offline) rows.push(make('p', t('offline'), 'hint'));
     const controls = make('div', null, 'btnrow'); controls.style.justifyContent = 'flex-start';
     const auto = make('label', null, 'pb-schutz-auto'), box = make('input'); box.type = 'checkbox'; box.id = 'schutz-auto';
@@ -411,11 +410,14 @@
       b.onclick = event => { if (event.isTrusted) void links?.open?.({ url }); };
       b.hidden = typeof links?.open !== 'function'; getters.append(b);
     }
+    // Klaus 2026-10-26 (Sitzung 3, Punkt 9b): explanations behind ⓘ, the important first, „Abgelegt in“ last.
+    // Visible stay only the controls and the state of the lists.
     const where = s.configured && s.unlocked ? line(t('where'), '„' + (s.folder || 'Schutzlisten') + '“: ' + ((s.files || []).map(f => f.name).join(', ') || '–')) : null;
+    const info = make('div', null, 'pb-schutz-info'), list = make('ul');
+    list.append(...W.limitList[lang()].map(x => make('li', x)));
+    info.append(help, list, line(t('helper'), t('helperInfo')), ...(where ? [where] : []));
     const status_ = make('p', [busy ? t('updating') : '', message].filter(Boolean).join(' · '), 'native-vault-status'); status_.id = 'schutzStatus'; status_.setAttribute('role', 'status');
-    const details = make('details', null, 'native-vault-limits'), summary = make('summary', t('limits')), list = make('ul');
-    list.append(...W.limitList[lang()].map(x => make('li', x))); details.append(summary, list);
-    card.replaceChildren(heading, help, ...rows, auto, controls, getters, ...(where ? [where] : []), status_, details);
+    card.replaceChildren(heading, info, ...rows, auto, controls, getters, status_);
   }
   function mountCard() {
     if (!api || card) return;

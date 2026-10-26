@@ -41,15 +41,16 @@ try{
   const chooseSort=key=>choose(`[data-sort-key="${key}"]`),chooseDirection=reverse=>choose(`[data-sort-reverse="${reverse}"]`);
   ok('Newest file is on top by default',JSON.stringify(await names())===JSON.stringify(['Rechnung-Stadtwerke.pdf','Gehaltsabrechnung-September.pdf','Arztbrief-Orthopaedie.pdf']));
   ok('Mails from "Alle Konten" do not appear in the explorer',!(await names()).some(n=>n.includes('Aldi'))&&!(await page.locator('#explorerTree').textContent()).includes('Mail'));
-  ok('The single Sort button describes the actual initial order',(await summary.innerText()).trim()==='Sortieren'&&(await summary.getAttribute('title'))==='Sortieren: Datum · Neueste oben');
+  // Sitzung 2 (Punkt 3): the button shows the choice itself, „D ↓“ = date, newest on top; the words are in the tooltip.
+  ok('The single Sort button describes the actual initial order',(await summary.innerText()).trim()==='D ↓'&&(await summary.getAttribute('title')).includes('D Datum · N Name · G Größe · T Typ')&&(await summary.getAttribute('aria-label'))==='Sortieren: Datum · Neueste oben');
   ok('Legacy select and direction remain in the DOM but are hidden',await page.locator('#explorerSort').count()===1&&await page.locator('#explorerOrder').count()===1&&!await page.locator('#explorerSort').isVisible()&&!await page.locator('#explorerOrder').isVisible());
   ok('The new button uses the shared line sort icon',await summary.locator('svg[data-icon-key="sort"]').count()===1);
   ok('A wide mouse workspace uses a flat Sort target',await summary.evaluate(e=>{const rect=e.getBoundingClientRect();return matchMedia('(any-pointer:fine)').matches&&rect.height>=32&&rect.height<=34;}));
   await chooseDirection(true);
-  ok('The direction choice puts the oldest on top',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf','Gehaltsabrechnung-September.pdf','Rechnung-Stadtwerke.pdf'])&&(await summary.getAttribute('title')).endsWith('Älteste oben'));
+  ok('The direction choice puts the oldest on top',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf','Gehaltsabrechnung-September.pdf','Rechnung-Stadtwerke.pdf'])&&(await summary.getAttribute('aria-label')).endsWith('Älteste oben'));
   ok('Choosing a direction closes its menu',!await menu.evaluate(e=>e.open));
   await chooseSort('name');
-  ok('Changing the sort starts in its natural order (A → Z)',(await names())[0]==='Arztbrief-Orthopaedie.pdf'&&(await summary.getAttribute('title')).endsWith('A → Z'));
+  ok('Changing the sort starts in its natural order (A → Z)',(await names())[0]==='Arztbrief-Orthopaedie.pdf'&&(await summary.getAttribute('aria-label')).endsWith('A → Z'));
   await chooseDirection(true);
   ok('The same menu reverses names (Z → A)',(await names())[0]==='Rechnung-Stadtwerke.pdf');
   await chooseSort('size');
@@ -68,7 +69,7 @@ try{
   const state=await page.evaluate(()=>PBWorkspace.explorerState());
   ok('Back navigation keeps order and content switch',state.content===true&&state.reverse===false&&state.sort==='date');
   await page.evaluate(()=>PBWorkspace.restoreExplorer({path:'',filter:'',sort:'date',reverse:true,content:false}));
-  await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort>summary').title.endsWith('Älteste oben'));
+  await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort>summary').getAttribute('aria-label').endsWith('Älteste oben'));
   ok('Restoring a state restores the menu, ordering and content switch',(await names())[0]==='Arztbrief-Orthopaedie.pdf'&&!(await page.locator('#explorerContent').isChecked()));
   await summary.click();
   await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort').open&&document.querySelector('#pb-explorer-sort>summary').getAttribute('aria-expanded')==='true');
@@ -76,18 +77,18 @@ try{
   await menu.locator('[data-sort-reverse="true"]').focus();await page.keyboard.press('Escape');
   ok('Escape closes the menu and returns keyboard focus',!await menu.evaluate(e=>e.open)&&await summary.evaluate(e=>e===document.activeElement));
   await page.evaluate(()=>{document.documentElement.lang='en';PBWorkspace.refresh();});
-  ok('English labels',(await summary.innerText()).trim()==='Sort'&&(await summary.getAttribute('title')).endsWith('Oldest first')&&(await page.locator('.explorer-content').textContent()).includes('also in content'));
+  ok('English labels',(await summary.innerText()).trim()==='D ↑'&&(await summary.getAttribute('aria-label')).endsWith('Oldest first')&&(await page.locator('.explorer-content').textContent()).includes('also in content'));
   await page.locator('[data-tab="dash"]').click();await page.locator('[data-tab="explorer"]').click();
   ok('Navigating away and back preserves reversed date sorting',(await names())[0]==='Arztbrief-Orthopaedie.pdf'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
   await page.evaluate(()=>PBNavigation.back());
   await page.waitForFunction(()=>document.querySelector('#panel-dash').classList.contains('on'));
   await page.evaluate(()=>PBNavigation.forward());
   await page.waitForFunction(()=>document.querySelector('#panel-explorer').classList.contains('on'));
-  ok('History restores the same visible sort description',(await summary.getAttribute('title'))==='Sort: Date · Oldest first'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
+  ok('History restores the same visible sort description',(await summary.getAttribute('aria-label'))==='Sort: Date · Oldest first'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
   await page.setViewportSize({width:360,height:740});
   ok('Toolbar fits a phone without sideways scrolling',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   ok('One compact Sort target follows the pointer profile and the content switch stays flat',await page.evaluate(()=>{const rect=document.querySelector('#pb-explorer-sort>summary').getBoundingClientRect(),toolbar=document.querySelector('.explorer-toolbar').getBoundingClientRect(),h=document.querySelector('.explorer-content').getBoundingClientRect().height;const target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+1&&rect.width<toolbar.width*.8&&h>=26&&h<=32;}));
-  for(const [lang,label] of [['de','Sortieren'],['en','Sort'],['ru','Сортировка'],['pl','Sortuj']]){
+  for(const [lang,label] of [['de','D ↑'],['en','D ↑'],['ru','Д ↑'],['pl','D ↑']]){
     await page.evaluate(lang=>{document.documentElement.lang=lang;PBWorkspace.refresh();},lang);
     let fits=true;
     for(const width of [320,800,1280])for(const size of [20,24]){
@@ -106,7 +107,7 @@ try{
   }
   await page.setViewportSize({width:1280,height:420});await summary.click();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-  ok('The dropdown stays within a short DeX window and scrolls internally',await menu.locator('.pb-explorer-sort-popup').evaluate(e=>{const rect=e.getBoundingClientRect();return rect.top>=0&&rect.bottom<=innerHeight+1&&e.clientHeight<e.scrollHeight;}));
+  ok('The dropdown stays within a short DeX window and scrolls internally',await page.locator('#pb-explorer-sort-popup').evaluate(e=>{const rect=e.getBoundingClientRect();return rect.top>=0&&rect.bottom<=innerHeight+1&&e.clientHeight<e.scrollHeight;}));
   await summary.click();await page.setViewportSize({width:1280,height:800});
   await page.evaluate(async()=>{
     for(const [name,type,ext] of [['Z-Foto.jpg','image/jpeg','jpg'],['A-Notiz.txt','text/plain','txt']]){
@@ -122,8 +123,8 @@ try{
   await chooseDirection(true);
   ok('Type order can be reversed and restored',(await names())[0]==='A-Notiz.txt'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
   await page.evaluate(()=>PBWorkspace.restoreExplorer({...PBWorkspace.explorerState(),sort:'type',reverse:false}));
-  await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort>summary').title.includes('Typ'));
-  ok('Programmatic type restore keeps the real sort key',(await names())[0]==='Z-Foto.jpg'&&(await summary.getAttribute('title'))==='Sortieren: Typ · A → Z');
+  await page.waitForFunction(()=>document.querySelector('#pb-explorer-sort>summary').getAttribute('aria-label').includes('Typ'));
+  ok('Programmatic type restore keeps the real sort key',(await names())[0]==='Z-Foto.jpg'&&(await summary.getAttribute('aria-label'))==='Sortieren: Typ · A → Z');
   await page.evaluate(async()=>{
     for(const [name,type] of [['Z-extensiononly.csv','application/octet-stream'],['A-extensiononly.xml','application/octet-stream'],['Z-mimeonly','image/jpeg'],['A-mimeonly','text/plain']]){
       const toks=tokens(name),r={hash:await sha256(new TextEncoder().encode(name).buffer),name,path:'Unterlagen/'+name,type,ext:'',date:Date.now(),size:500,snippet:'',summary:'',vector:buildVector(toks),tf:termFreq(toks),category:'Test',dirId:null,nameTokens:toks,dupes:[],tags:[]};CATALOG.push(r);HASHSET.add(r.hash);await idbPut('catalog',r);
