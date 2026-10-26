@@ -4,6 +4,11 @@
 2026-10-26 vorgezogen („Bilder verstehen muss unbedingt mit rein, überall, in jede Version. Das ist genial … das,
 was überall fehlt. In den Kameras.“). Die bisherige Sitzung 4 (3D-Knöpfe, Kategorien) ist jetzt Sitzung 5.
 
+## Ausgangsstand
+
+Sitzungen 2 und 3 und der Emoji-Nachtrag sind **nicht auf main**, sondern auf dem Zweig `ccr-290780da-7hree6`
+(Pro PR #88, V3 PR #23, beide grün). Darauf aufbauen: [Abschluss Sitzungen 2 und 3](BRIEF_ABSCHLUSS_2026-10-26_SITZUNGEN-02-03.md).
+
 ## Zuerst lesen
 
 1. [Sammlung](docs/design/aenderungen-2026-10-26/SAMMLUNG.md), Punkte **12, 13, 14**.

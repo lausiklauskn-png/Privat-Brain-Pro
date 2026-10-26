@@ -31,3 +31,14 @@ Ergänzt [Forschung Sitzung 1](FORSCHUNG-SITZUNG-01.md) und [Sitzung 2](FORSCHUN
    `h2`/`h3` werden auch Emojis mitten im Text entfernt, Tooltips/`aria-label` ebenso. Neue Texte am besten gleich
    ohne Emoji schreiben (so jetzt `native-tools.js`, `native-license.js`, Menüeintrag in `native-mycel.js`).
    Wer `display:…!important` an Knöpfe hängt, braucht `:not([hidden])`.
+9. **Wächter gegen Emojis** (`test-design-26`, Abschnitt „keine Emojis“): zählt sichtbare Textknoten mit
+   `\p{Extended_Pictographic}` sowie `title`/`aria-label`. Übersprungen: nur für Bildschirmleser versteckter Text
+   (Kasten ≤ 1 px oder `clip-path: inset(50%)`, so bei `.compact-label`), `.pb-icon-fallback`, `↗ © ™ ® ↔ ↕ ↺ ↻`
+   und die Kanon-Module `sbkim-*`. Wer neue Texte baut: gleich ohne Emoji.
+10. **Ältere V3-Proben verglichen Emoji-Texte** (`test-explorer-kinds`, `test-categories`, `test-speech`,
+   `tools/e2e-workspace.mjs`). Sie vergleichen jetzt die Wörter (`plain()`) und prüfen das Strichsymbol. Die
+   e2e-Probe läuft lokal nicht ganz (Absturz beim Neuladen), Fehler darin zeigt erst die CI.
+11. **CI-Stolperstein:** `validate` in V3 scheiterte einmal an „429 Too Many Requests“ von Maven Central beim
+   Android-Bau – nicht am Code. Einmal neu starten genügte.
+12. **V3-Klon holt nur `main`** (`remote.origin.fetch` steht nur auf main). Für den Arbeitszweig zusätzlich
+   `+refs/heads/<zweig>:refs/remotes/origin/<zweig>` eintragen, sonst meldet der Stop-Haken „nicht hochgeladen“.
