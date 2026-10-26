@@ -96,6 +96,8 @@
   const described = r => !!r && !!(String(r.caption || '').trim() || String(r.userCaption || '').trim() || /Bild-Beschreibung/.test(String(r.via || '')));
   const fold = s => (typeof window.fold === 'function' ? window.fold(s) : String(s || '').toLowerCase());
   const toks = s => (typeof window.tokens === 'function' ? window.tokens(s) : String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+  // Only write when the text changes: a repaint must not produce child-list mutations (test-help counts them after PBHelp.refresh()).
+  const setText = (el, v) => { if (el && el.textContent !== v) el.textContent = v; };
   const svg = (d, size = 16) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.setAttribute('focusable', 'false'); s.setAttribute('width', size); s.setAttribute('height', size); s.classList.add('pb-bild-icon'); const p = document.createElementNS(s.namespaceURI, 'path'); p.setAttribute('d', d); s.append(p); return s; };
   const ICON = { image: 'M3 3h18v18H3Z m1 14 5-6 4 4 3-3 5 5 M8 7h.1', mic: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z M5 10v2a7 7 0 0 0 14 0v-2 M12 19v3m-4 0h8' };
 
@@ -155,8 +157,8 @@
   function paintFilter() {
     const b = document.getElementById('pb-bild-filter'); if (!b) return;
     b.setAttribute('aria-pressed', String(filterOn)); b.classList.toggle('on', filterOn);
-    b.querySelector('.pb-bild-filter-label').textContent = t('name'); b.title = t('filterTip'); b.setAttribute('aria-label', t('filterTip'));
-    const help = document.getElementById('pb-bild-filter-help'); if (help) help.textContent = t('filterHelp');
+    setText(b.querySelector('.pb-bild-filter-label'), t('name')); b.title = t('filterTip'); b.setAttribute('aria-label', t('filterTip'));
+    const help = document.getElementById('pb-bild-filter-help'); if (help) setText(help, t('filterHelp'));
   }
   // The same ⓘ as everywhere (Sitzung 3): open the first time, remembered under pb_help_open_v1.
   const HELP = 'pb_help_open_v1', helpKey = 'bild-filter';
@@ -185,10 +187,10 @@
   /* ---------- 2. The field at every image: own words, typed or dictated ---------- */
   const drafts = new Map(), timers = new Map();
   function paintField(node, r) {
-    node.querySelector('.pb-bild-label-text').textContent = t('name');
+    setText(node.querySelector('.pb-bild-label-text'), t('name'));
     const model = node.querySelector('.pb-bild-model');
     const caption = String(r.caption || '').trim();
-    model.hidden = !caption; model.textContent = caption ? t('model') + ': ' + caption : '';
+    model.hidden = !caption; setText(model, caption ? t('model') + ': ' + caption : '');
     const own = node.querySelector('.pb-bild-own');
     own.placeholder = t('own'); own.setAttribute('aria-label', t('name') + ' – ' + t('own'));
     const value = drafts.has(r.hash) ? drafts.get(r.hash) : String(r.userCaption || '');
@@ -321,7 +323,7 @@
   function renderPanel() {
     const box = isApp ? panel() : null; if (!box) return;
     const q = s => box.querySelector(s), btn = n => q(`[data-caption="${n}"]`);
-    btn('load').textContent = t('load'); btn('cancel').textContent = t('cancel'); btn('retry').textContent = t('retry'); btn('remove').textContent = t('remove');
+    setText(btn('load'), t('load')); setText(btn('cancel'), t('cancel')); setText(btn('retry'), t('retry')); setText(btn('remove'), t('remove'));
     const total = state.total || facts.total, running = state.running || !!live;
     let text;
     if (message) text = message;
@@ -331,7 +333,7 @@
     else if (state.installed) text = t('ready', { mb: mb(total) });
     else if (state.present > 0) text = t('partial', { done: mb(state.present), mb: mb(total) });
     else text = t('none', { mb: mb(total) });
-    q('[data-s="text"]').textContent = text;
+    setText(q('[data-s="text"]'), text);
     const bar = q('.pb-semantic-bar'), done = running && live ? live.done : state.present;
     bar.hidden = state.installed || !(running || state.present > 0);
     bar.firstElementChild.style.width = total ? `${Math.min(100, done / total * 100).toFixed(1)}%` : '0';
