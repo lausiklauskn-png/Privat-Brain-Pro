@@ -59,7 +59,7 @@ Workflow-PDF Bibliothek, Handy, Dialog).
   wirkungslos, Fehler verschluckt, Modul nicht im Vorrat). Zwei Fälle liefen zuerst in einen Zeitablauf, einer war eine
   tote Sabotage (zwei Riegel deckten einander) – alle drei nachgezogen. `npm test` vollständig grün (33 Proben), nachdem
   `tests/teilen.mjs` für den Mauszug mehr Fensterhöhe bekommen hat (die Karten lagen in der 60-px-Rollzone des Ziehens).
-- **Workflow-PDF-Pro:** `verify-upstream` 0 Abweichungen (Kern `f52118d`, 200 Dateien), `test:native-web` 33 bestanden.
+- **Workflow-PDF-Pro:** `verify-upstream` 0 Abweichungen (Kern `3bf07ab`, 200 Dateien), `test:native-web` 33 bestanden.
 
 ## Grenzen, ehrlich
 
