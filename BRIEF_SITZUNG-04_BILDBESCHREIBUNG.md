@@ -17,7 +17,12 @@ was überall fehlt. In den Kameras.“). Die bisherige Sitzung 4 (3D-Knöpfe, Ka
 ## Entschieden (Klaus 2026-10-26)
 
 - Kurzer Name überall: **„Bildbeschreibung“**. Ein Schalter oder Filter in der Suche, kein langer Satz.
-- Gilt für alle sechs Varianten (Pro, V3; je Android, Windows, PWA) **und Workflow PDF** (eigenes Repo).
+- Gilt für alle sechs Varianten (Pro, V3; je Android, Windows, PWA) **und für beide Workflow-PDF-Apps**:
+  **Workflow-PDF-Pro** und **Workflow-PDF** (Klaus 2026-10-26: „Die soll Workflow PDF Pro und Workflow PDF
+  bekommen. Auch die Suche … Alle.“). Beide bekommen die Bildbeschreibung (Modell und eigene Worte) **und** die
+  Suche danach. Repos `lausiklauskn-png/Workflow-PDF-Pro` und `lausiklauskn-png/Workflow-PDF`, beide mit
+  `add_repo` holen.
+- Klaus will dafür eine **neue Sitzung** (diese hier).
 - Feste Regeln wie bisher: gemeinsamer Webteil, keine Emojis in Knöpfen, flach, Hinweise ohne Kasten, ⓘ für
   Erklärungen (anfangs offen, gemerkt), nichts veröffentlichen ohne Klaus' Wort, Vorher-nachher-Bilder.
 
@@ -52,9 +57,10 @@ was überall fehlt. In den Kameras.“). Die bisherige Sitzung 4 (3D-Knöpfe, Ka
    größerer Schritt (mit Klaus besprechen).
 3. **Bildbeschreibung in der Suche.** Ein kurzer Schalter oder Filter „Bildbeschreibung“, der Bilder nach
    Modell- und eigener Beschreibung findet.
-4. **Punkt 14 – Workflow PDF.** Repo mit `add_repo` holen (Name bei Klaus erfragen, falls unklar), dort dieselbe
-   Suche nach Bildbeschreibung einbauen. Erst den Aufbau von Workflow PDF lesen; nichts an dessen geschützten
-   Modulen ändern.
+4. **Punkt 14 – Workflow-PDF-Pro und Workflow-PDF.** Beide Repos mit `add_repo` holen. In beiden die
+   Bildbeschreibung (Modell, eigene Worte per Text/Mikrofon) und die Suche danach einbauen, passend zur
+   jeweiligen App. Erst den Aufbau beider Apps lesen; nichts an geschützten Modulen ändern. Keine Emojis,
+   Strichgrafiken (siehe Sammlung, Regel „Keine Emojis, nirgends“).
 
 ## Prüfen
 
@@ -65,4 +71,4 @@ was überall fehlt. In den Kameras.“). Die bisherige Sitzung 4 (3D-Knöpfe, Ka
 ## Am Ende
 
 `ABSCHLUSS-SITZUNG-04.md`, `FORSCHUNG-SITZUNG-04.md`, Sammlung nachtragen, `BRIEF_SITZUNG-05_…md` (Punkte 5, 6a),
-CLAUDE.md-Anker in beiden Repos (und in Workflow PDF, falls dort gearbeitet).
+CLAUDE.md-Anker in allen vier Repos (Pro, V3, Workflow-PDF-Pro, Workflow-PDF).
