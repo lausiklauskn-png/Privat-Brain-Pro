@@ -16,6 +16,11 @@ Sechs Varianten:
 
 **Grundregel (Klaus 2026-10-26):** Jeder Punkt dieser Sitzung gilt für alle sechs Varianten – Design und Funktion –, jeweils passend zur eigenen App umgesetzt (Pro in Pro, V3 in V3; Verweise führen zur jeweils eigenen nativen App).
 
+**Keine Emojis, nirgends (Klaus 2026-10-26):** „Bau bitte nicht wieder … Emojis ein … Bau entsprechende
+Strichgrafiken ein. Es sollen eine praktische Nutzer-App werden und kein Bilderbuch.“ Gilt in allen Varianten
+für Knöpfe, Überschriften, Menüs, Kacheln, leere Ansichten und Tooltips. Echte Programmsymbole der Werkzeuge
+(App-Logos) bleiben. Umgesetzt nach Sitzung 3, siehe [Abschluss Sitzung 3](ABSCHLUSS-SITZUNG-03.md#nachtrag-keine-emojis).
+
 ## Punkte
 
 | Nr. | Wo (Seite) | Was ändern | Varianten | Stand |

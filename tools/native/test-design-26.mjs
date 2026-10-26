@@ -151,6 +151,28 @@ try{
   ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, open at first',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
   ok('Point 7/9: no runtime errors',errors.length===0);
   await page.close();
+  // ---------- Klaus 2026-10-26: keine Emojis, Strichgrafiken („kein Bilderbuch“) ----------
+  ({page,errors}=await open(1000,900));
+  await page.evaluate(async()=>{const t=tokens('Urlaub');for(const [l,name,type,category] of [['d','Urlaub.jpg','image/jpeg','Foto/Bild'],['e','Notiz.txt','text/plain','Text/Notiz']]){const r={hash:l.repeat(64),name,path:'Ablage/'+name,size:1000,category,type,ext:name.split('.').pop(),date:Date.now(),vector:buildVector(t),tf:termFreq(t),nameTokens:t,snippet:'',summary:'',tags:[],dupes:[],dirId:null,pruefung:{zeit:1,funde:[],angaben:[],hinweise:[],ungeprueft:false}};await idbPut('catalog',r);CATALOG.push(r);HASHSET.add(r.hash);}rebuildIndex();refreshAll();});
+  // Visible text with a pictographic sign; ↗ and © are plain signs, the canon Siegel/Mycel modules (byte-1:1) are not ours.
+  const shownEmojis=()=>page.evaluate(()=>{const found=[],walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+    while((n=walk.nextNode())){const v=n.nodeValue.replace(/[↗©™®↔↕↺↻]/g,'');if(!/\p{Extended_Pictographic}/u.test(v))continue;const e=n.parentElement;
+      if(!e||e.closest('[id^="sbkim-"],[class^="sbkim-"],.pb-icon-fallback,[hidden],script,style'))continue;const r=document.createRange();r.selectNodeContents(n);const b=r.getBoundingClientRect(),cs=getComputedStyle(e);
+      const own=e.getBoundingClientRect();if(b.width<1||b.height<1||own.width<=1||own.height<=1||/inset\(50%\)/.test(cs.clipPath)||cs.visibility==='hidden'||parseFloat(cs.opacity)===0)continue;found.push(v.trim().slice(0,30));}
+    const tips=[...document.querySelectorAll('[title],[aria-label]')].filter(e=>e.getClientRects().length&&!e.closest('[id^="sbkim-"]')).map(e=>(e.title||'')+' '+(e.getAttribute('aria-label')||'')).filter(s=>/\p{Extended_Pictographic}/u.test(s.replace(/[↗©™®↔↕↺↻]/g,'')));
+    return [...found,...tips.map(s=>'tip: '+s.trim().slice(0,30))];});
+  const emojiViews={};
+  for(const tab of ['search','intake','explorer','mail','overview','order','dupes','settings']){
+    await page.evaluate(t=>{window.PBWorkspace.navigate(t);document.querySelectorAll('#panel-'+t+' details').forEach(d=>d.open=true);},tab);await page.waitForTimeout(250);
+    emojiViews[tab]=await shownEmojis();
+  }
+  await page.evaluate(()=>{window.PBWorkspace.navigate('search');const d=document.querySelector('details.native-options');if(d)d.open=true;});await page.waitForTimeout(250);
+  emojiViews.menu=await shownEmojis();
+  const emojiLeft=Object.entries(emojiViews).filter(([,v])=>v.length).map(([k,v])=>k+': '+v.join(' | '));
+  ok('No emojis on screen: bar, ☰ menu and every view use line icons'+(emojiLeft.length?' — still: '+emojiLeft.join(' ; '):''),emojiLeft.length===0);
+  ok('Line icons stand where emojis were (menu lock, catalog tiles)',await page.locator('.pb-tools-lock svg').count()>0);
+  ok('No emojis: no runtime errors',errors.length===0);
+  await page.close();
   // 9b needs the protection card, which only the apps show: a minimal stand-in for the device side.
   {
     const p2=await browser.newPage({viewport:{width:1000,height:1400}}),e2=[],origin=`http://127.0.0.1:${server.address().port}/`;

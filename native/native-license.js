@@ -30,8 +30,8 @@
     box: ['🔑 Werkzeuge freischalten', '🔑 Unlock tools', '🔑 Открыть инструменты', '🔑 Odblokuj narzędzia'],
     code: ['Freischalt-Code', 'Unlock code', 'Код', 'Kod'],
     unlock: ['Freischalten', 'Unlock', 'Открыть', 'Odblokuj'],
-    unlocked: ['✓ frei', '✓ open', '✓ открыт', '✓ odblokowane'],
-    locked: ['🔒 gesperrt', '🔒 locked', '🔒 закрыт', '🔒 zablokowane'],
+    unlocked: ['frei', 'open', 'открыт', 'odblokowane'],
+    locked: ['gesperrt', 'locked', 'закрыт', 'zablokowane'],
     ok: ['✓ Freigeschaltet: ', '✓ Unlocked: ', '✓ Открыто: ', '✓ Odblokowano: '],
     for: [' (für {n})', ' (for {n})', ' (для {n})', ' (dla {n})'],
     bad: ['Dieser Code passt nicht. Bitte genau so einfügen, wie du ihn bekommen hast.', 'This code does not fit. Please paste it exactly as you received it.', 'Код не подходит. Вставьте его точно как получили.', 'Ten kod nie pasuje. Wklej go dokładnie tak, jak go otrzymałeś.'],
@@ -301,7 +301,7 @@
     for (const tool of TOOLS) {
       const li = make('li'), open = unlocked(tool.id);
       li.dataset.tool = tool.id; li.dataset.open = String(open);
-      const status = make('b', open ? '🔓' : '🔒');
+      const status = make('b', '', 'pb-license-lock'); status.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (open ? 'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0' : 'M5 10h14v11H5Z M8 10V7a4 4 0 0 1 8 0v3') + '"/></svg>';
       status.title = open ? t('unlocked') : t('locked');
       status.setAttribute('aria-label', status.title);
       li.append(toolIcon(tool), make('span', toolName(tool), 'pb-license-name'), status); list.append(li);

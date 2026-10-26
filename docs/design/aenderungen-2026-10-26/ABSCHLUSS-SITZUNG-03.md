@@ -48,3 +48,29 @@ Geräteseite, Kategorien, Doppelte; je Pro und V3).
 Punkte 12–14 (Bilder verstehen überall, Bild in eigenen Worten, Bildersuche in Workflow PDF; Name
 „Bildbeschreibung“) sind in der Sammlung eingetragen und auf Klaus' Wunsch **Sitzung 4**. Der Sitzungsplan ist
 entsprechend verschoben.
+
+## Nachtrag: keine Emojis
+
+Klaus zeigte danach V3s Katalog mit 📦 ✉️ 📄 🖼️ 📝 und 🔀: „Es sollen eine praktische Nutzer-App werden und kein
+Bilderbuch.“ Jetzt überall Strichgrafiken:
+
+- **V3** (`assets/v3-ui.js`/`.css`): Katalog-Kacheln, „Neu ordnen“, Explorer-Baum, -Zeilen und -Pfad, leere
+  Ansichten (Katalog, Doppelte), alle Einstellungsknöpfe und -überschriften, Hinweise (Emoji nur entfernt), Tooltips
+  und Bildschirmleser-Namen ohne Emoji. Neue Liniensymbole: Kiste, Notiz, Person, Mischen, Katalog, Beleg, Sprechblase,
+  Diagramm, Präsentation, Entsperren, Herunterladen, Warnung, Labor, Netzwerk, Siegel, Tipp.
+- **Beide** (`native/native-tools.js`, `native-license.js`, `native-mycel.js`): ☰-Menü „Mycel-Netz“ und
+  „Werkzeuge“ ohne 🌐/🧰, die Schlösser vor gesperrten Werkzeugen (Menü und Freischalt-Liste) als Strich-Schloss.
+- Beim Bau gefunden: V3s Regel `button.v3-ic{display:inline-flex!important}` hätte versteckte Knöpfe sichtbar
+  gemacht („Siegel wieder zeigen“); sie gilt jetzt nur für `:not([hidden])`. Gefangen von `test-mycel`.
+- Prüfung: sichtbare Emojis im ☰-Menü, in der Leiste und in allen Einstellungen (aufgeklappt) gezählt – in beiden
+  Apps keins mehr (nur ↗ und ©, keine Bildzeichen). `test-tools`, `test-mycel` angepasst (Strich-Schloss statt 🔒,
+  „Mycel-Netz“ ohne 🌐).
+- Weitere Stellen: Doppelte-Liste (📦 vor jedem Namen, beide Apps), Mikrofon beim Zuhören (V3 rot statt 🔴),
+  Diktier-Knöpfe in V3, Tooltips und Bildschirmleser-Namen in Pro („Hilfe zu 🔒 Tresor“, „🔒 gesperrt“,
+  „📁 Ordner verbinden“, „🌐 Mycel-Fenster öffnen“).
+- **Neuer Wächter** in `test-design-26` (beide Repos): in Leiste, ☰-Menü und allen acht Ansichten (Erklärungen
+  aufgeklappt, Katalog mit PDF, Mail, Bild, Notiz) darf kein sichtbares Bildzeichen stehen, auch nicht in Tooltips
+  oder `aria-label`. Ausgenommen: nur für Bildschirmleser versteckter Text, ↗/©, die byte-gleichen Kanon-Module
+  von Siegel/Mycel. Gegenprobe: 🔒 im Menü zurück → rot. Pro 52, V3 51 grün.
+- Angepasste ältere V3-Proben (`test-explorer-kinds`, `test-categories`, `test-speech`, `test-mycel`,
+  `test-tools`): vergleichen jetzt die Wörter und prüfen das Strichsymbol.

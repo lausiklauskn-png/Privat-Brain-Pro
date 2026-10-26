@@ -25,3 +25,9 @@ Ergänzt [Forschung Sitzung 1](FORSCHUNG-SITZUNG-01.md) und [Sitzung 2](FORSCHUN
    (`test-design-26`, Abschnitt 9b).
 7. **Pro entfernt die Kategorien-Einleitung** (`native-overview.js`), V3 zeigt sie; dort steht ihr ⓘ jetzt in der
    Leiste mit dem Anordnungs-Knopf (`.pb-order-bar` aus Sitzung 2).
+8. **Emojis werden an zwei Stellen zu Strichen.** Pro: `native/native-toolbar.js` (`prefixKeys`, Liste der
+   Auswahlen in `decorateKnownPrefix`) legt das Emoji in ein verstecktes `.pb-icon-fallback`. V3:
+   `assets/v3-ui.js` (`EMOJI`, `ICONS`, Auswahl `GENERIC`) entfernt das Emoji und hängt ein `svg.v3-icon` an; in
+   `h2`/`h3` werden auch Emojis mitten im Text entfernt, Tooltips/`aria-label` ebenso. Neue Texte am besten gleich
+   ohne Emoji schreiben (so jetzt `native-tools.js`, `native-license.js`, Menüeintrag in `native-mycel.js`).
+   Wer `display:…!important` an Knöpfe hängt, braucht `:not([hidden])`.

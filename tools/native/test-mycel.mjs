@@ -47,7 +47,7 @@ try{
   await tapSeal();
   const sealOpen=()=>page.evaluate(()=>{const m=document.getElementById('sbkim-siegel-modal');return !!m&&getComputedStyle(m).display!=='none';});
   ok('Tapping the round Siegel opens the Siegel window',await sealOpen());
-  ok('The Siegel window carries "🌐 Mycel-Netz" right under its title',await page.evaluate(()=>{const b=document.querySelector('#sbkim-siegel-modal [data-mycel-from-seal]');return !!b&&b.textContent==='🌐 Mycel-Netz';}));
+  ok('The Siegel window carries "Mycel-Netz" right under its title',await page.evaluate(()=>{const b=document.querySelector('#sbkim-siegel-modal [data-mycel-from-seal]');return !!b&&b.textContent==='Mycel-Netz';}));
   await page.locator('#sbkim-siegel-modal [data-mycel-from-seal]').click();
   await page.waitForFunction(()=>SbkimRendezvousUI.isOpen());
   ok('… which closes the Siegel window and opens the Mycel window',!(await sealOpen()));
@@ -62,7 +62,7 @@ try{
   await page.evaluate(()=>[...document.querySelectorAll('#sbkim-rdv-panel button')].find(b=>b.textContent==='–').click());
   ok('"–" closes the window and leaves no pill behind',await page.evaluate(()=>!SbkimRendezvousUI.isOpen())&&!(await rect('#sbkim-rdv-btn')).shown);
   await page.locator('.native-options>summary').click();
-  ok('The app menu ☰ offers "🌐 Mycel-Netz" too',await page.locator('.native-mycel-menu').isVisible()&&(await page.locator('.native-mycel-menu').textContent())==='🌐 Mycel-Netz');
+  ok('The app menu ☰ offers "Mycel-Netz" too',await page.locator('.native-mycel-menu').isVisible()&&(await page.locator('.native-mycel-menu').textContent())==='Mycel-Netz');
   await page.locator('.native-mycel-menu').click();
   ok('… and it opens the Mycel window',await page.evaluate(()=>SbkimRendezvousUI.isOpen()));
   await page.evaluate(()=>[...document.querySelectorAll('#sbkim-rdv-panel button')].find(b=>b.textContent==='✕').click());

@@ -29,7 +29,7 @@
   function label(entry) {
     // A shared icon adapter may retain a hidden legacy glyph for the original
     // translator. Omit only known decorative prefixes from this UI label.
-    const w = copy(), name = (entry.name || entry.heading?.textContent || '').trim().replace(/^(?:📥|📎|🔬|🧠|🛡|✋|🗂|📁|📄)[\uFE0F\uFE0E]?\s*/u,'');
+    const w = copy(), name = (entry.name || entry.heading?.textContent || '').replace(/\p{Extended_Pictographic}[\uFE0F\uFE0E]?\s*/gu,'').trim();
     entry.button.title = entry.content.hidden ? w.show : w.hide;
     entry.button.setAttribute('aria-label',`${w.for} ${name}`);
     entry.content.setAttribute('aria-label',`${w.for} ${name}`);

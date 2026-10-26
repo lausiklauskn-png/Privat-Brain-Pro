@@ -522,7 +522,7 @@
     el('chooseLibrary').disabled=!window.showDirectoryPicker || signing;
     el('pauseLibrary').disabled=!library || signing;
     el('pickDir').textContent=text(library?'copyFolder':'linkFolder');
-    el('pickDir').title=text(library?'copyFolder':'linkFolder');
+    el('pickDir').title=text(library?'copyFolder':'linkFolder').replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u,'');
     if(!window.PBFolders)el('libraryStatus').textContent=library?text('active')+': '+library.name:window.showDirectoryPicker?text('noFolder'):text('unsupported');
     el('searchMailCount').textContent=CATALOG.filter(r=>r.mail).length+' '+text('emails');
     el('searchDocCount').textContent=CATALOG.filter(r=>!r.mail).length+' '+text('documents');
