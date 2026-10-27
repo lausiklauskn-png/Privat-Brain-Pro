@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Large list downloads wait for Wi-Fi (unmetered) unless the user starts them. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Klaus 2026-10-27: route dictation to the chosen microphone (no recording, no prompt). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- Only this companion app is visible for the explicit tool-menu launch. -->
     <queries>
