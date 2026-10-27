@@ -123,7 +123,7 @@
 
   async function refresh() { try { state = await plugin.getState(); } catch {} render(); }
 
-  plugin.addListener?.('progress', p => { live = p; render(); });
+  plugin.addListener?.('progress', p => { live = p; render(); forwardProgress(p); });
 
   // The meaning button is an inline on/off switch. Model installation remains
   // an explicit action in Settings; changing search mode never leaves Search.
@@ -176,11 +176,12 @@
   // started asks once and loads the model with progress, then continues; background calls (e.g. a question
   // from the network) get a clear message instead of a dialog. Modul 03 itself stays byte-for-byte.
   let asking = null, forwarding = false;
-  plugin.addListener?.('progress', p => {
+  // Called from the one progress listener above (one listener per event: some bridges keep only the last).
+  function forwardProgress(p) {
     if (!forwarding) return;
     const progress = p?.total ? Math.min(100, p.done / p.total * 100) : 0;
     try { window.dispatchEvent(new CustomEvent('sbkim:embedding-progress', { detail: { status: 'progress', progress } })); } catch {}
-  });
+  }
   const missingError = () => Object.assign(new Error(t('missing')), { name: 'ModelLoadError', code: 'MODEL_NOT_LOADED' });
   async function ensureModel() {
     if (state.installed) return;
