@@ -33,3 +33,9 @@ Siegel keine Identität erzeugen.
 
 ⚠ Nicht am Gerät gemessen. Welche App bei Klaus die Siegel-Identität nicht erzeugen konnte, ist nicht notiert;
 Sage-Protokol, Workflow PDF und das SBKIM-Tool sind andere Repos und hier nicht geprüft.
+
+## Veröffentlicht in 1.0.41 (2026-10-27)
+
+Android und Windows 1.0.41 aus main `c4d0c5fd`, Release-Läufe 40592146491 (Android) und 40592142031 (Windows).
+APK SHA-256 `92a2dd1b…41ac2d2`, Setup SHA-256 `1becda08…c297f62`, beide unabhängig geladen und gleich `SHA256SUMS`.
+Die PWA bekommt den Stand über Pages.
