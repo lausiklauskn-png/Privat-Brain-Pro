@@ -78,6 +78,8 @@ kein Suchwort und kein Mailtext darin steht (Gegenprobe: ein eingeschmuggelter N
   andere App (vermutlich Sage) es geladen hatte; außerdem wich der Aufbau in einer Windows-Fassung
   vom Sage-Protokoll ab, und in einer App ließ sich über das Siegel keine Identität erzeugen.
   Vor Abschnitt 3 klären: welche App, Abgleich mit dem Sage-Kanon, Probe für jede Variante.
+  **Geklärt für Private Brain Pro (2026-10-27):** Modell war in dieser App nicht geladen; jetzt führt die App
+  beim ausgelösten Schritt zum Laden: [Befund](MODELL-FEHLT-MYCEL-SIEGEL.md).
 
 ## 4. Vorsortierung beim Hochladen
 
