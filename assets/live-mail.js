@@ -1040,7 +1040,10 @@
     // Share with BookLedgerPro: natively the same system chooser as "share / save original" (BookLedgerPro is listed
     // there once installed); in the browser the Web Share API with the .eml file; otherwise a download plus the hint.
     async function shareBookLedger() {
-      if (native) return native.openOriginal({account,folder,validity,uid:item.uid});
+      // Pro-App mit Tresorordner (Schritt D2): wahlweise ins Fach „Eingang-BookLedgerPro“; sonst wie bisher teilen.
+      if (native) return native.shareBookLedger
+        ? native.shareBookLedger({account,folder,validity,uid:item.uid}, {name: emlName(), datum: new Date(item.date || mail.date || 0).getTime() || 0, auszug: String(mail.text || "").slice(0, 1000)})
+        : native.openOriginal({account,folder,validity,uid:item.uid});
       const file = new File([emlBlob()], emlName(), { type: "message/rfc822" });
       if (navigator.canShare?.({ files: [file] })) {
         try { await navigator.share({ files: [file], title: mail.subject || "" }); return; }

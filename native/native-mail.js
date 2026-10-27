@@ -109,6 +109,9 @@
     savedDraft: (account,id) => invoke('savedDraft',{account,id}),
     openAttachment: args => invoke('openAttachment', args),
     openOriginal: args => invoke('openOriginal', args),
+    // „An BookLedgerPro teilen“: mit verbundenem Tresorordner fragt native-tresorordner.js, ob die Mail ins Eingangsfach soll.
+    shareBookLedger: (args, meta) => window.PBTresorordner?.mailAnBookLedger ? PBTresorordner.mailAnBookLedger(args, meta) : invoke('openOriginal', args),
+    tresorMailAblegen: args => invoke('tresorMailAblegen', args),
     forgetMessage: args => invoke('forgetMessage', args),
     // Sorting index for all accounts: headers since a date, then readable text of a few mails.
     index: async args => {

@@ -171,6 +171,10 @@ final class Vault {
     synchronized String folderId() { return configured() ? prefs().getString("id", "") + "|" + prefs().getString("tree", "") : ""; }
     synchronized boolean unlocked() { return dataKey != null || (configured() && remembered()); }
     synchronized void requireUnlocked() throws IOException { key(); bind(); }
+    /** Kennung des Tresors (tresor.json) für den Tresorordner (Schritt D2). */
+    synchronized String tresorId() { return prefs().getString("id", ""); }
+    /** Kopie des Datenschlüssels für den Einzug in den Tresorordner. Bleibt nativ, nie an die WebView. */
+    synchronized byte[] tresorSchluessel() throws IOException { return key(); }
 
     private SecretKey deviceKey(boolean create) throws Exception {
         KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);

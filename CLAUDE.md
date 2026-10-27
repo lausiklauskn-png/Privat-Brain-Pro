@@ -8,6 +8,11 @@
 
 # Private Brain Pro — Sitzungs-Anker
 
+**Gemeinsamer Tresorordner, Schritt D2 (Klaus 2026-10-27):** Einzug in den Ordner aller Pro-Apps — Knopf im Kasten „Speicherort und
+Verschlüsselung“, Ordner über „Private Brain“ (auch eine Kopie zur Probe, geprüft über die Kennung), Inhaltsverzeichnis aus dem Katalog,
+„An BookLedgerPro teilen“ legt auf Wunsch die .eml ins Fach „Eingang-BookLedgerPro“. Paket `de.familyprojekt.tresor` byte-gleich aus
+Workflow PDF Pro (`tools/native/tresor-nachziehen.mjs`, nie von Hand). Nicht am Gerät gemessen. [Bedienung, Proben, Grenzen](docs/TRESORORDNER.md).
+
 **📒 „An BookLedgerPro teilen" (Klaus 2026-10-26, Claude):** in jeder geöffneten Mail neben „Original teilen / sichern" ein eigener
 Knopf (`assets/live-mail.js`, Schlüssel `bookledger`, DE/EN/RU/PL; nativ Liniensymbol „share" in `native-toolbar.js`). Pro-App:
 derselbe enge `openOriginal`-Weg (ACTION_SEND `message/rfc822` über den FileProvider, Android-Auswahl zeigt die installierte
