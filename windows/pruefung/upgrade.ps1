@@ -12,21 +12,21 @@ $setups = @(Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '
 if ($setups.Count -ne 1) { throw 'Exactly one current production installer required.' }
 $currentSetup = $setups[0].FullName
 $config = Get-Content windows/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-if ($config.version -ne '1.0.39' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
+if ($config.version -ne '1.0.40' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
 if ((Get-AuthenticodeSignature -LiteralPath $currentSetup).Status -ne 'NotSigned') { throw 'Expected the chosen unsigned production installer.' }
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-upgrade-' + $token)
 $reports = Join-Path (Get-Location) 'windows/pruef-out/upgrade-36-37'
 $vault = Join-Path $work 'chosen-vault'
 New-Item -ItemType Directory -Force $work, $reports, $vault | Out-Null
-$oldSetup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.38-x64-setup.exe'
-$oldUrl = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.38/Private-Brain-Pro-Windows-1.0.38-x64-setup.exe'
+$oldSetup = Join-Path $work 'Private-Brain-Pro-Windows-1.0.39-x64-setup.exe'
+$oldUrl = 'https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.39/Private-Brain-Pro-Windows-1.0.39-x64-setup.exe'
 Invoke-WebRequest -UseBasicParsing -Uri $oldUrl -OutFile $oldSetup
 $oldHash = (Get-FileHash -LiteralPath $oldSetup -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($oldHash -ne 'bb8389aa2feff6b4734c604a80d2314bb3418ca1dfa7429f710c085a4c4f2b59' -or (Get-Item $oldSetup).Length -ne 101119348) { throw 'Published 1.0.38 installer differs from its independently verified release pin.' }
+if ($oldHash -ne '3a579d3fca546ef3544d163e966b192c45c4170cb0de2b4d78ccce7ec670440d' -or (Get-Item $oldSetup).Length -ne 101205944) { throw 'Published 1.0.39 installer differs from its independently verified release pin.' }
 if ((Get-AuthenticodeSignature -LiteralPath $oldSetup).Status -ne 'NotSigned') { throw 'Unexpected legacy installer signing state.' }
 # The prior installed test used synthetic data in this isolated account. Reset
-# it ONCE before 1.0.38 starts; there is strictly no reset between versions.
+# it ONCE before 1.0.39 starts; there is strictly no reset between versions.
 if (Test-Path $dataDir) {
   if (((Get-Item -LiteralPath $dataDir -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Refusing a redirected app data root.' }
   Remove-Item -LiteralPath $dataDir -Recurse -Force
@@ -210,10 +210,10 @@ try {
   Install-Setup $currentSetup
   Phase 'verify' $false
   Phase 'verify-unlock' $false
-  $summary = [ordered]@{ from = '1.0.38'; to = '1.0.39'; oldSource = '1d7a235c4ec5f3aa14abb24300e9550341ba70a5'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
+  $summary = [ordered]@{ from = '1.0.39'; to = '1.0.40'; oldSource = 'e3f5c1190fc68a287c89b7665ab1c94cf9289e7b'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
-  Write-Output 'WINDOWS_INSTALLER_UPGRADE_38_TO_39_PASS'
+  Write-Output 'WINDOWS_INSTALLER_UPGRADE_39_TO_40_PASS'
 } finally {
   foreach ($name in @('PB_WINDOWS_UPGRADE_CDP_PORT','PB_WINDOWS_UPGRADE_MARKER','PB_WINDOWS_UPGRADE_REPORT_ROOT','PB_WINDOWS_UPGRADE_VAULT')) { Remove-Item ('Env:' + $name) -ErrorAction SilentlyContinue }
   # Existing production.ps1 must subsequently start the exact new binary with
