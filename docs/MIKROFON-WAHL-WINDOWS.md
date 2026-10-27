@@ -55,3 +55,13 @@ USB-Mikrofon eingesteckt wird. Für die App sah das aus, als höre sie „irgend
 ⚠ **Nicht gemessen:** an echten Mikrofonen unter Windows, mit Bluetooth-Headsets, nach
 Umstecken an echter Hardware. V3 (anderes Repo) hat dieselbe Windows-Spracherkennung und
 bekommt die Änderung erst auf Klaus' Wort.
+
+## Veröffentlicht: Windows 1.0.40 (2026-10-27, Klaus' Wort)
+
+[Windows-Setup 1.0.40](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.40/Private-Brain-Pro-Windows-1.0.40-x64-setup.exe)
+über die vorhandene App installieren. „Nach Update suchen“ in einer installierten 1.0.39 findet es ebenfalls.
+Quelle main `aae5013dabd8251051a8d731104dc64fba723b98` (PR #97), Windows-Abnahme 40531337324 mit echter
+Updateprobe 1.0.39 → 1.0.40, Release-Lauf 40541743653. Setup 101.191.212 Bytes, SHA-256
+`a11d4f177b924f765f204b895a5bec91b9025ee70197e1f58d790bb8e2c62546`, unabhängig geladen und gleich `SHA256SUMS`.
+Android-Lauf auf main: Versuch 1 rot an der Mycel-Probe „Verbinden fail-soft offline“ (inhaltsgleicher PR-Stand
+dort grün), einmal neu gestartet, Versuch 2 grün. Keine Android-Veröffentlichung. Nicht erneut auslösen.
