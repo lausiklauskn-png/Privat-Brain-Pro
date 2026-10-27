@@ -1,4 +1,4 @@
-# Mikrofon fürs Diktat wählen (Windows) – 2026-10-27
+# Mikrofon fürs Diktat wählen (Windows, Android, PWA) – 2026-10-27
 
 **Auftrag (Klaus 2026-10-27):** In der Windows-Fassung reagierte das Diktat nicht auf
 ein bestimmtes Mikrofon, sondern „auf alle Mikrofone, die auf dem Rechner installiert
@@ -33,13 +33,27 @@ USB-Mikrofon eingesteckt wird. Für die App sah das aus, als höre sie „irgend
 - Gespeichert wird nur Kennung und Name des Geräts (`localStorage` `pb_microphone_v1`).
   Kein Ton geht durch die Seite oder ins Netz.
 
-## Android und PWA
+## Android (Klaus 2026-10-27, nach dem Windows-Test: „lief sehr zufriedenstellend“)
 
-- **Android** öffnet weiter sein eigenes Sprachfenster; dort wählt Android das Mikrofon.
-  Die Einstellung erscheint dort nicht.
-- **PWA (Browser):** Die Spracherkennung des Browsers nimmt immer das Mikrofon, das im
-  Browser bzw. im System als Standard eingestellt ist; eine Seite kann es dafür nicht
-  wählen. Klaus hat die PWA geprüft und dort kein Problem gesehen.
+- Gleiche Einstellung. Android meldet die Verbindungsart selbst: **Mikrofon im Gerät**, **Kabel**, **USB-Kabel**,
+  **Bluetooth** (`AudioManager.getDevices`, `ProSpeechPlugin.inputs`). Mehrere eingebaute Mikrofone zählen als eines.
+- Die App **nimmt weiter nichts selbst auf** und fragt nach **keiner Mikrofon-Berechtigung**. Sie stellt nur Androids
+  Audio-Weiche auf das gewählte Gerät, solange Androids Sprachfenster zuhört, und stellt sie danach zurück:
+  ab Android 12 `setCommunicationDevice`, davor für Bluetooth `startBluetoothSco`. Dafür steht im Manifest nur
+  `MODIFY_AUDIO_SETTINGS` (ohne Rückfrage an den Nutzer).
+- Deshalb sagt die Statuszeile ehrlich „Diktat wird an dieses Mikrofon geleitet“. Ob Androids Spracherkennung der
+  Weiche folgt, entscheidet das Gerät; das zeigt erst der Test am Tablet.
+- Fehlt das gewählte Mikrofon: Meldung mit Namen, kein Diktat über ein anderes Gerät.
+
+## PWA (Browser)
+
+- Chrome und Edge ab Version 135 nehmen ein bestimmtes Mikrofon als Audiospur für ihre Spracherkennung an
+  ([Chrome 135](https://developer.chrome.com/release-notes/135)). Die App reicht das gewählte Mikrofon dort hinein,
+  bei der Suche und bei der Bildbeschreibung, ohne die gemeinsamen Dateien zu ändern.
+- Gerätenamen zeigt der Browser erst nach der Mikrofon-Freigabe: „Neu suchen“ fragt einmal danach.
+- Ältere oder andere Browser: Die Einstellung sagt das klar und bietet keine Wahl an; dort gilt das im Browser
+  eingestellte Mikrofon. Nichts wird still umgestellt.
+- ⚠ Ob Chrome **auf Android** die Spur annimmt, ist nicht belegt (die Ankündigung nennt den Desktop). Prüfen am Tablet.
 
 ## Geprüft
 
@@ -47,7 +61,8 @@ USB-Mikrofon eingesteckt wird. Für die App sah das aus, als höre sie „irgend
   (nur Typprüfung, kein Lauf unter Windows).
 - `rustc --test src/speech.rs`: 4 Fälle der Geräteauswahl grün (Kennung, neuer Name nach
   Umstecken, doppelter Name, abgestecktes Gerät).
-- `node tools/native/test-microphone.mjs`: 16 grün (Geräteliste und Erkenner simuliert).
+- `node tools/native/test-microphone.mjs`: 16 grün (Geräteliste und Erkenner simuliert); mit Android und PWA
+  jetzt 30 grün. Gegenproben: PWA ohne Audiospur → rot; Android ohne Übergabe der Wahl → rot.
   Gegenprobe in der Wegwerf-Kopie `www/`: ohne Übergabe der Wahl → rot; mit stillem
   Rückfall → rot.
 - `test-speech` 27 grün, `test-input-language` 40 grün.

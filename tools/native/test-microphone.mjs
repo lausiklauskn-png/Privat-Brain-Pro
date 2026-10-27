@@ -1,6 +1,6 @@
-// Windows: one chosen microphone for dictation (Klaus 2026-10-27).
-// The native device list and recognizer are simulated; the page, settings,
-// storage and the dictation button are real. No physical microphone claim.
+// One chosen microphone for dictation (Klaus 2026-10-27): Windows, Android and the
+// browser/PWA. Device lists, recognizers and getUserMedia are simulated; the page,
+// settings, storage and the dictation buttons are real. No physical microphone claim.
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
@@ -77,9 +77,86 @@ try{
   ok('No emoji in the microphone setting',await page.evaluate(()=>!/\p{Extended_Pictographic}/u.test(document.getElementById('pb-microphone-row').textContent)));
   ok('No unhandled app errors (Windows)',errors.length===0);
   await page.close();
-  const android=await open('android');
-  await android.page.waitForTimeout(400);
-  ok('Android keeps its own speech dialog: no microphone setting appears',await android.page.evaluate(()=>!document.getElementById('pb-microphone-setting')&&!window.PBMicrophone));
-  ok('No unhandled app errors (Android)',android.errors.length===0);
-  console.log(`${count} microphone-choice checks passed (simulated Windows device list and recognizer; no physical microphone claim).`);
+  // Android: the type of connection comes from Android itself; the app only routes.
+  const ANDROID=[{id:'builtin',name:'',kind:'builtin'},{id:'bluetooth:abc123',name:'Galaxy Buds',kind:'bluetooth'},{id:'usb:def456',name:'USB-C Headset',kind:'usb'}];
+  const android=await browser.newPage({viewport:{width:1280,height:900}}),androidErrors=[];
+  android.on('pageerror',e=>androidErrors.push(e.message));
+  await android.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
+  await android.addInitScript(stub('android')[0],{platform:'android',devices:ANDROID});
+  await android.goto(url);await android.waitForFunction(()=>window.PBWorkspace&&document.getElementById('pb-input-language-settings'));
+  await android.evaluate(()=>{window.toast=m=>window.toasts.push(m);PBInputLanguage.choose('de');});
+  await navigateTo(android,'settings');
+  await android.waitForFunction(()=>document.querySelectorAll('#pb-microphone-setting option').length===4);
+  const aOptions=await android.evaluate(()=>[...document.querySelectorAll('#pb-microphone-setting option')].map(o=>[o.value,o.textContent]));
+  ok('Android lists the device microphone, Bluetooth and USB with the connection Android reports',aOptions[0][1].startsWith('Android-Standard')&&aOptions[1][1]==='Mikrofon im Gerät'&&aOptions[2][1]==='Galaxy Buds · Bluetooth'&&aOptions[3][1]==='USB-C Headset · USB-Kabel');
+  ok('Without a choice Android decides, as before',(await android.locator('.pb-microphone-status').textContent()).includes('Wahl von Android'));
+  const aDictate=async()=>{await android.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await android.waitForFunction(()=>!document.querySelector('[data-speaking="true"]'));};
+  await aDictate();
+  ok('Android default dictation passes no device',await android.evaluate(()=>!('input' in micCalls.at(-1))));
+  await android.selectOption('#pb-microphone-setting','bluetooth:abc123');await aDictate();
+  ok('Android passes the chosen Bluetooth microphone to the routing and says so honestly',await android.evaluate(()=>micCalls.at(-1).input==='bluetooth:abc123'&&micCalls.at(-1).inputName==='Galaxy Buds')&&(await android.locator('.pb-microphone-status').textContent()).includes('geleitet: Galaxy Buds'));
+  await android.selectOption('#pb-microphone-setting','builtin');await aDictate();
+  ok('Choosing the device microphone passes its fixed id',await android.evaluate(()=>micCalls.at(-1).input==='builtin'));
+  ok('No unhandled app errors (Android)',androidErrors.length===0);
+  await android.close();
+
+  // Browser/PWA: Chrome 135+ gets the chosen microphone as an audio track.
+  const webStub=({version,devices})=>{
+    delete window.Capacitor;
+    Object.defineProperty(Navigator.prototype,'userAgentData',{configurable:true,get:()=>({brands:[{brand:'Chromium',version:String(version)}]})});
+    window.webDevices=devices;window.granted=false;window.srCalls=[];window.gumCalls=[];window.stopped=[];window.toasts=[];
+    const md={
+      async enumerateDevices(){return [{deviceId:'default',kind:'audioinput',label:window.granted?'Standard':'',groupId:'g1'},...window.webDevices.map(d=>({deviceId:d.id,kind:'audioinput',label:window.granted?d.name:'',groupId:d.group}))];},
+      async getUserMedia(c){window.gumCalls.push(JSON.parse(JSON.stringify(c)));
+        if(c.audio===true){window.granted=true;const t={label:'any',stop(){}};return{getTracks:()=>[t],getAudioTracks:()=>[t]};}
+        const d=window.webDevices.find(x=>x.id===c.audio.deviceId.exact);if(!d){const e=new Error('gone');e.name='OverconstrainedError';throw e;}
+        const t={kind:'audio',label:d.name,stop(){window.stopped.push(d.name);}};return{getTracks:()=>[t],getAudioTracks:()=>[t]};},
+      addEventListener(){}
+    };
+    Object.defineProperty(Navigator.prototype,'mediaDevices',{configurable:true,get:()=>md});
+    class FakeRecognition extends EventTarget{
+      dispatchEvent(e){const r=super.dispatchEvent(e);const h=this['on'+e.type];if(typeof h==='function')h.call(this,e);return r;}
+      start(track){window.srCalls.push(track===undefined?null:track.label);setTimeout(()=>{if(typeof this.onresult==='function')this.onresult({results:[[{transcript:'Hallo Web'}]]});this.dispatchEvent(new Event('end'));},20);}
+      stop(){} abort(){}
+    }
+    window.SpeechRecognition=FakeRecognition;window.webkitSpeechRecognition=FakeRecognition;
+  };
+  const WEB=[{id:'dev-builtin',name:'Mikrofon (Realtek(R) Audio)',group:'g1'},{id:'dev-bt',name:'Headset (Jabra Bluetooth)',group:'g2'}];
+  const openWeb=async version=>{
+    const p=await browser.newPage({viewport:{width:1280,height:900}}),errs=[];p.on('pageerror',e=>errs.push(e.message));
+    await p.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
+    await p.addInitScript(webStub,{version,devices:WEB});
+    await p.goto(url);await p.waitForFunction(()=>window.PBWorkspace&&document.getElementById('pb-input-language-settings'));
+    await p.evaluate(()=>{window.toast=m=>window.toasts.push(m);PBInputLanguage.choose('de');});
+    await navigateTo(p,'settings');return{p,errs};
+  };
+  const web=await openWeb(140),w=web.p;
+  await w.waitForFunction(()=>document.querySelectorAll('#pb-microphone-setting option').length===3);
+  ok('PWA lists microphones without asking first and explains how names appear',(await w.locator('.pb-microphone-status').textContent()).includes('Neu suchen')&&await w.evaluate(()=>gumCalls.length===0));
+  await w.click('#pb-microphone-search');
+  await w.waitForFunction(()=>[...document.querySelectorAll('#pb-microphone-setting option')].some(o=>o.textContent.startsWith('Headset (Jabra Bluetooth)')));
+  ok('"Neu suchen" asks for microphone access once and then shows the real names',await w.evaluate(()=>gumCalls.length===1&&gumCalls[0].audio===true));
+  const wDictate=async()=>{await w.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await w.waitForTimeout(200);};
+  await wDictate();
+  ok('PWA default dictation starts the browser recognizer without a device, as before',await w.evaluate(()=>srCalls.at(-1)===null));
+  await w.selectOption('#pb-microphone-setting','dev-bt');await wDictate();
+  ok('PWA hands the chosen Bluetooth microphone to the recognizer as an audio track',await w.evaluate(()=>srCalls.at(-1)==='Headset (Jabra Bluetooth)'&&gumCalls.at(-1).audio.deviceId.exact==='dev-bt')&&await w.locator('#q').inputValue()==='Hallo Web');
+  ok('The microphone track is released when listening ends',await w.evaluate(()=>stopped.includes('Headset (Jabra Bluetooth)')));
+  await w.evaluate(()=>{webDevices=webDevices.filter(d=>d.id!=='dev-bt');});await w.click('#pb-microphone-search');
+  await w.waitForFunction(()=>document.querySelector('.pb-microphone-status').textContent.startsWith('Nicht verbunden'));
+  const before=await w.evaluate(()=>srCalls.length);await wDictate();
+  ok('PWA: an unplugged chosen microphone is reported and nothing listens on another one',await w.evaluate(n=>srCalls.length===n&&/nicht verbunden: Headset \(Jabra Bluetooth\)/i.test(toasts.at(-1)||''),before));
+  ok('No unhandled app errors (PWA)',web.errs.length===0);
+  await w.close();
+  const old=await openWeb(120),o=old.p;
+  await o.evaluate(()=>localStorage.setItem('pb_microphone_v1',JSON.stringify({id:'dev-bt',name:'Headset (Jabra Bluetooth)'})));
+  await o.reload();await o.waitForFunction(()=>window.PBWorkspace&&document.querySelector('.pb-microphone-status'));
+  await o.evaluate(()=>{window.toast=m=>window.toasts.push(m);PBInputLanguage.choose('de');});
+  await navigateTo(o,'settings');
+  await o.waitForFunction(()=>document.querySelector('.pb-microphone-status').textContent.includes('Chrome oder Edge'));
+  ok('Older browsers say plainly that they use the browser microphone, with no choice offered',await o.evaluate(()=>document.getElementById('pb-microphone-setting').parentElement.hidden));
+  await o.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await o.waitForTimeout(200);
+  ok('Older browsers keep the recognizer untouched (no device, no extra access request)',await o.evaluate(()=>srCalls.at(-1)===null&&gumCalls.length===0));
+  ok('No unhandled app errors (older browser)',old.errs.length===0);
+  console.log(`${count} microphone-choice checks passed (simulated device lists and recognizers for Windows, Android and the browser; no physical microphone claim).`);
 }finally{await browser?.close();server.close();}
