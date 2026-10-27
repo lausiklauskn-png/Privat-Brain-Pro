@@ -38,15 +38,24 @@ impl Host {
     pub fn call(&self,plugin:&str,method:&str,mut options:Value)->Result<Value,String>{
         if let Some(lang)=options.get("_language").and_then(Value::as_str){if ["de","en","ru","pl"].contains(&lang){*self.language.lock().unwrap()=lang.into();}}
         if let Some(map)=options.as_object_mut(){map.remove("_language");}
+        if plugin=="ProSpeech"&&method=="inputs"{
+            let items=crate::speech::inputs()?;
+            return Ok(json!({"items":items.iter().map(|i|json!({"id":i.id,"name":i.name,"default":i.default})).collect::<Vec<_>>()}));
+        }
         if plugin=="ProSpeech"&&method=="listen"{
             let language=options.get("language").and_then(Value::as_str).unwrap_or("de-DE").to_owned();
             if !["de-DE","en-US","ru-RU","pl-PL"].contains(&language.as_str()){return Err("INVALID_INPUT".into());}
+            // Optional chosen microphone (Klaus 2026-10-27); empty = Windows default as before.
+            let input_id=options.get("input").and_then(Value::as_str).unwrap_or("").to_owned();
+            let input_name=options.get("inputName").and_then(Value::as_str).unwrap_or("").to_owned();
+            if input_id.len()>1024||input_name.len()>512{return Err("INVALID_INPUT".into());}
+            let shown=input_name.clone();
             let cancelled=Arc::new(AtomicBool::new(false));let stop=cancelled.clone();
             let worker=Box::new(move|sender:mpsc::Sender<Value>|{
-                let result=match crate::speech::recognize(&language,stop){Ok(Some(text))=>json!({"text":text}),Ok(None)=>json!({"cancelled":true}),Err(code)=>json!({"speechError":code})};
+                let result=match crate::speech::recognize(&language,&input_id,&input_name,stop){Ok(Some(text))=>json!({"text":text}),Ok(None)=>json!({"cancelled":true}),Err(code)=>json!({"speechError":code})};
                 let _=sender.send(result);
             });
-            let result=self.show_dialog_work("speech",json!({}),Some(worker));cancelled.store(true,Ordering::SeqCst);
+            let result=self.show_dialog_work("speech",json!({"microphone":shown}),Some(worker));cancelled.store(true,Ordering::SeqCst);
             let value=result?;if let Some(code)=value.get("speechError").and_then(Value::as_str){return Err(code.into());}return Ok(value);
         }
         let limit=if (plugin=="ProMail"&&["send","saveDraft"].contains(&method))||(plugin=="ProFiles"&&["open","share","openPdf"].contains(&method)){26*1024*1024}else{2*1024*1024};

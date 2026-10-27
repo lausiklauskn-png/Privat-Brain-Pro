@@ -6,10 +6,10 @@
   if (typeof plugin?.listen !== 'function') return;
   const LANG = { de: 'de-DE', en: 'en-US', ru: 'ru-RU', pl: 'pl-PL' };
   const WORDS = {
-    de: ['Sprechen Sie jetzt', 'Auf diesem Gerät ist keine Spracherkennung eingerichtet. Tippen geht immer.', 'Spracheingabe hat nicht geklappt.', 'Diktieren', 'Zuhören …'],
-    en: ['Speak now', 'No speech recognition is set up on this device. Typing always works.', 'Voice input did not work.', 'Dictate', 'Listening …'],
-    ru: ['Говорите', 'На этом устройстве не настроено распознавание речи. Ввод текста работает всегда.', 'Голосовой ввод не удался.', 'Диктовать', 'Слушаю …'],
-    pl: ['Mów teraz', 'Na tym urządzeniu nie skonfigurowano rozpoznawania mowy. Pisanie zawsze działa.', 'Wprowadzanie głosowe nie powiodło się.', 'Dyktuj', 'Słucham …']
+    de: ['Sprechen Sie jetzt', 'Auf diesem Gerät ist keine Spracherkennung eingerichtet. Tippen geht immer.', 'Spracheingabe hat nicht geklappt.', 'Diktieren', 'Zuhören …', 'Das gewählte Mikrofon ist nicht verbunden: {name}. Bitte anschließen oder in den Einstellungen ein anderes wählen.'],
+    en: ['Speak now', 'No speech recognition is set up on this device. Typing always works.', 'Voice input did not work.', 'Dictate', 'Listening …', 'The chosen microphone is not connected: {name}. Plug it in or choose another one in the settings.'],
+    ru: ['Говорите', 'На этом устройстве не настроено распознавание речи. Ввод текста работает всегда.', 'Голосовой ввод не удался.', 'Диктовать', 'Слушаю …', 'Выбранный микрофон не подключён: {name}. Подключите его или выберите другой в настройках.'],
+    pl: ['Mów teraz', 'Na tym urządzeniu nie skonfigurowano rozpoznawania mowy. Pisanie zawsze działa.', 'Wprowadzanie głosowe nie powiodło się.', 'Dyktuj', 'Słucham …', 'Wybrany mikrofon nie jest podłączony: {name}. Podłącz go lub wybierz inny w ustawieniach.']
   };
   const lang = () => Object.hasOwn(LANG, document.documentElement.lang) ? document.documentElement.lang : 'de';
   const say = i => WORDS[lang()][i];
@@ -98,11 +98,14 @@
     busy = true; mic.dataset.speaking = 'true'; mic.setAttribute('aria-busy', 'true'); paint(mic, field);
     try {
       const language = window.PBInputLanguage?.locale?.(field) || LANG[lang()];
-      const result = await plugin.listen({ language, prompt: say(0) });
+      // Windows: a microphone chosen in the settings (native-microphone.js); empty = system default.
+      const result = await plugin.listen({ language, prompt: say(0), ...(window.PBMicrophone?.choice?.() || {}) });
       const text = typeof result?.text === 'string' ? result.text.trim().slice(0, 2000) : '';
       if (!result?.cancelled && text && eligible(field)) insert(field, text, saved);
     } catch (error) {
-      note(say(String(error?.code || error?.message || '').includes('UNAVAILABLE') ? 1 : 2));
+      const code = String(error?.code || error?.message || '');
+      if (code.includes('MICROPHONE_MISSING')) { note(say(5).replace('{name}', window.PBMicrophone?.name?.() || '')); void window.PBMicrophone?.refresh?.(); }
+      else note(say(code.includes('UNAVAILABLE') ? 1 : 2));
     } finally { busy = false; delete mic.dataset.speaking; mic.removeAttribute('aria-busy'); paint(mic, field); }
   }
   function add(field) {
