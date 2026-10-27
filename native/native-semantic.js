@@ -24,7 +24,9 @@
       offline: 'Die App ist vom Internet getrennt. Zum Laden die Lampe oben auf Grün stellen.',
       space: 'Zu wenig freier Speicher auf dem Gerät.', failed: 'Laden hat nicht geklappt: {why}. Nochmal „Modell laden“ tippen, es geht dort weiter.',
       confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.',
-      goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.' },
+      goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.',
+      need: 'Für diesen Schritt (Mycel, Siegel-Identität oder Bedeutungssuche) braucht die App einmal das Modell für die Bedeutungssuche, etwa {mb} MB. Jetzt laden?',
+      missing: 'Das Modell für Mycel, Siegel und Bedeutungssuche ist auf diesem Gerät noch nicht geladen. In den Einstellungen unter „Modell für die Bedeutungssuche“ laden.' },
     en: { title: 'Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
       none: 'Not loaded yet. About {mb} MB once, ideally on Wi-Fi. Works without internet afterwards.',
       partial: 'Partly loaded ({done} of {mb} MB). “Load model” continues there.',
@@ -35,7 +37,9 @@
       offline: 'The app is cut off from the internet. Turn the lamp at the top green to load.',
       space: 'Not enough free storage on the device.', failed: 'Loading failed: {why}. Tap “Load model” again, it continues there.',
       confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.',
-      goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.' },
+      goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.',
+      need: 'This step (Mycel, seal identity or meaning search) needs the meaning-search model once, about {mb} MB. Load it now?',
+      missing: 'The model for Mycel, seal and meaning search is not loaded on this device yet. Load it in Settings under “Model for meaning search”.' },
     ru: { title: 'Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
       none: 'Ещё не загружена. Один раз около {mb} МБ, лучше по Wi-Fi. Потом работает без интернета.',
       partial: 'Загружено частично ({done} из {mb} МБ). «Загрузить модель» продолжит.',
@@ -46,7 +50,9 @@
       offline: 'Приложение отключено от интернета. Для загрузки переключите лампу вверху на зелёный.',
       space: 'Недостаточно свободной памяти.', failed: 'Загрузка не удалась: {why}. Нажмите «Загрузить модель» ещё раз.',
       confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.',
-      goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.' },
+      goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.',
+      need: 'Для этого шага (Mycel, личность печати или поиск по смыслу) приложению один раз нужна модель поиска по смыслу, около {mb} МБ. Загрузить сейчас?',
+      missing: 'Модель для Mycel, печати и поиска по смыслу на этом устройстве ещё не загружена. Загрузите её в настройках: «Модель для поиска по смыслу».' },
     pl: { title: 'Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
       none: 'Jeszcze nie pobrany. Jednorazowo około {mb} MB, najlepiej przez Wi-Fi. Potem działa bez internetu.',
       partial: 'Pobrano częściowo ({done} z {mb} MB). „Pobierz model” kontynuuje.',
@@ -57,7 +63,9 @@
       offline: 'Aplikacja jest odłączona od internetu. Aby pobrać, przełącz lampkę u góry na zielono.',
       space: 'Za mało wolnego miejsca.', failed: 'Pobieranie nie powiodło się: {why}. Stuknij „Pobierz model” ponownie.',
       confirmRemove: 'Usunąć model z urządzenia? Wyszukiwanie wróci do słów kluczowych.',
-      goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Pobierz go w ustawieniach.' }
+      goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Pobierz go w ustawieniach.',
+      need: 'Ten krok (Mycel, tożsamość pieczęci lub wyszukiwanie znaczeniowe) wymaga jednorazowo modelu wyszukiwania znaczeniowego, około {mb} MB. Pobrać teraz?',
+      missing: 'Model dla Mycel, pieczęci i wyszukiwania znaczeniowego nie jest jeszcze pobrany na tym urządzeniu. Pobierz go w ustawieniach: „Model do wyszukiwania znaczeniowego”.' }
   };
   const t = (k, v = {}) => ((W[document.documentElement.lang] || W.de)[k] || W.de[k]).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
   const mb = n => String(Math.round((n || 0) / 1048576));
@@ -162,6 +170,49 @@
     render();
   }
 
+  // Klaus 2026-10-27 (Windows test): connecting to the Mycel and creating the seal identity (andock wizard)
+  // call Modul 03 directly. Without the downloaded model they failed with "Modell … konnte nicht geladen
+  // werden" and a yellow lamp, although another app (with its own storage) had the model. Now a step the user
+  // started asks once and loads the model with progress, then continues; background calls (e.g. a question
+  // from the network) get a clear message instead of a dialog. Modul 03 itself stays byte-for-byte.
+  let asking = null, forwarding = false;
+  plugin.addListener?.('progress', p => {
+    if (!forwarding) return;
+    const progress = p?.total ? Math.min(100, p.done / p.total * 100) : 0;
+    try { window.dispatchEvent(new CustomEvent('sbkim:embedding-progress', { detail: { status: 'progress', progress } })); } catch {}
+  });
+  const missingError = () => Object.assign(new Error(t('missing')), { name: 'ModelLoadError', code: 'MODEL_NOT_LOADED' });
+  async function ensureModel() {
+    if (state.installed) return;
+    try { state = await plugin.getState(); } catch {}
+    if (state.installed) return;
+    if (asking) return asking;
+    const userStarted = !!navigator.userActivation?.isActive;
+    if (!userStarted || !confirm(t('need', { mb: mb(state.total) }))) { render(); throw missingError(); }
+    asking = (async () => {
+      forwarding = true;
+      try { await load(); } finally { forwarding = false; asking = null; }
+      if (!state.installed) throw missingError();
+    })();
+    return asking;
+  }
+  const GUARDED = ['init', 'embedQuery', 'embedPassage', 'embedQueryBatch', 'embedPassageBatch', 'embedContentVector', 'embedSnippets'];
+  function guard(api) {
+    if (!api || typeof api !== 'object' || api.pbModelGuard) return api;
+    for (const name of GUARDED) {
+      const original = api[name];
+      if (typeof original !== 'function') continue;
+      api[name] = async function (...args) { await ensureModel(); return original.apply(this, args); };
+    }
+    try { Object.defineProperty(api, 'pbModelGuard', { value: true }); } catch {}
+    return api;
+  }
+  // This file runs before Modul 03 (in <head>); catch its global as it is assigned.
+  let embedding = guard(window.SbkimEmbedding);
+  try {
+    Object.defineProperty(window, 'SbkimEmbedding', { configurable: true, enumerable: true, get: () => embedding, set: api => { embedding = guard(api); } });
+  } catch { window.SbkimEmbedding = guard(window.SbkimEmbedding); }
+
   window.PBSemantic = {
     /** Called by the app instead of starting the model directly. */
     async start(initEmbedding) {
@@ -171,7 +222,7 @@
       // Not loaded (or stopped after a crash): the search stays on keywords, without waiting.
       try { if (typeof EMBED === 'object') { EMBED.tried = true; renderEmbFlag(); } } catch {}
     },
-    refresh, showSwitch, get state() { return state; }
+    refresh, showSwitch, ensureModel, get state() { return state; }
   };
   const boot = () => refresh();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
