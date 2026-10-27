@@ -128,6 +128,18 @@ public class ProMailPlugin extends Plugin {
             return new JSONObject().put("ok", true);
         });
     }
+    /** „An BookLedgerPro“ in der Pro-App mit Tresorordner: die .eml ins Übergabefach „Eingang-BookLedgerPro/Mails/“ (Schritt D2).
+     *  Die Datei geht nicht durch die WebView; nur Name, Datum und ein kurzer Auszug kommen von der Seite. */
+    @PluginMethod public void tresorMailAblegen(PluginCall call) {
+        worker.execute(() -> {
+            try {
+                byte[] bytes = engine.raw(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1));
+                String name = call.getString("name", "mail"), auszug = call.getString("auszug", "");
+                long datum = call.getData().optLong("datum", 0);
+                call.resolve(JSObject.fromJSONObject(ProTresorordner.get(getContext()).mailAblegen(bytes, name, datum, auszug == null ? "" : auszug, Vault.get(getContext()))));
+            } catch (Exception error) { String code = ProVaultPlugin.tresorCode(error); call.reject(code, code); }
+        });
+    }
     private File staged(byte[] data, String name) throws Exception {
         File exports = new File(getContext().getCacheDir(), "exports");
         if (!exports.isDirectory() && !exports.mkdirs()) throw new MailFailure("FILE_UNAVAILABLE");
