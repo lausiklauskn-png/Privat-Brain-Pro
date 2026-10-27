@@ -80,3 +80,12 @@ Updateprobe 1.0.39 → 1.0.40, Release-Lauf 40541743653. Setup 101.191.212 Bytes
 `a11d4f177b924f765f204b895a5bec91b9025ee70197e1f58d790bb8e2c62546`, unabhängig geladen und gleich `SHA256SUMS`.
 Android-Lauf auf main: Versuch 1 rot an der Mycel-Probe „Verbinden fail-soft offline“ (inhaltsgleicher PR-Stand
 dort grün), einmal neu gestartet, Versuch 2 grün. Keine Android-Veröffentlichung. Nicht erneut auslösen.
+
+## Veröffentlicht: Android 1.0.40 und PWA (2026-10-27, Klaus' Wort)
+
+[Android-APK 1.0.40](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.40/Private-Brain-Pro-1.0.40.apk)
+über die vorhandene App installieren. Quelle main `595cd754d4df2f54271a841b320d23f8e258d2da` (PR #99),
+main-CI Android 40567456817 und Windows 40567456855 grün, Release-Lauf 40569926227 mit signiertem Update
+1.0.39 → 1.0.40. APK 60.935.065 Bytes, SHA-256 `c247297c65b93c8c3b115435c738df6f9212fd8f73fd58aacc152102b2215a04`,
+Code 40, unabhängig geladen und gleich `SHA256SUMS`; `native-microphone.js` in der APK bytegleich mit der Quelle.
+PWA über Pages vom selben Stand. Windows bleibt 1.0.40 vom Quellstand `aae5013`. Nicht erneut auslösen.
