@@ -43,6 +43,9 @@
     if(value.kind==='speech'){
       $('title').textContent=({de:'Sprechen Sie jetzt',en:'Speak now',ru:'Говорите',pl:'Mów teraz'}[value.language]||'Speak now');
       $('help').textContent=({de:'Lokale Windows-Spracherkennung. Ende nach einem Satz oder spätestens einer Minute.',en:'Local Windows speech recognition. Ends after one phrase or at most one minute.',ru:'Локальное распознавание Windows: одна фраза, не дольше минуты.',pl:'Lokalne rozpoznawanie Windows: jedna fraza, maksymalnie minuta.'}[value.language]||'Local Windows speech recognition.');
+      // Klaus 2026-10-27: say which microphone is listening, never leave it to chance unseen.
+      const mic=typeof value.microphone==='string'&&value.microphone?value.microphone:({de:'Windows-Standardmikrofon',en:'Windows default microphone',ru:'Микрофон Windows по умолчанию',pl:'Domyślny mikrofon Windows'}[value.language]||'Windows default microphone');
+      $('help').textContent+=' '+({de:'Mikrofon: ',en:'Microphone: ',ru:'Микрофон: ',pl:'Mikrofon: '}[value.language]||'Microphone: ')+mic;
       $('account').hidden=false;$('provider').closest('label').hidden=true;$('account-fields').hidden=true;
       for(const id of ['password-label','repeat-label','notice-label','remember-label','submit'])$(id).hidden=true;
       $('cancel').textContent=words[0];return;
