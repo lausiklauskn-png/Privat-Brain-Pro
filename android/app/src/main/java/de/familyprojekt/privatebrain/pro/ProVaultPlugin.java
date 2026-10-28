@@ -45,10 +45,12 @@ public class ProVaultPlugin extends Plugin {
     @Override public void load() { vault = Vault.get(getContext()); }
     private interface Work { JSONObject run() throws Exception; }
     private void work(ExecutorService executor, PluginCall call, Work task) {
-        executor.execute(() -> {
-            try { call.resolve(JSObject.fromJSONObject(task.run())); }
-            catch (Exception error) { String code = vaultCode(error); call.reject(code, code); }
-        });
+        try {
+            executor.execute(() -> {
+                try { call.resolve(JSObject.fromJSONObject(task.run())); }
+                catch (Exception error) { String code = vaultCode(error); call.reject(code, code); }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException closed) { call.reject("NATIVE_ACTIVITY_CLOSED", "NATIVE_ACTIVITY_CLOSED"); }
     }
     private void work(PluginCall call, Work task) { work(worker, call, task); }
     /** Stable codes only; unknown storage problems never pretend to be network failures. */
@@ -320,10 +322,14 @@ public class ProVaultPlugin extends Plugin {
         return vaultCode(error);
     }
     private void tresorWork(PluginCall call, Work task) {
-        worker.execute(() -> {
-            try { call.resolve(JSObject.fromJSONObject(task.run())); }
-            catch (Exception error) { String code = tresorCode(error); call.reject(code, code); }
-        });
+        // Nach handleOnDestroy ist der Arbeits-Thread zu; ein später Aufruf (z. B. Zustand beim Verlassen der App) darf die App
+        // nicht abstürzen lassen (CI 2026-10-28: RejectedExecutionException in tresorZustand während eines Activity-Neustarts).
+        try {
+            worker.execute(() -> {
+                try { call.resolve(JSObject.fromJSONObject(task.run())); }
+                catch (Exception error) { String code = tresorCode(error); call.reject(code, code); }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException closed) { call.reject("NATIVE_ACTIVITY_CLOSED", "NATIVE_ACTIVITY_CLOSED"); }
     }
     private ProTresorordner tresor() { return ProTresorordner.get(getContext()); }
     @PluginMethod public void tresorZustand(PluginCall call) { tresorWork(call, () -> tresor().zustand(vault)); }
@@ -373,6 +379,7 @@ public class ProVaultPlugin extends Plugin {
     }
     /** Auf dem Arbeits-Thread: offen oder gemerkt → gleich einziehen, sonst Passwort-Dialog. */
     private void tresorWeiter(PluginCall call) throws Exception {
+        tresor().entsperrenGewuenscht();
         if (tresor().istOffen() || tresor().gemerktEntsperren()) {
             tresor().einziehen(vault);
             JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", true));

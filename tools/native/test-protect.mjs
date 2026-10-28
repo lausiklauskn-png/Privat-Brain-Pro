@@ -89,7 +89,7 @@ try{
   const A=await device('A');const {page}=A;
   await navigateTo(page,'settings');
   await page.waitForFunction(()=>document.querySelector('#schutzPlace')?.textContent.includes('Einträge'));
-  ok('Settings show the protection card right after the storage card',await page.locator('#vaultPlace + #schutzPlace').isVisible());
+  ok('Settings show the protection card right after the storage card',await page.locator('#vaultPlace + #tresorNote + #schutzPlace').isVisible());
   const cardText=await page.locator('#schutzPlace').textContent();
   ok('Card names rules, both lists with date and count, VirusTotal and the helper app',['Regeln für Spam und Betrug','MalwareBazaar','URLhaus','3 Einträge','VirusTotal','Virenscanner-App'].every(s=>cardText.includes(s)));
   ok('Card says where the lists are stored, inside the storage folder',cardText.includes('„Schutzlisten“')&&cardText.includes('Schaddateien-MalwareBazaar-1.pbv'));

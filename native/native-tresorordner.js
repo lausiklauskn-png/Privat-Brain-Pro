@@ -20,15 +20,18 @@
     other: ['Anderen Tresorordner wählen …', 'Choose another shared vault folder …', 'Выбрать другую общую папку …', 'Wybierz inny wspólny folder …'],
     write: ['Inhaltsverzeichnis jetzt schreiben', 'Write table of contents now', 'Записать оглавление сейчас', 'Zapisz spis treści teraz'],
     lock: ['Tresorordner sperren', 'Lock shared vault folder', 'Заблокировать общую папку', 'Zablokuj wspólny folder'],
-    connected: ['Mit dem Tresorordner verbunden: ', 'Connected to the shared vault folder: ', 'Подключено к общей папке: ', 'Połączono ze wspólnym folderem: '],
+    connected: ['Offen · verbunden mit: ', 'Open · connected to: ', 'Открыто · подключено к: ', 'Otwarty · połączono z: '],
     entries: [' · Einträge im Inhaltsverzeichnis: ', ' · entries in the table of contents: ', ' · записей в оглавлении: ', ' · wpisów w spisie: '],
-    locked: ['Tresorordner gesperrt: ', 'Shared vault folder locked: ', 'Общая папка заблокирована: ', 'Wspólny folder zablokowany: '],
+    locked: ['Gesperrt. Zum Öffnen unten „Tresorordner entsperren“ tippen (Passwort des Tresorordners). Ordner: ', 'Locked. Tap “Unlock shared vault folder” below to open it (the folder’s password). Folder: ', 'Заблокировано. Нажмите ниже «Разблокировать общую папку» (пароль папки). Папка: ', 'Zablokowany. Stuknij poniżej „Odblokuj wspólny folder” (hasło folderu). Folder: '],
     away: ['Tresorordner nicht erreichbar (SD-Karte eingelegt?): ', 'Shared vault folder unavailable (SD card inserted?): ', 'Общая папка недоступна (вставлена SD-карта?): ', 'Wspólny folder niedostępny (karta SD włożona?): '],
     written: ['Inhaltsverzeichnis geschrieben und geprüft.', 'Table of contents written and verified.', 'Оглавление записано и проверено.', 'Spis treści zapisany i sprawdzony.'],
     same: ['Inhaltsverzeichnis ist aktuell.', 'Table of contents is up to date.', 'Оглавление актуально.', 'Spis treści jest aktualny.'],
     done: ['Eingezogen. Die anderen Pro-Apps sehen jetzt das Inhaltsverzeichnis.', 'Moved in. The other Pro apps now see the table of contents.', 'Перенесено. Другие Pro-приложения теперь видят оглавление.', 'Przeniesiono. Inne aplikacje Pro widzą teraz spis treści.'],
     askTitle: ['An BookLedgerPro', 'To BookLedgerPro', 'В BookLedgerPro', 'Do BookLedgerPro'],
     askText: ['Die Mail kann direkt in den Tresorordner (Fach „Eingang-BookLedgerPro“) gelegt werden. BookLedgerPro findet sie dort im Eingang. Oder wie bisher über Androids Teilen-Liste.', 'The email can go straight into the shared vault folder (compartment “Eingang-BookLedgerPro”), where BookLedgerPro finds it. Or share it via Android as before.', 'Письмо можно положить прямо в общую папку (раздел «Eingang-BookLedgerPro»), где его найдёт BookLedgerPro. Или передать через Android, как раньше.', 'Wiadomość można włożyć prosto do wspólnego folderu (przegródka „Eingang-BookLedgerPro”), gdzie znajdzie ją BookLedgerPro. Albo udostępnić przez Android jak dotąd.'],
+    askLocked: ['Der Tresorordner ist gesperrt. Entsperren und die Mail ins Fach „Eingang-BookLedgerPro“ legen – oder normal über Androids Teilen-Liste?', 'The shared vault folder is locked. Unlock it and put the email into “Eingang-BookLedgerPro” – or share it normally via Android?', 'Общая папка заблокирована. Разблокировать и положить письмо в «Eingang-BookLedgerPro» – или поделиться обычным способом через Android?', 'Wspólny folder jest zablokowany. Odblokować i włożyć wiadomość do „Eingang-BookLedgerPro” – czy udostępnić zwyczajnie przez Android?'],
+    unlockVault: ['Entsperren und hineinlegen', 'Unlock and put it in', 'Разблокировать и положить', 'Odblokuj i włóż'],
+    shareNormal: ['Normal teilen …', 'Share normally …', 'Поделиться обычно …', 'Udostępnij zwyczajnie …'],
     toVault: ['In den Tresorordner legen', 'Put into the shared vault folder', 'Положить в общую папку', 'Włóż do wspólnego folderu'],
     share: ['Teilen …', 'Share …', 'Поделиться …', 'Udostępnij …'],
     cancel: ['Abbrechen', 'Cancel', 'Отмена', 'Anuluj'],
@@ -145,13 +148,16 @@
   if (!beobachten()) document.addEventListener('DOMContentLoaded', beobachten, { once: true });
 
   // ---------- „An BookLedgerPro teilen“ mit verbundenem Tresorordner ----------
-  function frage() {
+  function frage(gesperrt) {
     return new Promise(resolve => {
       const dialog = make('dialog', null, 'live-dialog native-tresorordner-frage'); dialog.id = 'tresorordnerFrage';
-      dialog.append(make('h2', t('askTitle')), make('p', t('askText')));
+      dialog.dataset.gesperrt = gesperrt ? '1' : '';
+      dialog.append(make('h2', t('askTitle')), make('p', t(gesperrt ? 'askLocked' : 'askText')));
       let wahl = null;
       const add = (key, value, primary) => { const b = make('button', t(key), primary ? 'primary' : 'ghost'); b.type = 'button'; b.dataset.wahl = value; b.onclick = () => { wahl = value; dialog.close(); }; dialog.append(b); };
-      add('toVault', 'tresor', true); add('share', 'teilen', false); add('cancel', null, false);
+      if (gesperrt) { add('unlockVault', 'entsperren', true); add('shareNormal', 'teilen', false); }
+      else { add('toVault', 'tresor', true); add('share', 'teilen', false); }
+      add('cancel', null, false);
       document.body.append(dialog);
       dialog.addEventListener('close', () => { dialog.remove(); resolve(wahl); }, { once: true });
       dialog.showModal();
@@ -161,11 +167,19 @@
     const device = window.PBMailDevice;
     let z = null;
     try { z = await api.tresorZustand({}); } catch { /* ohne Ordner: teilen wie bisher */ }
-    if (!(z?.offen && z.eingezogen && z.pruefung === 'PASST')) return device.openOriginal(args);
-    const wahl = await frage();
+    const verbunden = z?.offen && z.eingezogen && z.pruefung === 'PASST';
+    // Tablet-Probe 2026-10-28: bei gesperrtem Ordner nahm das Teilen still den Android-Weg. Jetzt wird gefragt (Leitfaden § 5).
+    const gesperrt = !verbunden && z?.gewaehlt && z.vorhanden && z.pruefung === 'PASST' && !z.offen;
+    if (!verbunden && !gesperrt) return device.openOriginal(args);
+    const wahl = await frage(gesperrt);
     if (wahl === 'teilen') return device.openOriginal(args);
-    if (wahl !== 'tresor') return { abgebrochen: true };
+    if (wahl !== 'tresor' && wahl !== 'entsperren') return { abgebrochen: true };
     try {
+      if (wahl === 'entsperren') {
+        const r = await api.tresorEinziehen({ ...native() });
+        if (r?.abgebrochen || !r?.offen) return { abgebrochen: true };
+        void zeigen();
+      }
       const r = await device.tresorMailAblegen({ ...args, name: String(meta.name || 'mail.eml').slice(0, 255), datum: Math.max(0, Number(meta.datum) || 0), auszug: kurz(meta.auszug) });
       alert(t('stored'));
       return r;
