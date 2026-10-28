@@ -25,6 +25,8 @@
       space: 'Zu wenig freier Speicher auf dem Gerät.', failed: 'Laden hat nicht geklappt: {why}. Nochmal „Modell laden“ tippen, es geht dort weiter.',
       confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.',
       goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.',
+      bgTitle: 'Einordnen läuft',
+      bgText: 'Bedeutung wird berechnet – du kannst weiterarbeiten',
       need: 'Für diesen Schritt (Mycel, Siegel-Identität oder Bedeutungssuche) braucht die App einmal das Modell für die Bedeutungssuche, etwa {mb} MB. Jetzt laden?',
       missing: 'Das Modell für Mycel, Siegel und Bedeutungssuche ist auf diesem Gerät noch nicht geladen. In den Einstellungen unter „Modell für die Bedeutungssuche“ laden.' },
     en: { title: 'Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
@@ -38,6 +40,8 @@
       space: 'Not enough free storage on the device.', failed: 'Loading failed: {why}. Tap “Load model” again, it continues there.',
       confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.',
       goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.',
+      bgTitle: 'Indexing',
+      bgText: 'Computing meaning – you can keep working',
       need: 'This step (Mycel, seal identity or meaning search) needs the meaning-search model once, about {mb} MB. Load it now?',
       missing: 'The model for Mycel, seal and meaning search is not loaded on this device yet. Load it in Settings under “Model for meaning search”.' },
     ru: { title: 'Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
@@ -51,6 +55,8 @@
       space: 'Недостаточно свободной памяти.', failed: 'Загрузка не удалась: {why}. Нажмите «Загрузить модель» ещё раз.',
       confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.',
       goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.',
+      bgTitle: 'Идёт индексирование',
+      bgText: 'Вычисление смысла – можно продолжать работу',
       need: 'Для этого шага (Mycel, личность печати или поиск по смыслу) приложению один раз нужна модель поиска по смыслу, около {mb} МБ. Загрузить сейчас?',
       missing: 'Модель для Mycel, печати и поиска по смыслу на этом устройстве ещё не загружена. Загрузите её в настройках: «Модель для поиска по смыслу».' },
     pl: { title: 'Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
@@ -64,6 +70,8 @@
       space: 'Za mało wolnego miejsca.', failed: 'Pobieranie nie powiodło się: {why}. Stuknij „Pobierz model” ponownie.',
       confirmRemove: 'Usunąć model z urządzenia? Wyszukiwanie wróci do słów kluczowych.',
       goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Pobierz go w ustawieniach.',
+      bgTitle: 'Trwa indeksowanie',
+      bgText: 'Obliczanie znaczenia – możesz dalej pracować',
       need: 'Ten krok (Mycel, tożsamość pieczęci lub wyszukiwanie znaczeniowe) wymaga jednorazowo modelu wyszukiwania znaczeniowego, około {mb} MB. Pobrać teraz?',
       missing: 'Model dla Mycel, pieczęci i wyszukiwania znaczeniowego nie jest jeszcze pobrany na tym urządzeniu. Pobierz go w ustawieniach: „Model do wyszukiwania znaczeniowego”.' }
   };
@@ -198,12 +206,35 @@
     return asking;
   }
   const GUARDED = ['init', 'embedQuery', 'embedPassage', 'embedQueryBatch', 'embedPassageBatch', 'embedContentVector', 'embedSnippets'];
+  // Pro-Umbau 4: Einordnen (Bedeutung für Dateien und Mails, nicht die Suchfrage) meldet sich beim gemeinsamen
+  // Hintergrund-Dienst an (pro-hintergrund.js), solange gerechnet wird, und 3 s nach der letzten Rechnung wieder ab.
+  // „Abbrechen“ in der Mitteilung nimmt nur den Schutz weg (die App rechnet weiter, solange sie offen ist) und meldet
+  // sich für 60 s nicht neu an — die Einlese-Schleifen der App lassen sich von hier nicht sicher anhalten.
+  const PASSAGE = ['embedPassage', 'embedPassageBatch', 'embedContentVector', 'embedSnippets'];
+  const bg = { busy: 0, task: null, starting: null, idle: null, quietUntil: 0 };
+  function bgBegin() {
+    clearTimeout(bg.idle);
+    if (bg.task || bg.starting || Date.now() < bg.quietUntil || !window.ProHintergrund) { return; }
+    bg.starting = window.ProHintergrund.beginnen({ art: 'einordnen', titel: t('bgTitle'), text: t('bgText') }).then(task => {
+      bg.starting = null; bg.task = task;
+      task.signal.addEventListener('abort', () => { bg.quietUntil = Date.now() + 60000; bgEnd(); }, { once: true });
+      if (!bg.busy) bg.idle = setTimeout(bgEnd, 3000);
+    }).catch(() => { bg.starting = null; });
+  }
+  function bgEnd() { clearTimeout(bg.idle); if (bg.task) bg.task.ende(); bg.task = null; }
   function guard(api) {
     if (!api || typeof api !== 'object' || api.pbModelGuard) return api;
     for (const name of GUARDED) {
       const original = api[name];
       if (typeof original !== 'function') continue;
-      api[name] = async function (...args) { await ensureModel(); return original.apply(this, args); };
+      const passage = PASSAGE.includes(name);
+      api[name] = async function (...args) {
+        await ensureModel();
+        if (!passage) return original.apply(this, args);
+        bg.busy++; bgBegin();
+        try { return await original.apply(this, args); }
+        finally { bg.busy--; if (!bg.busy) { clearTimeout(bg.idle); bg.idle = setTimeout(bgEnd, 3000); } }
+      };
     }
     try { Object.defineProperty(api, 'pbModelGuard', { value: true }); } catch {}
     return api;
