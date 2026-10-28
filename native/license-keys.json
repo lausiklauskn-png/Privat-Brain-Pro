@@ -1,10 +1,4 @@
 {
   "_": "Public keys of the publisher (not secret). A code signed with one of these unlocks tools in every copy of the app. Klaus creates his key in Settings → 🔑 Werkzeuge freischalten → Herausgeber-Studio and sends only the PUBLIC key; the secret key never leaves his device.",
-  "publishers": [
-    {
-      "name": "Klaus (Herausgeber, Family Projekt)",
-      "key": "fb6cd374a3c42786b7260387c4b73b5796ba7c5328949adaf6a724883709ee2f",
-      "seit": "2026-10-28"
-    }
-  ]
+  "publishers": []
 }

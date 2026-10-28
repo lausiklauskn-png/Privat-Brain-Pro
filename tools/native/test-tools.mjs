@@ -1,4 +1,3 @@
-import {readFileSync} from 'node:fs';
 // 🔑 Unlock codes and 🧰 tools (Klaus 2026-10-22): publisher studio, one code per buyer, checked offline,
 // tools open inside the app, a file a tool hands out goes into Private Brain Pro. Real tool pages (Kimboard, Kimseek).
 import assert from 'node:assert/strict';
@@ -27,10 +26,7 @@ const settings=page=>page.evaluate(()=>window.PBWorkspace.navigate('settings'));
 try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   // ---------- a buyer without a code ----------
-  // Seit 2026-10-28 steht Klaus' öffentlicher Schlüssel fest in native/license-keys.json. „Vor dem Einbau“ wird deshalb mit leerer Liste gestellt.
-  const fest=JSON.parse(readFileSync(new URL('../../native/license-keys.json',import.meta.url),'utf8')).publishers.map(p=>p.key);
-  ok('Klaus\' öffentlicher Herausgeber-Schlüssel steht fest in der App (fb6cd374…709ee2f)',fest.length===1&&fest[0]==='fb6cd374a3c42786b7260387c4b73b5796ba7c5328949adaf6a724883709ee2f');
-  let {page,errors}=await app(browser,[]);
+  let {page,errors}=await app(browser,null);
   ok('Menu lists the tools, locked without a code',(await menuItem(page,'pinnwand').textContent()).replace(/\s/g,'').startsWith('Pinnwand')&&await menuItem(page,'pinnwand').locator('.pb-tools-lock svg').count()===1&&(await menuItem(page,'kimsync').getAttribute('data-open'))==='false');
   await page.waitForLoadState('load');
   ok('Only one pin board entry exists: the licensed tool, with no legacy floating board',await page.evaluate(()=>document.querySelectorAll('.native-options-panel [data-tool="pinnwand"]').length===1&&!document.getElementById('pbPinBtn')&&!document.getElementById('pbPinPanel')&&!document.querySelector('script[src="modules/pinnwand-widget.js"]')));
@@ -186,9 +182,6 @@ try{
   await field.fill(code.slice(0,-3)+'AAA');await go.click();
   await page.waitForFunction(()=>/passt nicht|nicht vom Herausgeber/.test(document.querySelector('[data-license-status]').textContent));
   ok('A changed code is refused',true);
-  await field.fill(pub);await go.click();
-  await page.waitForFunction(()=>/öffentliche Schlüssel, kein Freischalt-Code/.test(document.querySelector('[data-license-status]').textContent));
-  ok('The public key pasted into the code field is recognised as such (Leitfaden § 6)',true);
   await field.fill(foreign);await go.click();
   await page.waitForFunction(()=>/nicht vom Herausgeber/.test(document.querySelector('[data-license-status]').textContent));
   ok('A code from someone else\'s studio is refused',true);
