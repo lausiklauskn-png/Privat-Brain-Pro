@@ -171,7 +171,7 @@
     information('vault-limits',one(vault,':scope>.native-vault-limits'),one(vault,'h3'));
     information('protection-limits',one(protection,':scope>.native-vault-limits'),one(protection,'h3'));
     // V3 keeps its own order of the settings (Klaus asked for the ⓘ, not for a new order).
-    if(!root.classList.contains('v3'))settingsOrder(settings,[document.getElementById('pb-input-language-settings'),vault,protection,offline,ocr,tresor,provider,image,attachments,folders,catalog,merge,mycel,document.getElementById('pb-license'),one(settings,':scope>.native-updates')],[document.getElementById('stFiles')?.closest('.note'),document.getElementById('vaultNote')]);
+    if(!root.classList.contains('v3'))settingsOrder(settings,[document.getElementById('pb-input-language-settings'),vault,tresor,protection,offline,ocr,provider,image,attachments,folders,catalog,merge,mycel,document.getElementById('pb-license'),one(settings,':scope>.native-updates')],[document.getElementById('stFiles')?.closest('.note'),document.getElementById('vaultNote')]);
     for(const entry of entries.values())label(entry);
     if(!root.classList.contains('pb-help-ready'))root.classList.add('pb-help-ready');
   }

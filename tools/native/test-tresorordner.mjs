@@ -49,7 +49,8 @@ async function device(name,{answers=[],ohneTresor=false}={}){
     if(method==='tresorEinziehen'){if(JSON.stringify(args).toLowerCase().includes('passw'))throw new Error('password crossed the bridge');if(!local.unlocked)throw new Error('VAULT_LOCKED');if(tresor.fehler){const f=tresor.fehler;tresor.fehler=null;throw new Error(f);}
       tresor.zustand={gewaehlt:true,ordner:'Tresor-Probe',gemerkt:true,offen:true,eingezogen:true,erreichbar:true,vorhanden:true,pruefung:'PASST',eintraege:0};return {...tresor.zustand,eingezogenJetzt:true,angelegt:true};}
     if(method==='tresorVerzeichnis'){const neu=JSON.stringify(args.zeilen)!==JSON.stringify(tresor.zeilen);tresor.zeilen=args.zeilen;tresor.zustand.eintraege=args.zeilen.length;return {geschrieben:neu,eintraege:args.zeilen.length};}
-    if(method==='tresorSperren'){tresor.zustand={...tresor.zustand,offen:false,eingezogen:false};return {...tresor.zustand};}
+    // Wie Java: ohne „vergessen“ öffnet der gemerkte Schlüssel den Ordner beim nächsten Zustand sofort wieder.
+    if(method==='tresorSperren'){tresor.gesperrtMit=args;if(args.vergessen||!tresor.zustand.gemerkt)tresor.zustand={...tresor.zustand,offen:false,eingezogen:false,gemerkt:false};return {...tresor.zustand};}
     throw new Error('Unknown vault method '+method);
   });
   await page.exposeFunction('mailFixture',async(method,args={})=>{
@@ -114,7 +115,7 @@ try{
   const m=z.find(r=>r.art==='message/rfc822');
   ok('Mail-Zeile: nur Kurzfassung, nie der ganze Mailtext',m&&m.auszug.length<=1000&&!JSON.stringify(z).includes(langerText.slice(0,1500))&&m.name==='Rechnung 2026-117.eml');
   ok('Zeilen tragen nur die Felder des Formats',z.every(r=>Object.keys(r).sort().join()==='art,auszug,datum,groesse,id,name,sha256,verweis'));
-  ok('Verbunden: Ordner und Zahl der Einträge',await page.locator('#tresorordnerZeile').textContent().then(t=>t.includes('verbunden: Tresor-Probe')&&t.includes(': 2')));
+  ok('Verbunden: Ordner und Zahl der Einträge',await page.locator('#tresorordnerZeile').textContent().then(t=>t.includes('verbunden mit: Tresor-Probe')&&t.includes(': 2')));
   await page.click('#tresorordner [data-tresor=write]');
   await page.waitForFunction(()=>/aktuell/.test(document.querySelector('#tresorordnerHinweis')?.textContent||''));
   ok('„jetzt schreiben“ ohne Änderung meldet aktuell',true);
@@ -145,6 +146,13 @@ try{
   await page.click('#tresorordner [data-tresor=lock]');
   await page.waitForFunction(()=>document.querySelector('#tresorordner')?.dataset.zustand==='gesperrt');
   ok('Gesperrt: Zeile und „entsperren“',await page.locator('#tresorordner [data-tresor=unlock]').count()===1);
+  ok('Sperren vergisst den gemerkten Schlüssel (sonst wäre der Ordner sofort wieder offen)',tresor.gesperrtMit?.vergessen===true);
+  ok('Gesperrt-Zeile sagt, wo es weitergeht',await page.locator('#tresorordnerZeile').textContent().then(t=>t.startsWith('Gesperrt.')&&t.includes('„Tresorordner entsperren“')));
+  ok('Tresor — Verschlüsselung steht direkt unter Speicherort und Verschlüsselung',await page.evaluate(()=>document.getElementById('vaultPlace')?.nextElementSibling?.id==='tresorNote'));
+  ok('Gesperrter Tresor-Inhalt: Entsperren-Knopf direkt dabei, kein „oben“',await page.evaluate(()=>{const l=document.getElementById('vaultList');return !!l?.querySelector('#vaultListUnlock')&&!/oben/.test(l.textContent);}));
+  await page.click('#vaultListUnlock');
+  ok('Der Knopf öffnet sofort das Tresor-Fenster',await page.waitForFunction(()=>getComputedStyle(document.getElementById('tresorModalBg')).display!=='none').then(()=>true,()=>false));
+  await page.keyboard.press('Escape');await page.evaluate(()=>{const b=document.getElementById('tresorModalBg');b.classList.remove('on','open','show');b.style.display='';});
   await page.click('[data-tab=mail]');
   await page.locator('#mailWorkspace [data-live-uid="9"]').click();
   const n=folder.calls.filter(c=>c.method==='openOriginal').length;
