@@ -55,10 +55,11 @@ try{
   // Real local composer: every text field and later-opened Cc/Bcc needs a control.
   await navigateTo(page,'mail');await page.locator('.mail-app:not(.live-mail) [data-mail-text="compose"]').click();
   await page.locator('#pb-mail-body + .pb-dictate').waitFor();
-  ok('Local mail From, To, Subject and Body have microphones',await page.evaluate(()=>['from','to','subject','body'].every(key=>document.getElementById('pb-mail-'+key)?.nextElementSibling?.classList.contains('pb-dictate'))));
+  // Klaus 2026-10-28: Mikrofon nur an Suche und Freitext — der Mail-Text ja, Absender/An/Betreff/Cc/Bcc nicht.
+  ok('Local mail body has a microphone; From, To and Subject have none',await page.evaluate(()=>document.getElementById('pb-mail-body')?.nextElementSibling?.classList.contains('pb-dictate')&&['from','to','subject'].every(key=>!document.getElementById('pb-mail-'+key)?.nextElementSibling?.classList.contains('pb-dictate'))));
   await page.locator('.mail-app:not(.live-mail) .mail-copy-fields > summary').click();
-  ok('Cc and Bcc microphones are visible as soon as the fields open',await page.locator('#pb-mail-cc + .pb-dictate').isVisible()&&await page.locator('#pb-mail-bcc + .pb-dictate').isVisible());
-  await answer('Gesprochener Betreff');await clickMic('#pb-mail-subject');
+  ok('Cc and Bcc get no microphone',await page.locator('#pb-mail-cc + .pb-dictate').count()===0&&await page.locator('#pb-mail-bcc + .pb-dictate').count()===0);
+  await page.locator('#pb-mail-subject').fill('Gesprochener Betreff');
   await answer('Hallo zusammen');await clickMic('#pb-mail-body');
   await page.locator('.mail-app:not(.live-mail) .mail-compose-actions [data-mail-text="save"]').click();
   await page.waitForFunction(()=>CATALOG.some(r=>r.name==='Gesprochener Betreff'&&r.mailBody==='Hallo zusammen'));
@@ -67,15 +68,18 @@ try{
   await navigateTo(page,'search');
   await page.evaluate(()=>{
     const box=document.createElement('section');box.id='speech-fields';
-    for(const type of ['text','search','email','url','tel','password','number','file','hidden']){const label=document.createElement('label');label.textContent='Fixture '+type;const input=document.createElement('input');input.type=type;input.id='speech-'+type;label.append(input);box.append(label);}
-    for(const [id,attr] of [['readonly','readonly'],['disabled','disabled'],['no-dictate','data-no-dictate']]){const input=document.createElement('input');input.id='speech-'+id;input.setAttribute(attr,'');box.append(input);}
+    // Einzeilige Felder bekommen ein Mikrofon nur mit data-dictate (Klaus 2026-10-28); die Mechanik wird an solchen Feldern geprüft.
+    for(const type of ['text','search','email','url','tel','password','number','file','hidden']){const label=document.createElement('label');label.textContent='Fixture '+type;const input=document.createElement('input');input.type=type;input.id='speech-'+type;if(['text','email','url','tel','password','number'].includes(type))input.dataset.dictate='';label.append(input);box.append(label);}
+    for(const type of ['text','email','url','tel']){const input=document.createElement('input');input.type=type;input.id='speech-plain-'+type;input.setAttribute('aria-label','Plain '+type);box.append(input);}
+    for(const [id,attr] of [['readonly','readonly'],['disabled','disabled'],['no-dictate','data-no-dictate']]){const input=document.createElement('input');input.id='speech-'+id;input.dataset.dictate='';input.setAttribute(attr,'');box.append(input);}
     const code=document.createElement('textarea');code.id='trShares';box.append(code);
     const editor=document.createElement('div');editor.id='speech-editor';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-label','Fixture editor');editor.innerHTML='Vor <b>alt</b> nach';box.append(editor);
     document.getElementById('panel-search').prepend(box);
     window.speechEvents={input:0,change:0};const field=box.querySelector('#speech-text');field.addEventListener('input',()=>speechEvents.input++);field.addEventListener('change',()=>speechEvents.change++);
   });
   await page.locator('#speech-text + .pb-dictate').waitFor();
-  ok('All editable text, search, address and rich-text fields receive microphones',await page.evaluate(()=>['text','search','email','url','tel','editor'].every(key=>document.getElementById('speech-'+key).nextElementSibling?.classList.contains('pb-dictate'))));
+  ok('Plain one-line text, address, URL and phone fields get no microphone',await page.evaluate(()=>['text','email','url','tel'].every(key=>!document.getElementById('speech-plain-'+key).nextElementSibling?.classList.contains('pb-dictate'))));
+  ok('Search, free text and explicitly marked fields receive microphones',await page.evaluate(()=>['text','search','email','url','tel','editor'].every(key=>document.getElementById('speech-'+key).nextElementSibling?.classList.contains('pb-dictate'))));
   ok('Passwords, recovery codes, numbers, files, hidden and non-editable controls get no microphone',await page.evaluate(()=>['password','number','file','hidden','readonly','disabled','no-dictate'].every(key=>!document.getElementById('speech-'+key).nextElementSibling?.classList.contains('pb-dictate'))&&!document.getElementById('trShares').nextElementSibling?.classList.contains('pb-dictate')));
   await page.evaluate(()=>{
     const field=document.createElement('div');field.id='speech-focused-editor';field.contentEditable='true';field.innerHTML='Vor <b>Markiert</b> nach';document.getElementById('speech-fields').append(field);field.focus();

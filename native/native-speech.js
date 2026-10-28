@@ -21,7 +21,9 @@
   function eligible(field) {
     if (!field.isConnected || field.matches(':disabled,[readonly]') || field.closest('[data-no-dictate],[data-secret],[data-pb-private]')) return false;
     if (['trShares', 'aiKey'].includes(field.id) || /(?:^|\s)(?:current-password|new-password|one-time-code)(?:\s|$)/.test(field.autocomplete || '')) return false;
-    if (field instanceof HTMLInputElement) return ['text', 'search', 'email', 'url', 'tel'].includes(field.type);
+    // Klaus 2026-10-28 (in allen Pro-Apps gleich): Mikrofon nur an Suchfeldern und an Freitext (mehrzeilig: Mail-Text,
+    // Notizen). Einzeilige Felder (Namen, Adressen, Beträge, Betreff) nur, wenn sie ausdrücklich data-dictate tragen.
+    if (field instanceof HTMLInputElement) return field.type === 'search' || field.getAttribute('role') === 'searchbox' || (field.hasAttribute('data-dictate') && ['text', 'email', 'url', 'tel'].includes(field.type));
     if (field instanceof HTMLTextAreaElement) return true;
     if (!field.isContentEditable) return false;
     return !field.parentElement?.closest('[contenteditable="true"],[contenteditable="plaintext-only"],[contenteditable=""]');
