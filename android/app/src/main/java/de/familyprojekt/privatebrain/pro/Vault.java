@@ -175,11 +175,9 @@ final class Vault {
     synchronized String tresorId() { return prefs().getString("id", ""); }
     /** Ganzer Pfad der Ablage im Speicher (Teil hinter „Speicher:“ der Dokument-Kennung), z. B. „Ordner/Private Brain“ (Leitfaden § 5). */
     synchronized String pfad() { String r = prefs().getString("root", ""); return r.contains(":") ? r.substring(r.indexOf(':') + 1) : r; }
-    /** Dokument-Adresse des Ablage-Ordners für „In Dateien öffnen“; null ohne Speicherort. */
-    synchronized Uri ordnerUri() {
-        if (!configured()) return null;
-        return DocumentsContract.buildDocumentUriUsingTree(Uri.parse(prefs().getString("tree", "")), prefs().getString("root", ""));
-    }
+    /** Baum und Dokument-Kennung des Ablage-Ordners für „In Dateien öffnen“ (die Adresse baut das Plugin); null ohne Speicherort.
+     *  Ohne Android-Bezüge, weil die Windows-Fassung diese Datei übersetzt (windows/engine/build.mjs). */
+    synchronized String[] ordnerAdresse() { return configured() ? new String[] { prefs().getString("tree", ""), prefs().getString("root", "") } : null; }
     /** Kopie des Datenschlüssels für den Einzug in den Tresorordner. Bleibt nativ, nie an die WebView. */
     synchronized byte[] tresorSchluessel() throws IOException { return key(); }
 

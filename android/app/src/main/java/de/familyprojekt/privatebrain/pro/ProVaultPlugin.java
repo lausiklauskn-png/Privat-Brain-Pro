@@ -108,7 +108,9 @@ public class ProVaultPlugin extends Plugin {
     @PluginMethod public void lock(PluginCall call) { work(call, () -> vault.lock()); }
     /** „In Dateien öffnen“ (Leitfaden § 5): zeigt die Ablage oder den Tresorordner in der Dateien-App. Nichts wird gelesen oder verändert. */
     @PluginMethod public void ordnerOeffnen(PluginCall call) {
-        Uri uri = "tresor".equals(call.getString("welcher")) ? tresor().ordnerUri() : vault.ordnerUri();
+        String[] ablage = "tresor".equals(call.getString("welcher")) ? null : vault.ordnerAdresse();
+        Uri uri = "tresor".equals(call.getString("welcher")) ? tresor().ordnerUri()
+            : ablage == null ? null : android.provider.DocumentsContract.buildDocumentUriUsingTree(Uri.parse(ablage[0]), ablage[1]);
         if (uri == null) { call.reject("VAULT_NOT_CONFIGURED", "VAULT_NOT_CONFIGURED"); return; }
         Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
