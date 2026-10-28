@@ -20,9 +20,9 @@
     other: ['Anderen Tresorordner wählen …', 'Choose another shared vault folder …', 'Выбрать другую общую папку …', 'Wybierz inny wspólny folder …'],
     write: ['Inhaltsverzeichnis jetzt schreiben', 'Write table of contents now', 'Записать оглавление сейчас', 'Zapisz spis treści teraz'],
     lock: ['Tresorordner sperren', 'Lock shared vault folder', 'Заблокировать общую папку', 'Zablokuj wspólny folder'],
-    connected: ['Mit dem Tresorordner verbunden: ', 'Connected to the shared vault folder: ', 'Подключено к общей папке: ', 'Połączono ze wspólnym folderem: '],
+    connected: ['Offen · verbunden mit: ', 'Open · connected to: ', 'Открыто · подключено к: ', 'Otwarty · połączono z: '],
     entries: [' · Einträge im Inhaltsverzeichnis: ', ' · entries in the table of contents: ', ' · записей в оглавлении: ', ' · wpisów w spisie: '],
-    locked: ['Tresorordner gesperrt: ', 'Shared vault folder locked: ', 'Общая папка заблокирована: ', 'Wspólny folder zablokowany: '],
+    locked: ['Gesperrt. Zum Öffnen unten „Tresorordner entsperren“ tippen (Passwort des Tresorordners). Ordner: ', 'Locked. Tap “Unlock shared vault folder” below to open it (the folder’s password). Folder: ', 'Заблокировано. Нажмите ниже «Разблокировать общую папку» (пароль папки). Папка: ', 'Zablokowany. Stuknij poniżej „Odblokuj wspólny folder” (hasło folderu). Folder: '],
     away: ['Tresorordner nicht erreichbar (SD-Karte eingelegt?): ', 'Shared vault folder unavailable (SD card inserted?): ', 'Общая папка недоступна (вставлена SD-карта?): ', 'Wspólny folder niedostępny (karta SD włożona?): '],
     written: ['Inhaltsverzeichnis geschrieben und geprüft.', 'Table of contents written and verified.', 'Оглавление записано и проверено.', 'Spis treści zapisany i sprawdzony.'],
     same: ['Inhaltsverzeichnis ist aktuell.', 'Table of contents is up to date.', 'Оглавление актуально.', 'Spis treści jest aktualny.'],
@@ -118,7 +118,7 @@
     if (zustand === 'verbunden') {
       line.textContent = t('connected') + (z.ordner || '') + t('entries') + (z.eintraege ?? 0);
       knopf('write', async () => { let text = ''; try { const r = await aktualisieren(true); text = r ? t(r.geschrieben ? 'written' : 'same') : ''; } catch (error) { text = message(error); } await zeigen(text); });
-      knopf('lock', async () => { let text = ''; try { await api.tresorSperren({}); } catch (error) { text = message(error); } await zeigen(text); });
+      knopf('lock', async () => { let text = ''; try { await api.tresorSperren({ vergessen: true }); } catch (error) { text = message(error); } await zeigen(text); });
       knopf('other', einziehen(true));
     } else if (zustand === 'gesperrt') {
       line.textContent = t('locked') + (z.ordner || '');

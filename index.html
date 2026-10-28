@@ -3076,17 +3076,17 @@ boot();
   var DB="pb_vault", STORE="items";
   function lang(){ try{ return localStorage.getItem("pb_lang")||"de"; }catch(e){ return "de"; } }
   var TX={
-    de:{ locked:"Tresor gesperrt — oben entsperren, um den Inhalt zu sehen.", empty:"Noch nichts im Tresor. Lege bei einem Treffer über 🔒 eine Datei verschlüsselt ab.",
-      needUnlock:"Bitte zuerst den Tresor entsperren.", noFile:"Original nicht erreichbar (Ordner nicht verbunden).", stored:"✓ verschlüsselt im Tresor.",
+    de:{ locked:"Tresor gesperrt. Zum Ansehen hier entsperren:", empty:"Noch nichts im Tresor. Lege bei einem Treffer über 🔒 eine Datei verschlüsselt ab.",
+      needUnlock:"Bitte zuerst den Tresor entsperren.", unlockHere:"Tresor entsperren", noFile:"Original nicht erreichbar (Ordner nicht verbunden).", stored:"✓ verschlüsselt im Tresor.",
       restore:"⬇︎ Original", exportEnc:"🔐 Verschlüsselt sichern", del:"🗑 Entfernen", removed:"Aus dem Tresor entfernt.", already:"Diese Datei ist schon im Tresor." },
-    en:{ locked:"Vault locked — unlock above to see the contents.", empty:"Nothing in the vault yet. On a result, use 🔒 to store a file encrypted.",
-      needUnlock:"Please unlock the vault first.", noFile:"Original not reachable (folder not connected).", stored:"✓ stored encrypted in the vault.",
+    en:{ locked:"Vault locked. Unlock here to see the contents:", empty:"Nothing in the vault yet. On a result, use 🔒 to store a file encrypted.",
+      needUnlock:"Please unlock the vault first.", unlockHere:"Unlock vault", noFile:"Original not reachable (folder not connected).", stored:"✓ stored encrypted in the vault.",
       restore:"⬇︎ Original", exportEnc:"🔐 Save encrypted", del:"🗑 Remove", removed:"Removed from the vault.", already:"This file is already in the vault." },
-    ru:{ locked:"Сейф заблокирован — разблокируйте выше, чтобы увидеть содержимое.", empty:"В сейфе пока пусто. У результата нажмите 🔒, чтобы зашифровать файл.",
-      needUnlock:"Сначала разблокируйте сейф.", noFile:"Оригинал недоступен (папка не подключена).", stored:"✓ зашифровано в сейфе.",
+    ru:{ locked:"Сейф заблокирован. Разблокируйте здесь, чтобы увидеть содержимое:", empty:"В сейфе пока пусто. У результата нажмите 🔒, чтобы зашифровать файл.",
+      needUnlock:"Сначала разблокируйте сейф.", unlockHere:"Разблокировать сейф", noFile:"Оригинал недоступен (папка не подключена).", stored:"✓ зашифровано в сейфе.",
       restore:"⬇︎ Оригинал", exportEnc:"🔐 Сохранить зашифрованно", del:"🗑 Удалить", removed:"Удалено из сейфа.", already:"Этот файл уже в сейфе." },
-    pl:{ locked:"Sejf zablokowany — odblokuj powyżej, aby zobaczyć zawartość.", empty:"Sejf jest pusty. Przy wyniku użyj 🔒, aby zaszyfrować plik.",
-      needUnlock:"Najpierw odblokuj sejf.", noFile:"Oryginał niedostępny (folder niepołączony).", stored:"✓ zaszyfrowano w sejfie.",
+    pl:{ locked:"Sejf zablokowany. Odblokuj tutaj, aby zobaczyć zawartość:", empty:"Sejf jest pusty. Przy wyniku użyj 🔒, aby zaszyfrować plik.",
+      needUnlock:"Najpierw odblokuj sejf.", unlockHere:"Odblokuj sejf", noFile:"Oryginał niedostępny (folder niepołączony).", stored:"✓ zaszyfrowano w sejfie.",
       restore:"⬇︎ Oryginał", exportEnc:"🔐 Zapisz zaszyfrowane", del:"🗑 Usuń", removed:"Usunięto z sejfu.", already:"Ten plik jest już w sejfie." }
   };
   function tx(k){ var t=TX[lang()]||TX.de; return (k in t)?t[k]:TX.de[k]; }
@@ -3156,7 +3156,11 @@ boot();
 
   async function renderList(){
     var box=el("vaultList"); if(!box) return;
-    if(!window.PBTresor || !window.PBTresor.isUnlocked()){ box.innerHTML='<p class="hint">'+esc(tx("locked"))+'</p>'; return; }
+    if(!window.PBTresor || !window.PBTresor.isUnlocked()){
+      /* Klaus 2026-10-28: nicht „oben entsperren“ — der Knopf steht direkt hier. */
+      box.innerHTML='<p class="hint">'+esc(tx("locked"))+'</p><div class="btnrow" style="justify-content:flex-start"><button type="button" class="primary" id="vaultListUnlock">'+esc(tx("unlockHere"))+'</button></div>';
+      var u=el("vaultListUnlock"); if(u) u.addEventListener("click", function(){ if(window.PBTresor) window.PBTresor.openUnlock(); });
+      return; }
     var items=[];
     try{ items=await vAll(); }catch(e){ items=[]; }
     if(!items.length){ box.innerHTML='<p class="hint">'+esc(tx("empty"))+'</p>'; return; }
