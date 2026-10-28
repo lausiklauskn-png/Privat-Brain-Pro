@@ -23,6 +23,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ProSharePlugin.class);
         registerPlugin(ProSemanticPlugin.class);
         registerPlugin(ProCaptionPlugin.class);
+        registerPlugin(ProMeaningPlugin.class);
         registerPlugin(ProTranslationPlugin.class);
         registerPlugin(de.familyprojekt.hintergrund.ProHintergrundPlugin.class);
         super.onCreate(state);
@@ -52,6 +53,7 @@ public class MainActivity extends BridgeActivity {
                 // Remember it and open the app again instead of letting Android close it.
                 ProSemanticPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
                 ProCaptionPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
+                ProMeaningPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
                 ProTranslationPlugin.rendererGone(MainActivity.this, detail.didCrash(), detail.rendererPriorityAtExit());
                 android.util.Log.w("PrivateBrainPro", "WebView renderer gone: crash=" + detail.didCrash() + " priority=" + detail.rendererPriorityAtExit());
                 if (view.getParent() instanceof android.view.ViewGroup) ((android.view.ViewGroup) view.getParent()).removeView(view);
@@ -78,9 +80,12 @@ public class MainActivity extends BridgeActivity {
     private android.webkit.WebResourceResponse interceptAppRequest(android.webkit.WebResourceRequest request) {
         String address = request.getUrl().toString();
         if (TranslationModels.covers(address)) return TranslationAssets.respond(this, address);
-        if (BundledLibrary.covers(address)) return BundledLibrary.respond(getAssets(), address, ProSemanticPlugin.model(this), ProCaptionPlugin.model(this));
+        if (BundledLibrary.covers(address)) return BundledLibrary.respond(getAssets(), address, ProSemanticPlugin.model(this), ProCaptionPlugin.model(this),
+            ProMeaningPlugin.model(this, "mittel"), ProMeaningPlugin.model(this, "gross"));
         if (BundledLibrary.coversModel(address)) return BundledLibrary.respondModel(ProSemanticPlugin.model(this), address);
         if (BundledLibrary.coversCaptionModel(address)) return BundledLibrary.respondCaptionModel(ProCaptionPlugin.model(this), address);
+        String meaning = BundledLibrary.meaningStage(address);
+        if (meaning != null) return BundledLibrary.respondMeaningModel(ProMeaningPlugin.model(this, meaning), address);
         if (BundledLibrary.remoteModel(address)) return BundledLibrary.missing();
         if (AppNetwork.isOffline() && AppNetwork.external(address))
             return new android.webkit.WebResourceResponse("text/plain", "UTF-8", 503, "App offline",

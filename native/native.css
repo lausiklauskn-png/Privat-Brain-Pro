@@ -620,3 +620,8 @@ img.pb-tool-icon,span.pb-tool-icon{width:20px;height:20px;border-radius:5px;flex
 .pb-studio-probe [data-ok="true"]{color:#1d7a3a}.pb-studio-probe [data-ok="false"]{color:#b3261e}
 /* Version always visible next to the name (Klaus 2026-10-22). */
 header .brand h1 .pb-version { display:inline-block; vertical-align:middle; min-height:20px; margin-left:4px; padding:0 7px; font:600 .7rem/1.6 system-ui,sans-serif; letter-spacing:0; border-radius:999px; box-shadow:none; opacity:.85; white-space:nowrap; }
+/* Pro-Umbau 5: zweites Bedeutungs-Modell (native-meaning.js) – Wahl der Stufe als flache Knöpfe, die gewählte umrandet. */
+.pb-meaning .pro-kasten-kopf>b{flex:1 1 auto;min-width:0}
+.pb-meaning-wahl{display:flex;flex-wrap:wrap;gap:6px}
+.pb-meaning-wahl .pro-knopf[aria-checked="true"]{border-color:var(--pro-akzent);box-shadow:inset 0 0 0 1px var(--pro-akzent);font-weight:600}
+.pb-meaning .pro-info-inhalt p{margin:0}

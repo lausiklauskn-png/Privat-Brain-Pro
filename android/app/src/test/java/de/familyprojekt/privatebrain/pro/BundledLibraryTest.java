@@ -55,4 +55,21 @@ public class BundledLibraryTest {
         assertTrue(BundledLibrary.remoteModel("https://huggingface.co/Xenova/multilingual-e5-small/resolve/main/config.json"));
         assertFalse(BundledLibrary.remoteModel("https://huggingface.co/Xenova/other/resolve/main/config.json"));
     }
+
+    /** Pro-Umbau 5: the second meaning model has one folder per stage; neither answers for the other or for Modul 03. */
+    @Test public void meaningModelStagesHaveTheirOwnFolders() {
+        String Mi = BundledLibrary.MEANING_MITTEL_PREFIX, Gr = BundledLibrary.MEANING_GROSS_PREFIX;
+        assertEquals("mittel", BundledLibrary.meaningStage(Mi + "config.json"));
+        assertEquals("gross", BundledLibrary.meaningStage(Gr + "onnx/model_quantized.onnx"));
+        assertNull(BundledLibrary.meaningStage(BundledLibrary.MODEL_PREFIX + "config.json"));
+        assertNull(BundledLibrary.meaningStage(BundledLibrary.CAPTION_MODEL_PREFIX + "config.json"));
+        assertFalse(BundledLibrary.coversModel(Mi + "config.json"));
+        assertEquals("model/onnx/model_quantized.onnx", BundledLibrary.meaningMittelPath(Mi + "onnx/model_quantized.onnx?x=1"));
+        assertNull(BundledLibrary.meaningMittelPath(Gr + "config.json"));
+        assertNull(BundledLibrary.meaningGrossPath(Gr + "../multilingual-e5-small/config.json"));
+        assertNull(BundledLibrary.meaningGrossPath(Gr + "a/b/c.json"));
+        assertTrue(BundledLibrary.remoteModel("https://huggingface.co/Xenova/multilingual-e5-base/resolve/main/config.json"));
+        assertTrue(BundledLibrary.remoteModel("https://huggingface.co/Xenova/multilingual-e5-large/resolve/main/config.json"));
+        assertFalse(BundledLibrary.remoteModel("https://huggingface.co/Xenova/multilingual-e5-largeX/config.json"));
+    }
 }

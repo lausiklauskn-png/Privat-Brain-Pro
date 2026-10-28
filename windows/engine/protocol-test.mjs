@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 const root=resolve(import.meta.dirname,'../..'),test=await mkdtemp(join(tmpdir(),'pb-protocol-'));
 const java=process.argv[2]||'java',runtime=process.argv[3];
 const resources=runtime||join(test,'runtime');await mkdir(resources,{recursive:true});
-if(!runtime){await copyFile(join(root,'windows/gmail-desktop.json'),join(resources,'gmail-desktop.json'));await copyFile(join(root,'tools/native/semantic-model.json'),join(resources,'semantic-model.json'));await copyFile(join(root,'tools/native/caption-model.json'),join(resources,'caption-model.json'));}
+if(!runtime){await copyFile(join(root,'windows/gmail-desktop.json'),join(resources,'gmail-desktop.json'));await copyFile(join(root,'tools/native/semantic-model.json'),join(resources,'semantic-model.json'));await copyFile(join(root,'tools/native/caption-model.json'),join(resources,'caption-model.json'));await copyFile(join(root,'tools/native/meaning-models.json'),join(resources,'meaning-models.json'));}
 const classes=runtime?join(runtime,'engine/classes'):join(root,'windows/engine/build/classes'),lib=runtime?join(runtime,'engine/lib/*'):join(root,'windows/engine/build/lib/*');
 const child=spawn(java,['-cp',[classes,lib].join(delimiter),'de.familyprojekt.privatebrain.pro.EngineMain',join(test,'data'),resources],{stdio:['pipe','pipe','pipe'],windowsHide:true});
 const exited=new Promise(resolve=>child.once('exit',resolve));

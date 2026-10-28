@@ -1,3 +1,9 @@
+**Pro-Umbau 5, Schritt 2 (Klaus 2026-10-28): zweites Bedeutungs-Modell nur für die Suche in der App.** Stufe Mittel (e5-base) /
+Groß (e5-large) in den Einstellungen mit Empfehlung aus dem Gerätecheck, Laden per Schalter (`ProMeaning`, Android + Windows, eigene Ordner
+`meaning-*`, Pins `tools/native/meaning-models.json`), „Einordnen“ nur auf Tipp als Hintergrundaufgabe, Werte getrennt (IndexedDB
+`pb_meaning_v1`); die Suche nutzt sie nur, wenn alles eingeordnet ist, sonst Modul 03. Mycel/Siegel/Modul 03 unverändert (e5-small).
+Proben `test-meaning` 34 · Gegenprobe 12/12 · Engine 110. Echtes Modell in der App und am Gerät nicht gemessen. [Details](docs/BEDEUTUNGSSUCHE-ZWEITES-MODELL.md).
+
 **Pro-Umbau 4 (Klaus 2026-10-28): Hintergrundaufgabe für alle Pro-Apps, Quelle hier.** `native/pro-hintergrund.js` + Android-Dienst
 `de.familyprojekt.hintergrund` (Vordergrund-Dienst „dataSync“ mit Mitteilung, Stand, „Abbrechen“, WebView-Vorrang), gepinnt mit den
 Bedien-Bausteinen (Fassung 2, `native/pro-bedienung-herkunft.json` → `pfade`), byte-gleich nach Workflow PDF Pro und BookLedgerPro

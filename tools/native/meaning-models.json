@@ -9,6 +9,11 @@
       "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
       "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
       "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    },
+    "sizes": {
+      "transformers.min.js": 897938,
+      "ort-wasm-simd.wasm": 10014674,
+      "ort-wasm.wasm": 9223228
     }
   },
   "models": {
@@ -35,6 +40,12 @@
         "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
         "tokenizer_config.json": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15",
         "onnx/model_quantized.onnx": "df7a9a29309e3ad491e1783adf8baee710262cc06079c7cbab63c630277fac94"
+      },
+      "sizes": {
+        "config.json": 686,
+        "tokenizer.json": 17082660,
+        "tokenizer_config.json": 418,
+        "onnx/model_quantized.onnx": 278647662
       }
     },
     "gross": {
@@ -47,13 +58,24 @@
         "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
         "tokenizer_config.json": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15",
         "onnx/model_quantized.onnx": "0a8d65db9a36f810ba5da15249f13145fcdc7890e6656f1fd38cd8b7c4db1fca"
+      },
+      "sizes": {
+        "config.json": 792,
+        "tokenizer.json": 17082660,
+        "tokenizer_config.json": 418,
+        "onnx/model_quantized.onnx": 561768762
       }
     }
   },
   "download": {
+    "comment": "Laden per Schalter in der App (ProMeaning): Modell zuerst von Klaus' Server, sonst Hugging Face; die Bibliothek von jsDelivr, sonst unpkg. Jede Datei muss den Fingerabdruck oben tragen; Größen aus dem Lernlauf 40758382311 (MEANING-PIN).",
     "model": [
       "https://family-projekt.de/models/{id}/{file}",
       "https://huggingface.co/{id}/resolve/{revision}/{file}"
+    ],
+    "library": [
+      "https://cdn.jsdelivr.net/npm/@xenova/transformers@{version}/dist/{file}",
+      "https://unpkg.com/@xenova/transformers@{version}/dist/{file}"
     ]
   },
   "gemessen": {

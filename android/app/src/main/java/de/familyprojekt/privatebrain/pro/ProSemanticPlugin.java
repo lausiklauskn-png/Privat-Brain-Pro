@@ -65,6 +65,31 @@ public class ProSemanticPlugin extends Plugin {
         return list;
     }
 
+    /**
+     * The second meaning model (Pro-Umbau 5, Klaus 2026-10-28: only for the search inside the app; Mycel stays on
+     * Modul 03). Parses tools/native/meaning-models.json for one stage ("mittel" = e5-base, "gross" = e5-large):
+     * the library and that stage's model files, each with its fingerprint, size and sources. "klein" is Modul 03's
+     * own model and is not loaded a second time; any other stage gives an empty list (nothing is loaded).
+     */
+    static List<SemanticModel.Entry> meaningEntries(String text, String stage) throws Exception {
+        List<SemanticModel.Entry> list = new ArrayList<>();
+        if (!"mittel".equals(stage) && !"gross".equals(stage)) return list;
+        JSONObject pins = new JSONObject(text), lib = pins.getJSONObject("library"), download = pins.getJSONObject("download");
+        JSONObject mod = pins.getJSONObject("models").optJSONObject(stage);
+        if (mod == null) return list;
+        JSONObject sizes = new JSONObject();
+        JSONObject libSizes = lib.optJSONObject("sizes"), modSizes = mod.optJSONObject("sizes");
+        if (libSizes != null) for (Iterator<String> it = libSizes.keys(); it.hasNext(); ) { String k = it.next(); sizes.put("lib/" + k, libSizes.getLong(k)); }
+        if (modSizes != null) for (Iterator<String> it = modSizes.keys(); it.hasNext(); ) { String k = it.next(); sizes.put("model/" + k, modSizes.getLong(k)); }
+        add(list, "lib/", lib.getJSONObject("files"), sizes, download.getJSONArray("library"), lib.getString("version"), "", "");
+        if (list.isEmpty()) return list;
+        List<SemanticModel.Entry> model = new ArrayList<>();
+        add(model, "model/", mod.getJSONObject("files"), sizes, download.getJSONArray("model"), "", mod.getString("id"), mod.getString("revision"));
+        if (model.isEmpty()) { list.clear(); return list; }
+        list.addAll(model);
+        return list;
+    }
+
     private static void add(List<SemanticModel.Entry> list, String prefix, JSONObject files, JSONObject sizes, JSONArray templates,
                             String version, String id, String revision) throws Exception {
         for (Iterator<String> it = files.keys(); it.hasNext(); ) {
