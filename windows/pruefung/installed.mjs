@@ -149,6 +149,11 @@ try{
     await page.locator('#tool-origin-probe').evaluate(f=>f.remove());
     // Test-only studio identity is generated inside the disposable CI profile.
     // It is never bundled into the installer or used as Klaus' publisher key.
+    // Seit Klaus' Herausgeber-Schlüssel fest in der App steht, öffnet ein selbst erzeugtes Studio nichts (so gewollt, test-tools).
+    // Diese Abnahme prüft die Werkzeug-Trennung, nicht den Schlüssel: nur hier wird die Schlüsselliste leer gestellt und neu gelesen.
+    ok('installed app carries Klaus\' fixed publisher key',await page.evaluate(()=>PBLicense.ready.then(()=>fetch('license-keys.json',{cache:'no-store'}).then(r=>r.json())).then(d=>d.publishers.some(p=>p.key==='fb6cd374a3c42786b7260387c4b73b5796ba7c5328949adaf6a724883709ee2f'))));
+    await page.route('**/license-keys.json',route=>route.fulfill({contentType:'application/json',body:'{"publishers":[]}'}));
+    ok('test-only empty publisher list is read',await page.evaluate(()=>PBLicense.reloadKeys())===0);
     await page.evaluate(async()=>{await PBLicense.createKey('CI-studio-fixture-only-2026');PBTools.open('pinnwand');});
     const licensed=page.frameLocator('.pb-tool-frame iframe');await licensed.locator('body').waitFor({state:'visible',timeout:15000});
     ok('licensed tool is authorized on its own origin',await licensed.locator('html').evaluate(()=>PBToolAuthorized));
@@ -177,6 +182,7 @@ try{
     await page.evaluate(()=>PBTools.open('pinnwand'));await page.locator('.pb-tool-frame iframe').waitFor();
     await page.evaluate(async()=>{for(const key of ['pb_studio_v1','pb_studio_probe','pb_studio_visible'])localStorage.removeItem(key);await PBLicense.refresh();});
     ok('revoking the tool permission closes its active isolated frame',await page.locator('.pb-tool-frame').count()===0);
+    await page.unroute('**/license-keys.json');ok('fixed publisher key is read again after the tool checks',await page.evaluate(()=>PBLicense.reloadKeys())===1);
     await page.evaluate(()=>{window.speechProbe=null;Capacitor.Plugins.ProSpeech.listen({language:'de-DE'}).then(v=>window.speechProbe=v,e=>window.speechProbe={error:e.code});});
     for(let i=0;i<60;i++){
       if(await page.evaluate(()=>Boolean(window.speechProbe)))break;

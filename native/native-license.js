@@ -117,8 +117,11 @@
 
   // ---------- trusted publishers and stored codes ----------
   let publishers = [];
-  const ready = fetch('license-keys.json').then(r => r.ok ? r.json() : { publishers: [] }).catch(() => ({ publishers: [] }))
+  // Liest nur die mitgelieferte Datei (kein Setzen von außen). reloadKeys() liest sie erneut, z. B. nach einem Update im Hintergrund.
+  const loadKeys = () => fetch('license-keys.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : { publishers: [] }).catch(() => ({ publishers: [] }))
     .then(data => { publishers = (data.publishers || []).map(p => String(p.key || '').toLowerCase()).filter(k => /^[0-9a-f]{64}$/.test(k)); });
+  const ready = loadKeys();
+  const reloadKeys = () => loadKeys().then(() => publishers.length);
   const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } };
   const STUDIO = 'pb_studio_v1', CODES = 'pb_license_codes', LOG = 'pb_studio_log';
@@ -403,6 +406,6 @@
   }
   new MutationObserver(() => { box = null; document.getElementById('pb-license')?.remove(); paint(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  window.PBLicense = { toolIcon, studioShown, probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
+  window.PBLicense = { toolIcon, studioShown, probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready, reloadKeys };
   void refresh();
 })();
