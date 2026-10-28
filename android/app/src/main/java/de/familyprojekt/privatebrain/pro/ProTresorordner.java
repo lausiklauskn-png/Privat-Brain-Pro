@@ -3,6 +3,7 @@ package de.familyprojekt.privatebrain.pro;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.provider.DocumentsContract;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
@@ -49,6 +50,17 @@ final class ProTresorordner {
     /** Der Nutzer will ausdrücklich entsperren oder einziehen: der gemerkte Schlüssel darf wieder öffnen. */
     synchronized void entsperrenGewuenscht() { vonHandGesperrt = false; }
     synchronized boolean vonHandGesperrt() { return vonHandGesperrt; }
+    /** Ganzer Pfad des Tresorordners im Speicher (Leitfaden § 5), z. B. „Privat Brain Pro Hauptablageordner“. */
+    synchronized String pfad() {
+        String b = prefs().getString("baum", null); if (b == null) return "";
+        try { String id = DocumentsContract.getTreeDocumentId(Uri.parse(b)); return id.contains(":") ? id.substring(id.indexOf(':') + 1) : id; }
+        catch (Exception e) { return ""; }
+    }
+    /** Dokument-Adresse des Tresorordners für „In Dateien öffnen“; null ohne gewählten Ordner. */
+    synchronized Uri ordnerUri() {
+        String b = prefs().getString("baum", null); if (b == null) return null;
+        Uri t = Uri.parse(b); return DocumentsContract.buildDocumentUriUsingTree(t, DocumentsContract.getTreeDocumentId(t));
+    }
 
     private SafAblage ablage() throws IOException {
         if (ablage != null) return ablage;
@@ -122,7 +134,7 @@ final class ProTresorordner {
 
     synchronized JSONObject zustand(Vault vault) throws Exception {
         SharedPreferences p = prefs();
-        JSONObject z = new JSONObject().put("gewaehlt", p.contains("baum")).put("ordner", p.getString("name", "")).put("gemerkt", p.contains("merken"));
+        JSONObject z = new JSONObject().put("gewaehlt", p.contains("baum")).put("ordner", p.getString("name", "")).put("pfad", pfad()).put("gemerkt", p.contains("merken"));
         z.put("offen", offen != null).put("eingezogen", false);
         if (!p.contains("baum")) return z;
         try {

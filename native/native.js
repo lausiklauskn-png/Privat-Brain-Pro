@@ -111,6 +111,9 @@
     download.textContent = window.Capacitor?.getPlatform?.()==='windows' ? ({de:'Windows-Installer herunterladen',en:'Download Windows installer',ru:'Скачать установщик Windows',pl:'Pobierz instalator Windows'}[document.documentElement.lang]||'Download Windows installer') : t[5];
     download.hidden = state !== 'available' && state !== 'openError';
     download.disabled = busy;
+    // Leitfaden § 6 (Klaus 2026-10-28): immer mit Version – „Du verwendest die aktuelle Version 1.0.41.“ / „Neu: 1.0.42 (du hast 1.0.41)“.
+    const ich = String(window.PBVersionShown || '').replace(/^v/, ''), P = window.ProBedienung;
+    if (P && ich && (state === 'current' || state === 'available')) { message.textContent = state === 'available' ? P.versionSatz(ich, latest.replace(/^v/, '')) : P.versionSatz(ich); return; }
     message.textContent = state === 'available' ? t[4] + latest :
       state==='offline'?({de:'Die App ist vom Internet getrennt. Internetzugriff im App-Menü wieder erlauben.',en:'The app is offline. Allow internet access in the app menu.',ru:'Приложение отключено от интернета. Разрешите доступ в меню.',pl:'Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu.'}[document.documentElement.lang]||'App offline'):t[{idle:1, checking:2, current:3, error:6, unsupported:7, openError:8}[state]];
   }

@@ -10,7 +10,9 @@
   const api = window.Capacitor?.Plugins?.ProVault;
   if (!api || typeof api.tresorZustand !== 'function') return;
   const words = {
-    title: ['Gemeinsamer Tresorordner', 'Shared vault folder', 'Общая папка-хранилище', 'Wspólny folder sejfu'],
+    // Leitfaden § 2: „Tresor (alle Pro-Apps)“ – der gemeinsame Ordner über den Ablagen.
+    title: ['Tresor (alle Pro-Apps)', 'Vault (all Pro apps)', 'Сейф (все Pro-приложения)', 'Sejf (wszystkie aplikacje Pro)'],
+    noFilesApp: ['Keine Dateien-App gefunden, die Ordner zeigen kann. Pfad: ', 'No Files app found that can show folders. Path: ', 'Не найдено приложение «Файлы». Путь: ', 'Nie znaleziono aplikacji Pliki. Ścieżka: '],
     intro: ['Ein Ordner, ein Passwort und ein Ersatzschlüssel für alle Pro-Apps (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Gewählt wird der Ordner, in dem „Private Brain“ liegt – für eine Probe eine Kopie davon (mit der Dateien-App kopiert). Dort kommen nur „tresorordner.json“ und der Ordner „Tresorordner“ dazu; „Private Brain“ bleibt, wie es ist.',
       'One folder, one password and one recovery key for all Pro apps (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Choose the folder that contains “Private Brain” – for a trial, a copy of it (copied with the Files app). Only “tresorordner.json” and the folder “Tresorordner” are added there; “Private Brain” stays as it is.',
       'Одна папка, один пароль и один ключ восстановления для всех Pro-приложений (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Выберите папку, в которой лежит «Private Brain» – для пробы её копию (скопированную приложением «Файлы»). Туда добавятся только «tresorordner.json» и папка «Tresorordner»; «Private Brain» не изменится.',
@@ -84,8 +86,9 @@
   // ---------- Abschnitt im Kasten „Speicherort und Verschlüsselung“ ----------
   const section = make('section', null, 'native-tresorordner'); section.id = 'tresorordner'; section.hidden = true;
   const h = make('h4'), line = make('p', null, 'hint'), info = make('p', null, 'native-vault-status'), box = make('div', null, 'btnrow');
+  const ort = make('div', null, 'pro-ablage-zeile'); ort.id = 'tresorordnerOrt';
   line.id = 'tresorordnerZeile'; info.id = 'tresorordnerHinweis'; info.setAttribute('role', 'status'); box.style.justifyContent = 'flex-start';
-  section.append(h, line, info, box);
+  section.append(h, ort, line, info, box);
   function einsetzen() {
     const card = document.getElementById('vaultPlace');
     if (!card || section.isConnected) return Boolean(card);
@@ -109,6 +112,19 @@
     const zustand = z.eingezogen && z.offen && z.pruefung === 'PASST' ? 'verbunden' : z.gewaehlt && z.erreichbar === false ? 'fern'
       : z.gewaehlt && z.vorhanden && z.pruefung === 'PASST' && !z.offen ? 'gesperrt' : 'neu';
     section.dataset.zustand = zustand;
+    const P = window.ProBedienung;
+    const ortSig = [Boolean(P && z.gewaehlt), zustand, z.pfad, z.ordner, document.documentElement.lang, typeof api.ordnerOeffnen].join('|');
+    if (ort.dataset.sig !== ortSig) { ort.dataset.sig = ortSig; ort.replaceChildren(); }
+    if (P && z.gewaehlt && !ort.firstChild) {
+      const pfad = z.pfad || z.ordner || '';
+      const oeffnen = typeof api.ordnerOeffnen === 'function' ? async () => {
+        let text = '';
+        try { await api.ordnerOeffnen({ welcher: 'tresor' }); } catch (error) { text = error?.code === 'KEIN_DATEIEN_PROGRAMM' ? t('noFilesApp') + pfad : message(error); }
+        if (text) info.textContent = text;
+      } : null;
+      const zeile = P.ordnerZeile(pfad, oeffnen); zeile.prepend(P.zustand(zustand === 'verbunden'));
+      ort.append(zeile);
+    }
     const einziehen = neu => async () => {
       let text = '';
       try {

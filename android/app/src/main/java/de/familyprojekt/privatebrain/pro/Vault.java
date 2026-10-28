@@ -173,6 +173,13 @@ final class Vault {
     synchronized void requireUnlocked() throws IOException { key(); bind(); }
     /** Kennung des Tresors (tresor.json) für den Tresorordner (Schritt D2). */
     synchronized String tresorId() { return prefs().getString("id", ""); }
+    /** Ganzer Pfad der Ablage im Speicher (Teil hinter „Speicher:“ der Dokument-Kennung), z. B. „Ordner/Private Brain“ (Leitfaden § 5). */
+    synchronized String pfad() { String r = prefs().getString("root", ""); return r.contains(":") ? r.substring(r.indexOf(':') + 1) : r; }
+    /** Dokument-Adresse des Ablage-Ordners für „In Dateien öffnen“; null ohne Speicherort. */
+    synchronized Uri ordnerUri() {
+        if (!configured()) return null;
+        return DocumentsContract.buildDocumentUriUsingTree(Uri.parse(prefs().getString("tree", "")), prefs().getString("root", ""));
+    }
     /** Kopie des Datenschlüssels für den Einzug in den Tresorordner. Bleibt nativ, nie an die WebView. */
     synchronized byte[] tresorSchluessel() throws IOException { return key(); }
 
@@ -351,7 +358,7 @@ final class Vault {
         JSONObject state = new JSONObject().put("configured", configured());
         if (!configured()) return state;
         state.put("unlocked", unlocked()).put("remembered", prefs().contains("remember"))
-            .put("location", prefs().getString("location", "other")).put("folder", prefs().getString("name", ""))
+            .put("location", prefs().getString("location", "other")).put("folder", prefs().getString("name", "")).put("pfad", pfad())
             .put("minPassword", MIN_PASSWORD).put("attachmentLimit", attachmentLimit);
         if (unlocked()) {
             try {
