@@ -3,6 +3,7 @@
 // dass die .eml durch die Seite geht. Die Java-Seite prüft TresorEinzugTest (JVM).
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright-core';
 import {navigateTo} from './test-navigation-helper.mjs';
@@ -45,12 +46,12 @@ async function device(name,{answers=[],ohneTresor=false}={}){
     if(method==='catalogAbort'){local.pending.delete(args.ticket);return{ok:true};}
     if(method==='catalogInfo'){const last=folder.catalog.at(-1);return last?{exists:true,size:last.length,version:folder.catalog.length}:{exists:false};}
     if(method==='catalogRead')return{data:folder.catalog[args.version-1].subarray(args.offset,args.offset+262144).toString('base64')};
-    if(method==='tresorZustand')return {...tresor.zustand};
-    if(method==='tresorEinziehen'){if(JSON.stringify(args).toLowerCase().includes('passw'))throw new Error('password crossed the bridge');if(!local.unlocked)throw new Error('VAULT_LOCKED');if(tresor.fehler){const f=tresor.fehler;tresor.fehler=null;throw new Error(f);}
+    // Wie Java: ein gemerkter Schlüssel öffnet beim Zustand von selbst – außer nach „Sperren“ von Hand (vonHandGesperrt).
+    if(method==='tresorZustand'){if(tresor.zustand.gemerkt&&!tresor.zustand.offen&&tresor.zustand.vorhanden&&!tresor.vonHand)tresor.zustand={...tresor.zustand,offen:true,eingezogen:true};return {...tresor.zustand};}
+    if(method==='tresorEinziehen'){tresor.vonHand=false;tresor.einzuege=(tresor.einzuege||0)+1;if(JSON.stringify(args).toLowerCase().includes('passw'))throw new Error('password crossed the bridge');if(!local.unlocked)throw new Error('VAULT_LOCKED');if(tresor.fehler){const f=tresor.fehler;tresor.fehler=null;throw new Error(f);}
       tresor.zustand={gewaehlt:true,ordner:'Tresor-Probe',gemerkt:true,offen:true,eingezogen:true,erreichbar:true,vorhanden:true,pruefung:'PASST',eintraege:0};return {...tresor.zustand,eingezogenJetzt:true,angelegt:true};}
     if(method==='tresorVerzeichnis'){const neu=JSON.stringify(args.zeilen)!==JSON.stringify(tresor.zeilen);tresor.zeilen=args.zeilen;tresor.zustand.eintraege=args.zeilen.length;return {geschrieben:neu,eintraege:args.zeilen.length};}
-    // Wie Java: ohne „vergessen“ öffnet der gemerkte Schlüssel den Ordner beim nächsten Zustand sofort wieder.
-    if(method==='tresorSperren'){tresor.gesperrtMit=args;if(args.vergessen||!tresor.zustand.gemerkt)tresor.zustand={...tresor.zustand,offen:false,eingezogen:false,gemerkt:false};return {...tresor.zustand};}
+    if(method==='tresorSperren'){tresor.gesperrtMit=args;tresor.vonHand=true;tresor.zustand={...tresor.zustand,offen:false,eingezogen:false,gemerkt:args.vergessen?false:tresor.zustand.gemerkt};return {...tresor.zustand};}
     throw new Error('Unknown vault method '+method);
   });
   await page.exposeFunction('mailFixture',async(method,args={})=>{
@@ -146,7 +147,9 @@ try{
   await page.click('#tresorordner [data-tresor=lock]');
   await page.waitForFunction(()=>document.querySelector('#tresorordner')?.dataset.zustand==='gesperrt');
   ok('Gesperrt: Zeile und „entsperren“',await page.locator('#tresorordner [data-tresor=unlock]').count()===1);
-  ok('Sperren vergisst den gemerkten Schlüssel (sonst wäre der Ordner sofort wieder offen)',tresor.gesperrtMit?.vergessen===true);
+  ok('Sperren behält „Passwort merken“ (vergisst den Schlüssel nicht)',tresor.gesperrtMit&&tresor.gesperrtMit.vergessen!==true&&tresor.zustand.gemerkt===true);
+  await page.evaluate(()=>PBTresorordner.zeigen());
+  ok('Gesperrt bleibt gesperrt: der nächste Zustand öffnet nicht mit dem gemerkten Schlüssel',await page.evaluate(()=>document.querySelector('#tresorordner')?.dataset.zustand)==='gesperrt');
   ok('Gesperrt-Zeile sagt, wo es weitergeht',await page.locator('#tresorordnerZeile').textContent().then(t=>t.startsWith('Gesperrt.')&&t.includes('„Tresorordner entsperren“')));
   ok('Tresor — Verschlüsselung steht direkt unter Speicherort und Verschlüsselung',await page.evaluate(()=>document.getElementById('vaultPlace')?.nextElementSibling?.id==='tresorNote'));
   ok('Gesperrter Tresor-Inhalt: Entsperren-Knopf direkt dabei, kein „oben“',await page.evaluate(()=>{const l=document.getElementById('vaultList');return !!l?.querySelector('#vaultListUnlock')&&!/oben/.test(l.textContent);}));
@@ -156,9 +159,26 @@ try{
   await page.click('[data-tab=mail]');
   await page.locator('#mailWorkspace [data-live-uid="9"]').click();
   const n=folder.calls.filter(c=>c.method==='openOriginal').length;
+  // Tablet-Probe 2026-10-28: gesperrt nahm das Teilen still den Android-Weg. Jetzt: fragen „entsperren oder normal teilen?“.
   await share.click();
+  await page.waitForSelector('#tresorordnerFrage[data-gesperrt="1"]');
+  ok('Gesperrter Ordner: Teilen fragt „entsperren oder normal teilen?“',await page.locator('#tresorordnerFrage [data-wahl=entsperren]').count()===1&&await page.locator('#tresorordnerFrage [data-wahl=teilen]').count()===1&&folder.calls.filter(c=>c.method==='openOriginal').length===n);
+  await page.click('#tresorordnerFrage [data-wahl=teilen]');
   for(let i=0;i<20&&folder.calls.filter(c=>c.method==='openOriginal').length===n;i++)await page.waitForTimeout(100);
-  ok('Ohne offenen Tresorordner: direkt teilen wie bisher, keine Frage',folder.calls.filter(c=>c.method==='openOriginal').length===n+1&&await page.locator('#tresorordnerFrage').count()===0);
+  ok('„Normal teilen …“ geht den Android-Weg, nichts im Ordner',folder.calls.filter(c=>c.method==='openOriginal').length===n+1&&tresor.mails.length===1);
+  const einz=tresor.einzuege||0;
+  await share.click();await page.click('#tresorordnerFrage [data-wahl=entsperren]');
+  for(let i=0;i<30&&tresor.mails.length===1;i++)await page.waitForTimeout(100);
+  ok('„Entsperren und hineinlegen“: erst entsperren, dann liegt die Mail im Eingangsfach',tresor.einzuege===einz+1&&tresor.mails.length===2&&folder.calls.filter(c=>c.method==='openOriginal').length===n+1);
+  await navigateTo(page,'settings');await page.click('#tresorordner [data-tresor=lock]');
+  await page.waitForFunction(()=>document.querySelector('#tresorordner')?.dataset.zustand==='gesperrt');
+  tresor.zustand={...tresor.zustand,gewaehlt:false};
+  await page.click('[data-tab=mail]');await page.locator('#mailWorkspace [data-live-uid="9"]').click();
+  const m2=folder.calls.filter(c=>c.method==='openOriginal').length;
+  await share.click();
+  for(let i=0;i<20&&folder.calls.filter(c=>c.method==='openOriginal').length===m2;i++)await page.waitForTimeout(100);
+  ok('Ohne gewählten Tresorordner: direkt teilen wie bisher, keine Frage',folder.calls.filter(c=>c.method==='openOriginal').length===m2+1&&await page.locator('#tresorordnerFrage').count()===0);
+  tresor.zustand={...tresor.zustand,gewaehlt:true};
   const zaehle=()=>folder.calls.filter(c=>c.method==='tresorVerzeichnis').length;
   let vor=zaehle();
   tresor.zustand={...tresor.zustand,offen:true,eingezogen:true,pruefung:'FREMDER_TRESOR'};
@@ -172,5 +192,10 @@ try{
   const B=await device('B',{ohneTresor:true});
   ok('Ohne Tresorordner-Brücke (ältere Hülle, Windows) bleibt alles wie bisher',await B.page.evaluate(()=>typeof window.PBTresorordner==='undefined'));
   await B.context.close();
+  const java=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProTresorordner.java',import.meta.url),'utf8');
+  const plug=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProVaultPlugin.java',import.meta.url),'utf8');
+  ok('Java: von Hand gesperrt öffnet weder Zustand noch Hintergrund noch Mail-Ablage mit dem gemerkten Schlüssel',
+    /if \(!vonHandGesperrt\) gemerktEntsperren\(\);/.test(java)&&(java.match(/offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\)/g)||[]).length===2
+    &&/sperren\(boolean vergessen\) \{\s*schliessen\(\);\s*vonHandGesperrt = true;/.test(java)&&/tresorWeiter\(PluginCall call\) throws Exception \{\s*tresor\(\)\.entsperrenGewuenscht\(\);/.test(plug));
   console.log(count+' Tresorordner-Proben bestanden (Browser, Android-Plugins gestellt).');
 }finally{await browser?.close();}

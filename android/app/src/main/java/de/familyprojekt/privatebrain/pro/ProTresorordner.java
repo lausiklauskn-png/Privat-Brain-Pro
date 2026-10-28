@@ -37,12 +37,18 @@ final class ProTresorordner {
     private final Context context;
     private SafAblage ablage;
     private TresorOrdner offen;
+    // Von Hand gesperrt (Tablet-Probe 2026-10-28: „Sperren“ öffnete sofort wieder, weil zustand() den gemerkten Schlüssel nahm).
+    // Bis zum nächsten Entsperren von Hand oder App-Neustart öffnet der gemerkte Schlüssel nicht von selbst.
+    private boolean vonHandGesperrt;
 
     private ProTresorordner(Context context) { this.context = context.getApplicationContext(); }
 
     private SharedPreferences prefs() { return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     synchronized boolean gewaehlt() { return prefs().contains("baum"); }
     synchronized boolean istOffen() { return offen != null; }
+    /** Der Nutzer will ausdrücklich entsperren oder einziehen: der gemerkte Schlüssel darf wieder öffnen. */
+    synchronized void entsperrenGewuenscht() { vonHandGesperrt = false; }
+    synchronized boolean vonHandGesperrt() { return vonHandGesperrt; }
 
     private SafAblage ablage() throws IOException {
         if (ablage != null) return ablage;
@@ -100,6 +106,7 @@ final class ProTresorordner {
         if (!"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
         TresorOrdner t = anlegen ? TresorOrdner.anlegen(ablage(), TresorEinzug.APP, passwort) : TresorOrdner.oeffnen(ablage(), TresorEinzug.APP, passwort);
         schliessen();
+        vonHandGesperrt = false;
         offen = t;
         if (merken) merken(t);
         einziehen(vault);
@@ -123,7 +130,7 @@ final class ProTresorordner {
             boolean da = TresorOrdner.vorhanden(a);
             z.put("erreichbar", true).put("vorhanden", da);
             if (vault != null && vault.configured()) z.put("pruefung", TresorEinzug.pruefen(a, vault.tresorId()));
-            if (da) { z.put("kennung", TresorOrdner.kennung(a)); gemerktEntsperren(); }
+            if (da) { z.put("kennung", TresorOrdner.kennung(a)); if (!vonHandGesperrt) gemerktEntsperren(); }
             z.put("offen", offen != null);
             if (offen != null) {
                 z.put("eingezogen", TresorEinzug.eingezogen(offen));
@@ -135,7 +142,7 @@ final class ProTresorordner {
 
     /** Inhaltsverzeichnis des eigenen Fachs aus den Zeilen der Bibliothek (nur bei Änderung neu). */
     synchronized JSONObject verzeichnis(JSONArray zeilen, Vault vault) throws Exception {
-        if (offen == null && !gemerktEntsperren()) throw new IOException("TRESOR_GESPERRT");
+        if (offen == null && (vonHandGesperrt || !gemerktEntsperren())) throw new IOException("TRESOR_GESPERRT");
         if (!TresorEinzug.eingezogen(offen)) throw new IOException("TRESOR_FACH_FEHLT");
         if (vault != null && !"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
         List<Map<String, Object>> roh = new ArrayList<>();
@@ -147,7 +154,7 @@ final class ProTresorordner {
 
     /** Rechnungsmail (.eml) ins Übergabefach „Eingang-BookLedgerPro/Mails/“ legen. */
     synchronized JSONObject mailAblegen(byte[] eml, String name, long datum, String auszug, Vault vault) throws Exception {
-        if (offen == null && !gemerktEntsperren()) throw new IOException("TRESOR_GESPERRT");
+        if (offen == null && (vonHandGesperrt || !gemerktEntsperren())) throw new IOException("TRESOR_GESPERRT");
         if (vault != null && !"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
         Eintrag e = TresorEinzug.mailAblegen(offen, name, datum, new java.io.ByteArrayInputStream(eml), auszug);
         return new JSONObject(e.alsMap());
@@ -165,6 +172,7 @@ final class ProTresorordner {
 
     synchronized void sperren(boolean vergessen) {
         schliessen();
+        vonHandGesperrt = true;
         if (vergessen) prefs().edit().remove("merken").remove("kennung").commit();
     }
 

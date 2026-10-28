@@ -373,6 +373,7 @@ public class ProVaultPlugin extends Plugin {
     }
     /** Auf dem Arbeits-Thread: offen oder gemerkt → gleich einziehen, sonst Passwort-Dialog. */
     private void tresorWeiter(PluginCall call) throws Exception {
+        tresor().entsperrenGewuenscht();
         if (tresor().istOffen() || tresor().gemerktEntsperren()) {
             tresor().einziehen(vault);
             JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", true));
