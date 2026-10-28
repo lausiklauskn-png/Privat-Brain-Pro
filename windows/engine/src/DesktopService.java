@@ -14,7 +14,7 @@ final class DesktopService {
     private final MailEngine mail;
     private final DesktopOAuth oauth;
     private final Protection protection;
-    private final DesktopModel model,caption;
+    private final DesktopModel model,caption,meaningMittel,meaningGross;
     private final DesktopPdf pdf=new DesktopPdf();
     private final DesktopFolders folders;
     private final ShareInbox inbox;
@@ -32,6 +32,9 @@ final class DesktopService {
         protection=Protection.create(state);
         model=new DesktopModel(state,resources.resolve("semantic-model.json"));
         caption=new DesktopModel(state,resources.resolve("caption-model.json"),"caption","ProCaption",BundledRoutes::captionModelPath);
+        // Pro-Umbau 5: second meaning model only for the app's own search (Mycel stays on Modul 03), two stages.
+        meaningMittel=DesktopModel.meaning(state,resources.resolve("meaning-models.json"),"mittel",BundledRoutes::meaningMittelPath);
+        meaningGross=DesktopModel.meaning(state,resources.resolve("meaning-models.json"),"gross",BundledRoutes::meaningGrossPath);
         folders=new DesktopFolders(state);
         Path incoming=state.directory.resolve("cache/incoming");DesktopFiles.noLinks(incoming);Files.createDirectories(incoming);
         inbox=new ShareInbox(incoming.toFile());inbox.clear();
@@ -62,6 +65,7 @@ final class DesktopService {
             case "ProProtect" -> protect(method,o);
             case "ProSemantic" -> model.call(method);
             case "ProCaption" -> caption.call(method);
+            case "ProMeaning" -> meaning(method,o);
             case "ProLinks" -> {
                 if(method.equals("prepare"))yield new JSONObject().put("tickets",BrowserLinks.prepare(o.getJSONArray("urls")));
                 if(!method.equals("open"))throw new MailFailure("INVALID_INPUT");
@@ -69,14 +73,33 @@ final class DesktopService {
                 yield host.call("external",new JSONObject().put("url",safe));
             }
             case "DesktopInternal" -> {
-                if(method.equals("modelAsset")){JSONObject found=model.asset(required(o,"url"));yield found.optBoolean("missing",false)?caption.asset(required(o,"url")):found;}
-                if(method.equals("rendererGone")){model.rendererGone();caption.rendererGone();yield yes();}
+                if(method.equals("modelAsset")){
+                    String url=required(o,"url");JSONObject found=model.asset(url);
+                    for(DesktopModel next:new DesktopModel[]{caption,meaningMittel,meaningGross})if(found.optBoolean("missing",false))found=next.asset(url);
+                    yield found;
+                }
+                if(method.equals("rendererGone")){model.rendererGone();caption.rendererGone();meaningMittel.rendererGone();meaningGross.rendererGone();yield yes();}
                 if(method.equals("mailLink"))yield new JSONObject().put("url",BrowserLinks.resolve(required(o,"url")));
                 if(method.equals("receive"))yield receive(o.getJSONArray("paths"));
                 throw new MailFailure("INVALID_INPUT");
             }
             default -> throw new MailFailure("INVALID_INPUT");
         };
+    }
+    /** ProMeaning: the same contract as Android (ProMeaningPlugin): getState covers both stages, every other call names one. */
+    private JSONObject meaning(String method,JSONObject o)throws Exception {
+        if(method.equals("getState"))return meaningState();
+        String stage=o.optString("stage","");
+        DesktopModel m="mittel".equals(stage)?meaningMittel:"gross".equals(stage)?meaningGross:null;
+        if(m==null)throw new MailFailure("INVALID_INPUT");
+        if(method.equals("install")&&(meaningMittel.state().getBoolean("running")||meaningGross.state().getBoolean("running")))throw new MailFailure("BUSY");
+        m.call(method);
+        return meaningState();
+    }
+    private JSONObject meaningState(){
+        JSONObject a=meaningMittel.state(),b=meaningGross.state();
+        String running=a.getBoolean("running")?"mittel":b.getBoolean("running")?"gross":"";
+        return new JSONObject().put("stages",new JSONObject().put("mittel",a).put("gross",b)).put("running",running);
     }
     private JSONObject share(String method,JSONObject o)throws Exception {
         synchronized(inbox){

@@ -44,6 +44,7 @@ for (const [stufe, m] of Object.entries(pins.models)) {
     if (got.revision && got.revision !== e.revision) { e.revision = got.revision; console.log(`MEANING-REVISION ${stufe} ${m.id} ${got.revision}`); }
     const actual = sha256(got.bytes);
     if (want && actual !== want) throw new Error(`${stufe} ${name}: sha256 ${actual}, expected ${want}`);
+    if (m.sizes?.[name] && m.sizes[name] !== got.bytes.length) throw new Error(`${stufe} ${name}: ${got.bytes.length} bytes, expected ${m.sizes[name]}`);
     if (!want) console.log(`MEANING-PIN ${stufe} ${name} ${actual} ${got.bytes.length}`);
     e.files[name] = actual; e.bytes[name] = got.bytes.length; e.totalBytes += got.bytes.length;
   }

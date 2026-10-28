@@ -1,5 +1,6 @@
 import { adaptRecovery } from './adapt-recovery.mjs';
 import { adaptSearch } from './adapt-search.mjs';
+import { adaptMeaning } from './adapt-meaning.mjs';
 import { prerenderShell } from './prerender-shell.mjs';
 import { bundleSemanticModel } from './fetch-semantic-model.mjs';
 import { bundleCaptionModel } from './fetch-caption-model.mjs';
@@ -62,6 +63,7 @@ html = html.replace('</head>', '<link rel="stylesheet" href="pro-bedienung.css">
 html = html.replace('</head>', '<link rel="stylesheet" href="native-content-icons.css">\n<link rel="stylesheet" href="help-layout.css">\n<link rel="stylesheet" href="activity-layout.css">\n<link rel="stylesheet" href="panes-layout.css">\n<link rel="stylesheet" href="native-ocr.css">\n<link rel="stylesheet" href="mail-ai-layout.css">\n<link rel="stylesheet" href="pb-arrange.css">\n<link rel="stylesheet" href="dupes-layout.css">\n<link rel="stylesheet" href="palette-layout.css">\n</head>');
 html = adaptRecovery(html);
 html = adaptSearch(html);
+html = adaptMeaning(html);   // Pro-Umbau 5: zweites Bedeutungs-Modell nur für die Suche der App
 html = html.replace('</body>', '<script src="native-recovery.js"></script>\n<script src="native-originals.js"></script>\n<script src="native-record-status.js"></script>\n<script src="native-folders.js"></script>\n<script src="pro-bedienung.js"></script>\n<script src="pro-hintergrund.js"></script>\n<script src="pro-geraet.js"></script>\n<script src="native-vault.js"></script>\n<script src="native-ohne-web.js"></script>\n<script src="native-tresorordner.js"></script>\n<script src="native-protect.js"></script>\n<script src="native-categories.js"></script>\n<script src="native-mycel.js"></script>\n<script src="native-mail-expiry.js"></script>\n<script src="native-unsubscribe.js"></script>\n<script src="native-mail-index.js"></script>\n<script src="native-mail-ai.js"></script>\n<script src="native-keys.js"></script>\n<script src="native-ocr.js"></script>\n<script src="native-check.js"></script>\n<script src="native-license.js"></script>\n<script src="native-tools.js"></script>\n<script src="native-pdf.js"></script>\n<script src="native-microphone.js"></script>\n<script src="native-speech.js"></script>\n<script src="native-share.js"></script>\n<script src="native-navigation.js"></script>\n<script src="native.js"></script>\n<script src="native-theme.js"></script>\n<script src="native-toolbar.js"></script>\n<script src="native-palette.js"></script>\n<script src="assets/filme.js"></script>\n<script src="native-filme.js"></script>\n</body>');
 html = html.replace('<script src="native-keys.js"></script>', '<script src="native-keys.js"></script>\n<script src="native-input-language.js"></script>\n<script src="native-text-input.js"></script>\n<script src="native-translation-device.js"></script>\n<script src="native-mail-translation.js"></script>');
 html = html.replace('<script src="native-originals.js"></script>', '<script src="native-activity.js"></script>\n<script src="native-originals.js"></script>');
@@ -73,6 +75,8 @@ html = html.replace('</body>', '<script src="native-dupes.js"></script>\n<script
 html = html.replace('</body>', '<script src="native-result-cards.js"></script>\n<script src="native-result-previews.js"></script>\n</body>');
 // Sitzung 4 (Klaus 2026-10-26): Bildbeschreibung – eigene Worte, Modell-Schalter, Suchfilter; dieselbe Datei wie in V3.
 html = html.replace('</body>', '<script src="pb-bildbeschreibung.js"></script>\n</body>');
+// Pro-Umbau 5 (Klaus 2026-10-28): zweites, größeres Bedeutungs-Modell nur für die Suche der App (ProMeaning); Mycel bleibt bei Modul 03.
+html = html.replace('</body>', '<script src="native-meaning.js"></script>\n</body>');
 html = html.replace('</head>', '<link rel="stylesheet" href="pb-bildbeschreibung.css">\n</head>');
 // Sitzung 5 (Klaus 2026-10-26): 3D-Knöpfe in Übersicht und Kategorien, Vorschau/Zielordner als Baum; dieselben Dateien wie in V3.
 html = html.replace('</body>', '<script src="pb-3d.js"></script>\n<script src="pb-zielordner.js"></script>\n</body>');
@@ -126,7 +130,7 @@ for (const name of ['native-recovery.js', 'native.js', 'native-network.js', 'nat
 for (const name of ['native-input-language.js', 'native-text-input.js', 'native-translation-device.js', 'native-mail-translation.js', 'translation-worker.js', 'translation-notices.html']) await cp(join(root, 'native', name), join(out, name));
 for (const name of ['pro-bedienung.js','pro-bedienung.css','pro-bedienung-herkunft.json','pro-hintergrund.js','pro-geraet.js','native-ohne-web.js']) await cp(join(root,'native',name),join(out,name));   // gemeinsame Bedien-Bausteine aller Pro-Apps
 for (const name of ['native-content-icons.css','native-help.js','help-layout.css','native-activity.js','activity-layout.css','native-panes.js','panes-layout.css','native-overview.js','native-state.js','pb-arrange.js','pb-arrange.css','native-dupes.js','dupes-layout.css','mail-ai-layout.css','native-palette.js','palette-layout.css']) await cp(join(root,'native',name),join(out,name));
-for (const name of ['native-result-cards.js','result-cards.css','native-result-previews.js','result-previews.css','native-filme.js','pb-bildbeschreibung.js','pb-bildbeschreibung.css','pb-3d.js','pb-3d.css','pb-zielordner.js','pb-zielordner.css']) await cp(join(root,'native',name),join(out,name));
+for (const name of ['native-result-cards.js','result-cards.css','native-result-previews.js','result-previews.css','native-filme.js','pb-bildbeschreibung.js','pb-bildbeschreibung.css','native-meaning.js','pb-3d.js','pb-3d.css','pb-zielordner.js','pb-zielordner.css']) await cp(join(root,'native',name),join(out,name));
 await cp(join(root, 'tools/native/translation-models.json'), join(out, 'translation-models.json'));
 await cp(join(root, 'node_modules/@capacitor/core/LICENSE'), join(out, 'CAPACITOR-LICENSE'));
 // Meaning model and transformers.js inside the app (Klaus 2026-10-21), checked against fixed hashes.
@@ -142,4 +146,6 @@ await cp(join(root, 'tools/native/semantic-model.json'), join(out, 'semantic-mod
 // Bildbeschreibung (Sitzung 4): the image model is never in the bundle; its fingerprints travel with the app for the switch (ProCaption).
 await bundleCaptionModel(out);
 await cp(join(root, 'tools/native/caption-model.json'), join(out, 'caption-model.json'));
+// Pro-Umbau 5: Fingerabdrücke des zweiten Bedeutungs-Modells für den Schalter (ProMeaning); das Modell selbst ist nie im Bau.
+await cp(join(root, 'tools/native/meaning-models.json'), join(out, 'meaning-models.json'));
 console.log('Native web bundle prepared from explicit public inputs.');

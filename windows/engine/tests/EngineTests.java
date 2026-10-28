@@ -135,6 +135,7 @@ public final class EngineTests {
         Files.copy(repository.resolve("windows/gmail-desktop.json"),resources.resolve("gmail-desktop.json"));
         Files.copy(repository.resolve("tools/native/semantic-model.json"),resources.resolve("semantic-model.json"));
         Files.copy(repository.resolve("tools/native/caption-model.json"),resources.resolve("caption-model.json"));
+        Files.copy(repository.resolve("tools/native/meaning-models.json"),resources.resolve("meaning-models.json"));
         DesktopService service=new DesktopService(new DesktopState(root.resolve("api-device"),new TestProtection()),resources,(method,options)->switch(method){
             case "folder" -> new JSONObject().put("path",chosen.toString());
             case "password" -> new JSONObject().put("password",PASSWORD).put("repeat",PASSWORD).put("notice",true).put("remember",true);
@@ -168,6 +169,20 @@ public final class EngineTests {
         ok(service.call("ProCaption","getState",new JSONObject()).getInt("crashes")==1&&service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==0,"a renderer loss while the image model starts is counted for the image model only");
         service.call("ProCaption","clearCrash",new JSONObject());
         ok(service.call("DesktopInternal","modelAsset",new JSONObject().put("url","https://pbmodel.localhost/models/Xenova/vit-gpt2-image-captioning/config.json")).optBoolean("missing",false),"an image-model file is not served before the model is loaded and checked");
+        // Pro-Umbau 5: second meaning model, two stages with their own folders, pins and crash guards.
+        JSONObject meaning=service.call("ProMeaning","getState",new JSONObject());
+        JSONObject mi=meaning.getJSONObject("stages").getJSONObject("mittel"),gr=meaning.getJSONObject("stages").getJSONObject("gross");
+        ok(!mi.getBoolean("installed")&&!gr.getBoolean("installed")&&meaning.getString("running").isEmpty(),"the second meaning model (both stages) starts not installed and not loading");
+        ok(mi.getInt("files")==7&&gr.getInt("files")==7&&mi.getLong("total")==315867266L&&gr.getLong("total")==598988472L,"each stage carries the library and its own model files with the pinned sizes");
+        String bad="";try{service.call("ProMeaning","install",new JSONObject().put("stage","klein"));}catch(Exception error){bad=String.valueOf(error.getMessage());}
+        ok(bad.contains("INVALID_INPUT"),"stage klein (Modul 03's own model) or an unknown stage is refused");
+        service.call("ProMeaning","markLoading",new JSONObject().put("stage","gross"));service.call("DesktopInternal","rendererGone",new JSONObject());
+        JSONObject after=service.call("ProMeaning","getState",new JSONObject()).getJSONObject("stages");
+        ok(after.getJSONObject("gross").getInt("crashes")==1&&after.getJSONObject("mittel").getInt("crashes")==0&&service.call("ProSemantic","getState",new JSONObject()).getInt("crashes")==0,"a renderer loss while stage gross starts is counted for that stage only");
+        service.call("ProMeaning","clearCrash",new JSONObject().put("stage","gross"));
+        ok(service.call("ProMeaning","getState",new JSONObject()).getJSONObject("stages").getJSONObject("gross").getInt("crashes")==0,"only an explicit retry clears the stage's crash guard");
+        ok(service.call("DesktopInternal","modelAsset",new JSONObject().put("url","https://pbmodel.localhost/models/Xenova/multilingual-e5-base/config.json")).optBoolean("missing",false)
+            &&service.call("DesktopInternal","modelAsset",new JSONObject().put("url","https://pbmodel.localhost/models/Xenova/multilingual-e5-large/onnx/model_quantized.onnx")).optBoolean("missing",false),"a second-model file is not served before its stage is loaded and checked");
         // Ein Laufzeitordner ohne caption-model.json (älterer Stand, Protokollprobe): der Dienst startet, das Bildmodell ist nur nicht installierbar.
         Path bare=Files.createDirectory(root.resolve("resources-ohne-bildmodell"));
         Files.copy(repository.resolve("windows/gmail-desktop.json"),bare.resolve("gmail-desktop.json"));
@@ -176,6 +191,8 @@ public final class EngineTests {
         ok(!ohne.call("ProCaption","getState",new JSONObject()).getBoolean("installed"),"without caption-model.json the engine still starts and the image model is simply not installed");
         String ohnePins="";try{ohne.call("ProCaption","install",new JSONObject());}catch(Exception error){ohnePins=String.valueOf(error.getMessage());}
         ok(ohnePins.contains("NO_PINS"),"without caption-model.json installing the image model fails with NO_PINS instead of killing the engine");
+        String ohneMeaning="";try{ohne.call("ProMeaning","install",new JSONObject().put("stage","mittel"));}catch(Exception error){ohneMeaning=String.valueOf(error.getMessage());}
+        ok(ohneMeaning.contains("NO_PINS"),"without meaning-models.json the second meaning model is simply not installable (NO_PINS)");
     }
     static void tls(DesktopState state)throws Exception {
         AppNetwork.setOffline(state,false);

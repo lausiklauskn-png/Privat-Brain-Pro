@@ -16,7 +16,9 @@ import java.util.Map;
  * file under the address gets 404; nothing under it ever goes to the network. The same holds
  * for the model under the app's own address /models/Xenova/multilingual-e5-small/ and, since Sitzung 4
  * (Klaus 2026-10-26, Bildbeschreibung), for the image model under /models/Xenova/vit-gpt2-image-captioning/,
- * loaded with its own switch (ProCaption). The library is answered from whichever model folder has it.
+ * loaded with its own switch (ProCaption), and since Pro-Umbau 5 (Klaus 2026-10-28) for the second meaning model
+ * of the app's own search under /models/Xenova/multilingual-e5-base/ and -large/ (ProMeaning).
+ * The library is answered from whichever model folder has it.
  */
 final class BundledLibrary {
     static final String PREFIX = "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2";
@@ -27,6 +29,11 @@ final class BundledLibrary {
     /** Image model (Bildbeschreibung, Sitzung 4): same rule, own folder, own switch. */
     static final String CAPTION_MODEL_PREFIX = "https://localhost/models/Xenova/vit-gpt2-image-captioning/";
     static final String REMOTE_CAPTION_PREFIX = "https://huggingface.co/Xenova/vit-gpt2-image-captioning/";
+    /** Second meaning model (Pro-Umbau 5, only the app's own search): one folder per stage, own switch (ProMeaning). */
+    static final String MEANING_MITTEL_PREFIX = "https://localhost/models/Xenova/multilingual-e5-base/";
+    static final String MEANING_GROSS_PREFIX = "https://localhost/models/Xenova/multilingual-e5-large/";
+    static final String REMOTE_MEANING_MITTEL = "https://huggingface.co/Xenova/multilingual-e5-base/";
+    static final String REMOTE_MEANING_GROSS = "https://huggingface.co/Xenova/multilingual-e5-large/";
     private static final Map<String, String> FILES = new HashMap<>();
     static {
         FILES.put("transformers.min.js", "application/javascript");
@@ -56,7 +63,19 @@ final class BundledLibrary {
     static boolean coversModel(String url) { return url != null && url.startsWith(MODEL_PREFIX); }
     static boolean coversCaptionModel(String url) { return url != null && url.startsWith(CAPTION_MODEL_PREFIX); }
     /** Any remote address of the two models: never fetched by the view, the switches load them natively. */
-    static boolean remoteModel(String url) { return url != null && (url.startsWith(REMOTE_MODEL_PREFIX) || url.startsWith(REMOTE_CAPTION_PREFIX)); }
+    static boolean remoteModel(String url) {
+        return url != null && (url.startsWith(REMOTE_MODEL_PREFIX) || url.startsWith(REMOTE_CAPTION_PREFIX)
+            || url.startsWith(REMOTE_MEANING_MITTEL) || url.startsWith(REMOTE_MEANING_GROSS));
+    }
+    /** "mittel" or "gross" for an address under one of the two second-model folders, else null. */
+    static String meaningStage(String url) {
+        if (url == null) return null;
+        if (url.startsWith(MEANING_MITTEL_PREFIX)) return "mittel";
+        if (url.startsWith(MEANING_GROSS_PREFIX)) return "gross";
+        return null;
+    }
+    static String meaningMittelPath(String url) { return modelPath(url, MEANING_MITTEL_PREFIX); }
+    static String meaningGrossPath(String url) { return modelPath(url, MEANING_GROSS_PREFIX); }
 
     /** "model/<file>" for an address under the model folder, or null. Only plain names, at most one folder deep. */
     static String modelPath(String url) { return modelPath(url, MODEL_PREFIX); }
@@ -99,6 +118,10 @@ final class BundledLibrary {
 
     static WebResourceResponse respondModel(SemanticModel model, String url) { return respondFile(model, modelPath(url)); }
     static WebResourceResponse respondCaptionModel(SemanticModel model, String url) { return respondFile(model, captionModelPath(url)); }
+    static WebResourceResponse respondMeaningModel(SemanticModel model, String url) {
+        String stage = meaningStage(url);
+        return respondFile(model, "gross".equals(stage) ? meaningGrossPath(url) : "mittel".equals(stage) ? meaningMittelPath(url) : null);
+    }
     private static WebResourceResponse respondFile(SemanticModel model, String path) {
         File f = path == null || model == null ? null : model.file(path);
         if (f == null) return missing();

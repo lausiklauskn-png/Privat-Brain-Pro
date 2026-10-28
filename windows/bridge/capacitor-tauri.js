@@ -8,7 +8,7 @@
     for(const listener of listeners.get(event.detail?.name)||[])listener(event.detail.data);
   });
   const plugins={};
-  for(const name of ['ProDevice','ProFiles','ProFolders','ProVault','ProMail','ProLinks','ProNetwork','ProProtect','ProSemantic','ProCaption','ProSpeech','ProShare','ProUpdates']){
+  for(const name of ['ProDevice','ProFiles','ProFolders','ProVault','ProMail','ProLinks','ProNetwork','ProProtect','ProSemantic','ProCaption','ProMeaning','ProSpeech','ProShare','ProUpdates']){
     plugins[name]=new Proxy(Object.freeze({}),{get(_,method){
       if(method==='then')return undefined;
       if(method==='addListener')return async(event,listener)=>{
