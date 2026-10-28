@@ -197,5 +197,7 @@ try{
   ok('Java: von Hand gesperrt öffnet weder Zustand noch Hintergrund noch Mail-Ablage mit dem gemerkten Schlüssel',
     /if \(!vonHandGesperrt\) gemerktEntsperren\(\);/.test(java)&&(java.match(/offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\)/g)||[]).length===2
     &&/sperren\(boolean vergessen\) \{\s*schliessen\(\);\s*vonHandGesperrt = true;/.test(java)&&/tresorWeiter\(PluginCall call\) throws Exception \{\s*tresor\(\)\.entsperrenGewuenscht\(\);/.test(plug));
+  ok('Java: ein später Tresor-Aufruf nach dem Schließen der App stürzt nicht ab (RejectedExecutionException wird abgelehnt, nicht geworfen)',
+    /private void tresorWork\(PluginCall call, Work task\) \{[\s\S]{0,900}?catch \(java\.util\.concurrent\.RejectedExecutionException closed\) \{ call\.reject\("NATIVE_ACTIVITY_CLOSED"/.test(plug));
   console.log(count+' Tresorordner-Proben bestanden (Browser, Android-Plugins gestellt).');
 }finally{await browser?.close();}
