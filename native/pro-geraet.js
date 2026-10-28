@@ -40,6 +40,9 @@
   const MODELLE = {
     bedeutung: { name: 'Bedeutungssuche (multilingual-e5-small)', mb: 118, spitzeMB: 600, ab: 0 },
     bild:      { name: 'Bildbeschreibung (vit-gpt2)', mb: 256, spitzeMB: 1217, ab: 1 },
+    // Zweites Bedeutungs-Modell nur für die Suche in der App (gemessen 2026-10-28, Lauf 40758382311, Renderer-Spitze).
+    bedeutungMittel: { name: 'Bedeutungssuche größer (multilingual-e5-base)', mb: 282, spitzeMB: 1332, ab: 1 },
+    bedeutungGross:  { name: 'Bedeutungssuche groß (multilingual-e5-large)', mb: 552, spitzeMB: 2252, ab: 2 },
     diktatKlein: { name: 'Diktat Whisper base', mb: 150, spitzeMB: 500, ab: 0, geplant: true },
     diktatMittel: { name: 'Diktat Whisper small', mb: 470, spitzeMB: 1200, ab: 1, geplant: true },
     diktatGross: { name: 'Diktat Whisper large-v3-turbo', mb: 1600, spitzeMB: 3500, ab: 2, geplant: true },
