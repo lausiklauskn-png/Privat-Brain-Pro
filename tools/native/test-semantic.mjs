@@ -61,6 +61,7 @@ try{
   await box.locator('[data-semantic="load"]').click();
   await page.waitForFunction(()=>/Wird geladen: (20|90) von 155 MB/.test(document.querySelector('#pb-semantic [data-s="text"]').textContent));
   ok('While loading the bar moves and names the source',parseFloat(await box.locator('.pb-semantic-bar>span').evaluate(e=>e.style.width))>0&&(await text()).includes('family-projekt.de'));
+  ok('Before loading the device check names this computer and its verdict (Klaus 2026-10-28)',/Dieser Rechner: .*Stufe .*multilingual-e5-small.*(passt|knapp)/.test(await box.locator('[data-s="geraet"]').textContent())&&await box.locator('[data-s="geraet"]').isVisible());
   ok('While loading there is a cancel button and no second load button',await box.locator('[data-semantic="cancel"]').isVisible()&&!(await box.locator('[data-semantic="load"]').isVisible()));
   await page.waitForFunction(()=>document.getElementById('pb-semantic').dataset.state==='active');
   ok('When complete the model starts once, marked before and after',await page.evaluate(()=>SbkimEmbedding.inits===1&&sem.log.join(',')==='install,markLoading,init,markLoaded'));

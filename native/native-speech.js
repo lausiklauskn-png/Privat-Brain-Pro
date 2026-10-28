@@ -21,10 +21,18 @@
   function eligible(field) {
     if (!field.isConnected || field.matches(':disabled,[readonly]') || field.closest('[data-no-dictate],[data-secret],[data-pb-private]')) return false;
     if (['trShares', 'aiKey'].includes(field.id) || /(?:^|\s)(?:current-password|new-password|one-time-code)(?:\s|$)/.test(field.autocomplete || '')) return false;
-    if (field instanceof HTMLInputElement) return ['text', 'search', 'email', 'url', 'tel'].includes(field.type);
+    // Klaus 2026-10-28 (in allen Pro-Apps gleich): Mikrofon nur an Suchfeldern und an Freitext (mehrzeilig: Mail-Text,
+    // Notizen). Einzeilige Felder (Namen, Adressen, Beträge, Betreff) nur, wenn sie ausdrücklich data-dictate tragen.
+    if (field instanceof HTMLInputElement) return field.type === 'search' || field.getAttribute('role') === 'searchbox' || (field.hasAttribute('data-dictate') && ['text', 'email', 'url', 'tel'].includes(field.type));
     if (field instanceof HTMLTextAreaElement) return true;
     if (!field.isContentEditable) return false;
     return !field.parentElement?.closest('[contenteditable="true"],[contenteditable="plaintext-only"],[contenteditable=""]');
+  }
+  // Fields without a microphone still get the chosen input language and spelling (Klaus 2026-10-28: only the microphone goes).
+  function textLike(field) {
+    if (!field.isConnected || field.matches(':disabled,[readonly]') || field.closest('[data-secret],[data-pb-private]')) return false;
+    if (/(?:^|\s)(?:current-password|new-password|one-time-code)(?:\s|$)/.test(field.autocomplete || '')) return false;
+    return field instanceof HTMLInputElement ? ['text', 'search', 'email', 'url', 'tel'].includes(field.type) : field instanceof HTMLTextAreaElement;
   }
   function fieldName(field) {
     const own = field.getAttribute('aria-label');
@@ -142,7 +150,8 @@
       } else paint(mic, field);
     }
     for (const field of document.querySelectorAll(candidates)) {
-      if (!eligible(field) || field.id === 'q' || controls.has(field)) continue;
+      if (field.id === 'q' || controls.has(field)) continue;
+      if (!eligible(field)) { if (textLike(field)) window.PBInputLanguage?.applyField?.(field); continue; }
       add(field);
     }
     const search = document.getElementById('q'), mic = document.getElementById('mic');

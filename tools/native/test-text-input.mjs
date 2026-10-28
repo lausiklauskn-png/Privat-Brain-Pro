@@ -33,9 +33,9 @@ try{
   const dialog=page.locator('dialog.pb-text-input'),field=dialog.locator('#pb-text-input-value');
   for(const [language,apply,cancel]of[['de','Übernehmen','Abbrechen'],['en','Apply','Cancel'],['ru','Применить','Отмена'],['pl','Zastosuj','Anuluj']]){
     await page.evaluate(language=>{document.documentElement.lang=language;},language);
-    await page.locator('#text-prompt-fixture').click();await field.waitFor();await dialog.locator('.pb-dictate').waitFor();
-    ok(language+': one ordinary text field with a microphone and localized actions',await dialog.locator('input').count()===1&&await dialog.locator('.pb-dictate').count()===1&&await dialog.getByRole('button',{name:apply,exact:true}).count()===1&&await dialog.getByRole('button',{name:cancel,exact:true}).count()===1);
-    ok(language+': the title is plain text, the initial value stays focused/selected after microphone insertion, and recording does not start itself',await dialog.locator('h2').textContent()==='Eingabe <b>als Text</b>'&&await dialog.locator('h2 b').count()===0&&await field.inputValue()==='Ausgangstext'&&await page.evaluate(()=>speechCalls.length===0&&document.activeElement.id==='pb-text-input-value'&&document.getElementById('pb-text-input-value').selectionStart===0&&document.getElementById('pb-text-input-value').selectionEnd===12));
+    await page.locator('#text-prompt-fixture').click();await field.waitFor();await page.waitForTimeout(150);
+    ok(language+': one ordinary text field, no microphone (Klaus 2026-10-28: nur Suche und Notizen), localized actions',await dialog.locator('input').count()===1&&await dialog.locator('.pb-dictate').count()===0&&await dialog.getByRole('button',{name:apply,exact:true}).count()===1&&await dialog.getByRole('button',{name:cancel,exact:true}).count()===1);
+    ok(language+': the title is plain text, the initial value stays focused/selected, and recording does not start itself',await dialog.locator('h2').textContent()==='Eingabe <b>als Text</b>'&&await dialog.locator('h2 b').count()===0&&await field.inputValue()==='Ausgangstext'&&await page.evaluate(()=>speechCalls.length===0&&document.activeElement.id==='pb-text-input-value'&&document.getElementById('pb-text-input-value').selectionStart===0&&document.getElementById('pb-text-input-value').selectionEnd===12));
     await page.keyboard.press('Escape');await dialog.waitFor({state:'detached'});
     ok(language+': Escape cancels without an answer and restores keyboard focus',await page.evaluate(()=>fixtureAnswer===null&&document.activeElement.id==='text-prompt-fixture'));
   }
@@ -54,8 +54,8 @@ try{
   });
   if(await page.locator('#mode [data-m="mean"]').getAttribute('aria-pressed')==='true')await page.locator('#mode [data-m="mean"]').click();await page.locator('#q').fill('Tagprobe');
   const card=page.locator('#results .card[data-hash="'+'a'.repeat(64)+'"]');
-  await card.locator('[data-tagadd]').click();await dialog.locator('.pb-dictate').waitFor();
-  await dialog.locator('.pb-dictate').click();await page.waitForFunction(()=>document.getElementById('pb-text-input-value')?.value==='GesprochenesTag');
+  await card.locator('[data-tagadd]').click();await page.locator('#pb-text-input-value').waitFor();
+  await page.locator('#pb-text-input-value').fill('GesprochenesTag');
   await dialog.getByRole('button',{name:'Übernehmen',exact:true}).click();await dialog.waitFor({state:'detached'});
   await page.waitForFunction(()=>CATALOG.find(r=>r.name==='Tagprobe.txt').tags.includes('GesprochenesTag'));
   ok('A dictated tag uses the real add action and is stored before it is displayed',await page.evaluate(async()=>{const r=CATALOG.find(r=>r.name==='Tagprobe.txt');return r.tags.includes('GesprochenesTag')&&(await idbGet('catalog',r.hash)).tags.includes('GesprochenesTag');})&&(await card.textContent()).includes('GesprochenesTag'));
@@ -104,8 +104,8 @@ try{
 
 
   await navigateTo(page,'mail');const local=page.locator('.mail-app:not(.live-mail)');
-  const addFolder=local.locator('[data-mail-text="newFolder"]');await addFolder.scrollIntoViewIfNeeded();await addFolder.click();await dialog.locator('.pb-dictate').waitFor();
-  await page.evaluate(()=>{speechAnswer='Neue Ablage';});await dialog.locator('.pb-dictate').click();await page.waitForFunction(()=>document.getElementById('pb-text-input-value')?.value==='Neue Ablage');
+  const addFolder=local.locator('[data-mail-text="newFolder"]');await addFolder.scrollIntoViewIfNeeded();await addFolder.click();await page.locator('#pb-text-input-value').waitFor();
+  await page.locator('#pb-text-input-value').fill('Neue Ablage');
   await dialog.getByRole('button',{name:'Übernehmen',exact:true}).click();await dialog.waitFor({state:'detached'});
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pb_mail_folders')||'[]').some(folder=>folder.name==='Neue Ablage'));
   ok('A local mail folder can be named by voice while its surrounding mailbox is busy',await local.locator('[data-mail-folder^="custom_"]').textContent().then(text=>text.includes('Neue Ablage')));

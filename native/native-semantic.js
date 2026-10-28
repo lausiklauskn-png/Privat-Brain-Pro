@@ -78,7 +78,7 @@
   const t = (k, v = {}) => ((W[document.documentElement.lang] || W.de)[k] || W.de[k]).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
   const mb = n => String(Math.round((n || 0) / 1048576));
   let state = { installed: false, running: false, present: 0, total: 0, crashes: 0 };
-  let live = null, message = '', phase = '';   // phase: '' | 'starting' | 'active' | 'startFailed'
+  let live = null, message = '', phase = '', geraetSatz = '';   // phase: '' | 'starting' | 'active' | 'startFailed'
 
   function panel() {
     let box = document.getElementById('pb-semantic');
@@ -88,7 +88,7 @@
     box = document.createElement('div');
     box.id = 'pb-semantic'; box.className = 'pb-semantic';
     box.innerHTML = '<b data-s="title"></b><div class="pb-semantic-bar" hidden><span></span></div><p data-s="text" role="status"></p>'
-      + '<div class="pb-semantic-actions"><button type="button" data-semantic="load"></button><button type="button" data-semantic="cancel" hidden></button>'
+      + '<p data-s="geraet" class="pb-semantic-geraet" hidden></p><div class="pb-semantic-actions"><button type="button" data-semantic="load"></button><button type="button" data-semantic="cancel" hidden></button>'
       + '<button type="button" data-semantic="retry" hidden></button><button type="button" data-semantic="remove" hidden></button></div>';
     anchor.after(box);
     box.addEventListener('click', event => {
@@ -117,6 +117,7 @@
     else if (state.present > 0) text = t('partial', { done: mb(state.present), mb: mb(total) });
     else text = t('none', { mb: mb(total) });
     q('[data-s="text"]').textContent = text;
+    const geraet = q('[data-s="geraet"]'); if (geraet) { geraet.textContent = geraetSatz; geraet.hidden = !geraetSatz; }
     const bar = q('.pb-semantic-bar'), done = running && live ? live.done : state.present;
     bar.hidden = state.installed || !(running || state.present > 0);
     bar.firstElementChild.style.width = total ? `${Math.min(100, done / total * 100).toFixed(1)}%` : '0';
@@ -144,7 +145,13 @@
   }
 
   async function load() {
-    message = ''; live = { done: state.present, total: state.total, source: '' }; render();
+    message = '';
+    // Gerätecheck (Klaus 2026-10-28): erst messen, dann laden; bei „nicht empfohlen“ fragt ProGeraet ausdrücklich nach.
+    if (window.ProGeraet) {
+      try { const v = await window.ProGeraet.vorDemLaden('bedeutung'); geraetSatz = v.satz; render(); if (!v.weiter) return; }
+      catch { /* ohne Messung wie bisher */ }
+    }
+    live = { done: state.present, total: state.total, source: '' }; render();
     try {
       state = await plugin.install(); live = null; render();
       if (state.installed) startModel();

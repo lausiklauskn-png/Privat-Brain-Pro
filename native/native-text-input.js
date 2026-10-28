@@ -1,5 +1,5 @@
-/* Ordinary native text entry uses an app dialog so the shared microphone can
-   be reached by touch, mouse and keyboard. Secret/password dialogs stay native. */
+/* Ordinary native text entry uses an app dialog (touch, mouse and keyboard). Since 2026-10-28 (Klaus: microphone only at
+   search and free text) these one-line names get no microphone. Secret/password dialogs stay native. */
 (() => {
   'use strict';
   const labels = {
