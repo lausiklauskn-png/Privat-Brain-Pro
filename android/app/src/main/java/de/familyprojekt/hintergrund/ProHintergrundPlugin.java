@@ -77,9 +77,13 @@ public class ProHintergrundPlugin extends Plugin {
     /** Einmal je Installation fragen; „nein“ ist eine gültige Antwort (der Dienst läuft auch ohne sichtbare Mitteilung). */
     @PluginMethod public void erlauben(PluginCall call) {
         boolean gefragt = getContext().getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE).getBoolean(GEFRAGT, false);
-        if (Build.VERSION.SDK_INT < 33 || getPermissionState("mitteilung") == PermissionState.GRANTED || gefragt) { erlaubtAntwort(call); return; }
+        if (Build.VERSION.SDK_INT < 33 || getPermissionState("mitteilung") == PermissionState.GRANTED || gefragt || unterProbe()) { erlaubtAntwort(call); return; }
         getContext().getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE).edit().putBoolean(GEFRAGT, true).apply();
         requestPermissionForAlias("mitteilung", call, "nachFrage");
+    }
+    /** Gerätetests (Instrumentierung) laufen im App-Prozess: dort kein Systemfenster, das die Probe verdecken würde. */
+    static boolean unterProbe() {
+        try { Class.forName("androidx.test.platform.app.InstrumentationRegistry"); return true; } catch (ClassNotFoundException nein) { return false; }
     }
     @PermissionCallback private void nachFrage(PluginCall call) { erlaubtAntwort(call); }
     private void erlaubtAntwort(PluginCall call) {

@@ -111,6 +111,9 @@ try {
   });
   await mit.addScriptTag({ content: hjs });
   const h = await mit.evaluate(async () => {
+    // Playwright zählt evaluate als Tipp: „kein Tipp“ hier ausdrücklich nachstellen (wie ein Start aus einer Schleife).
+    const echt = Object.getOwnPropertyDescriptor(Navigator.prototype, 'userActivation');
+    Object.defineProperty(navigator, 'userActivation', { configurable: true, get: () => ({ isActive: false }) });
     const a = await ProHintergrund.beginnen({ art: 'pruefen', titel: 'Prüfen läuft' });
     for (let i = 1; i <= 5; i++) a.stand(i + ' von 5', i, 5);       // schnell hintereinander: höchstens einmal je Sekunde
     const sofort = __log.filter(e => e[0] === 'stand').length;
@@ -119,10 +122,15 @@ try {
     window.__abbruch(a.id); const abgebrochen = a.signal.aborted && a.grund === 'mitteilung';
     a.ende(); a.ende();
     const zweite = await ProHintergrund.lauf({ art: 'sichern', titel: 'Sicherung läuft' }, async () => { throw new Error('kaputt'); }).catch(e => e.message);
+    delete navigator.userActivation; if (echt) Object.defineProperty(Navigator.prototype, 'userActivation', echt);
     return { log: __log, sofort, spaeter, abgebrochen, zweite, geschuetzt: a.geschuetzt, aktiv: ProHintergrund.aktiv() };
   });
   ok('Beim Laden räumt die Seite alte Aufgaben ab (Neuladen meldet kein Ende)', h.log[0][0] === 'aufraeumen');
-  ok('Erste Aufgabe fragt einmal nach der Mitteilung, dann beginnen mit Titel', h.log.filter(e => e[0] === 'erlauben').length === 1 && h.log.some(e => e[0] === 'beginnen' && e[2] === 'Prüfen läuft') && h.geschuetzt === true);
+  ok('Ohne Tipp keine Frage nach der Mitteilung; beginnen mit Titel', h.log.filter(e => e[0] === 'erlauben').length === 0 && h.log.some(e => e[0] === 'beginnen' && e[2] === 'Prüfen läuft') && h.geschuetzt === true);
+  await mit.evaluate(() => { const b = document.createElement('button'); b.id = 'los'; b.textContent = 'los'; b.onclick = () => { window.__p = ProHintergrund.beginnen({ art: 'einordnen', titel: 'y' }).then(a => a.ende()); }; document.body.append(b); });
+  await mit.click('#los'); await mit.evaluate(() => window.__p);
+  await mit.click('#los'); await mit.evaluate(() => window.__p);
+  ok('Aus einem Tipp: genau einmal nach der Mitteilung gefragt', await mit.evaluate(() => __log.filter(e => e[0] === 'erlauben').length === 1));
   ok('Stand gedrosselt: sofort einer, danach der letzte („5 von 5“)', h.sofort === 1 && h.spaeter.length === 2 && h.spaeter[1][1] === '5 von 5' && h.spaeter[1][2] === 5);
   ok('„Abbrechen“ in der Mitteilung bricht die Aufgabe ab (signal)', h.abgebrochen);
   ok('ende genau einmal; lauf meldet ende auch bei Fehler', h.log.filter(e => e[0] === 'ende').length === 2 && h.zweite === 'kaputt' && h.aktiv === 0);

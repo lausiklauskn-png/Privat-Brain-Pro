@@ -52,7 +52,9 @@
     laufend.set(id, a);
     if (p) {
       zuhoeren(p);
-      if (!gefragt && typeof p.erlauben === 'function') { gefragt = true; try { await p.erlauben(); } catch { /* nein ist erlaubt */ } }
+      // Nach der Mitteilung nur fragen, wenn die Aufgabe direkt aus einem Tipp kommt (nie ungefragt beim Start, nie in
+      // Proben ohne Tipp). Ohne Erlaubnis läuft der Dienst trotzdem; Android zeigt ihn dann nur in der Aufgabenliste.
+      if (!gefragt && navigator.userActivation?.isActive && typeof p.erlauben === 'function') { gefragt = true; try { await p.erlauben(); } catch { /* nein ist erlaubt */ } }
       try { a.geschuetzt = !!(await p.beginnen({ id, titel: String(titel || ''), text: String(text || '') }))?.geschuetzt; }
       catch { a.geschuetzt = false; }
     }
