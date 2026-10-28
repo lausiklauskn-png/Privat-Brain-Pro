@@ -34,6 +34,8 @@
     locked: ['gesperrt', 'locked', 'закрыт', 'zablokowane'],
     ok: ['✓ Freigeschaltet: ', '✓ Unlocked: ', '✓ Открыто: ', '✓ Odblokowano: '],
     for: [' (für {n})', ' (for {n})', ' (для {n})', ' (dla {n})'],
+    // Leitfaden § 6 (Tablet-Probe 2026-10-28): Klaus kopierte den öffentlichen Schlüssel ins Code-Feld.
+    pubKey: ['Das ist der öffentliche Schlüssel, kein Freischalt-Code. Ein Freischalt-Code beginnt mit „PBK1.“.', 'This is the public key, not an unlock code. An unlock code starts with “PBK1.”.', 'Это открытый ключ, а не код разблокировки. Код начинается с «PBK1.».', 'To jest klucz publiczny, a nie kod odblokowania. Kod zaczyna się od „PBK1.”.'],
     bad: ['Dieser Code passt nicht. Bitte genau so einfügen, wie du ihn bekommen hast.', 'This code does not fit. Please paste it exactly as you received it.', 'Код не подходит. Вставьте его точно как получили.', 'Ten kod nie pasuje. Wklej go dokładnie tak, jak go otrzymałeś.'],
     foreign: ['Dieser Code ist echt, aber nicht vom Herausgeber dieser App.', 'This code is genuine but not from the publisher of this app.', 'Код настоящий, но не от издателя этого приложения.', 'Ten kod jest prawdziwy, ale nie od wydawcy tej aplikacji.'],
     owner: ['Auf diesem Gerät liegt der Herausgeber-Schlüssel: alle Werkzeuge sind frei.', 'This device holds the publisher key: all tools are open.', 'На этом устройстве ключ издателя: все инструменты открыты.', 'To urządzenie ma klucz wydawcy: wszystkie narzędzia są otwarte.'],
@@ -115,8 +117,11 @@
 
   // ---------- trusted publishers and stored codes ----------
   let publishers = [];
-  const ready = fetch('license-keys.json').then(r => r.ok ? r.json() : { publishers: [] }).catch(() => ({ publishers: [] }))
+  // Liest nur die mitgelieferte Datei (kein Setzen von außen). reloadKeys() liest sie erneut, z. B. nach einem Update im Hintergrund.
+  const loadKeys = () => fetch('license-keys.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : { publishers: [] }).catch(() => ({ publishers: [] }))
     .then(data => { publishers = (data.publishers || []).map(p => String(p.key || '').toLowerCase()).filter(k => /^[0-9a-f]{64}$/.test(k)); });
+  const ready = loadKeys();
+  const reloadKeys = () => loadKeys().then(() => publishers.length);
   const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } };
   const STUDIO = 'pb_studio_v1', CODES = 'pb_license_codes', LOG = 'pb_studio_log';
@@ -128,7 +133,9 @@
   }
   const isOwner = () => { const own = studio()?.pub; return Boolean(own && trusted().includes(own)); };
   async function check(code) {
-    const m = /^PBK1\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(String(code || '').replace(/\s+/g, ''));
+    const roh = String(code || '').replace(/\s+/g, '');
+    if (/^[0-9a-f]{64}$/i.test(roh)) return { ok: false, why: 'pubKey' };
+    const m = /^PBK1\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(roh);
     if (!m) return { ok: false, why: 'bad' };
     let data;
     try { data = JSON.parse(dec.decode(unb64u(m[1]))); } catch { return { ok: false, why: 'bad' }; }
@@ -399,6 +406,6 @@
   }
   new MutationObserver(() => { box = null; document.getElementById('pb-license')?.remove(); paint(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  window.PBLicense = { toolIcon, studioShown, probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready };
+  window.PBLicense = { toolIcon, studioShown, probe, probeDue, makeShares, restoreFromShares, TOOLS, toolName, unlocked, refresh, addCode, check, isOwner, createKey, makeCode, backupText, restoreBackup, words: t, ready, reloadKeys };
   void refresh();
 })();
