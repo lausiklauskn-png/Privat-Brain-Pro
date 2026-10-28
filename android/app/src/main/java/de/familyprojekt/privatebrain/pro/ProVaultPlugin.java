@@ -106,6 +106,18 @@ public class ProVaultPlugin extends Plugin {
     }
     @PluginMethod public void unlock(PluginCall call) { getActivity().runOnUiThread(() -> passwordDialog(call, MODE_UNLOCK, null)); }
     @PluginMethod public void lock(PluginCall call) { work(call, () -> vault.lock()); }
+    /** „In Dateien öffnen“ (Leitfaden § 5): zeigt die Ablage oder den Tresorordner in der Dateien-App. Nichts wird gelesen oder verändert. */
+    @PluginMethod public void ordnerOeffnen(PluginCall call) {
+        String[] ablage = "tresor".equals(call.getString("welcher")) ? null : vault.ordnerAdresse();
+        Uri uri = "tresor".equals(call.getString("welcher")) ? tresor().ordnerUri()
+            : ablage == null ? null : android.provider.DocumentsContract.buildDocumentUriUsingTree(Uri.parse(ablage[0]), ablage[1]);
+        if (uri == null) { call.reject("VAULT_NOT_CONFIGURED", "VAULT_NOT_CONFIGURED"); return; }
+        Intent intent = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        try { getActivity().startActivity(intent); call.resolve(); }
+        catch (android.content.ActivityNotFoundException none) { call.reject("KEIN_DATEIEN_PROGRAMM", "KEIN_DATEIEN_PROGRAMM"); }
+        catch (SecurityException denied) { call.reject("VAULT_FOLDER_UNAVAILABLE", "VAULT_FOLDER_UNAVAILABLE"); }
+    }
     @PluginMethod public void migrate(PluginCall call) {
         work(call, () -> vault.migrate(new OriginalFileStore(getContext()), new EncryptedMailStore(getContext())));
     }

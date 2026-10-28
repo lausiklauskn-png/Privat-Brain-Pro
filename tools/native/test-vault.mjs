@@ -186,7 +186,7 @@ try{
   const bChoose=folder.calls.find(c=>c.device==='B'&&c.method==='choose');
   ok('Opening uses the generic picker without volume',bChoose.args.volume==='');
   await B.page.evaluate(()=>{document.documentElement.lang='en';});
-  ok('Card follows the language switch',await B.page.locator('#vaultPlace h3').textContent()==='🔐 Storage location and encryption');
+  ok('Card follows the language switch',await B.page.locator('#vaultPlace h3').textContent()==='Vault & storage');
   ok('No page errors on device B',B.errors.length===0);
   console.log(`${count} vault simulation checks passed (browser, Android plugins stubbed).`);
 }finally{await browser?.close();}

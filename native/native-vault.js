@@ -6,7 +6,11 @@
   const api = window.Capacitor?.Plugins?.ProVault;
   if (typeof api?.state !== 'function') return;
   const words = {
-    title: ['🔐 Speicherort und Verschlüsselung', '🔐 Storage location and encryption', '🔐 Место хранения и шифрование', '🔐 Miejsce zapisu i szyfrowanie'],
+    // Leitfaden § 2 (Klaus 2026-10-28): nur EIN Ding heißt „Tresor“; der Kasten trägt Ablage und Tresor untereinander.
+    title: ['Tresor & Ablage', 'Vault & storage', 'Сейф и хранилище', 'Sejf i magazyn'],
+    ablage: ['Ablage von Private Brain', 'Private Brain storage', 'Хранилище Private Brain', 'Magazyn Private Brain'],
+    openFiles: ['In Dateien öffnen', 'Open in Files', 'Открыть в «Файлах»', 'Otwórz w Plikach'],
+    KEIN_DATEIEN_PROGRAMM: ['Keine Dateien-App gefunden, die Ordner zeigen kann. Pfad: ', 'No Files app found that can show folders. Path: ', 'Не найдено приложение «Файлы». Путь: ', 'Nie znaleziono aplikacji Pliki. Ścieżka: '],
     help: ['Lege fest, wo Private Brain Pro deine Daten ablegt: auf dem Tablet oder auf der SD-Karte. Mail-Anhänge (bis 1 GB je Datei), geöffnete Mails, Konten, Entwürfe, Originale und eine Sicherung des Katalogs liegen dort verschlüsselt mit deinem eigenen Passwort. Mit dem Ordner und dem Passwort holst du alles auf einem neuen Gerät zurück.', 'Choose where Private Brain Pro keeps your data: on the tablet or on the SD card. Email attachments (up to 1 GB each), opened emails, accounts, drafts, originals and a catalog backup are stored there, encrypted with your own password. With the folder and the password you can restore everything on a new device.', 'Выберите, где Private Brain Pro хранит данные: на планшете или на SD-карте. Вложения (до 1 ГБ каждое), открытые письма, аккаунты, черновики, оригиналы и резервная копия каталога хранятся там, зашифрованные вашим паролем. С папкой и паролем всё восстанавливается на новом устройстве.', 'Wybierz, gdzie Private Brain Pro przechowuje dane: na tablecie lub karcie SD. Załączniki (do 1 GB każdy), otwarte wiadomości, konta, szkice, oryginały i kopia katalogu są tam zaszyfrowane Twoim hasłem. Z folderem i hasłem przywrócisz wszystko na nowym urządzeniu.'],
     choose: ['Speicherort wählen', 'Choose storage location', 'Выбрать место', 'Wybierz miejsce'],
     change: ['Anderen Speicherort wählen', 'Choose another location', 'Выбрать другое место', 'Wybierz inne miejsce'],
@@ -90,6 +94,7 @@
   // ---------- settings card ----------
   const card = make('div', null, 'note native-vault'); card.id = 'vaultPlace';
   const heading = make('h3'), help = make('p', null, 'hint'), status = make('p', null, 'native-vault-status');
+  const ablageKopf = make('h4', null, 'pro-ablage-kopf'), ablageZeile = make('div', null, 'pro-ablage-zeile'); ablageZeile.id = 'vaultOrt';
   status.setAttribute('role', 'status'); status.id = 'vaultStatus';
   const row = make('div', null, 'btnrow'); row.style.justifyContent = 'flex-start';
   const buttons = {};
@@ -98,9 +103,16 @@
   }
   const details = make('details', null, 'native-vault-limits'), summary = make('summary'), list = make('ul');
   details.append(summary, list);
-  card.append(heading, help, status, row, details);
+  card.append(heading, help, ablageKopf, ablageZeile, status, row, details);
   const settings = document.getElementById('panel-settings');
   settings?.prepend(card);
+  // Leitfaden § 2 (Klaus 2026-10-28): der alte Browser-Datei-Tresor („Tresor — Verschlüsselung“) gehört nicht in die Pro-App.
+  // Nie eingerichtet → ausgeblendet. Eingerichtet → bleibt sichtbar, bis sein Inhalt in die Ablage übernommen ist (eigener Schritt).
+  const altTresor = () => {
+    let eingerichtet = false; try { eingerichtet = Boolean(window.PBTresor?.isSetUp?.()); } catch { /* ohne Auskunft: nicht eingerichtet */ }
+    for (const id of ['tresorNote', 'vaultNote']) { const n = document.getElementById(id); if (n) n.hidden = !eingerichtet; }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', altTresor, { once: true }); else altTresor();
   // A single line on "Dateien hinzufügen" shows where new copies go.
   const line = make('p', null, 'native-vault-line'); line.id = 'vaultLine';
   const lineText = make('span'), lineButton = make('button', null, 'ghost'); lineButton.type = 'button';
@@ -114,6 +126,21 @@
   }
   function render() {
     heading.textContent = t('title'); help.textContent = t('help'); summary.textContent = t('limits');
+    ablageKopf.textContent = t('ablage');
+    const P = window.ProBedienung;
+    // Nur neu bauen, wenn sich Zustand, Pfad oder Sprache ändern (sonst wäre jedes Neuzeichnen eine DOM-Änderung).
+    const ortSig = [Boolean(P && state.configured), state.unlocked, state.location, state.pfad, state.folder, document.documentElement.lang, typeof api.ordnerOeffnen].join('|');
+    if (ablageZeile.dataset.sig !== ortSig) { ablageZeile.dataset.sig = ortSig; ablageZeile.replaceChildren(); }
+    if (P && state.configured && !ablageZeile.firstChild) {
+      // Zustand ● und ganzer Pfad + „In Dateien öffnen“ (Leitfaden § 2, § 5).
+      const pfad = t(state.location === 'sdcard' ? 'sdcard' : state.location === 'device' ? 'device' : state.location === 'removable' ? 'removable' : 'other') + '/' + (state.pfad || state.folder || '');
+      const oeffnen = typeof api.ordnerOeffnen === 'function' ? () => act(async () => {
+        try { await api.ordnerOeffnen({ welcher: 'ablage' }); }
+        catch (error) { note = error?.code === 'KEIN_DATEIEN_PROGRAMM' ? t('KEIN_DATEIEN_PROGRAMM') + pfad : errorText(error); }
+      }) : null;
+      const zeile = P.ordnerZeile(pfad, oeffnen); zeile.prepend(P.zustand(Boolean(state.unlocked)));
+      ablageZeile.append(zeile);
+    }
     list.replaceChildren(...words.limitList[lang()].map(s => make('li', s)));
     for (const [key, b] of Object.entries(buttons)) b.textContent = t(key === 'choose' && state.configured ? 'change' : key);
     buttons.unlock.hidden = !state.configured || state.unlocked;

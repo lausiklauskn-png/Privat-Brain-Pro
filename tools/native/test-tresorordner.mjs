@@ -1,4 +1,4 @@
-// Simulation (Browser, Plugins gestellt): Tresorordner Schritt D2 — Abschnitt im Kasten „Speicherort und Verschlüsselung“,
+// Simulation (Browser, Plugins gestellt): Tresorordner Schritt D2 — Abschnitt im Kasten „Tresor & Ablage“,
 // Einzug, Inhaltsverzeichnis aus dem Katalog (nur Kurzfassung), Rechnungsmail ins Fach „Eingang-BookLedgerPro“ ohne
 // dass die .eml durch die Seite geht. Die Java-Seite prüft TresorEinzugTest (JVM).
 import assert from 'node:assert/strict';
@@ -14,7 +14,7 @@ const folder={exists:false,catalog:[],attachments:[],calls:[]};
 const tresor={zustand:{gewaehlt:false,ordner:'',gemerkt:false,offen:false,eingezogen:false},fehler:null,zeilen:null,mails:[]};
 const textBytes=Buffer.from('Anwaltsschreiben im Anhang-Ordner');
 function fresh(){return{configured:false,unlocked:false,pending:new Map()};}
-async function device(name,{answers=[],ohneTresor=false}={}){
+async function device(name,{answers=[],ohneTresor=false,altTresor=false}={}){
   const context=await browser.newContext({viewport:{width:1280,height:900}});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   const dialogs=[];page.on('dialog',d=>{dialogs.push(d.message());const a=answers.shift();a===false?d.dismiss():d.accept();});
@@ -47,6 +47,7 @@ async function device(name,{answers=[],ohneTresor=false}={}){
     if(method==='catalogInfo'){const last=folder.catalog.at(-1);return last?{exists:true,size:last.length,version:folder.catalog.length}:{exists:false};}
     if(method==='catalogRead')return{data:folder.catalog[args.version-1].subarray(args.offset,args.offset+262144).toString('base64')};
     // Wie Java: ein gemerkter Schlüssel öffnet beim Zustand von selbst – außer nach „Sperren“ von Hand (vonHandGesperrt).
+    if(method==='ordnerOeffnen'){folder.geoeffnet=(folder.geoeffnet||[]).concat(args.welcher);return{};}
     if(method==='tresorZustand'){if(tresor.zustand.gemerkt&&!tresor.zustand.offen&&tresor.zustand.vorhanden&&!tresor.vonHand)tresor.zustand={...tresor.zustand,offen:true,eingezogen:true};return {...tresor.zustand};}
     if(method==='tresorEinziehen'){tresor.vonHand=false;tresor.einzuege=(tresor.einzuege||0)+1;if(JSON.stringify(args).toLowerCase().includes('passw'))throw new Error('password crossed the bridge');if(!local.unlocked)throw new Error('VAULT_LOCKED');if(tresor.fehler){const f=tresor.fehler;tresor.fehler=null;throw new Error(f);}
       tresor.zustand={gewaehlt:true,ordner:'Tresor-Probe',gemerkt:true,offen:true,eingezogen:true,erreichbar:true,vorhanden:true,pruefung:'PASST',eintraege:0};return {...tresor.zustand,eingezogenJetzt:true,angelegt:true};}
@@ -74,9 +75,11 @@ async function device(name,{answers=[],ohneTresor=false}={}){
     throw new Error('Unknown mail method '+method);
   });
   if(ohneTresor)await page.addInitScript(()=>{window.__ohneTresor=true;});
+  // Der alte Browser-Datei-Tresor ist nur sichtbar, wenn er einmal eingerichtet wurde (Leitfaden § 2).
+  if(altTresor)await page.addInitScript(()=>{try{localStorage.setItem('pb_tresor_verify','x');}catch{}});
   await page.addInitScript(()=>{
     delete window.showDirectoryPicker;
-    const vault=['state','volumes','choose','unlock','lock','migrate','backupMail','attachments','readAttachment','openAttachment','clearAttachments','catalogBegin','catalogAppend','catalogFinish','catalogAbort','catalogInfo','catalogRead',...(window.__ohneTresor?[]:['tresorZustand','tresorEinziehen','tresorVerzeichnis','tresorSperren'])];
+    const vault=['state','volumes','choose','unlock','lock','migrate','backupMail','attachments','readAttachment','openAttachment','clearAttachments','catalogBegin','catalogAppend','catalogFinish','catalogAbort','catalogInfo','catalogRead','ordnerOeffnen',...(window.__ohneTresor?[]:['tresorZustand','tresorEinziehen','tresorVerzeichnis','tresorSperren'])];
     const mail=['accounts','folders','messages','message','action','forgetMessage','saved','openOriginal','tresorMailAblegen'];
     const wrap=(fixture,list)=>Object.fromEntries(list.map(m=>[m,async args=>{try{return await window[fixture](m,args);}catch(error){throw{code:String(error?.message||error).match(/[A-Z][A-Z_]{3,}/)?.[0]||'UNKNOWN'};}}]));
     window.Capacitor={Plugins:{ProVault:wrap('vaultFixture',vault),ProMail:wrap('mailFixture',mail),ProDevice:{async getInfo(){return{platform:'android',versionName:'0.1.0-preview.17-debug',nativeMail:true};}}}};
@@ -86,7 +89,7 @@ async function device(name,{answers=[],ohneTresor=false}={}){
 }
 try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
-  const A=await device('A',{answers:[false]});
+  const A=await device('A',{answers:[false],altTresor:true});
   const {page}=A;
   await navigateTo(page,'settings');
   await page.waitForTimeout(400);
@@ -117,6 +120,11 @@ try{
   ok('Mail-Zeile: nur Kurzfassung, nie der ganze Mailtext',m&&m.auszug.length<=1000&&!JSON.stringify(z).includes(langerText.slice(0,1500))&&m.name==='Rechnung 2026-117.eml');
   ok('Zeilen tragen nur die Felder des Formats',z.every(r=>Object.keys(r).sort().join()==='art,auszug,datum,groesse,id,name,sha256,verweis'));
   ok('Verbunden: Ordner und Zahl der Einträge',await page.locator('#tresorordnerZeile').textContent().then(t=>t.includes('verbunden mit: Tresor-Probe')&&t.includes(': 2')));
+  ok('Ein Kasten „Tresor & Ablage“ mit „Ablage von Private Brain“ und „Tresor (alle Pro-Apps)“ (Leitfaden § 2)',await page.evaluate(()=>{const c=document.getElementById('vaultPlace');return c.querySelector('h3')?.textContent==='Tresor & Ablage'&&c.querySelector('.pro-ablage-kopf')?.textContent==='Ablage von Private Brain'&&c.querySelector('#tresorordner h4')?.textContent==='Tresor (alle Pro-Apps)';}));
+  ok('Beide mit Zustand ● Entsperrt und ganzem Pfad',await page.evaluate(()=>{const a=document.querySelector('#vaultOrt'),t=document.querySelector('#tresorordnerOrt');return a?.querySelector('.pro-zustand')?.textContent==='Entsperrt'&&t?.querySelector('.pro-zustand')?.textContent==='Entsperrt'&&/\//.test(a.querySelector('.pro-pfad')?.textContent||'')&&!!t.querySelector('.pro-pfad')?.textContent;}));
+  await page.click('#vaultOrt [data-pro-knopf="in-dateien"]');await page.click('#tresorordnerOrt [data-pro-knopf="in-dateien"]');
+  for(let i=0;i<20&&(folder.geoeffnet||[]).length<2;i++)await page.waitForTimeout(100);
+  ok('„In Dateien öffnen“ fragt Android nach dem richtigen Ordner (Ablage, dann Tresor)',JSON.stringify(folder.geoeffnet)==='["ablage","tresor"]');
   await page.click('#tresorordner [data-tresor=write]');
   await page.waitForFunction(()=>/aktuell/.test(document.querySelector('#tresorordnerHinweis')?.textContent||''));
   ok('„jetzt schreiben“ ohne Änderung meldet aktuell',true);
@@ -147,11 +155,12 @@ try{
   await page.click('#tresorordner [data-tresor=lock]');
   await page.waitForFunction(()=>document.querySelector('#tresorordner')?.dataset.zustand==='gesperrt');
   ok('Gesperrt: Zeile und „entsperren“',await page.locator('#tresorordner [data-tresor=unlock]').count()===1);
+  ok('Gesperrt: der Tresor zeigt ● Gesperrt',await page.evaluate(()=>document.querySelector('#tresorordnerOrt .pro-zustand')?.textContent==='Gesperrt'));
   ok('Sperren behält „Passwort merken“ (vergisst den Schlüssel nicht)',tresor.gesperrtMit&&tresor.gesperrtMit.vergessen!==true&&tresor.zustand.gemerkt===true);
   await page.evaluate(()=>PBTresorordner.zeigen());
   ok('Gesperrt bleibt gesperrt: der nächste Zustand öffnet nicht mit dem gemerkten Schlüssel',await page.evaluate(()=>document.querySelector('#tresorordner')?.dataset.zustand)==='gesperrt');
   ok('Gesperrt-Zeile sagt, wo es weitergeht',await page.locator('#tresorordnerZeile').textContent().then(t=>t.startsWith('Gesperrt.')&&t.includes('„Tresorordner entsperren“')));
-  ok('Tresor — Verschlüsselung steht direkt unter Speicherort und Verschlüsselung',await page.evaluate(()=>document.getElementById('vaultPlace')?.nextElementSibling?.id==='tresorNote'));
+  ok('Alter Browser-Tresor (eingerichtet) steht direkt unter „Tresor & Ablage“',await page.evaluate(()=>document.getElementById('vaultPlace')?.nextElementSibling?.id==='tresorNote'));
   ok('Gesperrter Tresor-Inhalt: Entsperren-Knopf direkt dabei, kein „oben“',await page.evaluate(()=>{const l=document.getElementById('vaultList');return !!l?.querySelector('#vaultListUnlock')&&!/oben/.test(l.textContent);}));
   await page.click('#vaultListUnlock');
   ok('Der Knopf öffnet sofort das Tresor-Fenster',await page.waitForFunction(()=>getComputedStyle(document.getElementById('tresorModalBg')).display!=='none').then(()=>true,()=>false));
@@ -187,10 +196,30 @@ try{
   tresor.zustand={...tresor.zustand,pruefung:'PASST'};
   await page.evaluate(()=>PBTresorordner.aktualisieren(true));
   ok('Hintergrund: passender, offener Ordner bekommt das Verzeichnis',zaehle()===vor+1);
+  {
+  // Ausgenommen: #libraryStatus (in der App setzt native-folders.js die Zeile) und capP (in der App der App-Text von
+  // pb-bildbeschreibung.js über ProCaption) – beide Brücken sind in dieser Probe nicht gestellt.
+  const pg=page;
+  // Leitfaden § 4 (Klaus 2026-10-28): keine Web-Reste in der App – sichtbarer Text in jeder Ansicht ohne diese Wörter.
+  const webWords=/\b(Browser\w*|installier\w*|Installier\w*|localStorage|Browserdaten|dauerhafte[rn]? Speicher|Speicher dauerhaft)\b/;
+  const shownWeb=()=>pg.evaluate(src=>{const re=new RegExp(src),found=[],walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+    while((n=walk.nextNode())){const v=n.nodeValue;if(!re.test(v))continue;const e=n.parentElement;
+      if(!e||e.closest('[id^="sbkim-"],[class^="sbkim-"],[hidden],script,style,#diagLog,#libraryStatus,[data-i18n="capP"]'))continue;const own=e.getBoundingClientRect(),cs=getComputedStyle(e);
+      if(own.width<=1||own.height<=1||/inset\(50%\)/.test(cs.clipPath)||cs.visibility==='hidden'||parseFloat(cs.opacity)===0||!e.getClientRects().length)continue;found.push((v.match(re)||[''])[0]+' «'+v.trim().slice(0,50)+'»');}
+    return found;},webWords.source);
+  const webViews={};
+  for(const tab of ['search','intake','explorer','overview','order','dupes','settings']){
+    await pg.evaluate(t=>{window.PBWorkspace.navigate(t);document.querySelectorAll('#panel-'+t+' details').forEach(d=>d.open=true);document.querySelectorAll('#panel-'+t+' [data-pb-help-toggle][aria-expanded="false"],#panel-'+t+' [data-pro-info][aria-expanded="false"]').forEach(b=>b.click());},tab);await pg.waitForTimeout(250);
+    webViews[tab]=await shownWeb();
+  }
+  const webLeft=Object.entries(webViews).filter(([,v])=>v.length).map(([k,v])=>k+': '+v.join(' | '));
+  ok('Keine Web-Reste in der App (Browser, installieren, localStorage, dauerhafter Speicher) – Leitfaden § 4'+(webLeft.length?' — still: '+webLeft.join(' ; '):''),webLeft.length===0);
+  }
   ok('Keine Seitenfehler',A.errors.length===0);
   await A.context.close();
   const B=await device('B',{ohneTresor:true});
   ok('Ohne Tresorordner-Brücke (ältere Hülle, Windows) bleibt alles wie bisher',await B.page.evaluate(()=>typeof window.PBTresorordner==='undefined'));
+  ok('Alter Browser-Tresor nie eingerichtet: in der Pro-App ausgeblendet (Leitfaden § 2)',await B.page.evaluate(()=>document.getElementById('tresorNote')?.hidden===true&&document.getElementById('vaultNote')?.hidden===true));
   await B.context.close();
   const java=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProTresorordner.java',import.meta.url),'utf8');
   const plug=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProVaultPlugin.java',import.meta.url),'utf8');
