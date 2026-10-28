@@ -62,6 +62,8 @@
     allNone: ['🛡 Alle geprüft', '🛡 All checked', '🛡 Всё проверено', '🛡 Wszystko sprawdzone'],
     allRun: ['🛡 Prüfe {i} / {n} …', '🛡 Checking {i} / {n} …', '🛡 Проверка {i} / {n} …', '🛡 Sprawdzanie {i} / {n} …'],
     allDone: ['🛡 Alle geprüft', '🛡 All checked', '🛡 Всё проверено', '🛡 Wszystko sprawdzone'],
+    hgCheck: ['Prüfen läuft', 'Checking', 'Идёт проверка', 'Trwa sprawdzanie'],
+    hgStand: ['Datei {i} von {n}', 'File {i} of {n}', 'Файл {i} из {n}', 'Plik {i} z {n}'],
     allMissing: [' · {n} ohne Original auf diesem Gerät (nicht prüfbar)', ' · {n} without original on this device (cannot be checked)', ' · {n} без оригинала на устройстве', ' · {n} bez oryginału na urządzeniu'],
     allList: ['Mit Fund:', 'With a finding:', 'С находками:', 'Ze znaleziskiem:'],
     mailPart: ['Geprüft wurde nur der gespeicherte Mailtext mit rekonstruierten Absender-, Empfänger- und Betreffangaben. Original-Header und Anhänge wurden in dieser Textprüfung nicht geprüft.', 'Only the stored email text with reconstructed sender, recipient and subject details was checked. Original headers and attachments were not checked in this text check.', 'Проверен только сохранённый текст с восстановленными сведениями об отправителе, получателе и теме. Исходные заголовки и вложения этой проверкой не проверены.', 'Sprawdzono tylko zapisany tekst z odtworzonymi danymi nadawcy, odbiorcy i tematu. Oryginalnych nagłówków i załączników nie sprawdzono w tej kontroli tekstu.'],
@@ -287,20 +289,25 @@
     }
   }
   let allBusy = false;
+  const hgText = (i, n) => t('hgStand').replace('{i}', Math.max(1, i)).replace('{n}', n);
   async function checkAll(button) {
     if (allBusy) return; allBusy = true;
     const todo = openOnes(); let missing = 0, i = 0;
+    // Pro-Umbau 4: läuft in Android weiter, wenn die App im Hintergrund ist (Mitteilung mit Stand und „Abbrechen“).
+    const hg = await window.ProHintergrund?.beginnen({ art: 'pruefen', titel: t('hgCheck'), text: hgText(0, todo.length) }).catch(() => null);
     try {
       for (const rec of todo) {
+        if (hg?.signal.aborted) break;
         button.textContent = t('allRun').replace('{i}', ++i).replace('{n}', todo.length);
+        hg?.stand(hgText(i, todo.length), i - 1, todo.length);
         if (rec.pruefung) continue;
         try { if (!await checkRecord(rec, true)) missing++; } catch { missing++; }
         if (i % 3 === 0) await new Promise(r => setTimeout(r));
       }
-    } finally { allBusy = false; allButtons(); }
+    } finally { allBusy = false; hg?.ende(); allButtons(); }
     const dialog = make('dialog', null, 'live-dialog pb-check-report pb-check-all');
     dialog.append(make('h2', t('report')));
-    standBlock(dialog, todo.length - missing);
+    standBlock(dialog, i - missing);
     const close = make('button', t('close')); close.type = 'button'; close.onclick = () => dialog.close();
     dialog.append(make('p', t('noVirus'), 'hint'), close); document.body.append(dialog);
     dialog.addEventListener('close', () => dialog.remove()); dialog.showModal();
@@ -514,8 +521,15 @@
   async function checkVaultAll(entries, button, done) {
     const todo = entries.filter(e => !vaultMemory()[e.sha256 || e.ref || e.id]); let i = 0;
     button.disabled = true;
-    try { for (const e of todo) { button.textContent = t('allRun').replace('{i}', ++i).replace('{n}', todo.length); try { await checkVault(e); } catch { /* named as not checked */ } } }
-    finally { button.disabled = false; done?.(); }
+    const hg = await window.ProHintergrund?.beginnen({ art: 'pruefen', titel: t('hgCheck'), text: hgText(0, todo.length) }).catch(() => null);
+    try {
+      for (const e of todo) {
+        if (hg?.signal.aborted) break;
+        button.textContent = t('allRun').replace('{i}', ++i).replace('{n}', todo.length); hg?.stand(hgText(i, todo.length), i - 1, todo.length);
+        try { await checkVault(e); } catch { /* named as not checked */ }
+      }
+    }
+    finally { button.disabled = false; hg?.ende(); done?.(); }
   }
   const vaultOpen = entries => entries.filter(e => !vaultMemory()[e.sha256 || e.ref || e.id]).length;
   function vaultBadge(entry) {

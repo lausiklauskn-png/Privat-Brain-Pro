@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Klaus 2026-10-27: route dictation to the chosen microphone (no recording, no prompt). -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Pro-Umbau 4: gemeinsame Hintergrundaufgabe (Prüfen und Einordnen laufen weiter, Mitteilung mit Stand). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Only this companion app is visible for the explicit tool-menu launch. -->
     <queries>
@@ -22,6 +26,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <service android:name="de.familyprojekt.hintergrund.ProHintergrundDienst" android:exported="false" android:foregroundServiceType="dataSync" />
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density|colorMode"

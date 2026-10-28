@@ -1,6 +1,6 @@
 [package]
 name = "private-brain-pro"
-version = "1.0.41"
+version = "1.0.42"
 description = "Private Brain Pro für Windows"
 edition = "2021"
 publish = false

@@ -93,7 +93,7 @@ jobs:
           retention-days: 14
       - name: Auslieferungsbau ohne Prüfzugang
         run: npm run tauri --prefix windows -- build --bundles nsis
-      - name: Veröffentlichten 1.0.40-Installer wirklich auf 1.0.41 aktualisieren
+      - name: Veröffentlichten 1.0.41-Installer wirklich auf 1.0.42 aktualisieren
         timeout-minutes: 15
         run: powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File windows/pruefung/upgrade.ps1
         env:
