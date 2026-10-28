@@ -1,6 +1,7 @@
 {
   "ProDevice": [
-    "getInfo"
+    "getInfo",
+    "measure"
   ],
   "ProFiles": [
     "saveRecoveryKeys",

@@ -47,7 +47,7 @@ final class DesktopService {
     JSONObject call(String plugin,String method,JSONObject options)throws Exception {
         JSONObject o=options==null?new JSONObject():options;
         return switch(plugin){
-            case "ProDevice" -> new JSONObject().put("platform","windows").put("versionName",DesktopBuild.VERSION).put("versionCode",DesktopBuild.CODE).put("nativeMail",true).put("persistentFolders",true).put("persistentFiles",true);
+            case "ProDevice" -> "measure".equals(method) ? DesktopGeraet.measure(state.directory) : new JSONObject().put("platform","windows").put("versionName",DesktopBuild.VERSION).put("versionCode",DesktopBuild.CODE).put("nativeMail",true).put("persistentFolders",true).put("persistentFiles",true);
             case "ProUpdates" -> {
                 if(method.equals("check"))yield updates.check();
                 if(method.equals("openDownload"))yield host.call("external",new JSONObject().put("url",updates.download()));

@@ -1,0 +1,47 @@
+name: Zweites Bedeutungs-Modell – Fingerabdrücke und Messung
+# Pro-Umbau 4 (Klaus 2026-10-28: „ein zweites Embedding-Modell … ein größeres Modell für die Bedeutungssuche innerhalb der App“).
+# Lädt e5-base und e5-large (und zum Vergleich e5-small) einmal von Hugging Face, druckt je Datei SHA-256 und Bytes
+# (MEANING-PIN) und die Revision, lässt jede Stufe im headless Chromium erfundene Texte einordnen und misst Ladezeit,
+# Zeit je Abschnitt, Speicher und eine kleine Trefferprobe. Die Werte wandern von Hand in tools/native/meaning-models.json.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - tools/native/meaning-models.json
+      - tools/native/fetch-meaning-models.mjs
+      - tools/native/measure-meaning-models.mjs
+      - .github/workflows/meaning-model-pins.yml
+permissions:
+  contents: read
+concurrency:
+  group: meaning-model-pins-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  learn:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Browser installieren
+        run: npx playwright-core install --with-deps chromium
+      - name: Modelle laden, Fingerabdrücke und Größen drucken
+        run: node tools/native/fetch-meaning-models.mjs --learn "$RUNNER_TEMP/meaning"
+      - name: Modelle im Chromium laufen lassen und messen
+        run: node tools/native/measure-meaning-models.mjs "$RUNNER_TEMP/meaning"
+      - name: Ergebnis zusammenstellen
+        if: always()
+        run: |
+          mkdir -p meaning-audit
+          cp "$RUNNER_TEMP/meaning/meaning-pins-learned.json" "$RUNNER_TEMP/meaning/meaning-measured.json" meaning-audit/ || true
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: meaning-model-audit
+          path: meaning-audit/
+          if-no-files-found: warn
+          retention-days: 30

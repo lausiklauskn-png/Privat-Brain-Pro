@@ -1,0 +1,33 @@
+{
+  "comment": "Zweites, eigenes Bedeutungs-Modell nur für die Suche in der App (Klaus 2026-10-28: „unabhängig vom Mycel ein zweites Embedding-Modell … ein größeres Modell für die Bedeutungssuche innerhalb der App“). Mycel/Siegel bleiben bei Modul 03 (e5-small, 384 Werte). Welche Stufe passt, sagt der Gerätecheck (native/pro-geraet.js). Fingerabdrücke werden im Lernlauf .github/workflows/meaning-model-pins.yml gelernt (erstes Vertrauen), danach fest; leere Werte = noch nicht gelernt.",
+  "library": {
+    "package": "@xenova/transformers",
+    "version": "2.17.2",
+    "tarball": "https://registry.npmjs.org/@xenova/transformers/-/transformers-2.17.2.tgz",
+    "integrity": "sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==",
+    "files": {
+      "transformers.min.js": "bcf7cf304e51f470ed59409622b9d6ffbad80dfcf5baf6a40c919e4b9c4ff812",
+      "ort-wasm-simd.wasm": "9bd07bababc65f53d061f457233eeae501be7ceb8a2adb9eef52d87fe776d865",
+      "ort-wasm.wasm": "bbdcb6b3c7d294577d806077630460be4e13ca35a345acb5e81188e9649fa74a"
+    }
+  },
+  "models": {
+    "klein": { "id": "Xenova/multilingual-e5-small", "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78", "dim": 384, "stufe": "klein",
+      "note": "Das Modell von Modul 03 (Vergleich); Fingerabdrücke wie semantic-model.json.",
+      "files": {
+        "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+        "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+        "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+        "onnx/model_quantized.onnx": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193" } },
+    "mittel": { "id": "Xenova/multilingual-e5-base", "revision": "main", "dim": 768, "stufe": "mittel",
+      "files": { "config.json": "", "tokenizer.json": "", "tokenizer_config.json": "", "onnx/model_quantized.onnx": "" } },
+    "gross": { "id": "Xenova/multilingual-e5-large", "revision": "main", "dim": 1024, "stufe": "gross",
+      "files": { "config.json": "", "tokenizer.json": "", "tokenizer_config.json": "", "onnx/model_quantized.onnx": "" } }
+  },
+  "download": {
+    "model": [
+      "https://family-projekt.de/models/{id}/{file}",
+      "https://huggingface.co/{id}/resolve/{revision}/{file}"
+    ]
+  }
+}
