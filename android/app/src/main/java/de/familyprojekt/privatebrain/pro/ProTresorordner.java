@@ -8,6 +8,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import de.familyprojekt.tresor.Eintrag;
+import de.familyprojekt.tresor.Fach;
 import de.familyprojekt.tresor.SafAblage;
 import de.familyprojekt.tresor.TresorOrdner;
 import java.io.IOException;
@@ -162,6 +163,15 @@ final class ProTresorordner {
         List<Eintrag> neu = TresorEinzug.eintraege(roh);
         boolean geschrieben = TresorEinzug.schreibenWennGeaendert(offen, neu);
         return new JSONObject().put("geschrieben", geschrieben).put("eintraege", neu.size());
+    }
+
+    /** Inhaltsverzeichnis eines Fachs lesen (Pro-Umbau 12, „Überall suchen“): nur die Zeilen (Name, Art, Datum, Kurzfassung), nie Dateien. */
+    synchronized JSONObject fachLesen(String slug) throws Exception {
+        if (offen == null && (vonHandGesperrt || !gemerktEntsperren())) throw new IOException("TRESOR_GESPERRT");
+        Fach.nachSlug(slug); // unbekanntes Fach: IOException
+        JSONArray liste = new JSONArray();
+        for (Eintrag e : offen.verzeichnis(slug)) liste.put(new JSONObject(e.alsMap()));
+        return new JSONObject().put("fach", slug).put("eintraege", liste);
     }
 
     /** Rechnungsmail (.eml) ins Übergabefach „Eingang-BookLedgerPro/Mails/“ legen. */

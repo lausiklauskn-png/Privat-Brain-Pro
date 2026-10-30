@@ -209,6 +209,9 @@
   const offlineButton=optionsPanel.querySelector('.native-offline-switch')||make('button','ghost native-offline-switch');offlineButton.type='button';
   offlineButton.setAttribute('role','switch');
   const offlineError=optionsPanel.querySelector('.native-network-error')||make('p','native-network-error');offlineError.setAttribute('role','status');offlineError.hidden=true;
+  // Leitfaden § 1.8 (Klaus 2026-10-29, Pro-Umbau 12): Schriftgröße „A··A“, gemeinsamer Baustein. Im ☰-Menü statt in der Kopfleiste:
+  // am Handy (360 px) bliebe zwischen Titel und ← → ☰ kein Platz für das Siegel (gemessen 6 px).
+  if(window.ProBedienung?.schriftKnopf&&!optionsPanel.querySelector('.pro-schrift')){const schrift=window.ProBedienung.schriftKnopf();schrift.classList.add('native-menu-schrift');optionsPanel.append(schrift);}
   if(!offlineButton.isConnected)optionsPanel.append(offlineButton);
   if(!offlineError.isConnected)optionsPanel.append(offlineError);
   // Klaus 2026-10-21: a small lamp up in the bar, green = internet allowed, red = app cut off.
@@ -233,7 +236,7 @@
   offlineButton.onclick=()=>toggleNetwork(offlineButton);networkLabel();
   addEventListener('resize',()=>{options.open=false;primaryPage='';enhance();});
   optionsPanel.addEventListener('click',event=>{
-    const button=event.target.closest('button');if(!button)return;
+    const button=event.target.closest('button');if(!button||button.closest('.pro-schrift'))return;
     const page=button.matches('.tab[data-tab]')?button.dataset.tab:null;
     options.open=false;
     if(!page)return;

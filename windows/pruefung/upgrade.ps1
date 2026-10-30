@@ -12,7 +12,7 @@ $setups = @(Get-ChildItem windows/src-tauri/target/release/bundle/nsis -Filter '
 if ($setups.Count -ne 1) { throw 'Exactly one current production installer required.' }
 $currentSetup = $setups[0].FullName
 $config = Get-Content windows/src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-if ($config.version -ne '1.0.42' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
+if ($config.version -ne '1.0.43' -or $config.identifier -ne 'de.familyprojekt.privatebrain.pro') { throw 'Wrong version or app identity.' }
 if ((Get-AuthenticodeSignature -LiteralPath $currentSetup).Status -ne 'NotSigned') { throw 'Expected the chosen unsigned production installer.' }
 $token = [Guid]::NewGuid().ToString('N')
 $work = Join-Path $env:RUNNER_TEMP ('private-brain-upgrade-' + $token)
@@ -210,7 +210,7 @@ try {
   Install-Setup $currentSetup
   Phase 'verify' $false
   Phase 'verify-unlock' $false
-  $summary = [ordered]@{ from = '1.0.41'; to = '1.0.42'; oldSource = 'c4d0c5fdec8a80b7c4b821ad0593c4c1a0278c29'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
+  $summary = [ordered]@{ from = '1.0.41'; to = '1.0.43'; oldSource = 'c4d0c5fdec8a80b7c4b821ad0593c4c1a0278c29'; oldInstallerSha256 = $oldHash; newInstallerSha256 = (Get-FileHash -LiteralPath $currentSetup -Algorithm SHA256).Hash.ToLowerInvariant(); source = $env:PB_SOURCE_COMMIT; sameDataPath = $true; profileOverride = $false; productionBinaries = $true; phases = @('seed','verify','verify-unlock'); success = $true }
   $summary | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $reports 'summary.json') -Encoding UTF8
   $finished = $true
   Write-Output 'WINDOWS_INSTALLER_UPGRADE_41_TO_42_PASS'

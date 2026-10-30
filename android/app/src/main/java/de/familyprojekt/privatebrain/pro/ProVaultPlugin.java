@@ -353,6 +353,8 @@ public class ProVaultPlugin extends Plugin {
             return tresor().verzeichnis(zeilen, vault);
         });
     }
+    /** „Überall suchen“: Inhaltsverzeichnis eines Fachs im Tresorordner (alle Pro-Apps) lesen. Nichts wird geschrieben. */
+    @PluginMethod public void tresorFach(PluginCall call) { tresorWork(call, () -> tresor().fachLesen(call.getString("fach"))); }
     @PluginMethod public void tresorEinziehen(PluginCall call) {
         if (!tresorBusy.compareAndSet(false, true)) { call.reject("VAULT_BUSY", "VAULT_BUSY"); return; }
         worker.execute(() -> {

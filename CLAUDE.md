@@ -1,3 +1,5 @@
+**Pro-Umbau 12 (Klaus 2026-10-30): „Überall suchen“ als gemeinsamer Baustein, Quelle hier.** `native/pro-ueberall.js`/`.css` (Bedien-Bausteine Fassung 4, byte-gleich nach Workflow PDF Pro): eine Liste mit Herkunft — diese App (Katalog), Tresorordner-Fächer der anderen Pro-Apps (`ProVault.tresorFach`, nur Zeilen, nur offen), Netz über Modul 23 nur mit Haken. Dazu Schriftgröße „A··A“ (`ProBedienung.schriftKnopf`, hier im ☰-Menü, weil der Kopf am Handy voll ist) und `setTextZoom(100)`. Version **1.0.43**/43 (Windows-Updateprobe 1.0.41 → 1.0.43). Proben `test-pro-bedienung` 63 · `test-ueberall` 18 · `test-tresorordner` 38 · Gegenprobe 5/5. Nicht am Gerät, nicht veröffentlicht. [Details](docs/UEBERALL-SUCHEN.md).
+
 **Pro-Umbau 5, Schritt 2 (Klaus 2026-10-28): zweites Bedeutungs-Modell nur für die Suche in der App.** Stufe Mittel (e5-base) /
 Groß (e5-large) in den Einstellungen mit Empfehlung aus dem Gerätecheck, Laden per Schalter (`ProMeaning`, Android + Windows, eigene Ordner
 `meaning-*`, Pins `tools/native/meaning-models.json`), „Einordnen“ nur auf Tipp als Hintergrundaufgabe, Werte getrennt (IndexedDB
