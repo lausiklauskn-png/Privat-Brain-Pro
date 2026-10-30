@@ -28,6 +28,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(de.familyprojekt.hintergrund.ProHintergrundPlugin.class);
         super.onCreate(state);
         google = new GmailAuthorization(this);
+        // Leitfaden § 1.8 (Klaus 2026-10-29, wie BookLedgerPro): die WebView übernimmt sonst Androids Systemschrift (textZoom) und
+        // startet größer als die PWA. Die App startet bei 100 %; größer macht man sie mit „A··A“ im Kopf (nur die Schrift wächst).
+        bridge.getWebView().getSettings().setTextZoom(100);
         bridge.getWebView().getSettings().setBlockNetworkLoads(AppNetwork.isOffline());
         bridge.getWebView().setNetworkAvailable(!AppNetwork.isOffline());
         bridge.setWebViewClient(new com.getcapacitor.BridgeWebViewClient(bridge) {

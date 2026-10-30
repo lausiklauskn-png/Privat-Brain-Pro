@@ -85,6 +85,16 @@ try {
   await page.waitForFunction(() => document.querySelector('#pbUeberall [data-pro-ue-gruppe="netz"]'));
   ok('Mit Haken „Netz“: andere Arbeitsplätze gefragt (Modul 23), Zeile nennt den Knoten', await page.evaluate(() => window.__netz === 1 && /von Büro-PC/.test(document.querySelector('[data-pro-ue-gruppe="netz"] .pro-ue-stelle').textContent)));
   await page.evaluate(() => { document.documentElement.lang = 'en'; });
+  await page.evaluate(() => { document.documentElement.lang = 'de'; });
+  // Leitfaden § 1.8: Schriftgröße „A··A“ im ☰-Menü (in der Kopfleiste bliebe am Handy kein Platz für das Siegel).
+  await page.click('header .native-options > summary');
+  await page.click('.native-options-panel [data-pro-schrift-knopf]');
+  ok('A··A im ☰-Menü: Tipp lässt das Menü offen und zeigt den Regler', await page.evaluate(() => document.querySelector('header .native-options').open && !document.querySelector('.native-options-panel .pro-schrift-feld').hidden));
+  await page.evaluate(() => { const r = document.querySelector('.native-options-panel .pro-schrift-feld input[type=range]'); r.value = '120'; r.dispatchEvent(new Event('input')); });
+  ok('Regler 120 %: Grundschrift der App wächst', await page.evaluate(() => document.documentElement.style.fontSize === '120%'));
+  await page.evaluate(() => ProBedienung.schriftSetzen(100));
+  const java = await readFile(resolve('android/app/src/main/java/de/familyprojekt/privatebrain/pro/MainActivity.java'), 'utf8');
+  ok('Android startet mit Schriftzoom 100 % (nicht der Systemschrift)', /getSettings\(\)\.setTextZoom\(100\);/.test(java));
   ok('Keine Seitenfehler', A.errors.length === 0 || (console.log(A.errors), false));
   await A.context.close();
 
@@ -96,4 +106,4 @@ try {
   ok('360 px: nichts läuft quer hinaus, keine Seitenfehler', await B.page.evaluate(() => document.getElementById('pbUeberall').scrollWidth <= document.getElementById('pbUeberall').clientWidth + 1) && B.errors.length === 0);
   await B.context.close();
 } finally { await browser.close(); }
-console.log(count + ' Proben „Überall suchen“ in Private Brain Pro bestanden (Brücke und Mycel gestellt; nicht am Gerät).');
+console.log(count + ' Proben „Überall suchen“ und Schriftgröße in Private Brain Pro bestanden (Brücke und Mycel gestellt; nicht am Gerät).');

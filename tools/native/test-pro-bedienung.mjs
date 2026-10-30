@@ -26,7 +26,7 @@ ok('Dienst: Vordergrund „dataSync“, Abbrechen in der Mitteilung, hält bei 6
 ok('Plugin ruft nie stopService (vor startForeground beendete Android die App)', !/stopService\(/.test(javaPlugin) && /setRendererPriorityPolicy\(WebView\.RENDERER_PRIORITY_IMPORTANT, !hoch\)/.test(javaPlugin));
 ok('Keine Emojis, kein Netz in der Hintergrund-Hülle', !/\p{Extended_Pictographic}/u.test(hjs + javaDienst + javaPlugin) && !/fetch\(|XMLHttpRequest|WebSocket|indexedDB|localStorage/.test(hjs));
 ok('Keine Emojis in den gemeinsamen Dateien (Strichgrafiken)', !/\p{Extended_Pictographic}/u.test(js + css));
-ok('Kein Netz, kein fremder Speicher außer dem ⓘ-Merker', !/fetch\(|XMLHttpRequest|WebSocket|indexedDB/.test(js) && (js.match(/localStorage\./g) || []).length === 2);
+ok('Kein Netz, kein fremder Speicher außer dem ⓘ-Merker und der Schriftgröße', !/fetch\(|XMLHttpRequest|WebSocket|indexedDB/.test(js) && (js.match(/localStorage\./g) || []).length === 4);
 
 const browser = await chromium.launch({ executablePath: process.env.CB_CHROMIUM || process.env.WFP_CHROMIUM || undefined, args: ['--no-sandbox'] });
 try {
@@ -87,6 +87,29 @@ try {
   await page.evaluate(() => { document.documentElement.lang = 'xx'; });
   ok('Unbekannte Sprache fällt auf Deutsch', await page.evaluate(() => ProBedienung.zustand(true).textContent === 'Entsperrt'));
   ok('Keine Seitenfehler', errors.length === 0);
+
+  // ---------- Schriftgröße „A··A“ (Leitfaden § 1.8): Regler 85–150 %, gemerkt, Knöpfe bleiben gleich hoch ----------
+  await page.evaluate(() => { document.documentElement.lang = 'de'; localStorage.removeItem('pro_schrift_v1'); document.documentElement.style.fontSize = ''; delete document.documentElement.dataset.proSchrift; });
+  const s1 = await page.evaluate(() => {
+    const P = window.ProBedienung, kopf = document.createElement('header'); kopf.style.cssText = 'display:flex;justify-content:flex-end';
+    const a = P.schriftKnopf(); kopf.append(a); document.body.prepend(kopf);
+    const probe = P.knopf('Probe'); document.body.append(probe); const p = document.createElement('p'); p.style.fontSize = '1rem'; p.textContent = 'Text'; document.body.append(p);
+    const vorher = { text: parseFloat(getComputedStyle(p).fontSize), knopf: probe.getBoundingClientRect().height };
+    a.querySelector('[data-pro-schrift-knopf]').click();
+    const feld = a.querySelector('.pro-schrift-feld'), offen = !feld.hidden;
+    const r = feld.querySelector('input[type=range]'); r.value = '130'; r.dispatchEvent(new Event('input'));
+    const nachher = { text: parseFloat(getComputedStyle(p).fontSize), knopf: probe.getBoundingClientRect().height, zahl: feld.querySelector('.pro-schrift-zahl').textContent };
+    const box = feld.getBoundingClientRect();
+    return { knopfText: a.querySelector('[data-pro-schrift-knopf]').textContent, offen, vorher, nachher, gemerkt: localStorage.getItem('pro_schrift_v1'), imBild: box.left >= 0 && box.right <= innerWidth };
+  });
+  ok('A··A öffnet den Regler, ganz im Bild', s1.knopfText === 'A··A' && s1.offen && s1.imBild);
+  ok('Regler 130 %: Schrift wächst, Knopf bleibt gleich hoch, Zahl und Merker stimmen', Math.abs(s1.nachher.text - s1.vorher.text * 1.3) < 0.6 && Math.abs(s1.nachher.knopf - s1.vorher.knopf) < 0.5 && s1.nachher.zahl === '130 %' && s1.gemerkt === '130');
+  await page.reload(); await page.addScriptTag({ content: js });
+  ok('Nach Neuladen gilt die gemerkte Größe sofort', await page.evaluate(() => document.documentElement.style.fontSize === '130%' && document.documentElement.dataset.proSchrift === '130'));
+  ok('„Zurück auf 100 %“ und Grenzen 85–150', await page.evaluate(() => { const P = ProBedienung; const a = P.schriftKnopf(); document.body.append(a); a.querySelector('[data-pro-schrift-knopf]').click();
+    a.querySelector('[data-pro-knopf="schrift-100"]').click(); const zurueck = document.documentElement.style.fontSize === '' && localStorage.getItem('pro_schrift_v1') === '100';
+    return zurueck && P.schriftSetzen(300) === 150 && P.schriftSetzen(10) === 85 && P.schriftSetzen('x') === 100; }));
+  await page.evaluate(() => { localStorage.removeItem('pro_schrift_v1'); document.documentElement.style.fontSize = ''; });
 
   // ---------- Hintergrundaufgabe: ohne Brücke läuft die Arbeit einfach, mit gestellter Brücke wie in der App ----------
   const leer = pg => pg.route('https://pro-bedienung.test/**', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html lang="de"><body></body></html>' }));

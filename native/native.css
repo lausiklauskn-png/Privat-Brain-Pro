@@ -625,3 +625,7 @@ header .brand h1 .pb-version { display:inline-block; vertical-align:middle; min-
 .pb-meaning-wahl{display:flex;flex-wrap:wrap;gap:6px}
 .pb-meaning-wahl .pro-knopf[aria-checked="true"]{border-color:var(--pro-akzent);box-shadow:inset 0 0 0 1px var(--pro-akzent);font-weight:600}
 .pb-meaning .pro-info-inhalt p{margin:0}
+
+/* Schriftgröße „A··A“ im ☰-Menü (Pro-Umbau 12): Regler im Menü selbst, nicht schwebend. */
+.native-options-panel .native-menu-schrift{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
+.native-options-panel .native-menu-schrift .pro-schrift-feld{position:static;box-shadow:none;width:100%;max-width:none}
