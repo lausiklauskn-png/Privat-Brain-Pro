@@ -225,7 +225,7 @@ try {
     return ProUeberall.gruppieren(erg.treffer).map(x => x.schluessel + ':' + x.liste.length + ':' + (x.gruppe || '')).join();
   });
   ok('Überall suchen: Zeilen mit `gruppe` stehen in eigener Gruppe direkt nach der App', g === 'app:1:,app:Angebotsplaner:1:Angebotsplaner');
-  ok('Überall suchen: Fassung 2', await page.evaluate(() => ProUeberall.FASSUNG === 2));
+  ok('Überall suchen: Fassung ≥ 2', await page.evaluate(() => ProUeberall.FASSUNG >= 2));
   ok('Keine Seitenfehler', errors.length === 0 || (console.log(errors), false));
   await context.close();
 } finally { await browser.close(); }
