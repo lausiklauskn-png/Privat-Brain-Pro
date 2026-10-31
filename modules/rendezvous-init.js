@@ -101,9 +101,19 @@
   }
 
   // app-eigener Korpus-Provider: der Katalog beantwortet Fragen von Freunden.
-  function prepareCorpus() {
+  // Pro-Umbau 14 A2: Modul 23 holt den Korpus beim Einschalten EINMAL und gibt Modul 04 eine feste Liste — neue Dateien zählten erst
+  // nach Aus/An. Gleich danach (setTimeout, nach Modul 23s setLocalCorpus) bekommt Modul 04 stattdessen den Provider selbst:
+  // jede Frage liest den Katalog, wie er gerade ist (öffentliche Fläche setLocalCorpus(function), Kanon unverändert).
+  function liveCorpus() {
     try { return (typeof window.__CB_getCorpus === "function") ? window.__CB_getCorpus() : []; }
     catch (_e) { return []; }
+  }
+  function prepareCorpus() {
+    var k = liveCorpus();
+    setTimeout(function () {
+      try { var m = window.SbkimMatch; if (m && typeof m.setLocalCorpus === "function") m.setLocalCorpus(liveCorpus); } catch (_e) {}
+    }, 0);
+    return k;
   }
 
   var R = function () { return window.SbkimRendezvous; };
