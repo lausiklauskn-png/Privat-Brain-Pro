@@ -52,5 +52,27 @@ Titel und ← → ☰ kein Platz für das Siegel (gemessen 6 px bei 360 px). WPP
   gebaut wird sie in GitHub.
 - Windows und PWA haben keinen Tresorordner → nur „diese App“ und „Netz“.
 - Die Tresor-Suche liest nur das Inhaltsverzeichnis (Name, Kurzfassung), nicht den ganzen Text in den Dateien anderer Apps.
-- Was dieses Gerät dem Netz selbst antwortet, regelt weiter das Mycel jeder App; „Chefcode“ (Inhalt nur für Vertraute) ist nur Plan
-  (BookLedgerPro `BRIEF_ABSCHLUSS_2026-10-30_PRO-UMBAU-12.md`).
+- Was dieses Gerät dem Netz selbst antwortet, regelt weiter das Mycel jeder App. Den Chefcode gibt es seit Pro-Umbau 13 (Abschnitt unten).
+
+## Chefcode (Pro-Umbau 13, 2026-10-30)
+
+Klaus' Wort: *„Ja, Schritt 1+2“* · *„Chef legt fest, alle 3“*. Gemeinsamer Baustein `native/pro-chefcode.js` (hier gepflegt, Bedien-Bausteine
+**Fassung 5**, byte-gleich nach Workflow PDF Pro und BookLedgerPro). Ein Kasten **„Chefcode“**: verdecktes Feld, „Übernehmen“, „Entfernen“, Zustand
+(● Eigenes Netz mit Chefcode · Öffentliches Netz · ungültig), Erklärung hinter ⓘ.
+
+- **Schritt 1 (alle drei Apps):** wer denselben Code eingibt, ist im selben eigenen Netz. Gebaut wird am Netz nichts Neues: Modul 23 (byte-1:1)
+  kann es schon (`saveNetwork`/`applyNetwork`, Raum-Marke per SHA-256, Schlüssel per PBKDF2, Zettel AES-GCM; ungültig fällt nie still ins
+  öffentliche Netz). Der Baustein normalisiert wie Modul 23 (Leerzeichen und Bindestriche weg, groß), verlangt mindestens 12 Buchstaben oder
+  Ziffern, nimmt das Relais der vorhandenen Einstellung oder die Vorgabe von Modul 05b, leert danach das Feld (der Code steht nirgends im Bild)
+  und schaltet das Antwortrecht im neuen Netz wieder ein, wenn die App vorher geantwortet hat (Modul 23 beendet den Lauscher beim Wechsel).
+  Ein neuer Code ersetzt den alten sofort. Gespeichert wird er von Modul 23 im Speicher der App (`sbkim_netz_<Schublade>` im localStorage),
+  nie in Dateien oder im Tresorordner.
+- **Schritt 2 (nur BookLedgerPro, die einzige App mit begrenztem Antwort-Korpus):** Schalter „Mit Ausschnitt antworten“ — siehe BookLedgerPro.
+- Ort in Private Brain Pro: Einstellungen, nach dem Mycel-Kasten (`native/native-chefcode.js`).
+- `pro-ueberall.js` Fassung 2: Zeilen der App dürfen ein Feld `gruppe` tragen (eigene Gruppe direkt nach der App, z. B. BookLedgerPros
+  „Angebotsplaner“), und `nachSuche(erg, frage)` ruft nach jeder Suche zurück (BookLedgerPros KI-Schalter).
+- Probe `tools/native/test-chefcode.mjs` **20** (echtes Modul 23 im gebauten www/, kein Relais): öffentlich ab Werk, zu kurz/falsche Zeichen ändern
+  nichts, gültiger Code → `_meta.network === 'eigen'`, gespeichert normalisiert, Code nirgends im Bild, Wechsel → neue Raum-Marke, Antwortrecht
+  wieder an (nur wenn vorher an), Entfernen → öffentlich. Gegenprobe 3/3 gefangen (Feld nicht geleert · Mindestlänge 6 · Antwortrecht nicht
+  wieder an); der zweite Fall rutschte zuerst durch (Modul 23 lehnt selbst ab), die Probe prüft jetzt den Satz des Bausteins und die Grenze 11/12.
+- ⚠ Nicht gemessen: echtes Relais, zwei Arbeitsplätze mit demselben Code, am Gerät. Wer den Code hat, liest alles im Netz — er ist ein Schlüssel.
