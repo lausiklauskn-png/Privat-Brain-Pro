@@ -76,3 +76,35 @@ Klaus' Wort: *„Ja, Schritt 1+2“* · *„Chef legt fest, alle 3“*. Gemeinsa
   wieder an (nur wenn vorher an), Entfernen → öffentlich. Gegenprobe 3/3 gefangen (Feld nicht geleert · Mindestlänge 6 · Antwortrecht nicht
   wieder an); der zweite Fall rutschte zuerst durch (Modul 23 lehnt selbst ab), die Probe prüft jetzt den Satz des Bausteins und die Grenze 11/12.
 - ⚠ Nicht gemessen: echtes Relais, zwei Arbeitsplätze mit demselben Code, am Gerät. Wer den Code hat, liest alles im Netz — er ist ein Schlüssel.
+
+## Chef getrennt: Chef-PIN und Beitritts-Zettel (Pro-Umbau 14, 2026-10-31)
+
+Klaus: „Der Chef muss selber den Code eingeben können und das getrennt von den anderen.“ Antwort auf Frage 1: Beitritts-Zettel.
+`native/pro-chefcode.js` **Fassung 2** (Bedien-Bausteine **Fassung 6**).
+
+**So geht es**
+- **Chef** (einmal): Einstellungen → Chefcode → „Ich bin der Chef“ → Chef-PIN (6–12 Ziffern) zweimal und den Code (mindestens 12 Buchstaben
+  oder Ziffern) → „Festlegen“. Danach ist der Kasten 5 Minuten entsperrt: „Beitritts-Zettel“ erzeugt einen Text `CHEF1-…` zum Kopieren
+  oder Teilen; „Chef-PIN ändern“, „Entfernen“, „Sperren“; ein neuer Code im Feld „Neuer Chefcode“.
+- **Mitarbeiter**: „Mit Zettel beitreten“ → Zettel einfügen → „Beitreten“. Der Code steht danach nirgends im Bild; ohne Chef-PIN gibt es kein
+  Code-Feld und kein Entfernen. Schickt der Chef nach einem Codewechsel einen neuen Zettel, nimmt das Gerät ihn mit „Neuen Zettel übernehmen“
+  ohne PIN an. Mit der Chef-PIN lässt sich auch ein Mitarbeiter-Gerät entsperren (der Prüfwert kam mit dem Zettel).
+- **Gesperrt** (Normalfall): nur der Zustand, ein PIN-Feld und „Entsperren“. Nach 5 falschen PINs Wartezeit (30 s, dann doppelt, höchstens 1 h).
+- **Netz aus Fassung 1** (Code ohne PIN): „Eigenes Netz mit Chefcode – noch ohne Chef-PIN“; „Chef-PIN festlegen“ fragt nur die PIN, der Code bleibt.
+
+**Was gespeichert wird**: Modul 23 speichert wie bisher die Netz-Einstellung (`sbkim_netz_<Schublade>`). Der Baustein speichert daneben nur
+`pro_chef_v1_<Schublade>` = Rolle, Salz, Prüfwert (PBKDF2-SHA-256, 600 000 Runden) und Fehlversuche — nie PIN, nie Code. Der Zettel trägt
+Code, Prüfwert, Relais (nur wenn nicht Vorgabe) und eine Prüfsumme (3 Byte SHA-256); ein Tippfehler wird erkannt.
+
+**Proben**: `tools/native/test-chefcode.mjs` **46 grün** (echtes Modul 23, zwei Geräte in getrennten Browser-Kontexten: Chef richtet ein,
+Zettel, Sperren, Fehlversuche mit Wartezeit, Mitarbeiter tritt bei → gleiche Raum-Marke, kann ohne PIN nichts ändern, neuer Zettel ohne PIN,
+Chef entfernt am Mitarbeiter-Gerät, PIN ändern, Fassung-1-Netz). Gegenprobe `tools/native/gegenprobe-chefcode.mjs` **8 gefangen · 0 durchgerutscht ·
+0 aus falschem Grund · 0 tote Anker**. Beim ersten Lauf: alle 9 „gefangen“, aber aus falschem Grund (Browserpfad fehlte, die Probe startete nicht) —
+die Gegenprobe prüft jetzt zuerst, dass die Probe ohne Sabotage grün ist, und zählt nur Zeilen mit Namen. Danach 4 durchgerutscht: der Wächter
+„verdorbener Zettel“ war blind (das verdorbene Zeichen fiel schon an der Code-Prüfung auf, jetzt wird ein Byte im Prüfwert verdorben), zwei
+Sabotagen waren wirkungslos (ersetzt), „Felder leeren“ ist ein doppelter Riegel (der Kasten baut die Felder ohnehin neu; benannt, kein Fall).
+
+**Grenzen (benannt)**: Die PIN schützt die Einstellung, nicht das Gerät — wer die App bedient, kann sie deinstallieren oder ihre Daten löschen;
+wer an die Entwickler-Werkzeuge kommt, liest den Code aus dem Speicher. Der Zettel ist der Code in gepackter Form: wer ihn hat, ist im Netz.
+Mit dem Prüfwert im Zettel lässt sich eine kurze PIN mit viel Rechenzeit erraten — eine längere PIN hilft. Eine neue Chef-PIN gilt an den
+Mitarbeiter-Geräten erst mit einem neuen Zettel. Kein QR-Code (nur Text zum Kopieren/Teilen). Nicht am Gerät, kein echtes Relais.
