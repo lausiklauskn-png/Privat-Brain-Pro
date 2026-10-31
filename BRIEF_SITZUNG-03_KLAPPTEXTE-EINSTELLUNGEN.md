@@ -9,8 +9,8 @@ beiden Repos.
 1. [Sammlung mit Sitzungsplan](docs/design/aenderungen-2026-10-26/SAMMLUNG.md), Punkte **7, 9a, 9b, 9d** und der
    Nachtrag **11**, mit Bildern (`punkt-06-kategorien.jpg`, `punkt-09-einstellungen.jpg`).
 2. [Abschluss Sitzung 2](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-02.md) und
-   [Forschung Sitzung 2](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-02.md), dazu
-   [Forschung Sitzung 1](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-01.md) (lokaler Bau: Node 24,
+   [Forschung Sitzung 2](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-02-2026-10-26.md), dazu
+   [Forschung Sitzung 1](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-01-2026-10-26.md) (lokaler Bau: Node 24,
    Video-Platzhalter, Chromium-Pfad, `git add` vor dem Bauen).
 
 ## Feste Regeln (Klaus 2026-10-26)
@@ -60,5 +60,5 @@ am Handy in zwei Zeilen um; Klaus' Hinweis „keine Knöpfe übereinander“ bet
 
 ## Am Ende
 
-`ABSCHLUSS-SITZUNG-03.md` und `FORSCHUNG-SITZUNG-03.md` neben die Sammlung, Stand in der Sammlung eintragen,
+`ABSCHLUSS-SITZUNG-03.md` und Kimhub forschung/messungen/privat-brain-pro-designumbau-sitzung-03-2026-10-26.md neben die Sammlung, Stand in der Sammlung eintragen,
 `BRIEF_SITZUNG-04_…md` (Punkte 5 und 6a) schreiben und beide CLAUDE.md-Anker oben nachziehen.

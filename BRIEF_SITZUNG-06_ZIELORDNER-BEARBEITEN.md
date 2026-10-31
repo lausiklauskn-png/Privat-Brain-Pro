@@ -10,7 +10,7 @@ Sitzung 5 (3D-Knöpfe, Kategorien mit Ordnerbaum) ist auf main (Pro #92, V3 #26)
 ([Veröffentlichung](docs/design/aenderungen-2026-10-26/VEROEFFENTLICHUNG-SITZUNG-05.md)). Frisch von `origin/main` abzweigen;
 **nichts veröffentlichen ohne Klaus' Wort.**
 Rückblick: [Abschluss Sitzung 5](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-05.md),
-[Forschung 1–5](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-05.md).
+[Forschung 1–5](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-05-2026-10-26.md).
 
 Was es schon gibt: `native/pb-zielordner.js` (= V3 `assets/pb-zielordner.js`) zeigt nach „In neuen Ordner kopieren…“ den echten
 Zielordner als Baum. Es liest den `FileSystemDirectoryHandle`, den `startReorg` (in `index.html`) über `showDirectoryPicker`

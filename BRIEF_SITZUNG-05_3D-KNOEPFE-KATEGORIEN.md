@@ -10,7 +10,7 @@ Sitzung 4 (Bildbeschreibung) ist auf main: Pro #89, V3 #24, Workflow-PDF #134, W
 wurden nicht ausgelöst** (Pro 1.0.38, V3 3.0.0-preview.7, Workflow-PDF-Pro 1.0.3 bleiben die veröffentlichten Stände).
 Frisch von `origin/main` abzweigen.
 Rückblick: [Abschluss Sitzung 4](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-04.md),
-[Forschung 1–4](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-04.md).
+[Forschung 1–4](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-04-2026-10-26.md).
 
 ## Zuerst lesen
 
@@ -45,5 +45,5 @@ Rückblick: [Abschluss Sitzung 4](docs/design/aenderungen-2026-10-26/ABSCHLUSS-S
 
 ## Am Ende
 
-`ABSCHLUSS-SITZUNG-05.md`, `FORSCHUNG-SITZUNG-05.md`, Sammlung nachtragen (5, 6a → erledigt; Sitzungsplan),
+`ABSCHLUSS-SITZUNG-05.md`, Kimhub forschung/messungen/privat-brain-pro-designumbau-sitzung-05-2026-10-26.md, Sammlung nachtragen (5, 6a → erledigt; Sitzungsplan),
 `BRIEF_SITZUNG-06_…md` (Punkt 6b: Zielordner echt bearbeiten), CLAUDE.md-Anker in Pro und V3.
