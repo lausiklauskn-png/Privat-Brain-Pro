@@ -13,9 +13,9 @@ Frisch von `origin/main` abzweigen. Rückblick: [Abschluss Sitzungen 2 und 3](BR
 
 1. [Sammlung](docs/design/aenderungen-2026-10-26/SAMMLUNG.md), Punkte **12, 13, 14**.
 2. [Abschluss Sitzung 3](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-03.md), Forschung
-   [Sitzung 1](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-01.md),
-   [2](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-02.md),
-   [3](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-03.md).
+   [Sitzung 1](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-01-2026-10-26.md),
+   [2](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-02-2026-10-26.md),
+   [3](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-03-2026-10-26.md).
 3. Ältere Unterlagen zur Bedeutungssuche: [docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md](docs/BEDEUTUNGSSUCHE-UND-LADEBALKEN.md)
    (wie das Bedeutungs-Modell per Schalter in die App geladen wird, Absturz im Emulator 2026-10-21).
 
@@ -75,5 +75,5 @@ Frisch von `origin/main` abzweigen. Rückblick: [Abschluss Sitzungen 2 und 3](BR
 
 ## Am Ende
 
-`ABSCHLUSS-SITZUNG-04.md`, `FORSCHUNG-SITZUNG-04.md`, Sammlung nachtragen, `BRIEF_SITZUNG-05_…md` (Punkte 5, 6a),
+`ABSCHLUSS-SITZUNG-04.md`, Kimhub forschung/messungen/privat-brain-pro-designumbau-sitzung-04-2026-10-26.md, Sammlung nachtragen, `BRIEF_SITZUNG-05_…md` (Punkte 5, 6a),
 CLAUDE.md-Anker in allen vier Repos (Pro, V3, Workflow-PDF-Pro, Workflow-PDF).

@@ -20,8 +20,8 @@ ausgelöst.
 - **Sitzung 3** (ⓘ-Klapper überall, Schutz-Texte hinter ⓘ, Tresor-Inhalt im Tresor-Block): [Abschluss](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-03.md).
 - **Nachtrag „keine Emojis“** (Klaus: „praktische Nutzer-App … kein Bilderbuch“): Strichgrafiken überall, neuer
   Wächter in `test-design-26`. Regel steht oben in der [Sammlung](docs/design/aenderungen-2026-10-26/SAMMLUNG.md).
-- Forschung: [Sitzung 2](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-02.md),
-  [Sitzung 3](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-03.md).
+- Forschung: [Sitzung 2](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-02-2026-10-26.md),
+  [Sitzung 3](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-03-2026-10-26.md).
 
 ## Nächste Sitzung
 

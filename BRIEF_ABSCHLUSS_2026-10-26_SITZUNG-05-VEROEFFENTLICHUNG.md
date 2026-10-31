@@ -36,7 +36,7 @@ Workflow-PDF-Pro #28 (Anker, Produktstand, README-Links 1.0.5).
 - Nichts am Tablet oder an Klaus' Rechner gemessen; die Windows-Setups sind unsigniert.
 - Das Bildmodell (256 MB, 1,2 GB Arbeitsspeicher im Prüfrechner) ist in keinem Paket; ob ein Tablet es trägt, ist offen.
 - Drei CI-Eigenheiten sind benannt, nicht behoben: hängende WebKit-Jobs, Emulator-Launcher-Flocke, Windows-Release-Tor bei
-  Unterlagen-Commits ([Forschung](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-05.md), Punkte 14–18).
+  Unterlagen-Commits ([Forschung](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-05-2026-10-26.md), Punkte 14–18).
 
 ## Nächste Sitzung
 

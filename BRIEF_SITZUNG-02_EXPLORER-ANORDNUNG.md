@@ -9,7 +9,7 @@ der Brief für Sitzung 3.
 
 1. [Sammlung mit Sitzungsplan](docs/design/aenderungen-2026-10-26/SAMMLUNG.md), Punkte **2** und **3**, mit Bildern.
 2. [Abschluss Sitzung 1](docs/design/aenderungen-2026-10-26/ABSCHLUSS-SITZUNG-01.md) und
-   [Forschung Sitzung 1](docs/design/aenderungen-2026-10-26/FORSCHUNG-SITZUNG-01.md). Dort steht, wie man hier lokal
+   [Forschung Sitzung 1](https://github.com/lausiklauskn-png/Kimhub/blob/main/forschung/messungen/privat-brain-pro-designumbau-sitzung-01-2026-10-26.md). Dort steht, wie man hier lokal
    baut: Node 24, Video-Platzhalter, Chromium-Pfad, `git add` vor dem Bauen.
 
 ## Feste Regeln (Klaus 2026-10-26)
@@ -60,5 +60,5 @@ der Brief für Sitzung 3.
 
 ## Am Ende
 
-`ABSCHLUSS-SITZUNG-02.md` und `FORSCHUNG-SITZUNG-02.md` neben die Sammlung legen, den Stand in der Sammlung
+`ABSCHLUSS-SITZUNG-02.md` und Kimhub forschung/messungen/privat-brain-pro-designumbau-sitzung-02-2026-10-26.md neben die Sammlung legen, den Stand in der Sammlung
 eintragen, `BRIEF_SITZUNG-03_…md` schreiben (Punkte 7, 9a, 9b, 9d) und beide CLAUDE.md-Anker oben nachziehen.
