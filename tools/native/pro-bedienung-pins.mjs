@@ -1,7 +1,7 @@
 // Pin der gemeinsamen Bausteine aller Pro-Apps (Quelle Private Brain Pro). Nach jeder Änderung an einer der Dateien unten:
 //   node tools/native/pro-bedienung-pins.mjs --schreiben
 // danach in Workflow PDF Pro und BookLedgerPro mit deren tools/native/bedienung-nachziehen.mjs kopieren.
-// Fassung 6 (2026-10-31, Pro-Umbau 14): Chefcode Fassung 2 — Chef-PIN getrennt von den Mitarbeitern, Beitritts-Zettel. Fassung 5 (2026-10-30, Pro-Umbau 13): dazu der Chefcode (pro-chefcode.js), Gruppen und nachSuche in pro-ueberall.js. Fassung 4 (2026-10-30, Pro-Umbau 12): dazu „Überall suchen“ (pro-ueberall.js/.css). Fassung 3 (2026-10-28 abends): dazu der Gerätecheck (pro-geraet.js). Fassung 2 (Pro-Umbau 4): dazu die Hintergrundaufgabe (pro-hintergrund.js + Android-Dienst de.familyprojekt.hintergrund).
+// Fassung 7 (2026-10-31, Pro-Umbau 14 A3): „Überall suchen“ kennt die neuen Tresor-Fächer (V3, Familienakte, Eingang-Familienakte). Fassung 6 (2026-10-31, Pro-Umbau 14): Chefcode Fassung 2 — Chef-PIN getrennt von den Mitarbeitern, Beitritts-Zettel. Fassung 5 (2026-10-30, Pro-Umbau 13): dazu der Chefcode (pro-chefcode.js), Gruppen und nachSuche in pro-ueberall.js. Fassung 4 (2026-10-30, Pro-Umbau 12): dazu „Überall suchen“ (pro-ueberall.js/.css). Fassung 3 (2026-10-28 abends): dazu der Gerätecheck (pro-geraet.js). Fassung 2 (Pro-Umbau 4): dazu die Hintergrundaufgabe (pro-hintergrund.js + Android-Dienst de.familyprojekt.hintergrund).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const sha = p => createHash('sha256').update(readFileSync(p)).digest('hex');
