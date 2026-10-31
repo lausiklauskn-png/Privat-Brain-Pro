@@ -860,9 +860,20 @@ async function initEmbedding(){
   }catch(e){ EMBED.ready=false; renderEmbFlag(); } // fail-soft: Rückfall auf Stichwort
 }
 function passageText(r){ return ((r.name||"")+". "+(r.snippet||"")).slice(0,1600); }
+// Briefende (Pro-Umbau 14 A2, Klaus: „Herr Meier am Ende wird nicht gefunden“): der Katalog merkt sich neben dem Anfang
+// (snippet) auch das Ende eines langen Textes (Gruß, Unterschrift, Name). Mails haben ihren Text ohnehin (mailBody).
+const ENDE_LEN = 600;
+function textEnde(text){ const t=String(text||""); return t.length>SNIPPET_LEN ? t.slice(-ENDE_LEN) : ""; }
+function recEnde(r){ return r.ende || (r.mailBody ? textEnde(r.mailBody) : ""); }
 // Korpus-Provider für „Mit Freunden verbinden" (Modul 23 beantwortet damit Fragen).
-// Nur eigene Einträge (keine importierten Fremd-Rechner), nur Text — keine Datei.
-window.__CB_getCorpus = ()=> CATALOG.filter(r=>!r.origin).map(r=>({label:r.name, text:passageText(r), anchorId:r.hash, passageVec:r.evec||undefined}));
+// Nur eigene Einträge (keine importierten Fremd-Rechner), nur Text — keine Datei. Die Antwort trägt nur den Dateinamen.
+// Modul 04 verlangt je Eintrag einen Float32Array-Vektor; EIN Eintrag ohne (oder als Liste) ließ JEDE Antwort still leer
+// (validateCorpus wirft, Modul 23 antwortet dann mit nichts — Fund Pro-Umbau 14 A2, wie BookLedgerPro 0.1.6). Darum nur Einträge
+// mit Vektor, umgewandelt und je Eintrag gemerkt. Der Vergleichstext trägt Anfang UND Ende (Wortsuche findet den Namen am Briefende).
+const _f32 = new WeakMap();
+function f32(r){ const c=_f32.get(r); if(c && c.src===r.evec) return c.v; const v=Float32Array.from(r.evec); _f32.set(r,{src:r.evec,v}); return v; }
+window.__CB_getCorpus = ()=> CATALOG.filter(r=>!r.origin && Array.isArray(r.evec) && r.evec.length===384).map(r=>{ const e=recEnde(r);
+  return {label:r.name, text: e ? passageText(r)+" … "+e : passageText(r), anchorId:r.hash, passageVec:f32(r)}; });
 async function embedBackfill(){
   const emb = embedder(); if(!emb || EMBED.backfilling) return;
   const todo = CATALOG.filter(r=>!r.evec && (r.snippet||r.name));
@@ -1409,7 +1420,7 @@ async function signFile(entryFile, path, dirId){
   const rec = {
     hash, name:file.name, path: path||file.name, type:(file.type||extOf(file.name)),
     ext: extOf(file.name), date: file.lastModified||Date.now(), size:file.size,
-    snippet: (text||"").slice(0,SNIPPET_LEN), via,
+    snippet: (text||"").slice(0,SNIPPET_LEN), ende: textEnde(text), via,
     vector: buildVector(toks),
     tf: termFreq(toks),
     summary: summarize(text),
@@ -2441,7 +2452,7 @@ function downloadBlob(blob, name){
 }
 function fullExport(){
   const cat=CATALOG.map(r=>({hash:r.hash,name:r.name,path:r.path,type:r.type,ext:r.ext,date:r.date,size:r.size,
-    snippet:r.snippet,via:r.via,vector:r.vector,evec:r.evec||null,tf:r.tf,summary:r.summary,category:r.category,tags:r.tags||[],
+    snippet:r.snippet,ende:r.ende||"",via:r.via,vector:r.vector,evec:r.evec||null,tf:r.tf,summary:r.summary,category:r.category,tags:r.tags||[],
     dupes:r.dupes||[]}));
   const node = (localStorage.getItem("cb_node")|| ("Rechner-"+(location.hostname||"lokal")));
   const blob=new Blob([JSON.stringify({app:"company-brain",v:2,node,count:cat.length,catalog:cat},null,2)],{type:"application/json"});
