@@ -223,9 +223,10 @@ try{
   await B.context.close();
   const java=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProTresorordner.java',import.meta.url),'utf8');
   const plug=readFileSync(new URL('../../android/app/src/main/java/de/familyprojekt/privatebrain/pro/ProVaultPlugin.java',import.meta.url),'utf8');
-  // Pro-Umbau 12: dazu fachLesen („Überall suchen“) mit derselben Sperr-Regel → 3 Stellen.
-  ok('Java: von Hand gesperrt öffnet weder Zustand noch Hintergrund noch Mail-Ablage noch Fach-Lesen mit dem gemerkten Schlüssel',
-    /if \(!vonHandGesperrt\) gemerktEntsperren\(\);/.test(java)&&(java.match(/offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\)/g)||[]).length===3
+  // Zusätzlich zu Verzeichnis, Mail und Fach-Lesen gilt dieselbe Sperre für Pro-Übergaben → 4 Stellen.
+  ok('Java: von Hand gesperrt öffnet weder Zustand noch Hintergrund noch Mail-Ablage noch Fach-Lesen noch Pro-Übergaben mit dem gemerkten Schlüssel',
+    /if \(!vonHandGesperrt\) gemerktEntsperren\(\);/.test(java)&&(java.match(/offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\)/g)||[]).length===4
+    &&/JSONObject uebergabe\(JSONObject args\) throws Exception \{\s*if \(offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\) throw new IOException\("TRESOR_GESPERRT"\);/.test(java)
     &&/JSONObject fachLesen\(String slug\) throws Exception \{\s*if \(offen == null && \(vonHandGesperrt \|\| !gemerktEntsperren\(\)\)\) throw new IOException\("TRESOR_GESPERRT"\);\s*Fach\.nachSlug\(slug\);/.test(java)
     &&/public void tresorFach\(PluginCall call\) \{ tresorWork\(call, \(\) -> tresor\(\)\.fachLesen\(call\.getString\("fach"\)\)\); \}/.test(plug)
     &&/sperren\(boolean vergessen\) \{\s*schliessen\(\);\s*vonHandGesperrt = true;/.test(java)&&/tresorWeiter\(PluginCall call\) throws Exception \{\s*tresor\(\)\.entsperrenGewuenscht\(\);/.test(plug));

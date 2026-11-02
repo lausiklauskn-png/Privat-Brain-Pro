@@ -103,6 +103,7 @@
   }
   async function zeigen(keep) {
     if (!einsetzen()) return;
+    if (typeof api.tresorUebergabe === 'function') { section.hidden=true; return; }
     let vault;
     try { vault = await api.state(); } catch { vault = {}; }
     if (!vault.configured || !vault.unlocked) { section.hidden = true; return; }

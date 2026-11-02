@@ -314,16 +314,16 @@ public class ProVaultPlugin extends Plugin {
     // „Private Brain“; sie passt nur, wenn darin genau der entsperrte Tresor liegt (auch als Kopie, für die Probe).
     // Passwort nur im nativen Dialog; der Datenschlüssel verlässt Java nicht (TresorEinzug, ProTresorordner).
     static final String[][] T_WORDS = {
-        {"Tresorordner anlegen", "Tresorordner entsperren", "Ein Passwort für alle Pro-Apps (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Es verlässt das Gerät nie. Mindestens 10 Zeichen.",
+        {"Tresorordner anlegen", "Tresorordner entsperren", "Ein Passwort für alle Pro-Apps (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Es verlässt das Gerät nie. Mindestens 10 Zeichen.",
          "Das Passwort des Tresorordners (dasselbe wie in den anderen Pro-Apps).", "Passwort vergessen = ohne Ersatzschlüssel kein Zugang. Ich bewahre es sicher auf.",
          "Passwort falsch oder Ordner nicht erreichbar. Nichts wurde verändert.", "Weiter"},
-        {"Create shared vault folder", "Unlock shared vault folder", "One password for all Pro apps (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). It never leaves the device. At least 10 characters.",
+        {"Create shared vault folder", "Unlock shared vault folder", "One password for all Pro apps (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). It never leaves the device. At least 10 characters.",
          "The shared vault folder password (the same as in the other Pro apps).", "Forgotten password = no access without recovery keys. I will keep it safe.",
          "Wrong password or folder unavailable. Nothing was changed.", "Continue"},
-        {"Создать общую папку-хранилище", "Разблокировать общую папку-хранилище", "Один пароль для всех Pro-приложений (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Он не покидает устройство. Не менее 10 символов.",
+        {"Создать общую папку-хранилище", "Разблокировать общую папку-хранилище", "Один пароль для всех Pro-приложений (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Он не покидает устройство. Не менее 10 символов.",
          "Пароль общей папки (тот же, что в других Pro-приложениях).", "Забытый пароль = без ключей восстановления доступа нет. Я сохраню его надёжно.",
          "Неверный пароль или папка недоступна. Ничего не изменено.", "Продолжить"},
-        {"Utwórz wspólny folder sejfu", "Odblokuj wspólny folder sejfu", "Jedno hasło dla wszystkich aplikacji Pro (Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Nigdy nie opuszcza urządzenia. Co najmniej 10 znaków.",
+        {"Utwórz wspólny folder sejfu", "Odblokuj wspólny folder sejfu", "Jedno hasło dla wszystkich aplikacji Pro (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Nigdy nie opuszcza urządzenia. Co najmniej 10 znaków.",
          "Hasło wspólnego folderu (to samo co w innych aplikacjach Pro).", "Zapomniane hasło = bez kluczy zapasowych brak dostępu. Przechowam je bezpiecznie.",
          "Błędne hasło lub folder niedostępny. Nic nie zmieniono.", "Dalej"}
     };
@@ -344,6 +344,7 @@ public class ProVaultPlugin extends Plugin {
         } catch (java.util.concurrent.RejectedExecutionException closed) { call.reject("NATIVE_ACTIVITY_CLOSED", "NATIVE_ACTIVITY_CLOSED"); }
     }
     private ProTresorordner tresor() { return ProTresorordner.get(getContext()); }
+    @PluginMethod public void tresorUebergabe(PluginCall call) { tresorWork(call, () -> tresor().uebergabe(call.getData())); }
     @PluginMethod public void tresorZustand(PluginCall call) { tresorWork(call, () -> tresor().zustand(vault)); }
     @PluginMethod public void tresorSperren(PluginCall call) { tresorWork(call, () -> { tresor().sperren(call.getBoolean("vergessen", false)); return tresor().zustand(vault); }); }
     @PluginMethod public void tresorVerzeichnis(PluginCall call) {
@@ -359,9 +360,9 @@ public class ProVaultPlugin extends Plugin {
         if (!tresorBusy.compareAndSet(false, true)) { call.reject("VAULT_BUSY", "VAULT_BUSY"); return; }
         worker.execute(() -> {
             try {
-                byte[] probe = vault.tresorSchluessel(); java.util.Arrays.fill(probe, (byte) 0); // nur entsperrt
+                if (!call.getBoolean("nurVerbinden", false)) { byte[] probe = vault.tresorSchluessel(); java.util.Arrays.fill(probe, (byte) 0); }
                 boolean neu = call.getBoolean("neuWaehlen", false) || !tresor().gewaehlt();
-                if (!neu) { try { neu = !"PASST".equals(tresor().pruefung(vault.tresorId())); } catch (java.io.IOException unerreichbar) { neu = true; } }
+                if (!neu && !call.getBoolean("nurVerbinden", false)) { try { neu = !"PASST".equals(tresor().pruefung(vault.tresorId())); } catch (java.io.IOException unerreichbar) { neu = true; } }
                 if (neu) { getActivity().runOnUiThread(() -> tresorOrdnerWaehlen(call)); return; }
                 tresorWeiter(call);
             } catch (Exception error) { tresorBusy.set(false); String code = tresorCode(error); call.reject(code, code); }
@@ -383,9 +384,10 @@ public class ProVaultPlugin extends Plugin {
             try {
                 if (!"content".equals(tree.getScheme()) || (data.getFlags() & required) != required) throw new VaultCrypto.Failure("VAULT_FOLDER_UNAVAILABLE");
                 getContext().getContentResolver().takePersistableUriPermission(tree, required);
-                String pruefung = tresor().pruefen(tree, vault.tresorId());
-                // Nichts übernehmen, wenn der Ordner nicht genau diesen Tresor enthält. Die Freigabe bleibt (sie kann die des Speicherorts sein).
-                if (!"PASST".equals(pruefung)) throw new java.io.IOException("TRESOR_ORDNER_" + pruefung);
+                if (!call.getBoolean("nurVerbinden", false)) {
+                    String pruefung = tresor().pruefen(tree, vault.tresorId());
+                    if (!"PASST".equals(pruefung)) throw new java.io.IOException("TRESOR_ORDNER_" + pruefung);
+                }
                 tresor().baumSetzen(tree);
                 tresorWeiter(call);
             } catch (Exception error) { tresorBusy.set(false); String code = tresorCode(error); call.reject(code, code); }
@@ -395,8 +397,8 @@ public class ProVaultPlugin extends Plugin {
     private void tresorWeiter(PluginCall call) throws Exception {
         tresor().entsperrenGewuenscht();
         if (tresor().istOffen() || tresor().gemerktEntsperren()) {
-            tresor().einziehen(vault);
-            JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", true));
+            if (!call.getBoolean("nurVerbinden", false)) tresor().einziehen(vault);
+            JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", !call.getBoolean("nurVerbinden", false)));
             tresorBusy.set(false); call.resolve(state); return;
         }
         boolean anlegen = !tresor().vorhanden();
@@ -441,9 +443,9 @@ public class ProVaultPlugin extends Plugin {
             boolean keep = remember.isChecked();
             worker.execute(() -> {
                 try {
-                    tresor().mitPasswort(java.nio.CharBuffer.wrap(chars), anlegen, keep, vault);
+                    tresor().mitPasswort(java.nio.CharBuffer.wrap(chars), anlegen, keep, vault, call.getBoolean("nurVerbinden", false));
                     java.util.Arrays.fill(chars, '\0');
-                    JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", true).put("angelegt", anlegen));
+                    JSObject state = JSObject.fromJSONObject(tresor().zustand(vault).put("eingezogenJetzt", !call.getBoolean("nurVerbinden", false)).put("angelegt", anlegen));
                     activity.runOnUiThread(() -> {
                         if (!finished.compareAndSet(false, true)) return;
                         tresorBusy.set(false); call.resolve(state); wipe.run(); dialog.dismiss();

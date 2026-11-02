@@ -52,6 +52,7 @@
     applying=false;
     if(objectURL){URL.revokeObjectURL(objectURL);objectURL='';}
     body.replaceChildren();active=route.viewer?files.get(route.viewer):null;viewer.hidden=!route.viewer;
+    window.PBProVerbund?.viewer(head,active);
     document.querySelector('.wrap').inert=Boolean(route.viewer);
     if(!route.viewer){focusBefore?.focus?.({preventScroll:true});buttons();return;}
     title.textContent=active?.name||'';external.hidden=share.hidden=!active;handoffControls();close.focus({preventScroll:true});
@@ -92,7 +93,7 @@
   function open(file,r={}){
     if(pending)return;
     focusBefore=document.activeElement;
-    const key=String(++sequence);files.set(key,{file,name:r.name||file.name||'file'});
+    const key=String(++sequence);files.set(key,{file,name:r.name||file.name||'file',recordHash:r.hash||null});
     // Retain at least twenty recent files. Evicted entries still have a working Back button.
     while(files.size>20)files.delete(files.keys().next().value);
     commit({...route,viewer:key});

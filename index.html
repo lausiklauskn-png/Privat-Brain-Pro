@@ -724,7 +724,7 @@
 const VEC_DIM = 256;                 // Bedeutungs-Vektor (Hashing bag-of-words)
 const SNIPPET_LEN = 600;
 const DB_NAME = "company_brain";     // eigener Namensraum (geteilte github.io-Adresse)
-const DB_VER = 1;
+const DB_VER = 2;
 
 /* ---------- kleine Helfer ---------- */
 const $ = s => document.querySelector(s);
@@ -742,8 +742,10 @@ function openDB(){
       const d = e.target.result;
       if(!d.objectStoreNames.contains("catalog")) d.createObjectStore("catalog",{keyPath:"hash"});
       if(!d.objectStoreNames.contains("dirs")) d.createObjectStore("dirs",{keyPath:"id"});
+      if(!d.objectStoreNames.contains("proUebergaben")) d.createObjectStore("proUebergaben",{keyPath:"id"});
     };
-    r.onsuccess = e => res(e.target.result);
+    r.onblocked = () => toast(({de:'Bitte die andere geöffnete Private-Brain-Ansicht schließen. Die vorhandenen Daten bleiben erhalten.',en:'Close the other open Private Brain window. Existing data is preserved.',ru:'Закройте другое окно Private Brain. Существующие данные сохранены.',pl:'Zamknij inne okno Private Brain. Istniejące dane pozostają.'})[document.documentElement.lang] || 'Close the other open Private Brain window.', 20000);
+    r.onsuccess = e => { const opened=e.target.result; opened.onversionchange=()=>opened.close(); res(opened); };
     r.onerror = e => rej(e.target.error);
   });
 }

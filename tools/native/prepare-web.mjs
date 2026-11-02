@@ -70,6 +70,8 @@ html = html.replace('<script src="native-originals.js"></script>', '<script src=
 html = html.replace('</body>', '<script src="native-help.js"></script>\n<script src="native-panes.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-overview.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-state.js"></script>\n</body>');
+html = html.replace('</body>', '<script src="native-pro-verbund.js"></script>\n</body>');
+await cp(join(root, 'native/native-pro-verbund.js'), join(out, 'native-pro-verbund.js'));
 // Klaus 2026-10-26 (Sitzung 2): Explorer-Werkzeugzeile und Anordnungs-Knopf, dieselbe Datei wie in V3.
 html = html.replace('</body>', '<script src="native-dupes.js"></script>\n<script src="pb-arrange.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-result-cards.js"></script>\n<script src="native-result-previews.js"></script>\n</body>');

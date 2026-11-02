@@ -11,6 +11,7 @@ final class DesktopService {
     private final EncryptedMailStore storage;
     private final Vault vault;
     private final OriginalFileStore originals;
+    private final DesktopProTresor proTresor;
     private final MailEngine mail;
     private final DesktopOAuth oauth;
     private final Protection protection;
@@ -25,6 +26,7 @@ final class DesktopService {
         this.state=state;this.host=host;AppNetwork.initialize(state);
         exports=new DesktopExports(state);
         storage=new EncryptedMailStore(state);vault=Vault.get(state);originals=new OriginalFileStore(state);
+        proTresor=new DesktopProTresor(state,host,vault,originals);
         String client=new JSONObject(Files.readString(resources.resolve("gmail-desktop.json"))).optString("clientId");
         oauth=new DesktopOAuth(client,storage,url->host.call("browser",new JSONObject().put("url",url)));
         mail=new MailEngine(storage,oauth,vault);
@@ -243,6 +245,7 @@ final class DesktopService {
         DesktopFiles.atomic(target,bytes);return new Selected(target.toFile(),safe);
     }
     private JSONObject vault(String method,JSONObject o)throws Exception {
+        if(method.startsWith("tresor"))return proTresor.call(method,o);
         return switch(method){
             case "state" -> vault.state();
             case "volumes" -> host.call("volumes",new JSONObject());
