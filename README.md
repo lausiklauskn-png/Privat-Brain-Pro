@@ -1,11 +1,15 @@
 # Private Brain Pro
 
 Eigenständige Pro-App mit lokaler Suche, Dateiimport, Katalog und Postfach.
-**[Android 1.0.37 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk).
-[Windows 1.0.37 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe).**
+**[Android 1.0.44 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.44/Private-Brain-Pro-1.0.44.apk).
+[Windows 1.0.44 als Update herunterladen](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.44/Private-Brain-Pro-Windows-1.0.44-x64-setup.exe).**
 [PWA öffnen und installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
 
-1.0.37 liefert die neue Oberfläche bereits beim ersten sichtbaren Aufbau;
+Neu in der veröffentlichten Fassung: freiwillige, bestätigte Hin- und Rückgaben mit
+Familienakte Pro über den gemeinsamen Tresor. [Bedienung](docs/PRO-VERBUND-NATIV.md) ·
+[Veröffentlichung und tatsächliche Android-/Windows-Nachweise](docs/PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md).
+
+Seit 1.0.37 liefert die App die neue Oberfläche bereits beim ersten sichtbaren Aufbau;
 Farben und Suchsprache werden vorab aus den gespeicherten Einstellungen gelesen.
 Die PWA veröffentlicht dieselbe vorbereitete Oberfläche mit eigener, unveränderter
 Browseridentität. Vollständige Offline-Dateigenerationen verhindern gemischte

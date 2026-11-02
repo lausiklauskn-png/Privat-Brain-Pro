@@ -1,0 +1,67 @@
+{
+  "source": "1da44dee7171d2f998a06047e8c05c181752c320",
+  "releases": [
+    {
+      "repo": "Privat-Brain-Pro",
+      "tag": "windows-v1.0.44",
+      "source": "1da44dee7171d2f998a06047e8c05c181752c320",
+      "run": 41508795969,
+      "publishedAt": "2026-11-02T19:19:32Z",
+      "url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/windows-v1.0.44",
+      "publicHashCheck": "Successful release workflow independently fetched and compared published assets",
+      "assets": [
+        {
+          "name": "Private-Brain-Pro-Windows-1.0.44-x64-setup.exe",
+          "size": 101319804,
+          "digest": "sha256:686c02c7fcf6eaec699d95d98410a4855c3a7fa3b9c8ce757599d5be1ade32c7",
+          "browser_download_url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.44/Private-Brain-Pro-Windows-1.0.44-x64-setup.exe"
+        },
+        {
+          "name": "SHA256SUMS",
+          "size": 283,
+          "digest": "sha256:a301439ec3de9d291c2c8f4510c6281ca26e4d2ca19c82ec1f3f30aff9498e27",
+          "browser_download_url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.44/SHA256SUMS"
+        },
+        {
+          "name": "shared-source.json",
+          "size": 12705,
+          "digest": "sha256:a7856b1cf0a50a86a8c043b1aa8a15794a5e9678ce536e091d84a1f96fd280b3",
+          "browser_download_url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.44/shared-source.json"
+        },
+        {
+          "name": "windows-build.json",
+          "size": 424,
+          "digest": "sha256:f8a2a0cff0d1265dad28e229152f394bea850b3c739c80fea1d50aa38be2e8c2",
+          "browser_download_url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.44/windows-build.json"
+        }
+      ]
+    },
+    {
+      "repo": "Privat-Brain-Pro",
+      "tag": "v1.0.44",
+      "source": "1da44dee7171d2f998a06047e8c05c181752c320",
+      "run": 41508739185,
+      "publishedAt": "2026-11-02T19:39:33Z",
+      "url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/tag/v1.0.44",
+      "publicHashCheck": "Anonymous curl download in managed workspace, 61060619 bytes and SHA256 equal GitHub asset digest; signed upgrade CI succeeded with existing data.",
+      "assets": [
+        {
+          "name": "Private-Brain-Pro-1.0.44.apk",
+          "size": 61060619,
+          "digest": "sha256:3a48c70d94cdced23cc8a0c270108f4aef9f16e329e62a6bf23b90a5052f53cc",
+          "browser_download_url": "https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.44/Private-Brain-Pro-1.0.44.apk"
+        }
+      ]
+    }
+  ],
+  "pairProof": {
+    "run": 41506243317,
+    "androidJob": 125488987065,
+    "windowsJob": 125490024310,
+    "checksPerPlatform": 6,
+    "partnerCommit": "326dc3d4ba1c709c0f818247e01bfb383c063ad3",
+    "sourceTree": "928fe3f40b230469052c1df25503405cc52ddec9",
+    "treeEquivalentToPublishedCommit": true,
+    "limits": "Installed probe builds on Android API35 emulator and Windows CI. No physical user device. No private originals."
+  }
+}

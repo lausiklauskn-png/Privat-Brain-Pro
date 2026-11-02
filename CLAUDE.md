@@ -1,5 +1,11 @@
 **🔬 Regel: Forschung nur in Kimhub (Klaus 2026-10-31):** jeder Forschungseintrag (Sitzungs-Befunde, Messungen, Stunden-Auswertungen, Forschungsnotizen) kommt nach Kimhub `forschung/messungen/`; in diesem Repo werden keine Forschungseinträge geführt und keine Forschungsdateien angelegt. Öffentliche Forschungsaufgaben stehen in Sage-Protokol.
 
+**Aktueller Stand, 2026-11-02:** Android und Windows **1.0.44 veröffentlicht**, einschließlich
+freiwilligem Familienakte-Pro-Verbund. Tatsächliche installierte App-Paare auf beiden
+Plattformen, signiertes Android-Update und öffentliche Downloads geprüft.
+[Nachweis und Links](docs/PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md). Keine erneute Veröffentlichung
+dieser Versionen. Persönliche Geräte und Scanner folgen im Nutzertest.
+
 **Pro-Umbau 14, Sitzung A2 (Klaus 2026-10-31: „Herr Meier am Ende wird nicht gefunden“):** Netz-Korpus (`window.__CB_getCorpus` in `index.html`) gab Vektoren als Liste und Einträge ohne Vektor weiter — Modul 04 warf bei **jeder** Netzfrage, die App antwortete anderen nie. Jetzt nur Einträge mit Vektor als `Float32Array`; der Katalog merkt sich auch das **Ende** langer Texte (`ende`, 600 Zeichen; Mails aus `mailBody`), der Vergleichstext trägt Anfang und Ende; nach dem Einschalten liest Modul 04 den Katalog live (`modules/rendezvous-init.js`). Probe `tools/native/test-netzbrief.mjs` 9 · Gegenprobe 3/3. Ältere Dateien ohne gemerktes Ende: neu einlesen. Nicht am Gerät.
 
 **Pro-Umbau 14 A3 (Klaus 2026-10-31, Antworten 1, 2):** Tresor-Paket mit acht Fächern (neu „Private Brain V3“, „Familienakte“, „Eingang-Familienakte“, Quelle Workflow PDF Pro #49, hier nachgezogen); Bedien-Bausteine **Fassung 7**: `pro-ueberall.js` Fassung 3 sucht auch in den neuen Fächern (fällt bei Apps mit älterem Paket still weg). Proben `test-pro-bedienung` 64 · `test-ueberall` 18 · `test-chefcode` 46 · `test-tresorordner` 38. Nicht am Gerät.
@@ -548,19 +554,23 @@ nur vorbereiten, ohne Passwortlogin oder behauptete fertige Verbindung.
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
 Sitzung wissen muss, **bevor** sie hier etwas anfasst.
 
-## Laufender Bau: Pro-Verbund, 2026-11-02
+## Veröffentlichter Pro-Verbund, 2026-11-02
 
 Der Nutzer hat den Verbund mit Familienakte einschließlich Windows, geprüfter
-Main-Übernahmen und späterer Updates freigegeben. Der Gesamtauftrag ist offen;
-das Geschenk entsteht erst nach dem Bau. Erster abgesicherter PB-Abschnitt:
+Main-Übernahmen und Updates freigegeben. Der Gesamtauftrag wird im Familienakte-Repository
+protokolliert; das Geschenk entsteht erst nach dem Bau. Erster abgesicherter PB-Abschnitt:
 [Teileingang und Prüfgrenzen](docs/PRO-VERBUND-EINGANG.md). Fehlgeschlagene Importe
 bleiben erhalten, Quittung erst nach Katalogabschluss und frisch geprüften
 Originalbytes. Keine Änderung von Appkennung oder Datenbanknamen.
 
-Der nächste Abschnitt verbindet den gemeinsamen Tresor unabhängig von der eigenen
+Der übernommene Abschnitt verbindet den gemeinsamen Tresor unabhängig von der eigenen
 Ablage, mit quittiertem Hin-/Rückweg und erhaltenen Sicherungsquittungen auf Android
-und Windows: [Umfang und Prüfgrenzen](docs/PRO-VERBUND-NATIV.md). Plattformabnahmen
-vor Übernahme prüfen; keine fertigen App-Paare oder neue Downloads behaupten.
+und Windows: [Umfang und Prüfgrenzen](docs/PRO-VERBUND-NATIV.md).
+**Private Brain Pro 1.0.44 ist auf beiden Plattformen veröffentlicht.**
+Main-Prüfungen, signiertes Android-Update und tatsächliche App-Paare mit Familienakte
+bestanden. [Veröffentlichung, Downloads und Grenzen](docs/PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md).
+Die historischen Versionsangaben oben werden dadurch ergänzt. Diese Veröffentlichungen
+nicht erneut auslösen; persönliche Geräte folgen im Nutzertest.
 
 ## Was dieses Repo ist
 
