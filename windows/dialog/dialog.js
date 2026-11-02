@@ -62,6 +62,10 @@
     const create=value.kind==='password'&&value.mode==='create';
     $('repeat-label').hidden=$('notice-label').hidden=!create;$('remember-label').hidden=value.kind!=='password';
     $('title').textContent=value.kind==='key'?({de:'Schutzanbieter-Schlüssel',en:'Protection provider key',ru:'Ключ сервиса защиты',pl:'Klucz usługi ochrony'}[value.language]||'Protection provider key')+' · '+value.service:value.kind==='account'?words[5]:words[{create:2,open:3,unlock:4}[value.mode]||4];
+    if(value.kind==='password'&&value.context==='pro-verbund'){
+      const w=({de:['Gemeinsamen Pro-Tresor anlegen','Gemeinsamen Pro-Tresor entsperren','Dasselbe Tresorpasswort wie in Familienakte Pro, Workflow PDF Pro und BookLedgerPro.','Ohne Passwort oder Ersatzschlüssel kein Zugang. Ich bewahre beides sicher auf.'],en:['Create common Pro vault','Unlock common Pro vault','Use the same vault password as in Familienakte Pro, Workflow PDF Pro and BookLedgerPro.','No access without password or recovery keys. I will keep them safe.'],ru:['Создать общий Pro-сейф','Разблокировать общий Pro-сейф','Тот же пароль сейфа, что в Familienakte Pro, Workflow PDF Pro и BookLedgerPro.','Без пароля или ключей восстановления доступа нет. Я сохраню их.'],pl:['Utwórz wspólny sejf Pro','Odblokuj wspólny sejf Pro','To samo hasło sejfu co w Familienakte Pro, Workflow PDF Pro i BookLedgerPro.','Bez hasła lub kluczy odzyskiwania nie ma dostępu. Zachowam je bezpiecznie.']}[value.language]||[]);
+      $('title').textContent=w[create?0:1];$('help').textContent=w[2];$('notice-caption').textContent=w[3];
+    }
     if(value.kind==='account'){
       $('provider').replaceChildren(...(value.providers||[]).map(p=>{const option=document.createElement('option');option.value=p.id;option.textContent=p.label;return option;}));
       provider();$('provider').focus();

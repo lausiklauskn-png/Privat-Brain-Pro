@@ -223,10 +223,11 @@
   }
 
   // ---------- catalog backup (debounced, encrypted by Android) ----------
-  function snapshot() {
+  async function snapshot() {
     const catalog = CATALOG.map(record => { const { evec, ...rest } = record; return rest; });
     let saved = null; try { saved = localStorage.getItem('cb_saved'); } catch { /* optional */ }
-    return JSON.stringify({ app: 'private-brain-pro', v: 1, created: Date.now(), catalog, saved });
+    const proUebergaben = typeof db !== 'undefined' && db?.objectStoreNames.contains('proUebergaben') ? await idbGetAll('proUebergaben') : [];
+    return JSON.stringify({ app: 'private-brain-pro', v: 1, created: Date.now(), catalog, saved, proUebergaben });
   }
   async function backup(now = false) {
     if (!state.configured || !state.unlocked || typeof CATALOG === 'undefined') return;
@@ -234,7 +235,7 @@
     backingUp = true; if (now) render();
     let ticket = '';
     try {
-      const bytes = new TextEncoder().encode(snapshot());
+      const bytes = new TextEncoder().encode(await snapshot());
       ticket = (await api.catalogBegin()).ticket;
       for (let offset = 0; offset < bytes.length; offset += 262144)
         await api.catalogAppend({ ticket, offset, data: b64(bytes.subarray(offset, offset + 262144)) });
@@ -257,6 +258,7 @@
     if (typeof original !== 'function') continue;
     window[name] = function (store, ...rest) { const result = original.call(this, store, ...rest); if (store === 'catalog') Promise.resolve(result).then(schedule, () => {}); return result; };
   }
+  window.addEventListener('pb-pro-receipts', schedule);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') void flush(); });
   async function restoreCatalog() {
     const info = await api.catalogInfo();
@@ -265,6 +267,11 @@
     for (let offset = 0; offset < info.size; offset += 262144) parts.push(unb64((await api.catalogRead({ version: info.version, offset })).data));
     const data = JSON.parse(new TextDecoder().decode(await new Blob(parts).arrayBuffer()));
     if (data?.app !== 'private-brain-pro' || !Array.isArray(data.catalog)) throw new Error('VAULT_DAMAGED');
+    if (data.proUebergaben !== undefined && !Array.isArray(data.proUebergaben)) throw new Error('VAULT_DAMAGED');
+    if (data.proUebergaben?.length) {
+      if (!window.PBProVerbund?.restore) throw new Error('VAULT_DAMAGED');
+      await PBProVerbund.restore(data.proUebergaben);
+    }
     let added = 0;
     // Merge only: entries already on this device are never replaced.
     for (const record of data.catalog) {

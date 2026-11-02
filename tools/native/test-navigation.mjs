@@ -115,6 +115,7 @@ try{
     if(width===320)ok('A long filename at larger phone font stays on one header line beside reachable share/open controls',await page.evaluate(()=>{const h=document.querySelector('.native-file-head'),t=h.querySelector('.native-file-title'),b=h.querySelector('[data-native-action=share]'),r=t.getBoundingClientRect(),s=b.getBoundingClientRect(),target=matchMedia('(any-pointer:fine)').matches?32:44;return h.getBoundingClientRect().height<=160&&getComputedStyle(t).whiteSpace==='nowrap'&&r.width>=60&&r.height<=32&&s.width>=target&&s.height>=target&&s.right<=innerWidth;}));
     await page.keyboard.press('Escape');await page.locator('.native-file-viewer').waitFor({state:'hidden'});
   }
+  if(popups||errors.length)console.error('Navigation diagnostics',JSON.stringify({popups,errors}));
   ok('No popup, reload, private network call or runtime error',popups===0&&errors.length===0&&await page.evaluate(()=>CATALOG.length===2));
   console.log(`${count} navigation checks passed (browser UI; Android Back tested separately).`);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}

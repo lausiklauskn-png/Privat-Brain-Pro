@@ -22,5 +22,6 @@ await writeFile(join(here,'build/source/TestMailTlsServer.java'),server);
 const key=join(here,'build/test-only-tls.p12');await rm(key,{force:true});
 execFileSync('java',['-m','java.base/sun.security.tools.keytool.Main','-genkeypair','-alias','localhost','-keyalg','EC','-groupname','secp256r1','-dname','CN=localhost','-validity','2','-storetype','PKCS12','-keystore',key,'-storepass','pb-test-only','-keypass','pb-test-only','-ext','SAN=dns:localhost'],{stdio:'pipe'});
 execFileSync('java',['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',compileClasspath,'-d',join(here,'build/classes'),join(here,'build/source/TestMailTlsServer.java'),join(here,'tests/EngineTests.java')],{stdio:'inherit'});
-try{execFileSync('java',['-Dpb.test.key='+key,'-cp',classpath,'de.familyprojekt.privatebrain.pro.EngineTests',join(here,'../..')],{stdio:'inherit'});}
+try{execFileSync('java',['-Dpb.test.key='+key,'-cp',classpath,'de.familyprojekt.privatebrain.pro.EngineTests',join(here,'../..')],{stdio:'inherit'});
+execFileSync('java',['-cp',classpath,'de.familyprojekt.privatebrain.pro.EngineTests',join(here,'../..'),'pro-verbund'],{stdio:'inherit'});}
 finally{await rm(key,{force:true});}

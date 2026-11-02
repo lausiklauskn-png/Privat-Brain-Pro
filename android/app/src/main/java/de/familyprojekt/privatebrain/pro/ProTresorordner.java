@@ -115,14 +115,14 @@ final class ProTresorordner {
     }
 
     /** Mit Passwort anlegen oder öffnen, dann den App-Tresor einziehen. */
-    synchronized void mitPasswort(CharSequence passwort, boolean anlegen, boolean merken, Vault vault) throws Exception {
-        if (!"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
+    synchronized void mitPasswort(CharSequence passwort, boolean anlegen, boolean merken, Vault vault, boolean nurVerbinden) throws Exception {
+        if (!nurVerbinden && !"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
         TresorOrdner t = anlegen ? TresorOrdner.anlegen(ablage(), TresorEinzug.APP, passwort) : TresorOrdner.oeffnen(ablage(), TresorEinzug.APP, passwort);
         schliessen();
         vonHandGesperrt = false;
         offen = t;
         if (merken) merken(t);
-        einziehen(vault);
+        if (!nurVerbinden) einziehen(vault);
     }
 
     /** Einzug bei offenem Tresorordner (wiederholt ist kein Fehler; fremder Schlüssel im Fach: TRESOR_FACH_BELEGT). */
@@ -135,7 +135,7 @@ final class ProTresorordner {
 
     synchronized JSONObject zustand(Vault vault) throws Exception {
         SharedPreferences p = prefs();
-        JSONObject z = new JSONObject().put("gewaehlt", p.contains("baum")).put("ordner", p.getString("name", "")).put("pfad", pfad()).put("gemerkt", p.contains("merken"));
+        JSONObject z = new JSONObject().put("uebergaben", true).put("gewaehlt", p.contains("baum")).put("ordner", p.getString("name", "")).put("pfad", pfad()).put("gemerkt", p.contains("merken"));
         z.put("offen", offen != null).put("eingezogen", false);
         if (!p.contains("baum")) return z;
         try {
@@ -143,13 +143,18 @@ final class ProTresorordner {
             boolean da = TresorOrdner.vorhanden(a);
             z.put("erreichbar", true).put("vorhanden", da);
             if (vault != null && vault.configured()) z.put("pruefung", TresorEinzug.pruefen(a, vault.tresorId()));
-            if (da) { z.put("kennung", TresorOrdner.kennung(a)); if (!vonHandGesperrt) gemerktEntsperren(); }
+            if (da) {
+                String id = TresorOrdner.kennung(a);
+                z.put("kennung", id);
+                if (offen != null && !offen.id().equals(id)) { schliessen(); throw new IOException("TRESOR_UEBERGABE_FREMD"); }
+                if (!vonHandGesperrt) gemerktEntsperren();
+            } else { schliessen(); }
             z.put("offen", offen != null);
             if (offen != null) {
                 z.put("eingezogen", TresorEinzug.eingezogen(offen));
                 z.put("eintraege", TresorEinzug.eingezogen(offen) ? offen.eigenesVerzeichnis(TresorEinzug.FACH).size() : 0);
             }
-        } catch (IOException e) { z.put("erreichbar", false).put("problem", e.getMessage()); }
+        } catch (IOException e) { schliessen(); z.put("offen", false).put("erreichbar", false).put("problem", e.getMessage()); }
         return z;
     }
 
@@ -180,6 +185,12 @@ final class ProTresorordner {
         if (vault != null && !"PASST".equals(pruefung(vault.tresorId()))) throw new IOException("TRESOR_ORDNER_PASST_NICHT");
         Eintrag e = TresorEinzug.mailAblegen(offen, name, datum, new java.io.ByteArrayInputStream(eml), auszug);
         return new JSONObject(e.alsMap());
+    }
+
+    synchronized JSONObject uebergabe(JSONObject args) throws Exception {
+        if (offen == null && (vonHandGesperrt || !gemerktEntsperren())) throw new IOException("TRESOR_GESPERRT");
+        if (!offen.id().equals(TresorOrdner.kennung(ablage()))) throw new IOException("TRESOR_UEBERGABE_FREMD");
+        return ProVerbund.call(offen, new OriginalFileStore(context), args);
     }
 
     private static Map<String, Object> map(JSONObject o) {

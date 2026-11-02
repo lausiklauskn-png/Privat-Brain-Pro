@@ -207,6 +207,60 @@ public final class EngineTests {
         String ohneMeaning="";try{ohne.call("ProMeaning","install",new JSONObject().put("stage","mittel"));}catch(Exception error){ohneMeaning=String.valueOf(error.getMessage());}
         ok(ohneMeaning.contains("NO_PINS"),"without meaning-models.json the second meaning model is simply not installable (NO_PINS)");
     }
+    static void proVerbund(Path root,Path repository)throws Exception {
+        Path resources=Files.createDirectory(root.resolve("pro-resources")),common=Files.createDirectory(root.resolve("pro-common"));
+        for(String name:new String[]{"semantic-model.json","caption-model.json","meaning-models.json"})Files.copy(repository.resolve("tools/native/"+name),resources.resolve(name));
+        Files.copy(repository.resolve("windows/gmail-desktop.json"),resources.resolve("gmail-desktop.json"));
+        TestProtection protection=new TestProtection();Path home=root.resolve("pro-device");
+        DesktopState state=new DesktopState(home,protection);
+        DesktopService.Host host=(method,options)->switch(method){
+            case "folder" -> new JSONObject().put("path",common.toString());
+            case "password" -> new JSONObject().put("password",PASSWORD).put("repeat",PASSWORD).put("notice",true).put("remember",true);
+            default -> throw new IOException("unexpected dialog");
+        };
+        try(var family=de.familyprojekt.tresor.TresorOrdner.anlegen(new de.familyprojekt.tresor.DateiAblage(common.toFile()),"familienakte",PASSWORD)){
+            var sender=new de.familyprojekt.tresor.Uebergaben(family);
+            byte[] original="Erfundener Pro-Brief für Private Brain".getBytes(StandardCharsets.UTF_8);
+            var sent=sender.senden("private-brain","familie-17","akte-17","","Brief.txt","text/plain",new ByteArrayInputStream(original));
+            DesktopService first=new DesktopService(state,resources,host);
+            JSONObject connected=first.call("ProVault","tresorEinziehen",new JSONObject().put("nurVerbinden",true));
+            ok(connected.getBoolean("offen")&&connected.getString("kennung").equals(family.id())&&!first.call("ProVault","state",new JSONObject()).getBoolean("configured"),"Windows common vault connects without configuring or migrating the private app vault");
+            String id=family.id();JSONObject incoming=new JSONObject().put("vaultId",id).put("entryId",sent.id);
+            ok(first.call("ProVault","tresorUebergabe",new JSONObject().put("aktion","eingang").put("vaultId",id)).getJSONArray("items").length()==1,"Windows sees the actual Family sender entry through the canonical contract");
+            JSONObject read=first.call("ProVault","tresorUebergabe",new JSONObject(incoming.toString()).put("aktion","lesen"));
+            OriginalFileStore originals=new OriginalFileStore(state);
+            ok(read.getString("originalHash").equals(sent.sha256)&&Arrays.equals(Files.readAllBytes(originals.file(sent.sha256).toPath()),original)&&!sender.bestaetigt("private-brain",sent.id),"Native receive stores exact bytes but does not claim catalog acceptance");
+            DesktopService reopened=new DesktopService(new DesktopState(home,protection),resources,(m,o)->{throw new IOException("unexpected password");});
+            ok(reopened.call("ProVault","tresorZustand",new JSONObject()).getBoolean("offen"),"Windows restores the selected common vault with its OS-protected remembered key");
+            JSONObject wrong=new JSONObject(incoming.toString()).put("aktion","quittieren").put("sha256","0".repeat(64));
+            fails("TRESOR_UEBERGABE_PRUEFSUMME",()->reopened.call("ProVault","tresorUebergabe",wrong));
+            ok(!sender.bestaetigt("private-brain",sent.id),"A rejected receiver hash leaves the actual sender unconfirmed");
+            JSONObject accepted=new JSONObject(incoming.toString()).put("aktion","quittieren").put("sha256",sent.sha256);
+            reopened.call("ProVault","tresorUebergabe",accepted);reopened.call("ProVault","tresorUebergabe",accepted);
+            ok(sender.bestaetigt("private-brain",sent.id)&&family.verzeichnis("eingang-private-brain").stream().anyMatch(e->e.id.equals(sent.id)),"Repeated receiver acknowledgment leaves the sender original present");
+            JSONObject contract=new JSONObject().put("vertrag",de.familyprojekt.tresor.Uebergaben.VERTRAG).put("id","pb-zurueck-17")
+                .put("quelle","private-brain").put("ziel","familienakte").put("dokumentId",sent.sha256).put("bezug","familie-17")
+                .put("name","Brief.txt").put("mime","text/plain").put("groesse",original.length).put("sha256",sent.sha256);
+            JSONObject sendArgs=new JSONObject().put("aktion","senden").put("vaultId",id).put("vertrag",contract);
+            JSONObject back=reopened.call("ProVault","tresorUebergabe",sendArgs),again=reopened.call("ProVault","tresorUebergabe",sendArgs);
+            ok(back.getString("id").equals(again.getString("id"))&&Arrays.equals(sender.lesen(back.getString("id")),original)&&sender.beschreibung(back.getString("id")).get("bezug").equals("familie-17"),"Windows return preserves source relation and deduplicates the same transfer identifier");
+            JSONObject status=new JSONObject().put("aktion","stand").put("vaultId",id).put("entryId",back.getString("id")).put("ziel","familienakte");
+            ok(!reopened.call("ProVault","tresorUebergabe",status).getBoolean("bestaetigt"),"Return delivery alone is not claimed as Family acceptance");
+            sender.quittieren(back.getString("id"),sent.sha256);
+            ok(reopened.call("ProVault","tresorUebergabe",status).getBoolean("bestaetigt"),"The actual target mark confirms the return");
+            fails("TRESOR_UEBERGABE_FREMD",()->reopened.call("ProVault","tresorUebergabe",new JSONObject(status.toString()).put("vaultId","foreign")));
+            reopened.call("ProVault","tresorSperren",new JSONObject());
+            ok(!reopened.call("ProVault","tresorZustand",new JSONObject()).getBoolean("offen"),"Explicit common-vault lock does not reopen a remembered key");
+            fails("TRESOR_GESPERRT",()->reopened.call("ProVault","tresorUebergabe",status));
+            reopened.call("ProVault","tresorEinziehen",new JSONObject().put("nurVerbinden",true));
+            Path moved=common.resolveSibling("pro-common-kept");Files.move(common,moved);Files.createDirectory(common);
+            try(var other=de.familyprojekt.tresor.TresorOrdner.anlegen(new de.familyprojekt.tresor.DateiAblage(common.toFile()),"familienakte",PASSWORD)){
+                fails("TRESOR_UEBERGABE_FREMD",()->reopened.call("ProVault","tresorUebergabe",status));
+                ok(!reopened.call("ProVault","tresorZustand",new JSONObject()).getBoolean("offen"),"Replacing the selected disk folder never exposes a different vault through the old connection");
+            }
+        }
+    }
+
     static void tls(DesktopState state)throws Exception {
         AppNetwork.setOffline(state,false);
         try(TestMailTlsServer server=new TestMailTlsServer("test",false,false)){
@@ -291,6 +345,7 @@ public final class EngineTests {
         ok(shared.endsWith(".pdf")&&shared.length()<=120&&shared.codePoints().noneMatch(cp->cp>=0xd800&&cp<=0xdfff),"shared incoming name also preserves complete Unicode characters");
     }
     public static void main(String[] args) throws Exception {
+        if(args.length>1 && args[1].equals("pro-verbund")){proVerbund(Files.createTempDirectory("pb-pro-verbund-"),Path.of(args[0]));System.out.println(count+" common-vault engine checks passed.");return;}
         Path root = Files.createTempDirectory("pb-engine-");
         TestProtection protection = new TestProtection();
         DesktopState state = new DesktopState(root.resolve("device-a"), protection);

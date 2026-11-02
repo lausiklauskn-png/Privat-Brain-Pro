@@ -22,7 +22,7 @@ for(const dep of deps){
 }
 await rm(generated,{recursive:true,force:true});await mkdir(generated,{recursive:true});
 const receipt=[];
-const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks','ShareInbox','PortableNames','UpdatePolicy'];
+const names=['VaultCrypto','MailAccount','MailProvider','MailFailure','GmailIdentity','GmailUserInfo','MailOutbox','MailIndex','AppSocketFactory','Unsubscribe','ProtectionList','Protection','SemanticModel','MailEngine','MailMime','AppNetwork','OriginalFileStore','Vault','BrowserLinks','ShareInbox','PortableNames','UpdatePolicy','TresorEinzug','ProVerbund'];
 for(const name of names){
   const original=await readFile(join(source,name+'.java'),'utf8');let text=original;
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
@@ -92,7 +92,14 @@ const files=(await readdir(join(here,'src'))).filter(n=>n.endsWith('.java')).map
 await rm(join(build,'classes'),{recursive:true,force:true});
 await mkdir(join(build,'classes'),{recursive:true});
 const libraries=deps.map(d=>join(build,'lib',`${d.name}-${d.version}.jar`)).join(delimiter);
-const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...names.map(n=>join(generated,n+'.java')),join(generated,'SemanticPins.java'),join(generated,'BundledRoutes.java'),join(generated,'DesktopBuild.java'),...files];
+const tresorPins=JSON.parse(await readFile(join(root,'native/tresor-herkunft.json'),'utf8'));
+const tresorFiles=[];
+for(const [path,expected] of Object.entries(tresorPins.dateien)){
+  if(!path.includes('/src/main/')||path.endsWith('/SafAblage.java'))continue;
+  const bytes=await readFile(join(root,path));if(hash(bytes)!==expected)throw Error('Common vault source drift: '+path);
+  tresorFiles.push(join(root,path));receipt.push({path,sha256:expected,generatedSha256:expected,byteIdentical:true});
+}
+const args=['-m','jdk.compiler/com.sun.tools.javac.Main','-source','21','-target','21','-encoding','UTF-8','-cp',libraries,'-d',join(build,'classes'),...tresorFiles,...names.map(n=>join(generated,n+'.java')),join(generated,'SemanticPins.java'),join(generated,'BundledRoutes.java'),join(generated,'DesktopBuild.java'),...files];
 execFileSync('java',args,{stdio:'inherit'});
 await writeFile(join(build,'shared-source.json'),JSON.stringify({sources:receipt,dependencies:deps},null,2)+'\n');
 console.log(`${receipt.length} shared Android sources compiled for Windows (${receipt.filter(x=>x.byteIdentical).length} byte-identical).`);

@@ -125,6 +125,12 @@
     "catalogFinish",
     "catalogAbort",
     "catalogInfo",
-    "catalogRead"
+    "catalogRead",
+    "tresorZustand",
+    "tresorEinziehen",
+    "tresorSperren",
+    "tresorVerzeichnis",
+    "tresorFach",
+    "tresorUebergabe"
   ]
 }

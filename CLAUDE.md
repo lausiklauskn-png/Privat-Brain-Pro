@@ -557,6 +557,11 @@ das Geschenk entsteht erst nach dem Bau. Erster abgesicherter PB-Abschnitt:
 bleiben erhalten, Quittung erst nach Katalogabschluss und frisch geprüften
 Originalbytes. Keine Änderung von Appkennung oder Datenbanknamen.
 
+Der nächste Abschnitt verbindet den gemeinsamen Tresor unabhängig von der eigenen
+Ablage, mit quittiertem Hin-/Rückweg und erhaltenen Sicherungsquittungen auf Android
+und Windows: [Umfang und Prüfgrenzen](docs/PRO-VERBUND-NATIV.md). Plattformabnahmen
+vor Übernahme prüfen; keine fertigen App-Paare oder neue Downloads behaupten.
+
 ## Was dieses Repo ist
 
 **Private Brain** ist Klaus' **fokussiertes Zusammenführungs-Repo** (Entscheid 2026-07-16):

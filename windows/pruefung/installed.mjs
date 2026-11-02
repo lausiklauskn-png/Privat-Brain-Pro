@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright-core';
 import {writeFile,mkdir,readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {resolve} from 'node:path';
-import {spawn} from 'node:child_process';
+import {resolve,delimiter} from 'node:path';
+import {spawn,execFileSync} from 'node:child_process';
 const phase=process.argv[2]||'first',out=resolve(process.argv[3]||'windows-report.json');
 const report={phase,source:process.env.PB_SOURCE_COMMIT||'',checks:[],errors:[]};
 const expectedVersion=JSON.parse(await readFile(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8')).version;
@@ -75,6 +75,33 @@ async function toolImportDiagnostics(){
     openSelects:CSS.supports('selector(:open)')?[...document.querySelectorAll('select:open')].map(select=>select.id):null})));}catch(error){evidence.tool={error:error.message};}
   return evidence;
 }
+function commonFixture(mode){
+ const classpath=[resolve('windows/engine/build/classes'),resolve('windows/engine/build/lib/*')].join(delimiter);
+ return JSON.parse(execFileSync('java',['--class-path',classpath,'windows/pruefung/CommonVaultFixture.java',mode,process.env.PB_WINDOWS_TEST_FOLDER],{encoding:'utf8'}));
+}
+async function commonFirst(){
+ const fixture=commonFixture('seed');
+ await page.evaluate(()=>{window.commonResult=null;Capacitor.Plugins.ProVault.tresorEinziehen({nurVerbinden:true}).then(v=>window.commonResult=v,e=>window.commonResult={error:e.code});});
+ const prompt=await dialog();await prompt.locator('#password').fill(PASSWORD);await prompt.locator('#remember').check();await prompt.locator('#submit').click();
+ await page.waitForFunction(()=>window.commonResult,null,{timeout:90000});
+ ok('Installed Windows connects the optional common vault through its native password dialog',await page.evaluate(id=>commonResult.offen&&commonResult.kennung===id&&!commonResult.eingezogen,fixture.vaultId));
+ const received=await page.evaluate(()=>PBProVerbund.receive());
+ ok('Installed Windows imports Family input through the normal catalog before acknowledging',received.imported===1&&received.failed===0&&await page.evaluate(()=>CATALOG.some(r=>r.name==='Windows-Pro-Verbund.txt')));
+ await page.evaluate(async()=>{const r=CATALOG.find(r=>r.name==='Windows-Pro-Verbund.txt');await PBProVerbund.send(new File(['Erfundener Windows-Brief aus Familienakte – bearbeitet'],'Windows-Pro-Verbund-Antwort.txt',{type:'text/plain'}),r.hash,'familienakte');await PBProVerbund.confirm();});
+ const returns=await page.evaluate(async()=>(await PBProVerbund.receipts()).filter(r=>r.kind==='ausgang'));
+ const checked=commonFixture('check');ok('Installed Windows returns exact edited bytes and source relation while acceptance remains open',checked.sourceAccepted&&returns.length===1&&returns[0].stand==='weitergegeben');
+ commonFixture('ack');await page.evaluate(()=>PBProVerbund.confirm());
+ ok('Installed Windows reports only the canonical Family receiver mark as acceptance',await page.evaluate(async()=>(await PBProVerbund.receipts()).some(r=>r.kind==='ausgang'&&r.stand==='im-eingang')));
+ await page.evaluate(()=>PBVault.backup());
+}
+async function commonRestart(){
+ const z=await call('ProVault','tresorZustand');
+ ok('Common-vault connection survives process restart and reinstallation with DPAPI',z.offen&&z.gemerkt&&z.uebergaben);
+ ok('Common-vault incoming and outgoing receipts survive process restart and reinstallation',await page.evaluate(async()=>{const rows=await PBProVerbund.receipts();return rows.some(r=>r.kind==='eingang'&&r.vertrag.id==='windows-family-17'&&r.stand==='gespeichert')&&rows.some(r=>r.kind==='ausgang'&&r.stand==='im-eingang');}));
+ await call('ProVault','tresorSperren');ok('Explicit common-vault lock stays locked in the installed app',!(await call('ProVault','tresorZustand')).offen);
+ await page.evaluate(()=>{window.commonResult=null;Capacitor.Plugins.ProVault.tresorEinziehen({nurVerbinden:true}).then(v=>window.commonResult=v,e=>window.commonResult={error:e.code});});
+ await page.waitForFunction(()=>window.commonResult,null,{timeout:90000});ok('Explicit unlock restores the same remembered common vault',await page.evaluate(()=>commonResult.offen));
+}
 async function dialog(){
   for(let i=0;i<80;i++){
     const target=browser.contexts().flatMap(c=>c.pages()).find(p=>p.url().includes('/windows/dialog/index.html'));
@@ -133,6 +160,7 @@ try{
     const catalogData=await page.evaluate(()=>JSON.stringify({app:'private-brain-pro',catalog:CATALOG}));
     await call('ProVault','catalogAppend',{ticket,offset:0,data:Buffer.from(catalogData).toString('base64')});await call('ProVault','catalogFinish',{ticket});
     const backup=await call('ProVault','catalogInfo');ok('catalog is committed and read back before success',backup.exists&&backup.size>0);
+    await commonFirst();
     await page.evaluate(()=>{window.keyProbe=null;Capacitor.Plugins.ProProtect.setKey({service:'virustotal'}).then(v=>window.keyProbe=v,e=>window.keyProbe={error:e.code});});
     const key=await dialog();await key.locator('#password').fill('CI-fixture-only-never-a-real-key');await key.locator('#submit').click();
     await page.waitForFunction(()=>window.keyProbe,null,{timeout:10000});ok('native provider key dialog confirms the committed encrypted key',await page.evaluate(()=>keyProbe.saved&&keyProbe.state.keys.virustotal));
@@ -263,6 +291,7 @@ try{
     const guarded=await call('ProSemantic','getState');ok('real renderer crash recovers the app and prevents automatic model restart',guarded.installed&&guarded.crashes>0);
     await call('ProSemantic','clearCrash');
   }else{
+    await commonRestart();
     const hash=createHash('sha256').update('Windows-Probe: Fahrzeug Radstand 2820 Millimeter').digest('hex');
     ok('catalog persists across process restart and reinstallation',await page.evaluate(()=>CATALOG.some(r=>r.name==='windows-proof.txt')));
     ok('native original persists across process restart and reinstallation',(await call('ProFiles','originalInfo',{hash})).hash===hash);
