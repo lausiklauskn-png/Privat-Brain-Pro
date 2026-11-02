@@ -1447,10 +1447,12 @@ async function signFile(entryFile, path, dirId){
 function termFreq(toks){ const m={}; for(const t of toks){ const s=stem(t); m[s]=(m[s]||0)+1; } return m; }
 
 /* --- Fortschritt / Batch --- */
-async function signBatch(items){ // items: [{file, path, dirId}]
-  if(signing) return;
+async function signBatch(items, options={}){ // items: [{file, path, dirId}]
+  const accepted=[], durable=options.durable===true;
+  if(signing) return accepted;
   signing=true;
-  if(window.PBWorkspace && !await PBWorkspace.prepareImport(items)){ signing=false; PBWorkspace.refresh(); return; }
+  try {
+  if(window.PBWorkspace && !await PBWorkspace.prepareImport(items)) return accepted;
   cancelReq=false;
   KI_LAUF = KiReinigung.reiniger();   // Reinigung vor der KI: einmal anhalten je Einlese-Lauf
   const prog=$("#prog"), fill=$("#barFill"), cur=$("#progCur"), cnt=$("#progCount");
@@ -1472,12 +1474,26 @@ async function signBatch(items){ // items: [{file, path, dirId}]
     cur.textContent = stepName = it.path||it.file.name;
     diag("Import: "+(it.path||it.file.name)+" ("+((it.file.size||0)/1048576).toFixed(2)+" MB)");
     try{
+      if(durable && !window.PBOriginals?.verifyStored) throw new Error("Dauerhafte Originalablage fehlt");
       const local = window.PBWorkspace ? await PBWorkspace.storeItem(it) : it;
-      if(window.PBMail && PBMail.isMail(local.file.name)){ const n = await PBMail.importFile(local.file, local.dirId ? {dirId:local.dirId,path:local.path} : null); added += n; filed.push({kind:"mail",known:!n}); }
-      else {
+      const hashes=[];
+      if(window.PBMail && PBMail.isMail(local.file.name)){
+        const source=local.dirId ? {dirId:local.dirId,path:local.path} : local.file.pbOriginalHash ? {originalHash:local.file.pbOriginalHash,name:local.file.name} : null;
+        const result=await PBMail.importFile(local.file, source, {durable});
+        const n=durable?result.added:result;
+        if(durable) hashes.push(...result.hashes);
+        added += n; filed.push({kind:"mail",known:!n});
+      } else {
         const r = await signFile(local.file, local.path, local.dirId); r.skipped?skipped++:added++;
         const rec = r.rec || CATALOG.find(x=>x.hash===r.hash);
+        hashes.push(r.hash);
         if(rec && window.PBWorkspace && PBWorkspace.kindOf) filed.push({kind:PBWorkspace.kindOf(rec, rec.path), known:!!r.skipped, hash:rec.hash});
+      }
+      if(durable){
+        if(!hashes.length) throw new Error("Kein gespeicherter Eintrag");
+        for(const hash of hashes) if((await idbGet("catalog",hash))?.hash!==hash) throw new Error("Katalogeintrag fehlt");
+        await PBOriginals.verifyStored(local.file.pbOriginalHash,local.file.size);
+        accepted.push({index:done,sha256:local.file.pbOriginalHash,hashes});
       }
     }
     catch(e){ failed++; diag("✗ Import fehlgeschlagen: "+(it.path||it.file.name)+" — "+(e&&e.message||e)); /* eine Datei darf nicht alles stoppen */ }
@@ -1499,6 +1515,8 @@ async function signBatch(items){ // items: [{file, path, dirId}]
   diag(`Import fertig: ${added} neu, ${skipped} übersprungen, ${failed} fehlgeschlagen`);
   toast(cancelReq ? `Abgebrochen · ${added} neu signiert`
                   : `Fertig · ${added} neu signiert, ${skipped} schon bekannt (übersprungen)${failed ? ` · ${failed} fehlgeschlagen — siehe Diagnose` : ""}`);
+  return accepted;
+  } finally { signing=false; KI_LAUF=null; delete window.PBImportStep; window.PBWorkspace?.refresh(); }
 }
 
 /* ============================================================================
@@ -3450,7 +3468,7 @@ boot();
       vector:buildVector(toks), tf:termFreq(toks), summary:summarize(msg.body||""),
       category:"E-Mail", dirId:null, nameTokens:tokens(name), dupes:[], tags:[],
       mail:{from:msg.from,to:msg.to,cc:msg.cc||"",subject:msg.subject,date:msg.date}, mailBody:(msg.body||"").slice(0,20000), localSource:source||null };
-    try{ await idbPut("catalog", rec); }catch(e){}
+    await idbPut("catalog", rec);
     CATALOG.push(rec); HASHSET.add(hash);
     return true;
   }
@@ -3459,7 +3477,7 @@ boot();
   // Wird über die App-Funktion signFile zu einem EIGENEN Katalog-Eintrag (Bild -> Beschreibung,
   // PDF -> OCR, Text -> Text). Fail-soft; das Original der Mail bleibt unberührt.
   var ATT_OK = {jpg:1,jpeg:1,png:1,webp:1,gif:1,bmp:1,tif:1,tiff:1,pdf:1,docx:1,doc:1,odt:1,xlsx:1,xls:1,csv:1,tsv:1,pptx:1,ppt:1,txt:1,md:1,rtf:1};
-  async function importAttachment(att, msg){
+  async function importAttachment(att, msg, options={}){
     if(typeof signFile!=="function") return 0;
     var ext=(att.filename.split(".").pop()||"").toLowerCase();
     if(!ATT_OK[ext]) return 0;                        // Signaturen/exotisches überspringen
@@ -3477,26 +3495,41 @@ boot();
         var ah=r&&r.hash?r.hash:await sha256(await f.arrayBuffer());
         var arec=CATALOG.find(function(x){return x.hash===ah;});
         if(arec && msg._pbHash && arec.fromMail!==msg._pbHash){arec.fromMail=msg._pbHash;await idbPut("catalog",arec);}
-      }catch(e){}
+      }catch(e){if(options.durable) throw e;}
+      if(options.durable){
+        if((await idbGet("catalog",r.hash))?.hash!==r.hash) throw new Error("Anhang nicht gespeichert");
+        await PBOriginals.verifyStored(item.file.pbOriginalHash,item.file.size);
+        options.hashes.push(r.hash);
+      }
       return r && !r.skipped ? 1 : 0;
-    }catch(e){ return 0; }
+    }catch(e){ if(options.durable) throw e; return 0; }
   }
 
-  async function importFile(file, source){
+  async function importFile(file, source, options={}){
     var name=(file.name||"").toLowerCase();
     var raw=await file.text();
     var msgs = name.endsWith(".mbox") ? parseMbox(raw)
              : name.endsWith(".eml")  ? [parseEml(raw)]
              : (raw.indexOf("\nFrom ")>=0 || /^From /.test(raw)) ? parseMbox(raw) : [parseEml(raw)];
-    var added=0;
+    var added=0; const hashes=[];
     var doAtt = (typeof localStorage==="undefined") || localStorage.getItem("pb_mail_attach")!=="0"; // Standard AN
     for(var i=0;i<msgs.length;i++){
-      try{ if(await addMailEntry(msgs[i], source)) added++; }catch(e){}
+      try{
+        if(await addMailEntry(msgs[i], source)) added++;
+        if(options.durable){
+          const hash=msgs[i]._pbHash;
+          if(!hash || (await idbGet("catalog",hash))?.hash!==hash) throw new Error("E-Mail nicht gespeichert");
+          hashes.push(hash);
+        }
+      }catch(e){if(options.durable) throw e;}
       if(doAtt && msgs[i] && msgs[i].attachments){
-        for(var a=0;a<msgs[i].attachments.length;a++){ try{ added += await importAttachment(msgs[i].attachments[a], msgs[i]); }catch(e){} }
+        for(var a=0;a<msgs[i].attachments.length;a++){
+          try{ added += await importAttachment(msgs[i].attachments[a], msgs[i], {durable:options.durable,hashes}); }
+          catch(e){if(options.durable) throw e;}
+        }
       }
     }
-    return added;
+    return options.durable ? {added,hashes} : added;
   }
 
   async function getRaw(hash){
@@ -3505,10 +3538,18 @@ boot();
     if(rawMails.has(hash)) return rawMails.get(hash);
     const source=rec.localSource;
     if(!source) return rec.mailRemote && window.PBLiveMail ? PBLiveMail.getRaw(rec.mailRemote) : null;
-    const handle=DIR_HANDLES.get(source.dirId) || (await idbGet("dirs",source.dirId))?.handle;
-    if(!handle) return null;
-    if(handle.requestPermission && await handle.requestPermission({mode:"read"})!=="granted") return null;
-    const file=await getByPath(handle,source.path), raw=await file.text();
+    let file;
+    if(source.originalHash){
+      if(!window.PBOriginals?.verifyStored) return null;
+      file=await PBOriginals.verifyStored(source.originalHash);
+      file=new File([file],source.name||file.name,{type:file.type});
+    } else {
+      const handle=DIR_HANDLES.get(source.dirId) || (await idbGet("dirs",source.dirId))?.handle;
+      if(!handle) return null;
+      if(handle.requestPermission && await handle.requestPermission({mode:"read"})!=="granted") return null;
+      file=await getByPath(handle,source.path);
+    }
+    const raw=await file.text();
     const messages=file.name.toLowerCase().endsWith(".mbox")?parseMbox(raw):[parseEml(raw)];
     for(const msg of messages){
       const key=(msg.from||"")+"|"+(msg.subject||"")+"|"+(msg.date||"")+"|"+(msg.body||"").slice(0,4000);

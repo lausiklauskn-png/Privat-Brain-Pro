@@ -73,4 +73,62 @@ public class ShareInboxTest {
         try { inbox.read("../" + item.id, 0); fail("unknown id"); } catch (IOException expected) { }
         try { inbox.read(item.id, -1); fail("negative offset"); } catch (IOException expected) { }
     }
+
+    @Test public void restartRestoresExactOriginalUntilAcknowledged() throws IOException {
+        File dir = folder();
+        byte[] bytes = "Erfundener dauerhafter Eingang".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        ShareInbox.Item item = new ShareInbox(dir).add(new ByteArrayInputStream(bytes), "Brief.txt", "text/plain");
+        ShareInbox restarted = new ShareInbox(dir);
+        assertEquals(1, restarted.count());
+        assertEquals(item.id, restarted.list().get(0).id);
+        assertEquals("Brief.txt", restarted.list().get(0).name);
+        assertArrayEquals(bytes, restarted.read(item.id, 0));
+        restarted.remove(item.id);
+        restarted.remove(item.id);
+        assertEquals(0, new ShareInbox(dir).count());
+        assertEquals(0, dir.list().length);
+    }
+
+    @Test public void damagedDescriptorAndPartialDataAreRetainedWithoutFalseOffer() throws IOException {
+        File dir = folder();
+        ShareInbox.Item item = new ShareInbox(dir).add(new ByteArrayInputStream(new byte[]{1,2,3}), "Brief.txt", "text/plain");
+        Files.write(new File(dir,item.id).toPath(),new byte[]{1});
+        ShareInbox restarted = new ShareInbox(dir);
+        assertEquals(0,restarted.count());
+        assertEquals(1,restarted.unavailable());
+        assertTrue(new File(dir,item.id).exists());
+        assertTrue(new File(dir,item.id+".meta").exists());
+        restarted.remove("../../other");
+        assertTrue(new File(dir,item.id).exists());
+    }
+
+    @Test public void descriptorFailureDoesNotSilentlyAcknowledge() throws IOException {
+        File dir=folder();
+        ShareInbox inbox=new ShareInbox(dir);
+        ShareInbox.Item item=inbox.add(new ByteArrayInputStream(new byte[]{1,2,3}),"Brief.txt","text/plain");
+        File meta=new File(dir,item.id+".meta");
+        assertTrue(meta.delete());assertTrue(meta.mkdir());
+        Files.write(new File(meta,"keeps-directory-nonempty").toPath(),new byte[]{1});
+        try { inbox.remove(item.id);fail("must report metadata removal failure"); } catch(IOException expected) { }
+        assertEquals(1,inbox.count());
+        assertArrayEquals(new byte[]{1,2,3},inbox.read(item.id,0));
+    }
+
+    @Test public void sizeAndCountLimitsSurviveRestart() throws IOException {
+        File dir=folder(); ShareInbox inbox=new ShareInbox(dir,10);
+        for(int i=0;i<ShareInbox.MAX_FILES;i++) inbox.add(new ByteArrayInputStream(new byte[]{1}),"a.txt","text/plain");
+        ShareInbox restarted=new ShareInbox(dir,10);
+        assertEquals(ShareInbox.MAX_FILES,restarted.count());
+        try {restarted.add(new ByteArrayInputStream(new byte[]{2}),"b.txt","text/plain");fail("too many");}catch(IOException expected) { }
+        assertEquals(ShareInbox.MAX_FILES,new ShareInbox(dir,10).count());
+    }
+
+    @Test public void retainedUncommittedDataCountsAgainstTheTotalLimit() throws IOException {
+        File dir=folder(),orphan=new File(dir,"interrupted-copy");
+        try(java.io.RandomAccessFile data=new java.io.RandomAccessFile(orphan,"rw")){data.setLength(ShareInbox.MAX_TOTAL);}
+        ShareInbox inbox=new ShareInbox(dir);
+        try {inbox.add(new ByteArrayInputStream(new byte[]{1}),"b.txt","text/plain");fail("total limit");}catch(IOException expected) { }
+        assertEquals(0,inbox.count());assertEquals(1,dir.list().length);
+        assertEquals(ShareInbox.MAX_TOTAL,orphan.length());
+    }
 }
