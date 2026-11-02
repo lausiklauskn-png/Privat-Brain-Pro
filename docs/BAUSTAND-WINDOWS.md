@@ -1,4 +1,11 @@
-# Windows 1.0.37 veröffentlicht — 2026-10-25
+# Windows 1.0.44 veröffentlicht — 2026-11-02
+
+Der unveränderte abgenommene Installer aus `1da44dee7171d2f998a06047e8c05c181752c320`
+ist veröffentlicht. [Download, Prüfsumme, installierte App-Paar-Probe und Grenzen](PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md).
+Android steht ebenfalls auf 1.0.44. Windows bleibt unsigniert, ohne Prüfendpunkt;
+Appkennung, Datenpfad und bisherige Ablage bleiben erhalten.
+
+## Historischer Stand: Windows 1.0.37 — 2026-10-25
 
 Quelle `015c9a1266a64f44a1896ead56349094c64e2f9a`, PR #85 übernommen. [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) über
 die vorhandene App installieren. Kennung, Datenpfade und Passwortformat bleiben erhalten.

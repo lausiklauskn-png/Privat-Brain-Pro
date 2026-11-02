@@ -1,9 +1,9 @@
 # Freiwillige Zusammenarbeit mit Familienakte und den Pro-Apps
 
-Bauabschnitt vom 2026-11-02, aufbauend auf dem dauerhaften Eingang aus PR #123
-(Merge `268d104`). Der Gesamtauftrag einschließlich Workflow-Gegenstelle,
-Familienakte-Geräte-/Modellwahl, Transport und App-Updates ist noch offen.
-Das Geschenk-HTML folgt erst nach dem vollständigen Bau.
+Seit dem 2. November 2026 in **Private Brain Pro 1.0.44** auf Android und Windows
+veröffentlicht, aufbauend auf PR #123 und #124.
+[Downloads und tatsächliche Plattform-/Paar-Nachweise](PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md).
+Der übergreifende Familienakte-Abschluss und das Geschenk folgen getrennt nach dem Gesamtbau.
 
 In **Einstellungen → Tresor & Ablage → Zusammenarbeit mit Pro-Apps** lässt sich
 auf Android und Windows ein gemeinsamer Pro-Tresor auswählen, öffnen und sperren.
@@ -57,12 +57,13 @@ Kein Tresorpasswort oder Hauptschlüssel gehört in diese Metadaten.
 - Neu ergänzt: Android-Instrumentierung mit echtem SAF, Keystore und FPT1;
   Abnahme in der installierten Windows-App einschließlich nativer Dialoge,
   tatsächlicher Rückgabe und DPAPI-Erhalt nach Neustart/Neuinstallation.
-  Diese Plattformprüfungen müssen vor der Übernahme vollständig bestehen.
+  Diese Plattformprüfungen sind auf dem veröffentlichten main-Stand bestanden.
 
 Der lokale vollständige Webbau wird in dieser Cloud durch HTTP 403 beim bestehenden
 Anleitungsvideo blockiert. Gezielte Browserproben verwenden die erzeugten Dateien
 und vorhandenen lokalen Adapter; das ist kein vollständiger Paketnachweis. Der
-reguläre GitHub-Bau lädt und prüft das vollständige Paket. Keine echte zweite APK,
-kein physisches Tablet/USB-/SD-Laufwerk und kein Nutzer-Windows-Gerät sind mit
-Java-Gegenakteuren oder Browseradaptern nachgewiesen. Es gibt hier noch keinen
-neuen App-Release.
+reguläre GitHub-Bau lädt und prüft das vollständige Paket. Zusätzlich bestanden
+die tatsächlichen Zwei-App-Proben mit Familienakte auf Android API 35 und Windows,
+je sechs Prüfabschnitte. Das sind installierte Prüfbuilds auf CI, kein physisches
+Tablet/USB-/SD-Laufwerk und kein Nutzer-Windows-PC. Die Auslieferungsfassungen
+1.0.44 sind separat geprüft und veröffentlicht, siehe den Nachweis oben.

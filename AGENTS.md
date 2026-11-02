@@ -1,4 +1,14 @@
-# Private Brain Pro — veröffentlichter Stand 1.0.37
+# Private Brain Pro — veröffentlichter Stand 1.0.44
+
+Android und Windows **1.0.44** sind seit dem 2. November 2026 veröffentlicht, Quelle
+`1da44dee7171d2f998a06047e8c05c181752c320`. Main-Abnahmen, signiertes Android-Update,
+installierte Windows-App und wirklicher Familienakte-Hin-/Rückweg auf beiden Plattformen
+bestanden. Öffentliche Downloads geprüft. Details und Links:
+[Veröffentlichungsnachweis](docs/PRO-VERBUND-VEROEFFENTLICHUNG-1.0.44.md).
+Diese Versionen nicht erneut veröffentlichen. Persönliche Geräte bleiben der Nutzertest;
+der übergreifende Abschluss wird im Familienakte-Repository geführt.
+
+## Historischer Stand 1.0.37
 
 Android und Windows **1.0.37** sowie die gebaute PWA sind veröffentlicht (25.10.2026); PR #85 übernommen.
 [Android-Update-APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.37/Private-Brain-Pro-1.0.37.apk) · [Windows-x64-Setup](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/windows-v1.0.37/Private-Brain-Pro-Windows-1.0.37-x64-setup.exe) · [PWA öffnen / installieren](https://lausiklauskn-png.github.io/Privat-Brain-Pro/).
