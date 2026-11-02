@@ -36,8 +36,8 @@ final class DesktopService {
         meaningMittel=DesktopModel.meaning(state,resources.resolve("meaning-models.json"),"mittel",BundledRoutes::meaningMittelPath);
         meaningGross=DesktopModel.meaning(state,resources.resolve("meaning-models.json"),"gross",BundledRoutes::meaningGrossPath);
         folders=new DesktopFolders(state);
-        Path incoming=state.directory.resolve("cache/incoming");DesktopFiles.noLinks(incoming);Files.createDirectories(incoming);
-        inbox=new ShareInbox(incoming.toFile());inbox.clear();
+        Path incoming=state.directory.resolve("shared-in");DesktopFiles.noLinks(incoming);Files.createDirectories(incoming);
+        inbox=new ShareInbox(incoming.toFile());
     }
     private static JSONObject yes(){return new JSONObject().put("ok",true);}
     private static String required(JSONObject o,String key)throws MailFailure {
@@ -106,7 +106,7 @@ final class DesktopService {
             return switch(method){
                 case "pending" -> {
                     JSONArray items=new JSONArray();for(ShareInbox.Item item:inbox.list())items.put(new JSONObject().put("id",item.id).put("name",item.name).put("mime",item.mime).put("size",item.size));
-                    int count=refused;refused=0;yield new JSONObject().put("items",items).put("refused",count);
+                    int count=refused+inbox.unavailable();refused=0;yield new JSONObject().put("items",items).put("refused",count);
                 }
                 case "read" -> {try{yield bytes(inbox.read(required(o,"id"),o.optLong("offset",-1)));}catch(Exception error){throw new java.io.IOException("SHARE_UNAVAILABLE");}}
                 case "done" -> {inbox.remove(required(o,"id"));yield yes();}

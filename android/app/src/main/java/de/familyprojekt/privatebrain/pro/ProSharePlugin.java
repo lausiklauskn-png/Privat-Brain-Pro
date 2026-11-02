@@ -33,8 +33,7 @@ public class ProSharePlugin extends Plugin {
     private volatile int refused;
 
     @Override public void load() {
-        inbox = new ShareInbox(new File(getContext().getCacheDir(), "shared-in"));
-        inbox.clear();
+        inbox = new ShareInbox(new File(getContext().getNoBackupFilesDir(), "shared-in"));
         Intent first = getActivity() == null ? null : getActivity().getIntent();
         if (first != null) take(first);
     }
@@ -99,7 +98,7 @@ public class ProSharePlugin extends Plugin {
             JSArray list = new JSArray();
             for (ShareInbox.Item item : inbox.list())
                 list.put(new JSObject().put("id", item.id).put("name", item.name).put("mime", item.mime).put("size", item.size));
-            int gone = refused; refused = 0;
+            int gone = refused + inbox.unavailable(); refused = 0;
             call.resolve(new JSObject().put("items", list).put("refused", gone));
         });
     }
@@ -115,6 +114,6 @@ public class ProSharePlugin extends Plugin {
 
     @PluginMethod public void done(PluginCall call) {
         String id = call.getString("id", "");
-        worker.execute(() -> { inbox.remove(id); call.resolve(); });
+        worker.execute(() -> { try { inbox.remove(id); call.resolve(); } catch (Exception error) { call.reject("SHARE_UNAVAILABLE", "SHARE_UNAVAILABLE"); } });
     }
 }

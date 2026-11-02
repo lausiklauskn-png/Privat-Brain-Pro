@@ -548,6 +548,15 @@ nur vorbereiten, ohne Passwortlogin oder behauptete fertige Verbindung.
 **Kurz-Verfassung.** Netzweites steht in **Sage-Protokol**; hier steht nur, was eine
 Sitzung wissen muss, **bevor** sie hier etwas anfasst.
 
+## Laufender Bau: Pro-Verbund, 2026-11-02
+
+Der Nutzer hat den Verbund mit Familienakte einschließlich Windows, geprüfter
+Main-Übernahmen und späterer Updates freigegeben. Der Gesamtauftrag ist offen;
+das Geschenk entsteht erst nach dem Bau. Erster abgesicherter PB-Abschnitt:
+[Teileingang und Prüfgrenzen](docs/PRO-VERBUND-EINGANG.md). Fehlgeschlagene Importe
+bleiben erhalten, Quittung erst nach Katalogabschluss und frisch geprüften
+Originalbytes. Keine Änderung von Appkennung oder Datenbanknamen.
+
 ## Was dieses Repo ist
 
 **Private Brain** ist Klaus' **fokussiertes Zusammenführungs-Repo** (Entscheid 2026-07-16):

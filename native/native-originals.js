@@ -53,11 +53,11 @@
     }catch(error){if(ticket)await files.abortImport({ticket}).catch(()=>{});throw new Error(t(5));}
   }
   const oldResolve=window.resolveFile,oldOpen=window.openFile,oldLightbox=window.openLightbox;
-  async function readOriginal(r){
-    if(SESSION_FILES.has(r.hash))return SESSION_FILES.get(r.hash);
-    if(cache.has(r.hash))return cache.get(r.hash);
+  async function readOriginal(r,fresh=false){
+    if(!fresh&&SESSION_FILES.has(r.hash))return SESSION_FILES.get(r.hash);
+    if(!fresh&&cache.has(r.hash))return cache.get(r.hash);
     const info=await files.originalInfo({hash:r.hash});
-    if(info.missing)return oldResolve(r);
+    if(info.missing){if(fresh)throw new Error(t(5));return oldResolve(r);}
     if(info.hash!==r.hash||!Number.isSafeInteger(info.size)||info.size<0||info.size>256*1024*1024)throw new Error(t(5));
     const parts=[];
     for(let offset=0;offset<info.size;offset+=chunk){
@@ -68,6 +68,12 @@
     const file=mark(new File(parts,r.name||info.name,{type:info.type}),r.hash);
     if(await sha256(await file.arrayBuffer())!==r.hash)throw new Error(t(5));
     cache.set(r.hash,file);if(cache.size>4)cache.delete(cache.keys().next().value);stored.add(r.hash);return file;
+  }
+  async function verifyStored(hash,size){
+    if(typeof hash!=='string'||!/^[a-f0-9]{64}$/.test(hash))throw new Error(t(5));
+    const file=await readOriginal({hash},true);
+    if(size!==undefined&&file.size!==size)throw new Error(t(5));
+    return file;
   }
   async function resolve(r){
     const before=statusFor(r.hash);
@@ -166,7 +172,7 @@
     if(window.PBFolders){window.PBFolders.refresh();return;}
     for(const id of ['chooseLibrary','pauseLibrary']){const e=document.getElementById(id);if(e)e.hidden=true;}
   }
-  window.PBOriginals={stored,resolve,reconnect,searchFolder,missingRecords,notice,statusFor,unavailable,snapshot:()=>Object.freeze({ready:originalsReady,error:originalsError}),label:()=>t(7),async storeItem(item){const hash=await save(item.file);if(window.PBFolders)await window.PBFolders.copy(hash,item.file.name);return item;}};
+  window.PBOriginals={stored,resolve,verifyStored,reconnect,searchFolder,missingRecords,notice,statusFor,unavailable,snapshot:()=>Object.freeze({ready:originalsReady,error:originalsError}),label:()=>t(7),async storeItem(item){const hash=await save(item.file);if(window.PBFolders)await window.PBFolders.copy(hash,item.file.name);return item;}};
   new MutationObserver(notice).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   files.listOriginals().then(result=>{
     if(!Array.isArray(result?.items)||result.items.some(hash=>typeof hash!=='string'||!/^[a-f0-9]{64}$/.test(hash)))throw new Error('Original list unavailable');

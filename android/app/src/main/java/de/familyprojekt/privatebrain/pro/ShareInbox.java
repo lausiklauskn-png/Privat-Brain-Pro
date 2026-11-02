@@ -3,9 +3,11 @@ package de.familyprojekt.privatebrain.pro;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ final class ShareInbox {
     static final long MAX_FILE = 200L * 1024 * 1024;   // one shared file
     static final int MAX_FILES = 30;                    // one share
     static final int CHUNK = 256 * 1024;
+    static final long MAX_TOTAL = 512L * 1024 * 1024;
 
     static final class Item {
         final String id, name, mime; final long size;
@@ -30,9 +33,29 @@ final class ShareInbox {
     private final File dir;
     private final long maxFile;
     private final Map<String, Item> items = new LinkedHashMap<>();
+    private int unavailable;
 
     ShareInbox(File dir) { this(dir, MAX_FILE); }
-    ShareInbox(File dir, long maxFile) { this.dir = dir; this.maxFile = maxFile; }
+    ShareInbox(File dir, long maxFile) { this.dir = dir; this.maxFile = maxFile; restore(); }
+
+    /** Only committed descriptors are offered again. Damaged/pending originals are retained. */
+    private void restore() {
+        File[] old = dir.listFiles();
+        if (old == null) return;
+        for (File f : old) {
+            if (!f.getName().matches("[a-f0-9-]{36}\\.meta")) continue;
+            String id = f.getName().substring(0, 36);
+            try (DataInputStream in = new DataInputStream(new FileInputStream(f))) {
+                if (in.readInt() != 1) throw new IOException("metadata");
+                String name = in.readUTF(), mime = in.readUTF(); long size = in.readLong();
+                File data = new File(dir, id);
+                if (in.read() != -1 || !name.equals(safeName(name, "Geteilte Datei")) || !mime.equals(safeMime(mime)) || size < 0 || size > maxFile || !data.isFile() || data.length() != size) throw new IOException("metadata");
+                items.put(id, new Item(id, name, mime, size));
+            } catch (IOException error) { unavailable++; }
+        }
+    }
+
+    synchronized int unavailable() { return unavailable; }
 
     /** A file name without folders or control characters, never empty, at most 120 characters. */
     static String safeName(String raw, String fallback) {
@@ -53,22 +76,32 @@ final class ShareInbox {
     synchronized int count() { return items.size(); }
 
     /** Copies one stream; refuses files above the limit and shares above MAX_FILES. */
-    Item add(InputStream in, String name, String mime) throws IOException {
-        synchronized (this) { if (items.size() >= MAX_FILES) throw new IOException("too many"); }
+    synchronized Item add(InputStream in, String name, String mime) throws IOException {
+        if (items.size() >= MAX_FILES) throw new IOException("too many");
         if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("no folder");
+        long used = 0; File[] stored = dir.listFiles();
+        if (stored != null) for (File f : stored) if (f.isFile()) used += f.length();
         String id = UUID.randomUUID().toString();
         File target = new File(dir, id);
         long total = 0;
-        try (InputStream source = in; OutputStream out = new FileOutputStream(target)) {
+        try (InputStream source = in; FileOutputStream out = new FileOutputStream(target)) {
             byte[] buffer = new byte[64 * 1024];
             for (int n; (n = source.read(buffer)) > 0; ) {
                 total += n;
-                if (total > maxFile) throw new IOException("too large");
+                if (total > maxFile || used + total > MAX_TOTAL) throw new IOException("too large");
                 out.write(buffer, 0, n);
             }
+            out.getFD().sync();
         } catch (IOException error) { target.delete(); throw error; }
         Item item = new Item(id, safeName(name, "Geteilte Datei"), safeMime(mime), total);
-        synchronized (this) { items.put(id, item); }
+        File pending = new File(dir, id + ".pending"), metadata = new File(dir, id + ".meta");
+        try {
+            try (FileOutputStream file = new FileOutputStream(pending); DataOutputStream out = new DataOutputStream(file)) {
+                out.writeInt(1); out.writeUTF(item.name); out.writeUTF(item.mime); out.writeLong(item.size); out.flush(); file.getFD().sync();
+            }
+            if (!pending.renameTo(metadata)) throw new IOException("metadata");
+        } catch (IOException error) { pending.delete(); target.delete(); throw error; }
+        items.put(id, item);
         return item;
     }
 
@@ -85,9 +118,15 @@ final class ShareInbox {
         }
     }
 
-    synchronized void remove(String id) { if (items.remove(id) != null) new File(dir, id).delete(); }
+    synchronized void remove(String id) throws IOException {
+        if (!items.containsKey(id)) return;
+        File metadata = new File(dir, id + ".meta");
+        if (metadata.exists() && !metadata.delete()) throw new IOException("metadata");
+        items.remove(id);
+        new File(dir, id).delete();
+    }
 
-    /** Leftovers from an earlier run are removed; the page never saw them. */
+    /** Explicit test/reset operation, never called during ordinary app startup. */
     synchronized void clear() {
         items.clear();
         File[] old = dir.listFiles();
