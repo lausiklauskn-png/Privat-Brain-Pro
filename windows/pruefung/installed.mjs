@@ -124,7 +124,10 @@ try{
   report.modelConsole=[];
   page.on('console',message=>{const value=message.text();if(/embedding|MODUL 03|wasm|onnx|model.*load/i.test(value)&&report.modelConsole.length<30)report.modelConsole.push(value.slice(0,1500));});
   page.on('response',response=>{const url=response.url();if(url.startsWith('https://pbmodel.localhost/models/')||url.startsWith('https://tauri.localhost/models/')||url.startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))report.modelRequests.push({url:url.split('?')[0],status:response.status()});});
-  await page.waitForFunction(()=>window.PBWorkspace&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
+  // The workspace is registered before the remaining adapter scripts load.
+  // A freshly reinstalled WebView can reach it while ProVerbund is still loading.
+  // Require the modules used below; an absent/broken module still fails this wait.
+  await page.waitForFunction(()=>window.PBWorkspace&&window.PBProVerbund&&window.PBVault&&typeof db!=='undefined'&&db&&window.Capacitor,null,{timeout:90000});
   const info=await call('ProDevice','getInfo');ok('installed app reports Windows and the actual native version',info.platform==='windows'&&info.versionName===expectedVersion);
   ok('raw calls without the private app capability are denied',await page.evaluate(async()=>{try{await __TAURI_INTERNALS__.invoke('pb_call',{plugin:'ProFiles',method:'listOriginals',options:{}});return false;}catch(error){return String(error).includes('NOT_ALLOWED');}}));
   if(phase==='first'){
