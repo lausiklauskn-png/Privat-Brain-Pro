@@ -47,6 +47,8 @@ final class ProTresorordner {
 
     private SharedPreferences prefs() { return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     synchronized boolean gewaehlt() { return prefs().contains("baum"); }
+    /** Gemerkter Baum des Tresorordners (für die Ersatzschlüssel-Warnung) oder null. */
+    synchronized String baum() { return prefs().getString("baum", null); }
     synchronized boolean istOffen() { return offen != null; }
     /** Der Nutzer will ausdrücklich entsperren oder einziehen: der gemerkte Schlüssel darf wieder öffnen. */
     synchronized void entsperrenGewuenscht() { vonHandGesperrt = false; }

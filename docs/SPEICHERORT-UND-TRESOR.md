@@ -112,3 +112,10 @@ Modell-Vektoren (`evec`) nicht, sie werden neu gerechnet.
 | Simulation `tools/native/test-vault.mjs` | Chromium, Android-Brücken gestellt: Karte, Tablet/SD-Wahl, kein Passwortfeld in der Seite, Übernahme, Katalogsicherung ohne Klick und ohne `evec`, Mail mit Ordner-Anhängen, Ansehen, Warnung vor „Öffnen mit“, Leeren, „Anhang gelöscht“, erneut laden, Sperren/Entsperren, Wiederherstellen auf zweitem Gerät ohne Doppelte, Sprache | 30 grün; Gegenprobe 8 Sabotagen, 8 gefangen (zuerst 2 durchgerutscht, Prüfungen nachgezogen) |
 | Android-Emulator `NativeVaultTest` | echtes Speicherzugriffs-Framework (lokaler Testanbieter), echter Schlüsselspeicher: Einrichten, falsches/kurzes Passwort, zerlegtes Umlaut-Passwort, Wiederherstellen auf „neuem Gerät“, Katalog, Konten, Original zurück, Sperren/Merken, 40-MB-Anhang gestreamt, Wiederverwendung, Manipulation erkannt, Leeren → „gelöscht“, 1-GiB-Grenze ohne Reste, beschädigte neueste Sicherung | siehe PR/CI |
 | Tablet | echte SD-Karte, echte Mail mit großem Anhang, Wiederherstellung auf zweitem Gerät | **nicht gemessen** – wartet auf den Nutzer |
+
+## Hauptablageordner oder „Private Brain“ (gemeinsamer Tresor-Plan, Klaus 2026-11-03)
+
+Liegt auf der Karte schon der gemeinsame Tresor aller Pro-Apps, darf beim Speicherort sowohl „Private Brain“ als auch der
+Ordner mit `tresorordner.json` gewählt werden; im zweiten Fall wird der vorhandene Unterordner „Private Brain“ benutzt
+(oder genau dieser angelegt). `Tresorordner/` und die Ordner anderer Apps/„Eingang-…“ werden abgelehnt
+(„Nichts wurde verändert“). Der Auswahl-Dialog nennt denselben Hinweissatz. Details: `TRESORORDNER.md`, letzter Abschnitt.

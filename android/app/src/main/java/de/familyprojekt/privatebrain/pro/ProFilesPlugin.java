@@ -3,7 +3,10 @@ package de.familyprojekt.privatebrain.pro;
 import android.content.ClipData;
 import android.content.Intent;
 import android.app.Activity;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 import androidx.core.content.FileProvider;
@@ -16,7 +19,9 @@ import com.getcapacitor.annotation.ActivityCallback;
 import androidx.activity.result.ActivityResult;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -74,6 +79,12 @@ public class ProFilesPlugin extends Plugin {
         worker.execute(() -> {
             try {
                 if (!"content".equals(destination.getScheme()) || recoveryBytes == null) throw new SecurityException();
+                // Gemeinsamer Tresor-Plan (Klaus 2026-11-03): Auf Klaus' SD-Karte lag die Datei im Klartext direkt im Tresor.
+                // Im oder neben dem Tresor wird nichts geschrieben; die Seite warnt und bietet einen anderen Ort an.
+                if (nebenTresor(destination)) {
+                    leerVerwerfen(destination);
+                    clearRecovery(); call.resolve(new JSObject().put("cancelled", true).put("saved", false).put("nebenTresor", true)); return;
+                }
                 try (OutputStream output = getContext().getContentResolver().openOutputStream(destination, "w")) {
                     if (output == null) throw new IllegalStateException();
                     output.write(recoveryBytes); output.flush();
@@ -83,6 +94,29 @@ public class ProFilesPlugin extends Plugin {
                 clearRecovery(); call.reject("Recovery export unavailable", "RECOVERY_EXPORT_FAILED");
             }
         });
+    }
+
+    /** Liegt das gewählte Dokument im Speicherort-/Tresor-Baum oder direkt neben „Private Brain“? Nur am Pfad der
+     *  Kennung erkennbar (Gerätespeicher/SD-Karte); bei anderen Anbietern und jedem Fehler: nicht erkennbar = false. */
+    private boolean nebenTresor(Uri ziel) {
+        try {
+            List<String> bereiche = new ArrayList<>(); String wurzel = null;
+            String[] ablage = Vault.get(getContext()).ordnerAdresse();
+            if (ablage != null) {
+                Uri baum = Uri.parse(ablage[0]);
+                bereiche.add(baum.getAuthority() + "|" + DocumentsContract.getTreeDocumentId(baum));
+                wurzel = baum.getAuthority() + "|" + ablage[1]; bereiche.add(wurzel);
+            }
+            String tresor = ProTresorordner.get(getContext()).baum();
+            if (tresor != null) { Uri baum = Uri.parse(tresor); bereiche.add(baum.getAuthority() + "|" + DocumentsContract.getTreeDocumentId(baum)); }
+            return OrdnerWahl.imTresor(ziel.getAuthority(), DocumentsContract.getDocumentId(ziel), bereiche, wurzel);
+        } catch (Exception error) { return false; }
+    }
+    /** Android legt beim „Speichern unter“ schon eine leere Datei an. Nur diese eigene, leere Datei wird wieder entfernt. */
+    private void leerVerwerfen(Uri ziel) {
+        try (Cursor c = getContext().getContentResolver().query(ziel, new String[] {OpenableColumns.SIZE}, null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0) && c.getLong(0) == 0) DocumentsContract.deleteDocument(getContext().getContentResolver(), ziel);
+        } catch (Exception ignored) { }
     }
 
     private void clearRecovery() {

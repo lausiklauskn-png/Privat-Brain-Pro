@@ -80,10 +80,14 @@ async function render(){
  let z,own={},all;try{z=await api.tresorZustand({});if(z.offen)own=await api.state();all=await receipts();}catch{z={};all=[];note=t(20);}
  if(generation!==renderGeneration)return;
  if(!panel){panel=make('section');panel.id='pro-verbund';panel.className='note';host.append(panel);}
- panel.replaceChildren(make('h4',t(0)),make('p',t(1)));
+ panel.replaceChildren(make('h4',t(0)),make('p',t(1)+(window.PBOrdnerHinweis?' '+PBOrdnerHinweis.hinweis():'')));
  const status=make('p',z.erreichbar===false?t(9)+(z.ordner||''):z.offen?t(7)+(z.ordner||''):z.gewaehlt?t(8)+(z.ordner||''):t(6));status.setAttribute('role','status');panel.append(status);
  const row=make('div');row.className='btnrow';panel.append(row);
- const connect=async other=>{const r=await api.tresorEinziehen({...options(),nurVerbinden:true,...(other?{neuWaehlen:true}:{})});if(!r?.abgebrochen)note='';};
+ const connect=async other=>{
+  // Gemeinsamer Tresor-Plan (Klaus 2026-11-03): falsch gewählter Ordner → klare Meldung statt Code.
+  try{const r=await api.tresorEinziehen({...options(),nurVerbinden:true,...(other?{neuWaehlen:true}:{})});if(!r?.abgebrochen)note='';}
+  catch(error){const text=window.PBOrdnerHinweis?.meldung(String(error?.code||error?.message||''));if(!text)throw error;note=text;}
+ };
  if(!z.offen)button(row,z.gewaehlt?t(4):t(2),()=>connect(false));
  if(z.gewaehlt)button(row,t(3),()=>connect(true));
  if(z.offen){button(row,t(5),()=>api.tresorSperren({}));button(row,t(10),receive);button(row,t(11),confirm);
