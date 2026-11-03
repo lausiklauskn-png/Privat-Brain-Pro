@@ -52,7 +52,7 @@ export function adaptRecovery(html) {
       var result=await window.PBRecoveryExport.save(shares,tx('sharesFile'),tx('sharesHead'));
       if(shares!==pendingShares)return;
       sharesSaved=result.saved===true;
-      el('tzErr').textContent=window.PBRecoveryExport.text(sharesSaved?'saved':'cancelled');
+      el('tzErr').textContent=window.PBRecoveryExport.text(sharesSaved?'saved':result.nebenTresor?'beside':'cancelled');
     }catch(e){if(epoch===setupEpoch)el('tzErr').textContent=window.PBRecoveryExport.text('failed');}
     finally{if(epoch===setupEpoch)recoveryBusy(false);}
   }

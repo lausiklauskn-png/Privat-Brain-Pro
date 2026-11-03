@@ -3,12 +3,14 @@ package de.familyprojekt.privatebrain.pro;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
+import android.provider.DocumentsContract;
 import android.text.InputType;
 import android.util.Base64;
 import android.view.ContextThemeWrapper;
@@ -99,10 +101,29 @@ public class ProVaultPlugin extends Plugin {
             try {
                 if (!"content".equals(tree.getScheme()) || (data.getFlags() & required) != required) throw new VaultCrypto.Failure("VAULT_FOLDER_UNAVAILABLE");
                 getContext().getContentResolver().takePersistableUriPermission(tree, required);
+                // Gemeinsamer Tresor-Plan (Klaus 2026-11-03): Hauptablageordner und „Private Brain“ sind beide richtig
+                // (Vault.find nutzt den vorhandenen Unterordner „Private Brain“); Verwaltung und fremde Fächer nie.
+                String falsch = OrdnerWahl.speicherortFehler(new de.familyprojekt.tresor.SafAblage(getContext().getContentResolver(), tree), ordnerName(tree));
+                if (falsch != null) { freigabeZurueck(tree, "vault-v1", "tree"); throw new VaultCrypto.Failure(falsch); }
                 boolean existing = vault.find(tree) != null;
                 getActivity().runOnUiThread(() -> passwordDialog(call, existing ? MODE_OPEN : MODE_CREATE, tree));
             } catch (Exception error) { String code = vaultCode(error); call.reject(code, code); }
         });
+    }
+    /** Anzeigename des gewählten Ordners (Dateien-App), sonst der letzte Teil der Kennung. */
+    private String ordnerName(Uri tree) {
+        String id = DocumentsContract.getTreeDocumentId(tree);
+        try (Cursor c = getContext().getContentResolver().query(DocumentsContract.buildDocumentUriUsingTree(tree, id),
+                new String[] {DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+            if (c != null && c.moveToFirst() && c.getString(0) != null) return c.getString(0);
+        } catch (Exception ignored) { }
+        int i = Math.max(id.lastIndexOf('/'), id.indexOf(':'));
+        return i >= 0 ? id.substring(i + 1) : id;
+    }
+    /** Eine abgelehnte Wahl behält keine Android-Freigabe, außer es ist der gerade benutzte Ordner. */
+    private void freigabeZurueck(Uri tree, String prefs, String key) {
+        if (tree.toString().equals(getContext().getSharedPreferences(prefs, Context.MODE_PRIVATE).getString(key, ""))) return;
+        try { getContext().getContentResolver().releasePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION); } catch (Exception ignored) { }
     }
     @PluginMethod public void unlock(PluginCall call) { getActivity().runOnUiThread(() -> passwordDialog(call, MODE_UNLOCK, null)); }
     @PluginMethod public void lock(PluginCall call) { work(call, () -> vault.lock()); }
@@ -316,16 +337,24 @@ public class ProVaultPlugin extends Plugin {
     static final String[][] T_WORDS = {
         {"Tresorordner anlegen", "Tresorordner entsperren", "Ein Passwort für alle Pro-Apps (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Es verlässt das Gerät nie. Mindestens 10 Zeichen.",
          "Das Passwort des Tresorordners (dasselbe wie in den anderen Pro-Apps).", "Passwort vergessen = ohne Ersatzschlüssel kein Zugang. Ich bewahre es sicher auf.",
-         "Passwort falsch oder Ordner nicht erreichbar. Nichts wurde verändert.", "Weiter"},
+         "Passwort falsch oder Ordner nicht erreichbar. Nichts wurde verändert.", "Weiter",
+         "In diesem Ordner liegt noch kein gemeinsamer Tresor. Wähle den Ordner, in dem „tresorordner.json“ liegt. Gibt es noch keinen: hier neu anlegen.",
+         "Ja, hier einen neuen, leeren gemeinsamen Tresor anlegen."},
         {"Create shared vault folder", "Unlock shared vault folder", "One password for all Pro apps (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). It never leaves the device. At least 10 characters.",
          "The shared vault folder password (the same as in the other Pro apps).", "Forgotten password = no access without recovery keys. I will keep it safe.",
-         "Wrong password or folder unavailable. Nothing was changed.", "Continue"},
+         "Wrong password or folder unavailable. Nothing was changed.", "Continue",
+         "There is no shared vault in this folder yet. Choose the folder that contains “tresorordner.json”. If there is none yet: create a new one here.",
+         "Yes, create a new, empty shared vault here."},
         {"Создать общую папку-хранилище", "Разблокировать общую папку-хранилище", "Один пароль для всех Pro-приложений (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Он не покидает устройство. Не менее 10 символов.",
          "Пароль общей папки (тот же, что в других Pro-приложениях).", "Забытый пароль = без ключей восстановления доступа нет. Я сохраню его надёжно.",
-         "Неверный пароль или папка недоступна. Ничего не изменено.", "Продолжить"},
+         "Неверный пароль или папка недоступна. Ничего не изменено.", "Продолжить",
+         "В этой папке ещё нет общего сейфа. Выберите папку, в которой лежит «tresorordner.json». Если его ещё нет: создайте новый здесь.",
+         "Да, создать здесь новый пустой общий сейф."},
         {"Utwórz wspólny folder sejfu", "Odblokuj wspólny folder sejfu", "Jedno hasło dla wszystkich aplikacji Pro (Familienakte Pro, Private Brain Pro, Workflow PDF Pro, BookLedgerPro). Nigdy nie opuszcza urządzenia. Co najmniej 10 znaków.",
          "Hasło wspólnego folderu (to samo co w innych aplikacjach Pro).", "Zapomniane hasło = bez kluczy zapasowych brak dostępu. Przechowam je bezpiecznie.",
-         "Błędne hasło lub folder niedostępny. Nic nie zmieniono.", "Dalej"}
+         "Błędne hasło lub folder niedostępny. Nic nie zmieniono.", "Dalej",
+         "W tym folderze nie ma jeszcze wspólnego sejfu. Wybierz folder, w którym leży „tresorordner.json”. Jeśli go nie ma: utwórz nowy tutaj.",
+         "Tak, utwórz tutaj nowy, pusty wspólny sejf."}
     };
     private final AtomicBoolean tresorBusy = new AtomicBoolean();
     static String tresorCode(Exception error) {
@@ -384,6 +413,10 @@ public class ProVaultPlugin extends Plugin {
             try {
                 if (!"content".equals(tree.getScheme()) || (data.getFlags() & required) != required) throw new VaultCrypto.Failure("VAULT_FOLDER_UNAVAILABLE");
                 getContext().getContentResolver().takePersistableUriPermission(tree, required);
+                // Gemeinsamer Tresor-Plan: gewählt wird der Ordner mit tresorordner.json. „Tresorordner/“ und Fach-Ordner
+                // (auch „Private Brain“) werden abgelehnt, nichts wird dort angelegt.
+                String falsch = OrdnerWahl.tresorFehler(OrdnerWahl.einordnen(new de.familyprojekt.tresor.SafAblage(getContext().getContentResolver(), tree), ordnerName(tree)));
+                if (falsch != null && !"NEU".equals(falsch)) { freigabeZurueck(tree, "pb-tresorordner-v1", "baum"); throw new java.io.IOException(falsch); }
                 if (!call.getBoolean("nurVerbinden", false)) {
                     String pruefung = tresor().pruefen(tree, vault.tresorId());
                     if (!"PASST".equals(pruefung)) throw new java.io.IOException("TRESOR_ORDNER_" + pruefung);
@@ -414,10 +447,13 @@ public class ProVaultPlugin extends Plugin {
         LinearLayout form = new LinearLayout(context); form.setOrientation(LinearLayout.VERTICAL);
         int padding = Math.round(20 * activity.getResources().getDisplayMetrics().density);
         form.setPadding(padding, padding / 2, padding, padding / 2);
-        TextView help = new TextView(context); help.setText(tt[anlegen ? 2 : 3]); form.addView(help);
+        // Kein neuer Tresor ohne ausdrückliche Rückfrage (Klaus 2026-11-03): Hinweissatz und eigener Haken.
+        TextView help = new TextView(context); help.setText(anlegen ? tt[7] + "\n\n" + tt[2] : tt[3]); form.addView(help);
         EditText first = password(context, form, anlegen ? t[3] : t[3].replaceAll(" \\(.*\\)$", ""));
         EditText second = anlegen ? password(context, form, t[4]) : null;
         CheckBox notice = null;
+        CheckBox neuHier = null;
+        if (anlegen) { neuHier = new CheckBox(context); neuHier.setText(tt[8]); form.addView(neuHier); }
         if (anlegen) { notice = new CheckBox(context); notice.setText(tt[4]); form.addView(notice); }
         CheckBox remember = new CheckBox(context); remember.setText(t[6]); remember.setChecked(true); form.addView(remember);
         TextView status = new TextView(context); status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); form.addView(status);
@@ -429,12 +465,13 @@ public class ProVaultPlugin extends Plugin {
         Runnable cancel = () -> { wipe.run(); if (finished.compareAndSet(false, true)) { tresorBusy.set(false); call.resolve(new JSObject().put("abgebrochen", true)); } };
         dialog.setOnCancelListener(d -> cancel.run());
         dialog.setOnDismissListener(d -> cancel.run());
-        CheckBox confirm = notice;
+        CheckBox confirm = notice, confirmNeu = neuHier;
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             if (busy.get()) return;
             CharSequence value = first.getText();
             if (value.length() < Vault.MIN_PASSWORD) { status.setText(t[10]); return; }
             if (anlegen && !value.toString().equals(second.getText().toString())) { status.setText(t[11]); return; }
+            if (anlegen && !confirmNeu.isChecked()) { status.setText(tt[7]); return; }
             if (anlegen && !confirm.isChecked()) { status.setText(t[12]); return; }
             busy.set(true); status.setText(t[19]);
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);

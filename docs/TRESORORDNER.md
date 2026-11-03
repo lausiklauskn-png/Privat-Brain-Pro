@@ -40,3 +40,22 @@ Hintergrund nicht); Probe ergänzt, danach gefangen. Unverändert grün: `drift-
 - Windows: kein Einzug (die Engine übersetzt eine feste Liste ohne das Paket; Windows-Sitzung). PWA: bewusst ohne Tresorordner.
 - Das Inhaltsverzeichnis geht als eine Nachricht über die Brücke; bei sehr großem Katalog (Zehntausende Mails) ungemessen langsam.
 - Eine zweimal abgelegte Mail ist zweimal im Eingang (nie löschen); BookLedgerPro erkennt Doppel am SHA-256.
+
+## Ordnerwahl einheitlich (gemeinsamer Tresor-Plan, Klaus 2026-11-03)
+
+- **Tresor verbinden** („Zusammenarbeit mit Pro-Apps“ › „Pro-Tresor verbinden …“): gewählt wird der Ordner, in dem
+  `tresorordner.json` liegt. Wählt Klaus `Tresorordner/` (am Namen oder an `kennwort-/ersatz-/fach-*.json` erkannt) oder
+  einen Fach-Ordner („Private Brain“ mit `tresor.json`, „Workflow PDF Pro“, „Eingang-…“), lehnt Android ab
+  (`TRESOR_ORDNER_VERWALTUNG` / `TRESOR_ORDNER_IST_FACH`), gibt die Ordnerfreigabe zurück und die Seite sagt
+  „Wähle den Ordner, in dem „tresorordner.json“ liegt.“ Nichts wird angelegt.
+- **Kein neuer Tresor ohne Rückfrage:** liegt im gewählten Ordner noch kein `tresorordner.json`, zeigt das Passwort-Fenster
+  „Tresorordner anlegen“ zuerst diesen Hinweissatz und verlangt einen eigenen Haken „Ja, hier einen neuen, leeren
+  gemeinsamen Tresor anlegen.“
+- **Speicherort** (Ablage von Private Brain): richtig sind „Private Brain“ selbst **oder** der Hauptablageordner; im
+  zweiten Fall nutzt `Vault.find/create` den vorhandenen Unterordner „Private Brain“ bzw. legt genau ihn an (kein zweiter
+  daneben). Verwaltung und fremde Fächer lehnt Android ab (`VAULT_FOLDER_IM_TRESOR`).
+- Hilfe **„Wo liegt was?“** im Kasten „Tresor & Ablage“ (`native/native-wo-liegt-was.js`, app-eigen, DE/EN; RU/PL zeigen
+  Deutsch): allgemeiner Text aus dem Plan, darunter Fach „Private Brain“, Eingang „Eingang-Private-Brain“, Menüwege,
+  „Ablageordner wählen“ = UNVERSCHLÜSSELTE Kopien (kein Tresor, „Kopieren ausschalten“), „Original teilen / sichern“.
+- Reine Einordnung `OrdnerWahl.java` (JVM-Probe `OrdnerWahlTest`, nachgestellte Karte vom 3.11.). Die Android-Seite
+  (SAF, Fenster) ist hier nicht übersetzbar (kein SDK) und nur am Quelltext geprüft; nicht am Tablet.
