@@ -1,5 +1,7 @@
 **🔬 Regel: Forschung nur in Kimhub (Klaus 2026-10-31):** jeder Forschungseintrag (Sitzungs-Befunde, Messungen, Stunden-Auswertungen, Forschungsnotizen) kommt nach Kimhub `forschung/messungen/`; in diesem Repo werden keine Forschungseinträge geführt und keine Forschungsdateien angelegt. Öffentliche Forschungsaufgaben stehen in Sage-Protokol.
 
+**Android 1.0.45 veröffentlicht 2026-11-04 (Klaus 2026-11-03: „Ja zu 1 und 2“, Tablet-Testfassung, nur Android):** [APK](https://github.com/lausiklauskn-png/Privat-Brain-Pro/releases/download/v1.0.45/Private-Brain-Pro-1.0.45.apk), Code 45, Quelle main `7d6035f4118f2a2918f3c80b37c4c384d2a49015` (PR #127), Release-Lauf 41746092281 (signiertes Update, Veröffentlichung), 61.068.501 B, SHA-256 `fbed7652e094c9e57e1ee895e14bf49d5bda19593502a4e263cf996e36b8d1b7`, unabhängig geladen und gleich `SHA256SUMS`. Windows bleibt bei 1.0.44 (nur Metadaten/Updateprobe nachgezogen). [Nachweis](docs/VEROEFFENTLICHUNG-1.0.45.md). Nicht erneut auslösen; Tablet nicht gemessen.
+
 **Aktueller Stand, 2026-11-02:** Android und Windows **1.0.44 veröffentlicht**, einschließlich
 freiwilligem Familienakte-Pro-Verbund. Tatsächliche installierte App-Paare auf beiden
 Plattformen, signiertes Android-Update und öffentliche Downloads geprüft.
