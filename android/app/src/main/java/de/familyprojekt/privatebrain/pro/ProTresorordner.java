@@ -56,20 +56,29 @@ final class ProTresorordner {
     /** Ganzer Pfad des Tresorordners im Speicher (Leitfaden § 5), z. B. „Privat Brain Pro Hauptablageordner“. */
     synchronized String pfad() {
         String b = prefs().getString("baum", null); if (b == null) return "";
-        try { String id = DocumentsContract.getTreeDocumentId(Uri.parse(b)); return id.contains(":") ? id.substring(id.indexOf(':') + 1) : id; }
+        try { String id = wurzel(Uri.parse(b)); return id.contains(":") ? id.substring(id.indexOf(':') + 1) : id; }
         catch (Exception e) { return ""; }
     }
     /** Dokument-Adresse des Tresorordners für „In Dateien öffnen“; null ohne gewählten Ordner. */
     synchronized Uri ordnerUri() {
         String b = prefs().getString("baum", null); if (b == null) return null;
-        Uri t = Uri.parse(b); return DocumentsContract.buildDocumentUriUsingTree(t, DocumentsContract.getTreeDocumentId(t));
+        Uri t = Uri.parse(b); return DocumentsContract.buildDocumentUriUsingTree(t, wurzel(t));
+    }
+    /**
+     * Dokumentkennung des Tresor-Hauptordners. Seit „Tresor einrichten – nur Speicher wählen“ (Klaus 2026-11-04) kann er
+     * ein Ordner innerhalb der gewählten Freigabe sein ({@code wurzel}); ältere Verbindungen ohne Eintrag: die Freigabe selbst.
+     */
+    private String wurzel(Uri baum) {
+        String w = prefs().getString("wurzel", "");
+        return w == null || w.isEmpty() ? DocumentsContract.getTreeDocumentId(baum) : w;
     }
 
     private SafAblage ablage() throws IOException {
         if (ablage != null) return ablage;
         String baum = prefs().getString("baum", null);
         if (baum == null) throw new IOException("TRESOR_KEIN_ORDNER");
-        ablage = new SafAblage(context.getContentResolver(), Uri.parse(baum));
+        Uri b = Uri.parse(baum);
+        ablage = new SafAblage(context.getContentResolver(), b, wurzel(b));
         return ablage;
     }
 
@@ -78,12 +87,21 @@ final class ProTresorordner {
         return TresorEinzug.pruefen(new SafAblage(context.getContentResolver(), baum), tresorId);
     }
 
-    synchronized void baumSetzen(Uri baum) throws IOException {
+    synchronized void baumSetzen(Uri baum) throws IOException { baumSetzen(baum, null); }
+
+    /**
+     * Tresor merken: die Freigabe {@code baum} und darin der Hauptordner {@code wurzel} (Dokumentkennung; null = die
+     * Freigabe selbst, wie bisher). Wie Workflow PDF Pro {@code ProTresorordner.baumSetzen(baum, wurzel)}.
+     */
+    synchronized void baumSetzen(Uri baum, String wurzel) throws IOException {
         schliessen();
-        String name = baum.getLastPathSegment() == null ? "" : baum.getLastPathSegment();
+        String name = wurzel != null && !wurzel.isEmpty() ? wurzel : baum.getLastPathSegment() == null ? "" : baum.getLastPathSegment();
         if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
+        if (wurzel != null && !wurzel.isEmpty() && name.contains("/")) name = name.substring(name.lastIndexOf('/') + 1);
         // Ein anderer Ordner: ein gemerkter Schlüssel gehört zum alten und wird vergessen.
-        if (!prefs().edit().putString("baum", baum.toString()).putString("name", name).remove("merken").remove("kennung").commit()) throw new IOException("TRESOR_NICHT_VERFUEGBAR");
+        SharedPreferences.Editor e = prefs().edit().putString("baum", baum.toString()).putString("name", name).remove("merken").remove("kennung");
+        if (wurzel != null && !wurzel.isEmpty()) e.putString("wurzel", wurzel); else e.remove("wurzel");
+        if (!e.commit()) throw new IOException("TRESOR_NICHT_VERFUEGBAR");
         ablage = null;
     }
 
