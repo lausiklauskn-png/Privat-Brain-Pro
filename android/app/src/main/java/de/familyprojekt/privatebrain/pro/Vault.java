@@ -254,10 +254,16 @@ final class Vault {
         return "";
     }
     /** Returns the existing vault folder below or at the chosen folder, or null. */
-    synchronized String find(Uri chosen) throws IOException {
+    synchronized String find(Uri chosen) throws IOException { return find(chosen, DocumentsContract.getTreeDocumentId(chosen)); }
+    /**
+     * Wie {@link #find(Uri)}, aber ab dem Ordner {@code base} innerhalb der Freigabe (Tresor-Hauptordner,
+     * Klaus 2026-11-04: „Tresor einrichten – nur Speicher wählen“). Die Freigabe bleibt die gewählte.
+     */
+    synchronized String find(Uri chosen, String base) throws IOException {
+        if (base == null || base.isEmpty()) throw fail("VAULT_FOLDER_UNAVAILABLE");
         Uri saved = tree; String savedRoot = rootId; tree = chosen;
         try {
-            String top = DocumentsContract.getTreeDocumentId(chosen);
+            String top = base;
             if (child(top, SETTINGS) != null) return top;
             Entry folder = child(top, ROOT);
             if (folder != null && DIR.equals(folder.mime) && child(folder.id, SETTINGS) != null) return folder.id;
@@ -265,10 +271,14 @@ final class Vault {
         } finally { tree = saved; rootId = savedRoot; }
     }
     synchronized JSONObject create(Uri chosen, CharSequence password, boolean rememberHere) throws Exception {
+        return create(chosen, DocumentsContract.getTreeDocumentId(chosen), password, rememberHere);
+    }
+    /** Wie {@link #create(Uri, CharSequence, boolean)}, „Private Brain“ aber unter {@code base} (Tresor-Hauptordner). */
+    synchronized JSONObject create(Uri chosen, String base, CharSequence password, boolean rememberHere) throws Exception {
         if (password.length() < MIN_PASSWORD) throw fail("VAULT_PASSWORD_SHORT");
-        if (find(chosen) != null) throw fail("VAULT_EXISTS");
+        if (find(chosen, base) != null) throw fail("VAULT_EXISTS");
         tree = chosen; dirs.clear();
-        String top = DocumentsContract.getTreeDocumentId(chosen);
+        String top = base;
         // A chosen, empty "Private Brain" folder is used directly; otherwise a subfolder is created.
         if (ROOT.equals(displayName(chosen, top)) && children(top).isEmpty()) rootId = top;
         else {
@@ -317,7 +327,11 @@ final class Vault {
     }
     /** Opens an existing vault folder (e.g. the SD card from an old tablet). Nothing is changed on a wrong password. */
     synchronized JSONObject open(Uri chosen, CharSequence password, boolean rememberHere) throws Exception {
-        String root = find(chosen);
+        return open(chosen, DocumentsContract.getTreeDocumentId(chosen), password, rememberHere);
+    }
+    /** Wie {@link #open(Uri, CharSequence, boolean)}, gesucht ab {@code base} (Tresor-Hauptordner). */
+    synchronized JSONObject open(Uri chosen, String base, CharSequence password, boolean rememberHere) throws Exception {
+        String root = find(chosen, base);
         if (root == null) throw fail("VAULT_MISSING");
         Uri savedTree = tree; String savedRoot = rootId;
         tree = chosen; rootId = root; dirs.clear();

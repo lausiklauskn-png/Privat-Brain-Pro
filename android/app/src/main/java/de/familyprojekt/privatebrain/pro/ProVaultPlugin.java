@@ -505,5 +505,212 @@ public class ProVaultPlugin extends Plugin {
         }));
         dialog.show();
     }
+    // ---------- „Tresor einrichten – nur Speicher wählen“ (Klaus 2026-11-04) ----------
+    // Vorbild Workflow PDF Pro tresorEinrichten, Familienakte #92, BookLedgerPro #454. Der Nutzer wählt nur den Speicher;
+    // der Tresor-Hauptordner wird am Inhalt gefunden oder angelegt (Name frei, Vorschlag „Family-Projekt“). EIN Passwort für
+    // den gemeinsamen Tresor und die eigene Ablage „Private Brain“ darin. Entscheidung gerätefrei in TresorEinrichtung
+    // (JUnit); hier nur Speicherwahl und Fenster. Bis zur Bestätigung im Passwort-Fenster ist nichts geschrieben; ein falsches
+    // Tresor-Passwort darf neu versucht werden. Eine schon eingerichtete eigene Ablage an einem anderen Ort zieht nie still um.
+    static final String[][] E_WORDS = {
+        {"Tresor einrichten", "Tresor öffnen", "Neuer Tresor-Hauptordner", "Im gewählten Speicher entsteht ein Ordner für alle Pro-Apps. Name frei wählbar:",
+         "Dieser Name geht nicht (keine Zeichen wie / \\ : * ? \" < > |, nicht der Name eines Fachs). Bitte anderen Namen.",
+         "Ein Passwort für den gemeinsamen Tresor und die Ablage von Private Brain Pro darin (Mails, Anhänge, Originale, Katalog). Es verlässt das Gerät nie. Mindestens 10 Zeichen.",
+         "Das Passwort des Tresors (dasselbe wie in den anderen Pro-Apps). Die Ablage von Private Brain Pro darin bekommt dasselbe Passwort.",
+         "Gefunden: ", "Neu: ", "Weiter", "Passwort falsch. Nichts wurde verändert."},
+        {"Set up vault", "Open vault", "New vault main folder", "A folder for all Pro apps is created in the chosen storage. Choose any name:",
+         "This name is not allowed (no / \\ : * ? \" < > |, not the name of a compartment). Please choose another.",
+         "One password for the shared vault and Private Brain Pro’s storage inside it (emails, attachments, originals, catalog). It never leaves the device. At least 10 characters.",
+         "The vault password (the same as in the other Pro apps). Private Brain Pro’s storage inside gets the same password.",
+         "Found: ", "New: ", "Continue", "Wrong password. Nothing was changed."},
+        {"Настроить сейф", "Открыть сейф", "Новая главная папка сейфа", "В выбранном хранилище будет создана папка для всех Pro-приложений. Имя на выбор:",
+         "Это имя недопустимо (без / \\ : * ? \" < > |, не имя отсека). Выберите другое.",
+         "Один пароль для общего сейфа и хранилища Private Brain Pro в нём (письма, вложения, оригиналы, каталог). Он не покидает устройство. Не менее 10 символов.",
+         "Пароль сейфа (тот же, что в других Pro-приложениях). Хранилище Private Brain Pro в нём получит тот же пароль.",
+         "Найдено: ", "Новое: ", "Далее", "Неверный пароль. Ничего не изменено."},
+        {"Skonfiguruj sejf", "Otwórz sejf", "Nowy główny folder sejfu", "W wybranej pamięci powstanie folder dla wszystkich aplikacji Pro. Nazwa dowolna:",
+         "Ta nazwa jest niedozwolona (bez / \\ : * ? \" < > |, nie nazwa przegródki). Wybierz inną.",
+         "Jedno hasło dla wspólnego sejfu i miejsca Private Brain Pro w nim (wiadomości, załączniki, oryginały, katalog). Nigdy nie opuszcza urządzenia. Co najmniej 10 znaków.",
+         "Hasło sejfu (to samo co w innych aplikacjach Pro). Miejsce Private Brain Pro w nim dostaje to samo hasło.",
+         "Znaleziono: ", "Nowy: ", "Dalej", "Błędne hasło. Nic nie zmieniono."}
+    };
+    @PluginMethod public void tresorEinrichten(PluginCall call) {
+        if (!tresorBusy.compareAndSet(false, true)) { call.reject("VAULT_BUSY", "VAULT_BUSY"); return; }
+        Intent intent = null;
+        String volume = call.getString("volume", "");
+        if (Build.VERSION.SDK_INT >= 29 && !volume.isEmpty()) {
+            StorageManager storage = (StorageManager) getContext().getSystemService(Context.STORAGE_SERVICE);
+            if (storage != null) for (StorageVolume v : storage.getStorageVolumes())
+                if (volume.equals(v.isPrimary() ? "primary" : String.valueOf(v.getUuid()))) intent = v.createOpenDocumentTreeIntent();
+        }
+        if (intent == null) intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        try { startActivityForResult(call, intent, "einrichtenGewaehlt"); }
+        catch (Exception error) { tresorBusy.set(false); call.reject("TRESOR_ORDNER_NICHT_ERREICHBAR", "TRESOR_ORDNER_NICHT_ERREICHBAR"); }
+    }
+    /** Abgebrochen oder abgewiesen: die neue Freigabe nicht behalten, außer Ablage oder Tresor benutzen sie schon. */
+    private void einrichtenEnde(PluginCall call, Uri tree, String code) {
+        if (tree != null && !tree.toString().equals(getContext().getSharedPreferences("vault-v1", Context.MODE_PRIVATE).getString("tree", "")))
+            freigabeZurueck(tree, "pb-tresorordner-v1", "baum");
+        tresorBusy.set(false);
+        if (code == null) call.resolve(new JSObject().put("abgebrochen", true)); else call.reject(code, code);
+    }
+    @ActivityCallback private void einrichtenGewaehlt(PluginCall call, ActivityResult result) {
+        if (call == null) { tresorBusy.set(false); return; }
+        Intent data = result.getData();
+        if (result.getResultCode() != Activity.RESULT_OK || data == null || data.getData() == null) { einrichtenEnde(call, null, null); return; }
+        Uri tree = data.getData();
+        int required = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        try {
+            worker.execute(() -> {
+                try {
+                    if (!"content".equals(tree.getScheme()) || (data.getFlags() & required) != required) throw new VaultCrypto.Failure("VAULT_FOLDER_UNAVAILABLE");
+                    getContext().getContentResolver().takePersistableUriPermission(tree, required);
+                    de.familyprojekt.tresor.SafAblage s = new de.familyprojekt.tresor.SafAblage(getContext().getContentResolver(), tree);
+                    de.familyprojekt.tresor.Hauptordner.Ergebnis e = TresorEinrichtung.pruefen(s, ordnerName(tree));
+                    if (de.familyprojekt.tresor.Hauptordner.ANLEGEN_DARIN.equals(e.art) && !TresorEinrichtung.alteAblageHier(s))
+                        getActivity().runOnUiThread(() -> einrichtenName(call, tree, s, e, false));
+                    else einrichtenPlanen(call, tree, s, e, null);
+                } catch (Exception error) { einrichtenEnde(call, tree, tresorCode(error)); }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException closed) { einrichtenEnde(call, tree, "NATIVE_ACTIVITY_CLOSED"); }
+    }
+    private ContextThemeWrapper dialogKontext(PluginCall call) {
+        return new ContextThemeWrapper(getActivity(), call.getBoolean("dark", false) ?
+            androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert : androidx.appcompat.R.style.Theme_AppCompat_Light_Dialog_Alert);
+    }
+    /** Name des neuen Hauptordners (Vorschlag „Family-Projekt“), nur wenn im Speicher schon anderes liegt. UI-Thread. */
+    private void einrichtenName(PluginCall call, Uri tree, de.familyprojekt.tresor.SafAblage s, de.familyprojekt.tresor.Hauptordner.Ergebnis e, boolean fehler) {
+        Activity activity = getActivity();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) { einrichtenEnde(call, tree, "NATIVE_ACTIVITY_CLOSED"); return; }
+        int lang = language(call.getString("language", "de"));
+        String[] t = WORDS[lang], e2 = E_WORDS[lang];
+        ContextThemeWrapper context = dialogKontext(call);
+        LinearLayout form = new LinearLayout(context); form.setOrientation(LinearLayout.VERTICAL);
+        int padding = Math.round(20 * activity.getResources().getDisplayMetrics().density); form.setPadding(padding, padding / 2, padding, padding / 2);
+        TextView help = new TextView(context); help.setText(e2[3]); form.addView(help);
+        EditText feld = new EditText(context); feld.setSingleLine(true); feld.setText(de.familyprojekt.tresor.Hauptordner.VORSCHLAG); feld.selectAll(); form.addView(feld);
+        TextView status = new TextView(context); status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); if (fehler) status.setText(e2[4]); form.addView(status);
+        AlertDialog dialog = new AlertDialog.Builder(context).setTitle(e2[2]).setView(form).setPositiveButton(e2[9], null).setNegativeButton(t[9], null).create();
+        AtomicBoolean finished = new AtomicBoolean(false);
+        Runnable cancel = () -> { if (finished.compareAndSet(false, true)) einrichtenEnde(call, tree, null); };
+        dialog.setOnCancelListener(d -> cancel.run());
+        dialog.setOnDismissListener(d -> cancel.run());
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v -> dialog.dismiss());
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String n;
+                try { n = de.familyprojekt.tresor.Hauptordner.name(feld.getText().toString()); }
+                catch (java.io.IOException falsch) { status.setText(e2[4]); return; }
+                if (!finished.compareAndSet(false, true)) return;
+                dialog.dismiss();
+                try {
+                    worker.execute(() -> {
+                        try { einrichtenPlanen(call, tree, s, e, n); }
+                        catch (Exception error) { einrichtenEnde(call, tree, tresorCode(error)); }
+                    });
+                } catch (java.util.concurrent.RejectedExecutionException closed) { einrichtenEnde(call, tree, "NATIVE_ACTIVITY_CLOSED"); }
+            });
+        });
+        dialog.show(); feld.requestFocus();
+    }
+    /** Arbeits-Thread: nur lesend planen, dann das eine Passwort-Fenster. */
+    private void einrichtenPlanen(PluginCall call, Uri tree, de.familyprojekt.tresor.SafAblage s, de.familyprojekt.tresor.Hauptordner.Ergebnis e, String name) throws Exception {
+        TresorEinrichtung.Plan plan = TresorEinrichtung.planen(s, e, name, vault.configured() ? vault.tresorId() : null);
+        String zeige = plan.pfad.isEmpty() ? ordnerName(tree) : plan.pfad;
+        getActivity().runOnUiThread(() -> einrichtenPasswort(call, tree, s, plan, zeige));
+    }
+    private void einrichtenPasswort(PluginCall call, Uri tree, de.familyprojekt.tresor.SafAblage s, TresorEinrichtung.Plan plan, String zeige) {
+        Activity activity = getActivity();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) { einrichtenEnde(call, tree, "NATIVE_ACTIVITY_CLOSED"); return; }
+        int lang = language(call.getString("language", "de"));
+        String[] t = WORDS[lang], tt = T_WORDS[lang], e2 = E_WORDS[lang];
+        boolean anlegen = plan.anlegen();
+        ContextThemeWrapper context = dialogKontext(call);
+        LinearLayout form = new LinearLayout(context); form.setOrientation(LinearLayout.VERTICAL);
+        int padding = Math.round(20 * activity.getResources().getDisplayMetrics().density); form.setPadding(padding, padding / 2, padding, padding / 2);
+        TextView ort = new TextView(context); ort.setText(e2[plan.tresorDa ? 7 : 8] + zeige); form.addView(ort);
+        TextView help = new TextView(context); help.setText(e2[plan.tresorDa ? 6 : 5]); form.addView(help);
+        EditText first = password(context, form, anlegen ? t[3] : t[3].replaceAll(" \\(.*\\)$", ""));
+        EditText second = anlegen ? password(context, form, t[4]) : null;
+        CheckBox notice = null;
+        if (anlegen) { notice = new CheckBox(context); notice.setText(tt[4]); form.addView(notice); }
+        CheckBox remember = new CheckBox(context); remember.setText(t[6]); remember.setChecked(true); form.addView(remember);
+        TextView status = new TextView(context); status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); form.addView(status);
+        ScrollView scroll = new ScrollView(context); scroll.addView(form);
+        AlertDialog dialog = new AlertDialog.Builder(context).setTitle(e2[plan.tresorDa ? 1 : 0]).setView(scroll)
+            .setPositiveButton(e2[9], null).setNegativeButton(t[9], null).create();
+        AtomicBoolean finished = new AtomicBoolean(false), busy = new AtomicBoolean(false);
+        Runnable wipe = () -> { first.setText(""); if (second != null) second.setText(""); };
+        Runnable cancel = () -> { wipe.run(); if (!busy.get() && finished.compareAndSet(false, true)) einrichtenEnde(call, tree, null); };
+        dialog.setOnCancelListener(d -> cancel.run());
+        dialog.setOnDismissListener(d -> cancel.run());
+        CheckBox confirm = notice;
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (busy.get()) return;
+            CharSequence value = first.getText();
+            if (value.length() < Vault.MIN_PASSWORD) { status.setText(t[10]); return; }
+            if (anlegen && !value.toString().equals(second.getText().toString())) { status.setText(t[11]); return; }
+            if (anlegen && !confirm.isChecked()) { status.setText(t[12]); return; }
+            busy.set(true); status.setText(t[anlegen ? 14 : 19]); dialog.setCancelable(false);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false); dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
+            char[] chars = new char[value.length()];
+            for (int i = 0; i < chars.length; i++) chars[i] = value.charAt(i);
+            boolean keep = remember.isChecked();
+            try {
+                worker.execute(() -> {
+                    try {
+                        JSObject state = JSObject.fromJSONObject(einrichtenAusfuehren(tree, s, plan, java.nio.CharBuffer.wrap(chars), keep));
+                        java.util.Arrays.fill(chars, '\0');
+                        activity.runOnUiThread(() -> {
+                            if (!finished.compareAndSet(false, true)) return;
+                            tresorBusy.set(false); call.resolve(state); wipe.run(); dialog.dismiss();
+                        });
+                    } catch (Exception error) {
+                        java.util.Arrays.fill(chars, '\0');
+                        String code = tresorCode(error);
+                        boolean nochmal = "TRESOR_PASSWORT_FALSCH".equals(code) || "TRESOR_PASSWORT".equals(code);
+                        activity.runOnUiThread(() -> {
+                            if (nochmal) {
+                                busy.set(false); status.setText(e2[10]); wipe.run(); dialog.setCancelable(true);
+                                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true); dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);
+                            } else if (finished.compareAndSet(false, true)) { busy.set(false); einrichtenEnde(call, tree, code); wipe.run(); dialog.dismiss(); }
+                        });
+                    }
+                });
+            } catch (java.util.concurrent.RejectedExecutionException closed) { java.util.Arrays.fill(chars, '\0'); busy.set(false); einrichtenEnde(call, tree, "NATIVE_ACTIVITY_CLOSED"); }
+        }));
+        dialog.show(); first.requestFocus();
+    }
+    /** Arbeits-Thread: erst alle Passwörter prüfen, dann Hauptordner, eigene Ablage, Tresor, Einzug, Lies-mich. */
+    private JSONObject einrichtenAusfuehren(Uri tree, de.familyprojekt.tresor.SafAblage s, TresorEinrichtung.Plan plan, CharSequence p, boolean keep) throws Exception {
+        // 1. Prüfen ohne zu schreiben: falsches Tresor-Passwort → TRESOR_PASSWORT_FALSCH (Fenster bleibt offen).
+        TresorEinrichtung.tresorPasswortPruefen(s, plan, p);
+        boolean geoeffnet = false;
+        if (plan.ablageDa) {
+            String w = s.kennung(plan.pfad);
+            if (w == null) throw new java.io.IOException("TRESOR_ORDNER_NICHT_ERREICHBAR");
+            try {
+                // Vault.open schreibt nur die eigenen Einstellungen, und erst nach dem richtigen Passwort.
+                if (!vault.configured()) { vault.open(tree, w, p, keep); geoeffnet = true; }
+                else if (!vault.unlocked()) vault.unlock(p, keep);
+            } catch (Exception falsch) {
+                if ("VAULT_PASSWORD_WRONG".equals(tresorCode(falsch))) throw new java.io.IOException("TRESOR_ABLAGE_PASSWORT_ANDERS");
+                throw falsch;
+            }
+        }
+        // 2. Schreiben.
+        TresorEinrichtung.hauptAnlegen(s, plan);
+        String wurzel = s.kennung(plan.pfad);
+        if (wurzel == null) throw new java.io.IOException("TRESOR_ORDNER_NICHT_ERREICHBAR");
+        if (!plan.ablageDa) vault.create(tree, wurzel, p, keep);
+        tresor().baumSetzen(tree, wurzel);
+        tresor().mitPasswort(p, !plan.tresorDa, keep, vault, false);
+        TresorEinrichtung.liesMich(new de.familyprojekt.tresor.SafAblage(getContext().getContentResolver(), tree, wurzel));
+        JSONObject out = tresor().zustand(vault).put("eingezogenJetzt", true).put("angelegt", !plan.tresorDa)
+            .put("ablageAngelegt", !plan.ablageDa).put("hauptordner", plan.pfad).put("state", vault.state());
+        if (geoeffnet) out.put("restored", vault.restoreMailStore(new EncryptedMailStore(getContext())));
+        return out;
+    }
     @Override protected void handleOnDestroy() { worker.shutdown(); reader.shutdown(); }
 }

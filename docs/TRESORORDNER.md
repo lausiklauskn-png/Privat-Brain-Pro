@@ -59,3 +59,28 @@ Hintergrund nicht); Probe ergänzt, danach gefangen. Unverändert grün: `drift-
   „Ablageordner wählen“ = UNVERSCHLÜSSELTE Kopien (kein Tresor, „Kopieren ausschalten“), „Original teilen / sichern“.
 - Reine Einordnung `OrdnerWahl.java` (JVM-Probe `OrdnerWahlTest`, nachgestellte Karte vom 3.11.). Die Android-Seite
   (SAF, Fenster) ist hier nicht übersetzbar (kein SDK) und nur am Quelltext geprüft; nicht am Tablet.
+
+## Tresor einrichten – nur Speicher wählen (Klaus 2026-11-04, Zweig, nicht veröffentlicht)
+
+Vorbild Workflow PDF Pro `tresorEinrichten`, Familienakte #92, BookLedgerPro #454. Einstellungen › Zusammenarbeit mit Pro-Apps
+zeigt in der Android-App, solange kein Tresor verbunden ist, vorn **„Tresor einrichten – nur Speicher wählen …“**
+(`ProVault.tresorEinrichten`, Knopf in `native/native-pro-verbund.js`; ohne diese Brücke – Windows, ältere Hülle – nur der alte Weg).
+
+1. Speicher wählen (Gerät oder SD-Karte).
+2. Der Tresor wird am Inhalt gefunden (auch „Privat Brain Pro Hauptablageordner“) oder ein Hauptordner angelegt (Name frei,
+   Vorschlag „Family-Projekt“; nur gefragt, wenn im Speicher schon anderes liegt). Liegt im gewählten Ordner selbst schon eine
+   alte Ablage „Private Brain/tresor.json“, entsteht der Tresor daneben (wie bisher bei „In den Tresorordner einziehen“).
+3. Ein Passwort-Fenster für den gemeinsamen Tresor und die eigene Ablage „Private Brain“ darin (Mails, Anhänge, Originale, Katalog).
+4. Danach: eigene Ablage angelegt oder geöffnet, Tresor angelegt oder geöffnet, eingezogen, `LIES-MICH.txt`.
+
+**Erst prüfen, dann schreiben:** ein falsches Tresor-Passwort lässt das Fenster offen; passt es zum Tresor, aber nicht zur alten
+Ablage darin, wird abgebrochen (`TRESOR_ABLAGE_PASSWORT_ANDERS`). Abgewiesen, bevor etwas entsteht: Ordner im Tresor, mehrere
+Tresore, ungültiger oder belegter Name, fremder Inhalt in „Private Brain“, und **eine schon eingerichtete eigene Ablage an einem
+anderen Ort** (`VAULT_ANDERER_ORT` – sie zieht nie still um; für die Neuinstallation gedacht).
+
+Technik: `Vault.find/create/open(tree, base, …)` arbeiten ab einem Ordner innerhalb der Freigabe; `ProTresorordner.baumSetzen(baum,
+wurzel)` merkt den Hauptordner (`wurzel`), ältere Verbindungen ohne Eintrag nutzen weiter die Freigabe selbst. Entscheidung
+gerätefrei in `TresorEinrichtung` (JUnit `TresorEinrichtungTest`, 10 Fälle). Probe `tools/native/test-tresor-ein-schritt.mjs`
+(JVM, Reihenfolge im Quelltext, Browser mit gestellter Brücke) 20 grün · Gegenprobe von Hand 3/3 gefangen.
+Nicht geprüft: Android-Übersetzung (kein SDK im Behälter, das macht die CI), echte SD-Karte, Tablet. Kein Ersatzschlüssel-Angebot
+beim Anlegen.
