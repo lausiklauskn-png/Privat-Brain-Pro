@@ -39,5 +39,13 @@ for (const [rel, want] of Object.entries(EXPECT)) {
   if (!ok) fail++;
   console.log(`${ok ? '✅' : '❌'} byte-1:1 ${rel}  ${ok ? '' : `(erwartet ${want.slice(0,12)}…, ist ${got.slice(0,12)}…)`}`);
 }
-console.log(`\n${Object.keys(EXPECT).length - fail} byte-identisch, ${fail} abgewichen`);
+// Verbund-Landkarte (Klaus 2026-11-09): byte-1:1 aus BookLedgerPro, Pin in assets/pro-verbund.herkunft.json.
+{
+  const herkunft = JSON.parse(await readFile(join(ROOT, 'assets/pro-verbund.herkunft.json'), 'utf8'));
+  const got = createHash('sha256').update(await readFile(join(ROOT, 'assets/pro-verbund.html'))).digest('hex');
+  const ok = herkunft.datei === 'assets/pro-verbund.html' && /^[0-9a-f]{64}$/.test(herkunft.sha256) && got === herkunft.sha256;
+  if (!ok) fail++;
+  console.log(`${ok ? '✅' : '❌'} byte-1:1 assets/pro-verbund.html (Quelle ${herkunft.quelle})  ${ok ? '' : `(erwartet ${String(herkunft.sha256).slice(0,12)}…, ist ${got.slice(0,12)}…)`}`);
+}
+console.log(`\n${Object.keys(EXPECT).length + 1 - fail} byte-identisch, ${fail} abgewichen`);
 if (fail) process.exit(1);
