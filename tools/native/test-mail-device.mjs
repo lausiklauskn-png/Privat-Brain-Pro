@@ -135,6 +135,12 @@ try{
   ok('"An BookLedgerPro teilen" stands in the message actions with the native label',await button('bookledger').first().textContent()==='An BookLedgerPro teilen'&&await button('bookledger').first().locator('.compact-icon').count()===1);
   await button('bookledger').first().click();
   ok('"An BookLedgerPro teilen" opens the same scoped native share chooser for the original .eml (BookLedgerPro is listed there)',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7&&c.args.validity==='123')));
+  ok('Shared .eml is named after the subject, not "mail-<id>-mail.eml"',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='openOriginal').every(c=>c.args.name==='Native message.eml')));
+  await page.evaluate(()=>{window.mailCalls=window.mailCalls.filter(c=>c.method!=='openOriginal');});
+  await mail.locator('.mail-message-tools>summary').click();
+  ok('"An Familienakte teilen" stands next to BookLedgerPro with the native label and a line icon',await button('familienakte').first().textContent()==='An Familienakte teilen'&&await button('familienakte').first().locator('.compact-icon').count()===1);
+  await button('familienakte').first().click();
+  ok('Without the shared Pro vault "An Familienakte teilen" uses the system chooser with the original .eml',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7&&c.args.validity==='123'&&c.args.name==='Native message.eml')));
   await page.evaluate(()=>window.failMessage=true);
   await mail.locator('[data-live-uid="7"]').click();
   ok('Failed message opening removes previous subject and actions',await mail.locator('.live-mail [data-live-text=reply]').count()===0&&await mail.locator('.live-mail .mail-reader h3').count()===0);

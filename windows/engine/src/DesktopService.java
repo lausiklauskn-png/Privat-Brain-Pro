@@ -310,7 +310,15 @@ final class DesktopService {
             case "message" -> mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
             case "openOriginal" -> {
                 byte[] data=mail.raw(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
-                yield export(selected(new JSONObject().put("name","mail.eml").put("data",Base64.encodeToString(data,Base64.NO_WRAP))),true);
+                String wunsch=o.optString("name","").trim();if(wunsch.toLowerCase(java.util.Locale.ROOT).endsWith(".eml"))wunsch=wunsch.substring(0,wunsch.length()-4);
+                if(wunsch.length()>116)wunsch=wunsch.substring(0,116);wunsch=wunsch.trim();
+                yield export(selected(new JSONObject().put("name",wunsch.isEmpty()?"mail.eml":wunsch+".eml").put("data",Base64.encodeToString(data,Base64.NO_WRAP))),true);
+            }
+            // Unveränderte Quelle (MIME mit Anhängen) für die Übergabe an die Familienakte über den Pro-Tresor.
+            case "original" -> {
+                byte[] data=mail.raw(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+                if(data.length>20*1024*1024)throw new MailFailure("MESSAGE_TOO_LARGE");
+                yield new JSONObject().put("sourceBase64",Base64.encodeToString(data,Base64.NO_WRAP)).put("groesse",data.length);
             }
             case "openAttachment" -> {
                 JSONObject message=mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));

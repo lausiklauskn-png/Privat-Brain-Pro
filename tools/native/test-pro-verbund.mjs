@@ -10,19 +10,19 @@ const root=resolve(process.env.PB_PRO_TEST_ROOT||'www'),types={'.html':'text/htm
 const server=createServer(async(req,res)=>{if(req.url==='/seed'){res.setHeader('content-type','text/html');res.end('<!doctype html><html><body>Migration fixture</body></html>');return;}const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+sep)){res.writeHead(403).end();return;}try{const body=await readFile(path);res.writeHead(200,{'content-type':types[extname(path)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const digest=x=>createHash('sha256').update(x).digest('hex'),incoming=new Map(),saved=new Map(),pending=new Map(),sent=new Map(),targetMarks=new Set(),ack=[],invalid=[];
-let vaultId='vault-a',open=true,failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[];
+let vaultId='vault-a',open=true,chosen=true,unlocks=0,alerts=[],failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[];
 const add=(id,name,text,overrides={})=>{const bytes=Buffer.from(text);incoming.set(id,{entryId:id,bytes,vertrag:{vertrag:'familienakte-uebergabe/1',id,quelle:'familienakte',ziel:'private-brain',dokumentId:'doc-'+id,name,mime:'text/plain',groesse:bytes.length,sha256:digest(bytes),...overrides}});};
 add('first','Brief.txt','Erfundener Brief zur privaten Ablage');
 let browser,page,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('PASS '+name);count++;};
 try{
  browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
  page=await browser.newPage({viewport:{width:412,height:850}});const url=`http://127.0.0.1:${server.address().port}/`,errors=[];
- page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+ page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>{alerts.push(d.message());d.accept();});
  await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
  await page.exposeFunction('proFixture',async(method,args={})=>{
   if(method==='state')return{configured:true,unlocked:true,location:'device',reachable:true};
-  if(method==='tresorZustand')return{uebergaben:true,gewaehlt:true,offen:open,erreichbar:true,kennung:vaultId,ordner:'Erfundener gemeinsamer Ordner',eingezogen:false};
-  if(method==='tresorEinziehen'){assert.equal(args.nurVerbinden,true);assert.ok(!('password' in args));open=true;return{offen:true};}
+  if(method==='tresorZustand')return{uebergaben:true,gewaehlt:chosen,offen:chosen&&open,erreichbar:true,kennung:vaultId,ordner:'Erfundener gemeinsamer Ordner',eingezogen:false};
+  if(method==='tresorEinziehen'){assert.equal(args.nurVerbinden,true);assert.ok(!('password' in args));open=true;unlocks++;return{offen:true};}
   if(method==='tresorSperren'){open=false;return{};}
   if(method==='attachments')return{items:[]};
   if(method==='catalogBegin'){backupParts=[];return{ticket:'backup'};}
@@ -116,6 +116,38 @@ try{
  await page.locator('dialog[open] button').filter({hasText:'Schließen'}).click();
  await page.setViewportSize({width:320,height:800});
  ok('Pro transfer remains reachable in the narrow file viewer without page overflow',await page.locator('[data-pro-transfer]').isVisible()&&await page.evaluate(()=>{const r=document.querySelector('[data-pro-transfer]').getBoundingClientRect();return document.documentElement.scrollWidth<=innerWidth&&r.left>=0&&r.right<=innerWidth;}));
+ // Mail an die Familienakte (Klaus 2026-11-09): die unveränderte .eml mit Anhang über den gemeinsamen Pro-Tresor.
+ await page.setViewportSize({width:412,height:850});
+ const pdf=Buffer.from('%PDF-1.4\n% Erfundene Rechnung\n%%EOF\n'),eml=Buffer.from('From: Erfundener Absender <absender@example.invalid>\r\nTo: nutzer@example.invalid\r\nSubject: =?UTF-8?Q?Rechnung_M=C3=A4rz?=\r\nMessage-ID: <rechnung@example.invalid>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="b1"\r\n\r\n--b1\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nAnbei die Rechnung.\r\n--b1\r\nContent-Type: application/pdf; name="Rechnung.pdf"\r\nContent-Disposition: attachment; filename="Rechnung.pdf"\r\nContent-Transfer-Encoding: base64\r\n\r\n'+pdf.toString('base64')+'\r\n--b1--\r\n');
+ await page.evaluate(b64=>{window.mailDeviceCalls=[];window.PBMailDevice={base:'android:private-brain-pro',text:()=>null,
+  async original(args){mailDeviceCalls.push({method:'original',args});return{sourceBase64:window.bigMail||b64,groesse:0};},
+  async openOriginal(args){mailDeviceCalls.push({method:'openOriginal',args});return{ok:true};}};},eml.toString('base64'));
+ const ref={account:'konto-1',folder:'INBOX',validity:'77',uid:5},calls=()=>page.evaluate(()=>mailDeviceCalls),lastSent=()=>[...sent.values()].at(-1);
+ const before=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Rechnung März.eml'}),ref);
+ ok('Open Pro vault: the raw .eml with its PDF attachment goes to Familienakte through the canonical handover',sent.size===before+1&&lastSent().ziel==='familienakte'&&lastSent().mime==='message/rfc822'&&lastSent().name==='Rechnung März.eml'&&lastSent().sha256===digest(eml)&&saved.get(digest(eml))?.bytes.equals(eml)&&saved.get(digest(eml)).bytes.includes(pdf.toString('base64')));
+ ok('The .eml is fetched by account, folder, UIDVALIDITY and UID and nothing is shared outside',(await calls()).some(c=>c.method==='original'&&c.args.uid===5&&c.args.validity==='77')&&!(await calls()).some(c=>c.method==='openOriginal')&&/Familienakte weitergegeben/.test(alerts.at(-1)));
+ await page.evaluate(()=>{mailDeviceCalls.length=0;});const other=Buffer.from(eml.toString().replace('Anbei die Rechnung.','Anbei die korrigierte Rechnung.'));
+ await page.evaluate(({ref,b64})=>PBProVerbund.mailAnFamilienakte(ref,{name:'Korrektur',sourceBase64:b64}),{ref,b64:other.toString('base64')});
+ ok('An already loaded complete source is used without a second download',lastSent().sha256===digest(other)&&lastSent().name==='Korrektur.eml'&&!(await calls()).length);
+ chosen=false;await page.evaluate(()=>{mailDeviceCalls.length=0;});let count0=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Rechnung März.eml'}),ref);
+ ok('Without a connected Pro vault one short line says so and the system chooser gets the .eml',sent.size===count0&&/normal geteilt/.test(alerts.at(-1))&&(await calls()).some(c=>c.method==='openOriginal'&&c.args.uid===5&&c.args.name==='Rechnung März.eml'));
+ chosen=true;open=false;await page.evaluate(()=>{mailDeviceCalls.length=0;});
+ const ask=async wahl=>{const b=page.locator('dialog[open][data-mail-familienakte-frage] [data-wahl='+wahl+']');const asked=await b.waitFor({timeout:5000}).then(()=>true,()=>false);if(asked)await b.click();return asked;};
+ let waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Gesperrt.eml'}),ref);let asked=await ask('teilen');await waiting;
+ ok('Locked Pro vault asks first; "share normally" sends nothing through the vault',asked&&sent.size===count0&&!open&&(await calls()).some(c=>c.method==='openOriginal'&&c.args.name==='Gesperrt.eml'));
+ open=false;waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Gesperrt.eml'}),ref);asked=await ask('entsperren');await waiting;
+ ok('Locked Pro vault: "unlock and pass on" opens it without a password field and hands the .eml over',asked&&open&&unlocks>0&&lastSent().name==='Gesperrt.eml'&&lastSent().sha256===digest(eml));
+ await page.evaluate(()=>{window.bigMail=btoa('x'.repeat(20*1024*1024+1));});count0=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Riesig.eml'}),ref);
+ ok('A mail over 20 MiB is refused with a clear message and nothing is sent',sent.size===count0&&/20 MiB/.test(alerts.at(-1)));
+ await page.evaluate(()=>{delete window.bigMail;});
+ // Datei-Fenster: ein katalogisierter Mail-Eintrag zeigt Text, weitergegeben wird an die Familienakte die echte .eml.
+ await page.evaluate(ref=>{const r={hash:'c'.repeat(64),name:'Rechnung Mai',type:'message/rfc822',ext:'eml',mailBody:'Anbei die Rechnung.',mail:{from:'absender@example.invalid',to:'',subject:'Rechnung Mai',date:''},mailRemote:{base:'android:private-brain-pro',...ref},tags:[],dupes:[]};CATALOG.push(r);
+  PBNavigation.open(new File(['Betreff: Rechnung Mai\n\nAnbei die Rechnung.'],'Rechnung Mai.txt',{type:'text/plain'}),r);},ref);
+ await page.waitForFunction(()=>document.querySelector('.native-file-title')?.textContent==='Rechnung Mai');await page.locator('[data-pro-transfer]').click();
+ count0=sent.size;await page.locator('dialog[open] select').selectOption('familienakte');await page.locator('dialog[open] button').filter({hasText:'Weitergeben'}).click();
+ await page.waitForFunction(()=>document.querySelector('dialog[open] p[role=status]')?.textContent.includes('Weitergegeben'));
+ ok('File viewer: "To Pro app" sends a catalogued mail to Familienakte as the raw .eml, not as .txt',sent.size===count0+1&&lastSent().name==='Rechnung Mai.eml'&&lastSent().mime==='message/rfc822'&&lastSent().sha256===digest(eml)&&lastSent().dokumentId==='c'.repeat(64));
+ await page.locator('dialog[open] button').filter({hasText:'Schließen'}).click();
  ok('No source is falsely acknowledged or sent before its receipt commits',invalid.length===0);
  ok('No uncaught page errors in common-vault integration',errors.length===0);
  console.log(`${count} common-vault UI checks passed.`);

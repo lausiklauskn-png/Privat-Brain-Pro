@@ -9,6 +9,9 @@ const cases=[
  ['memory-instead-of-disk','native-originals.js','const file=await readOriginal({hash},true);','const file=await readOriginal({hash},false);','A corrupt stored original never gets a receiver mark'],
  ['delivery-is-not-acceptance','native-pro-verbund.js',"stand:old.stand==='im-eingang'?'im-eingang':'weitergegeben'","stand:'im-eingang'",'Transport delivery is still awaiting the real target mark'],
  ['backup-missing-receipts','native-vault.js',"catalog, saved, proUebergaben });","catalog, saved, proUebergaben: [] });",'Encrypted catalog snapshot also contains the stable transfer receipts'],
+ ['mail-not-into-vault','native-pro-verbund.js',"const result=await send(new File([bytes],name,{type:'message/rfc822'}),rec?.hash||null,'familienakte');","const result=await teilen();",'Open Pro vault: the raw .eml with its PDF attachment goes to Familienakte through the canonical handover'],
+ ['viewer-sends-text','native-pro-verbund.js',"if(target==='familienakte'){const eml=await mailEml(entry.recordHash);if(eml)file=eml;}","",'File viewer: "To Pro app" sends a catalogued mail to Familienakte as the raw .eml, not as .txt'],
+ ['locked-vault-shares-silently','native-pro-verbund.js',"if(z?.gewaehlt&&z.uebergaben&&z.erreichbar!==false){","if(false){",'Locked Pro vault asks first'],
  ['receipt-restoration-overwrites','native-pro-verbund.js',"if(db!==database||old&&(JSON.stringify(old.vertrag)!==JSON.stringify(r.vertrag)||old.vaultId!==r.vaultId))throw Error(t(23));\n   if(!old)store.add(r);","if(db!==database)throw Error(t(23));store.put(r);",'Conflicting restoration never overwrites existing receipt metadata']
 ];
 function run(root){return spawnSync(process.execPath,['tools/native/test-pro-verbund.mjs'],{env:{...process.env,PB_PRO_TEST_ROOT:root},encoding:'utf8',timeout:120000,maxBuffer:2*1024*1024});}

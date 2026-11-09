@@ -12,6 +12,17 @@ const W={
 };
 const extra={de:['Schließen','Erneut weitergeben'],en:['Close','Pass on again'],ru:['Закрыть','Передать снова'],pl:['Zamknij','Przekaż ponownie']};
 const more=i=>(extra[document.documentElement.lang]||extra.de)[i];
+/* Mail an die Familienakte (Klaus 2026-11-09): die unveränderte .eml mit allen Anhängen über den gemeinsamen Pro-Tresor
+   ins Fach „Eingang-Familienakte“; die Familienakte löst die Anhänge dort auf Knopfdruck heraus. */
+const MAIL={
+ de:{titel:'An Familienakte',gesperrt:'Der Pro-Tresor ist gesperrt. Entsperren und die Mail mit Anhängen in den Eingang der Familienakte legen?',entsperren:'Entsperren und weitergeben',teilen:'Normal teilen',abbrechen:'Abbrechen',gesendet:'Mail mit Anhängen an die Familienakte weitergegeben. Dort unter „Pro-Eingang prüfen“ aufnehmen.',ohne:'Kein Pro-Tresor verbunden – die Mail wird normal geteilt; dort Familienakte wählen.',gross:'Die Mail ist größer als 20 MiB und kann nicht über den Pro-Tresor gehen. Bitte normal teilen.'},
+ en:{titel:'To Familienakte',gesperrt:'The Pro vault is locked. Unlock it and put the email with its attachments into the Familienakte inbox?',entsperren:'Unlock and pass on',teilen:'Share normally',abbrechen:'Cancel',gesendet:'Email with attachments passed on to Familienakte. Accept it there under “Check Pro inbox”.',ohne:'No Pro vault connected – the email is shared normally; choose Familienakte there.',gross:'The email is larger than 20 MiB and cannot go through the Pro vault. Please share it normally.'},
+ ru:{titel:'В Familienakte',gesperrt:'Сейф Pro заблокирован. Разблокировать и положить письмо с вложениями во входящие Familienakte?',entsperren:'Разблокировать и передать',teilen:'Обычная передача',abbrechen:'Отмена',gesendet:'Письмо с вложениями передано в Familienakte. Примите его там через «Проверить входящие Pro».',ohne:'Сейф Pro не подключён – письмо передаётся обычным способом; выберите там Familienakte.',gross:'Письмо больше 20 МиБ и не может пройти через сейф Pro. Передайте его обычным способом.'},
+ pl:{titel:'Do Familienakte',gesperrt:'Sejf Pro jest zablokowany. Odblokować i włożyć wiadomość z załącznikami do skrzynki Familienakte?',entsperren:'Odblokuj i przekaż',teilen:'Udostępnij zwykle',abbrechen:'Anuluj',gesendet:'Wiadomość z załącznikami przekazano do Familienakte. Przyjmij ją tam w „Sprawdź skrzynkę Pro”.',ohne:'Brak połączonego sejfu Pro – wiadomość zostanie udostępniona zwykle; wybierz tam Familienakte.',gross:'Wiadomość ma ponad 20 MiB i nie może przejść przez sejf Pro. Udostępnij ją zwykle.'}
+};
+const mt=k=>(MAIL[document.documentElement.lang]||MAIL.de)[k];
+const ausB64=v=>Uint8Array.from(atob(v),c=>c.charCodeAt(0));
+const emlDatei=name=>((String(name||'mail').replace(/\.eml$/i,'').replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').trim().slice(0,80))||'mail')+'.eml';
 /* „Tresor einrichten – nur Speicher wählen“ (Klaus 2026-11-04): nur in der Android-App mit ProVault.tresorEinrichten. */
 const EIN={
  de:{knopf:'Tresor einrichten – nur Speicher wählen …',info:'Speicher wählen (Gerät oder SD-Karte). Private Brain Pro findet den Tresor darin oder legt einen Hauptordner an. Ein Passwort für Tresor und Ablage.',fertig:'Tresor eingerichtet: ',TRESOR_ORDNER_UNTERORDNER:'Das ist ein Ordner im Tresor. Bitte den Speicher selbst wählen (Gerät oder SD-Karte). Nichts wurde verändert.',TRESOR_ORDNER_MEHRERE:'In diesem Speicher liegen mehrere Tresore. Bitte den richtigen Tresor-Ordner selbst wählen. Nichts wurde verändert.',TRESOR_NAME_BELEGT:'Ein Ordner mit diesem Namen liegt schon da und ist nicht leer. Bitte anderen Namen. Nichts wurde verändert.',VAULT_ANDERER_ORT:'Die Ablage von Private Brain Pro ist schon an einem anderen Ort eingerichtet. Sie zieht nicht still um. Nichts wurde verändert.',VAULT_FOLDER_IN_USE:'Im Tresor liegt ein Ordner „Private Brain“ mit fremden Dateien. Nichts wurde verändert.',TRESOR_ORDNER_FREMDER_TRESOR:'„Private Brain“ in diesem Tresor gehört nicht zu Private Brain Pro. Nichts wurde verändert.',TRESOR_ABLAGE_PASSWORT_ANDERS:'Das Passwort öffnet den Tresor, aber nicht die Ablage „Private Brain“ darin (älterer Stand mit eigenem Passwort). Nichts wurde verändert.'},
@@ -119,9 +130,46 @@ function choose(entry){
  const go=make('button',t(18)),cancel=make('button',t(19));go.type=cancel.type='button';dialog.append(go,cancel);cancel.onclick=()=>dialog.close();
  let sending=false;dialog.addEventListener('cancel',event=>{if(sending)event.preventDefault();});
  go.onclick=async()=>{if(sending)return;const target=select.value;sending=true;go.disabled=select.disabled=cancel.disabled=true;try{let file=entry.file;if(!(file instanceof File)){const stored=await PBOriginals.verifyStored(file.pbOriginalHash,file.size);file=new File([stored],file.name,{type:file.type});}
+  if(target==='familienakte'){const eml=await mailEml(entry.recordHash);if(eml)file=eml;}
   await send(file,entry.recordHash,target);status.textContent=t(13);cancel.textContent=more(0);await render();}
  catch(error){status.textContent=t(20)+' '+String(error?.message||'');}finally{sending=false;go.disabled=select.disabled=cancel.disabled=false;}};
  document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
+}
+/* Ein katalogisierter Mail-Eintrag zeigt im Datei-Fenster nur seinen Text (.txt). Für die Familienakte wird, wo es geht,
+   die echte .eml mit Anhängen genommen: zuerst vom Anbieter über die App, sonst die eingelesene .eml-Datei. */
+async function mailEml(hash){
+ const r=hash&&typeof CATALOG!=='undefined'?CATALOG.find(x=>x.hash===hash):null;if(!r||r.mailBody==null)return null;
+ const name=emlDatei(r.name),ref=r.mailRemote,device=window.PBMailDevice;
+ if(ref&&device?.original&&(!ref.base||ref.base===device.base)){try{const o=await device.original({account:ref.account,folder:ref.folder,validity:ref.validity,uid:ref.uid});if(o?.sourceBase64)return new File([ausB64(o.sourceBase64)],name,{type:'message/rfc822'});}catch{/* weiter mit der Ablage */}}
+ const src=r.localSource;
+ if(src?.originalHash&&/\.eml$/i.test(src.name||'')){try{const f=await PBOriginals.verifyStored(src.originalHash);return new File([f],name,{type:'message/rfc822'});}catch{/* weiter */}}
+ // Nur bei eingelesenen Dateien ist getRaw die ganze Quelle (bei Anbieter-Mails im Ordnermodus nur Kopf und Text).
+ if(!ref&&window.PBMail?.getRaw){try{const raw=await PBMail.getRaw(hash);if(raw)return new File([raw],name,{type:'message/rfc822'});}catch{/* .txt wie bisher */}}
+ return null;
+}
+function frageGesperrt(){
+ return new Promise(resolve=>{const dialog=make('dialog');dialog.className='live-dialog';dialog.dataset.mailFamilienakteFrage='';dialog.append(make('h2',mt('titel')),make('p',mt('gesperrt')));let wahl=null;
+  for(const [key,value] of [['entsperren','entsperren'],['teilen','teilen'],['abbrechen',null]]){const b=make('button',mt(key));b.type='button';b.dataset.wahl=value||'';if(value==='entsperren')b.className='primary';b.onclick=()=>{wahl=value;dialog.close();};dialog.append(b);}
+  document.body.append(dialog);dialog.addEventListener('close',()=>{dialog.remove();resolve(wahl);},{once:true});dialog.showModal();});
+}
+async function mailAnFamilienakte(args,meta={}){
+ const device=window.PBMailDevice,name=emlDatei(meta.name),teilen=()=>device.openOriginal({...args,name});
+ let z=null;try{z=await api.tresorZustand({});}catch{/* ohne Tresor: teilen */}
+ if(!(z?.offen&&z.kennung&&z.uebergaben)){
+  if(z?.gewaehlt&&z.uebergaben&&z.erreichbar!==false){
+   const wahl=await frageGesperrt();if(wahl==='teilen')return teilen();if(wahl!=='entsperren')return{abgebrochen:true};
+   try{const r=await api.tresorEinziehen({...options(),nurVerbinden:true});if(r?.abgebrochen||!r?.offen)return{abgebrochen:true};}catch(error){alert(t(20)+' '+String(error?.message||''));return{fehler:true};}
+  }else{alert(mt('ohne'));return teilen();}
+ }
+ try{
+  let base64=typeof meta.sourceBase64==='string'?meta.sourceBase64:'';
+  if(!base64)base64=(await device.original(args))?.sourceBase64||'';
+  const bytes=ausB64(base64);if(!bytes.length)throw Error(t(21));
+  if(bytes.length>MAX){alert(mt('gross'));return{zuGross:true};}
+  const rec=typeof CATALOG!=='undefined'?CATALOG.find(r=>r.mailRemote&&r.mailRemote.account===args.account&&r.mailRemote.folder===args.folder&&String(r.mailRemote.validity)===String(args.validity)&&r.mailRemote.uid===args.uid):null;
+  const result=await send(new File([bytes],name,{type:'message/rfc822'}),rec?.hash||null,'familienakte');
+  alert(mt('gesendet'));void render();return result;
+ }catch(error){const code=String(error?.message||'');alert(/MESSAGE_TOO_LARGE/.test(code)?mt('gross'):t(20)+' '+code);return{fehler:true};}
 }
 function viewer(host,entry){let b=host.querySelector('[data-pro-transfer]');if(!b){b=make('button');b.type='button';b.dataset.proTransfer='';host.append(b);}b.textContent=t(15);b.hidden=!entry;b.onclick=()=>entry&&choose(entry);}
 // Backup contains only bounded receipts, never a vault key or original bytes. Merge all-or-nothing;
@@ -148,7 +196,7 @@ async function restore(rows){
  });
  window.dispatchEvent(new Event('pb-pro-receipts'));
 }
-window.PBProVerbund={receive,send,confirm,render,viewer,contract,restore,receipts};
+window.PBProVerbund={receive,send,confirm,render,viewer,contract,restore,receipts,mailAnFamilienakte,mailEml};
 new MutationObserver(()=>void render()).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 const start=()=>{if(typeof db!=='undefined'&&db&&document.querySelector('#vaultPlace'))void render();else setTimeout(start,300);};start();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void render();});
