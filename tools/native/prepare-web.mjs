@@ -72,6 +72,9 @@ html = html.replace('</body>', '<script src="native-overview.js"></script>\n</bo
 html = html.replace('</body>', '<script src="native-state.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-pro-verbund.js"></script>\n</body>');
 await cp(join(root, 'native/native-pro-verbund.js'), join(out, 'native-pro-verbund.js'));
+// Klaus 2026-11-09: Pro-App-Verbund (Vorschau) – Kasten in den Einstellungen, Karte assets/pro-verbund.html (byte-1:1 aus BookLedgerPro) im Vollbild-Rahmen.
+html = html.replace('</body>', '<script src="native-verbund-karte.js"></script>\n</body>');
+await cp(join(root, 'native/native-verbund-karte.js'), join(out, 'native-verbund-karte.js'));
 // Klaus 2026-10-26 (Sitzung 2): Explorer-Werkzeugzeile und Anordnungs-Knopf, dieselbe Datei wie in V3.
 html = html.replace('</body>', '<script src="native-dupes.js"></script>\n<script src="pb-arrange.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-result-cards.js"></script>\n<script src="native-result-previews.js"></script>\n</body>');
