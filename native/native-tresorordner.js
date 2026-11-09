@@ -188,9 +188,9 @@
     const verbunden = z?.offen && z.eingezogen && z.pruefung === 'PASST';
     // Tablet-Probe 2026-10-28: bei gesperrtem Ordner nahm das Teilen still den Android-Weg. Jetzt wird gefragt (Leitfaden § 5).
     const gesperrt = !verbunden && z?.gewaehlt && z.vorhanden && z.pruefung === 'PASST' && !z.offen;
-    if (!verbunden && !gesperrt) return device.openOriginal(args);
+    if (!verbunden && !gesperrt) return device.openOriginal({ ...args, name: String(meta.name || '') });
     const wahl = await frage(gesperrt);
-    if (wahl === 'teilen') return device.openOriginal(args);
+    if (wahl === 'teilen') return device.openOriginal({ ...args, name: String(meta.name || '') });
     if (wahl !== 'tresor' && wahl !== 'entsperren') return { abgebrochen: true };
     try {
       if (wahl === 'entsperren') {

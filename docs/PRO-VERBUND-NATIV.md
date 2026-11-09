@@ -36,6 +36,36 @@ Wiederherstellung prüft Verträge und abgeleitete Kennungen und ergänzt sie in
 Transaktion; widersprüchliche vorhandene Quittungen werden nicht überschrieben.
 Kein Tresorpasswort oder Hauptschlüssel gehört in diese Metadaten.
 
+## Mail mit Anhängen an die Familienakte (Klaus 2026-11-09, Zweig, nicht veröffentlicht)
+
+Bisher kam eine Mail mit PDF-Anhang nur über Androids Teilen-Auswahl in die Familienakte; über den
+gemeinsamen Pro-Tresor ging aus dem Datei-Fenster nur der Mailtext als `.txt`. Jetzt:
+
+- **Geöffnete Mail → Nachrichtenaktionen → „An Familienakte teilen“** (neben „An BookLedgerPro teilen“,
+  `assets/live-mail.js`, Strichsymbol wie dort). Mit offenem Pro-Tresor geht die **unveränderte `.eml`**
+  (MIME mit eingebetteten Anhängen) über den kanonischen Übergabeweg `tresorUebergabe` / Vertrag
+  `familienakte-uebergabe/1` ins Fach `eingang-familienakte` (`PBProVerbund.mailAnFamilienakte` in
+  `native/native-pro-verbund.js`). Die Quelle kommt aus der geladenen Nachricht (`sourceBase64`) oder, im
+  Ordnermodus, neu vom Anbieter über die neue Brückenmethode `ProMail.original` (Android
+  `ProMailPlugin.original`, Windows `DesktopService` „original“, `windows/bridge/contracts.json`).
+- **Gesperrter Tresor:** erst fragen („Entsperren und weitergeben“ · „Normal teilen“ · „Abbrechen“), nie still.
+  **Kein Tresor verbunden:** eine kurze Zeile, dann Androids Teilen-Auswahl mit der `.eml`. Browser: Web Share,
+  sonst Download mit Hinweis.
+- **Grenze 20 MiB** mit eigener Meldung (der Abruf vom Anbieter endet ohnehin bei 8 MB).
+- **Datei-Fenster → „An Pro-App …“ → Familienakte Pro:** ist der Eintrag eine katalogisierte Mail, geht die echte
+  `.eml` (`PBProVerbund.mailEml`: Anbieter über die App, sonst die eingelesene `.eml`-Datei); nur wenn keine
+  Quelle erreichbar ist, wie bisher der Text.
+- Der geteilte Dateiname folgt dem Betreff (`openOriginal` mit `name`, bereinigt; vorher `mail-<id>-mail.eml`).
+
+**Empfang in der Familienakte** (gelesen in `Meine-Familienakte`, nicht geändert): der Vertrag kennt keine
+Typ-Liste; `proUebergabePruefen` verlangt nur gleichen Namen, gleichen Typ (`message/rfc822`), ≤ 20 MiB und die
+Prüfsumme. „Pro-Eingang prüfen“ → „In Familienakte-Eingang aufnehmen“ legt die `.eml` in die Eingangszentrale;
+dort erkennt `lib/central-intake.ts` sie als „E-Mail (.eml)“ und löst die Anhänge auf Knopfdruck heraus
+(`extractEmlAttachments`).
+
+Proben: `tools/native/test-pro-verbund.mjs` 42 (neu 8) · `test-mail-device.mjs` 84 (neu 3) ·
+`gegenprobe-pro-verbund.mjs` 9/9 (neu 3). Nicht am Gerät, nicht mit echter Familienakte im selben Tresor.
+
 ## Umsetzung und Prüfgrenzen
 
 - `ProVerbund.java` ist der gemeinsame Android-/Windows-Adapter des bereits

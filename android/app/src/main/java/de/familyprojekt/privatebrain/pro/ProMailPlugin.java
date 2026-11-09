@@ -117,15 +117,34 @@ public class ProMailPlugin extends Plugin {
     @PluginMethod public void openOriginal(PluginCall call) {
         perform(call, () -> {
             byte[] bytes = engine.raw(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1));
-            File file = staged(bytes, "mail.eml");
+            // Name aus dem Betreff (von der Seite, `emlName()`), bereinigt; sonst „mail.eml“ wie bisher.
+            String name = emlDateiname(call.getString("name", ""));
+            File file = staged(bytes, name);
             android.net.Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
             Intent intent = new Intent(Intent.ACTION_SEND).setType("message/rfc822").putExtra(Intent.EXTRA_STREAM, uri)
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getActivity().runOnUiThread(() -> {
-                try { getActivity().startActivity(Intent.createChooser(intent, "mail.eml")); }
+                try { getActivity().startActivity(Intent.createChooser(intent, name)); }
                 catch (ActivityNotFoundException ignored) { /* No compatible external app installed. */ }
             });
             return new JSONObject().put("ok", true);
+        });
+    }
+    /** Dateiname für eine geteilte .eml: bereinigt, immer mit Endung „.eml“, höchstens 120 Zeichen. */
+    static String emlDateiname(String wunsch) throws Exception {
+        String name = wunsch == null ? "" : wunsch.trim();
+        if (name.toLowerCase(java.util.Locale.ROOT).endsWith(".eml")) name = name.substring(0, name.length() - 4);
+        if (name.length() > 116) name = name.substring(0, 116);
+        name = name.trim();
+        return name.isEmpty() ? "mail.eml" : MailMime.filename(name + ".eml");
+    }
+    /** Unveränderte Quelle einer Mail (MIME mit eingebetteten Anhängen) für die Übergabe an die Familienakte
+     *  über den gemeinsamen Pro-Tresor (Vertrag familienakte-uebergabe/1, höchstens 20 MiB). */
+    @PluginMethod public void original(PluginCall call) {
+        perform(call, () -> {
+            byte[] bytes = engine.raw(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1));
+            if (bytes.length > de.familyprojekt.tresor.Uebergaben.MAX_BYTES) throw new MailFailure("MESSAGE_TOO_LARGE");
+            return new JSONObject().put("sourceBase64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)).put("groesse", bytes.length);
         });
     }
     /** „An BookLedgerPro“ in der Pro-App mit Tresorordner: die .eml ins Übergabefach „Eingang-BookLedgerPro/Mails/“ (Schritt D2).
@@ -143,16 +162,31 @@ public class ProMailPlugin extends Plugin {
     private File staged(byte[] data, String name) throws Exception {
         File exports = new File(getContext().getCacheDir(), "exports");
         if (!exports.isDirectory() && !exports.mkdirs()) throw new MailFailure("FILE_UNAVAILABLE");
+        long now = System.currentTimeMillis(), used = 0;
         File[] old = exports.listFiles();
-        if (old != null) for (File file : old) if (file.isFile() && file.getName().startsWith("mail-") &&
-                System.currentTimeMillis() - file.lastModified() > 24L * 60 * 60 * 1000) file.delete();
-        long used = 0;
-        File[] remaining = exports.listFiles();
-        if (remaining != null) for (File file : remaining) used += file.length();
+        if (old != null) for (File entry : old) {
+            if (entry.getName().startsWith("mail-") && now - entry.lastModified() > 24L * 60 * 60 * 1000) { entfernen(entry); continue; }
+            if (entry.isFile() || entry.getName().startsWith("mail-")) used += groesse(entry);   // fremde Unterordner (vault, files) zählen nicht
+        }
         if (used + data.length > 32L * 1024 * 1024) throw new MailFailure("FILE_UNAVAILABLE");
-        File file = new File(exports, "mail-" + UUID.randomUUID() + "-" + MailMime.filename(name));
+        // Eigener Unterordner je Datei: die empfangende App sieht nur den bereinigten Namen
+        // (vorher „mail-<uuid>-mail.eml“, Klaus 2026-11-09).
+        File folder = new File(exports, "mail-" + UUID.randomUUID());
+        if (!folder.mkdirs()) throw new MailFailure("FILE_UNAVAILABLE");
+        File file = new File(folder, MailMime.filename(name));
         try (FileOutputStream output = new FileOutputStream(file)) { output.write(data); }
         return file;
+    }
+    private static long groesse(File entry) {
+        if (entry.isFile()) return entry.length();
+        long sum = 0; File[] inner = entry.listFiles();
+        if (inner != null) for (File file : inner) if (file.isFile()) sum += file.length();
+        return sum;
+    }
+    private static void entfernen(File entry) {
+        File[] inner = entry.isDirectory() ? entry.listFiles() : null;
+        if (inner != null) for (File file : inner) if (file.isFile()) file.delete();
+        entry.delete();
     }
 
     @PluginMethod public void openAttachment(PluginCall call) {

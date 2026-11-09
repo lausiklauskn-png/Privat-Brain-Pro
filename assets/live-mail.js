@@ -215,6 +215,18 @@
       "Передача здесь недоступна – письмо сохранено как .eml. Загрузите его в BookLedgerPro в разделе «Документы».",
       "Udostępnianie nie jest tu możliwe – wiadomość zapisano jako .eml. Wgraj ją w BookLedgerPro w „Dowodach”.",
     ],
+    familienakte: [
+      "An Familienakte teilen",
+      "Share with Familienakte",
+      "Передать в Familienakte",
+      "Udostępnij do Familienakte",
+    ],
+    familienakteFallback: [
+      "Teilen ist hier nicht möglich – die Mail wurde als .eml gespeichert. In der Familienakte in der Eingangszentrale hineinziehen; die Anhänge löst sie dort heraus.",
+      "Sharing is not available here – the mail was saved as .eml. Drop it into the Familienakte inbox; it extracts the attachments there.",
+      "Передача здесь недоступна – письмо сохранено как .eml. Перетащите его во входящие Familienakte; вложения будут извлечены там.",
+      "Udostępnianie nie jest tu możliwe – wiadomość zapisano jako .eml. Przeciągnij ją do skrzynki odbiorczej Familienakte; tam zostaną wyodrębnione załączniki.",
+    ],
     filter: [
       "Ordner filtern",
       "Filter folder",
@@ -1043,7 +1055,7 @@
       // Pro-App mit Tresorordner (Schritt D2): wahlweise ins Fach „Eingang-BookLedgerPro“; sonst wie bisher teilen.
       if (native) return native.shareBookLedger
         ? native.shareBookLedger({account,folder,validity,uid:item.uid}, {name: emlName(), datum: new Date(item.date || mail.date || 0).getTime() || 0, auszug: String(mail.text || "").slice(0, 1000)})
-        : native.openOriginal({account,folder,validity,uid:item.uid});
+        : native.openOriginal({account,folder,validity,uid:item.uid,name:emlName()});
       const file = new File([emlBlob()], emlName(), { type: "message/rfc822" });
       if (navigator.canShare?.({ files: [file] })) {
         try { await navigator.share({ files: [file], title: mail.subject || "" }); return; }
@@ -1052,11 +1064,30 @@
       downloadBlob(emlBlob(), emlName());
       alert(T("bookledgerFallback"));
     }
+    // Share with Familienakte (Klaus 2026-11-09): the raw .eml with its attachments. In the Pro app with an open
+    // shared Pro vault it goes into the inbox "Eingang-Familienakte" (contract familienakte-uebergabe/1, at most
+    // 20 MiB, native-pro-verbund.js); without the vault the system chooser; in the browser Web Share or a download.
+    async function shareFamilienakte() {
+      const meta = { name: emlName(), sourceBase64: mail.sourceBase64 || "" };
+      if (native) return native.shareFamilienakte
+        ? native.shareFamilienakte({account,folder,validity,uid:item.uid}, meta)
+        : native.openOriginal({account,folder,validity,uid:item.uid,name:emlName()});
+      const file = new File([emlBlob()], emlName(), { type: "message/rfc822" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: mail.subject || "" }); return; }
+        catch (e) { if (e?.name === "AbortError") return; }
+      }
+      downloadBlob(emlBlob(), emlName());
+      alert(T("familienakteFallback"));
+    }
+    const familienakteButton = btn("familienakte", shareFamilienakte);
+    familienakteButton.dataset.mailFamilienakte = "";
     actions.append(
       btn("download", () =>
-        native ? native.openOriginal({account,folder,validity,uid:item.uid}) : downloadBlob(emlBlob(), "mail.eml"),
+        native ? native.openOriginal({account,folder,validity,uid:item.uid,name:emlName()}) : downloadBlob(emlBlob(), emlName()),
       ),
       btn("bookledger", shareBookLedger),
+      familienakteButton,
       catalogButton,
     );
     if (native) {
