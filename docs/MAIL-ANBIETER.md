@@ -39,6 +39,8 @@ HTTPS-Maildienst und die unabhängige PWA wurden nicht erweitert oder verändert
 
 ## Microsoft für die nächste Sitzung vorbereiten
 
+Plan mit Anleitung für die Registrierung und den Einbau (Klaus 2026-11-12): `docs/PLAN_2026-11-12_MICROSOFT-KONTEN.md`.
+
 Der Eintrag „Outlook / Microsoft 365“ blendet Passwort-/Serverfelder aus und öffnet
 nur einen vier-sprachigen Einrichtungsplan. Er speichert kein Microsoft-Konto,
 startet keinen Passwortlogin und behauptet keine fertige OAuth-Anbindung.
