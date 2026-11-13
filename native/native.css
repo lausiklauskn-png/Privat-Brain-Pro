@@ -620,6 +620,9 @@ img.pb-tool-icon,span.pb-tool-icon{width:20px;height:20px;border-radius:5px;flex
 .pb-studio-probe [data-ok="true"]{color:#1d7a3a}.pb-studio-probe [data-ok="false"]{color:#b3261e}
 /* Version always visible next to the name (Klaus 2026-10-22). */
 header .brand h1 .pb-version { display:inline-block; vertical-align:middle; min-height:20px; margin-left:4px; padding:0 7px; font:600 .7rem/1.6 system-ui,sans-serif; letter-spacing:0; border-radius:999px; box-shadow:none; opacity:.85; white-space:nowrap; }
+/* Update-Fähnchen neben der Versionsnummer (Klaus 2026-11-13): flach, ohne Schatten, erscheint nur bei einem Update. */
+header .brand h1 .pb-update-fahne { display:inline-block; vertical-align:middle; min-height:20px; margin-left:4px; padding:0 7px; font:700 .7rem/1.6 system-ui,sans-serif; letter-spacing:0; border-radius:4px 999px 999px 4px; border:1px solid #b3261e; background:#b3261e; color:#fff; box-shadow:none; white-space:nowrap; cursor:pointer; }
+@media (max-width:640px) { header .brand h1 .pb-update-fahne { margin-left:2px; padding:0 4px; font-size:.56rem; } }
 /* Pro-Umbau 5: zweites Bedeutungs-Modell (native-meaning.js) – Wahl der Stufe als flache Knöpfe, die gewählte umrandet. */
 .pb-meaning .pro-kasten-kopf>b{flex:1 1 auto;min-width:0}
 .pb-meaning-wahl{display:flex;flex-wrap:wrap;gap:6px}

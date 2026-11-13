@@ -154,7 +154,7 @@ try {
     window.Capacitor = {Plugins:{ProUpdates:{
       async check() {
         window.updateCalls++;
-        if (window.holdUpdate) await new Promise(resolve=>window.finishUpdate=resolve);
+        if (window.holdUpdate && window.updateCalls > 1) await new Promise(resolve=>window.finishUpdate=resolve);
         if (window.updateMode === 'error') throw new Error('offline');
         return {status:window.updateMode, version:'0.1.0-preview.10'};
       },
@@ -163,7 +163,10 @@ try {
   });
   await updatePage.goto(url);
   await updatePage.waitForSelector('#native-update-check',{state:'attached'});
-  ok('Update checks never run automatically',await updatePage.evaluate(()=>window.updateCalls===0));
+  // Seit 1.0.49 (Update-Fähnchen, Klaus 2026-11-13) prüft die App beim Start einmal still; ohne ProDevice gibt es
+  // keine Versionsmarke und damit kein Fähnchen. Die Meldung in den Einstellungen bleibt dabei unberührt.
+  await updatePage.waitForFunction(()=>window.updateCalls===1);
+  ok('Exactly one silent update check at start; it shows nothing and opens no download',await updatePage.evaluate(()=>window.updateCalls===1&&window.downloadCalls===0&&!document.getElementById('pbUpdateFahne')&&document.getElementById('native-update-download').hidden&&document.querySelector('.native-updates p').textContent.includes('GitHub')));
   await clickControl(updatePage,'[data-tab="settings"]');
   await updatePage.locator('#native-update-check').click();
   ok('Check prevents duplicate requests while pending',await updatePage.locator('#native-update-check').isDisabled());

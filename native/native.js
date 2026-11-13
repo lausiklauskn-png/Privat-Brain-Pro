@@ -127,7 +127,7 @@
       state = ['current', 'available', 'unsupported'].includes(result?.status) ? result.status : 'error';
       latest = typeof result?.version === 'string' ? (/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/.test(result.version) && !result.version.startsWith('0.') ? 'v' + result.version.replace(/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/, '$1.$2.$3') : result.version) : '';
     } catch (error) { state = error?.code==='APP_OFFLINE'?'offline':'error'; }
-    finally { busy = false; renderUpdates(); }
+    finally { busy = false; renderUpdates(); if (state === 'current' || state === 'available') { fahneVersion = state === 'available' ? latest : ''; renderFahne(); } }
   });
   download.addEventListener('click', async () => {
     if (busy) return;
@@ -139,6 +139,57 @@
   });
   box.append(check, download, message);
   status.after(box);
-  new MutationObserver(renderUpdates).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+  // Update-Fähnchen (Klaus 2026-11-13): erscheint von selbst neben der Versionsnummer, sobald ein Update bereitsteht.
+  // Still geprüft wird beim Start, beim Zurückholen der App und höchstens stündlich – über denselben Weg wie der Knopf
+  // (ProUpdates.check). Ist der Internetschalter der App „getrennt“ oder sein Stand unbekannt, geht KEIN Abruf hinaus.
+  // Kein Netz, Fehler, Entwicklungsfassung oder aktuelle Fassung: kein Fähnchen und keine Meldung.
+  // Benannte Änderung: bis 1.0.48 lief nie eine Updateprüfung ohne Tipp.
+  const FAHNE_STUNDE = 60 * 60 * 1000, FAHNE_NACH_FEHLER = 5 * 60 * 1000;
+  const fahneWort = { de: ['Update', 'Update verfügbar: Version {v} – antippen'], en: ['Update', 'Update available: version {v} – tap to open'], ru: ['Обновление', 'Доступно обновление: версия {v} – нажмите'], pl: ['Aktualizacja', 'Dostępna aktualizacja: wersja {v} – dotknij'] };
+  const shownVersion = value => typeof value === 'string' ? (/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/.test(value) && !value.startsWith('0.') ? 'v' + value.replace(/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/, '$1.$2.$3') : value) : '';
+  let fahne = null, fahneVersion = '', fahneNext = 0, fahneBusy = false;
+  function renderFahne() {
+    const badge = document.getElementById('pbVersion');
+    if (!fahneVersion || !badge) { fahne?.remove(); fahne = null; return; }
+    if (!fahne) {
+      fahne = document.createElement('button');
+      fahne.type = 'button'; fahne.id = 'pbUpdateFahne'; fahne.className = 'pb-update-fahne';
+      fahne.addEventListener('click', () => {
+        // Der vorhandene Update-Weg: Einstellungen mit „Neu: …“ und dem Herunterladen-Knopf.
+        state = 'available'; latest = fahneVersion; renderUpdates();
+        window.PBWorkspace?.navigate?.('settings');
+        download.scrollIntoView({ block: 'center' }); download.focus();
+      });
+    }
+    const t = fahneWort[document.documentElement.lang] || fahneWort.de, number = fahneVersion.replace(/^v/, '');
+    fahne.textContent = t[0] + ' ' + number;
+    fahne.title = fahne.ariaLabel = t[1].replace('{v}', number);
+    fahne.dataset.version = number;
+    if (badge.nextElementSibling !== fahne) badge.after(' ', fahne);
+  }
+  async function stillPruefen(now = Date.now()) {
+    if (fahneBusy || now < fahneNext || document.visibilityState === 'hidden') return;
+    fahneBusy = true;
+    try {
+      const net = window.PBNetwork;
+      // Without the switch's confirmed state nothing leaves the app (native builds always carry PBNetwork).
+      if (net) { await net.initialized; if (net.offline || !net.ready) return; }
+      else if (window.Capacitor?.isNativePlatform?.()) return;
+      if (navigator.onLine === false) return;
+      fahneNext = now + FAHNE_NACH_FEHLER;
+      const result = await updates.check();
+      fahneNext = now + FAHNE_STUNDE;
+      fahneVersion = result?.status === 'available' ? shownVersion(result.version) : '';
+      renderFahne();
+    } catch { /* Still: ohne Netz oder bei einem Fehler bleibt alles, wie es ist. */ }
+    finally { fahneBusy = false; }
+  }
+  window.PBUpdateFahne = { pruefen: stillPruefen };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') stillPruefen(); });
+  setInterval(stillPruefen, FAHNE_STUNDE);
+  stillPruefen();
+
+  new MutationObserver(() => { renderUpdates(); renderFahne(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   renderUpdates();
 })();
