@@ -30,7 +30,7 @@ try {
     await page.route('**/*', r => r.request().url().startsWith(url) ? r.continue() : r.abort());
     await page.addInitScript(([mode, offline, version, lang]) => {
       if (lang) try { localStorage.setItem('pb_lang', lang); } catch { /* default language */ }
-      window.updateCalls = 0; window.downloadCalls = 0; window.updateMode = mode; window.netOffline = offline;
+      window.updateCalls = 0; window.downloadCalls = 0; window.installCalls = 0; window.updateMode = mode; window.netOffline = offline;
       window.Capacitor = { Plugins: {
         ProDevice: { async getInfo() { return { versionName: '1.0.49', platform: 'android', nativeMail: false }; } },
         ProNetwork: { async getState() { return { offline: window.netOffline }; }, async setOffline({ offline }) { window.netOffline = offline; return { offline }; } },
@@ -41,7 +41,8 @@ try {
             if (window.updateMode === 'error') throw new Error('no network');
             return window.updateMode === 'available' ? { status: 'available', version } : { status: window.updateMode, version: '1.0.49' };
           },
-          async openDownload() { window.downloadCalls++; }
+          async openDownload() { window.downloadCalls++; },
+          async install() { window.installCalls++; return window.installAnswer || { gestartet: true }; }
         }
       } };
     }, [mode, offline, version, lang]);
@@ -77,15 +78,37 @@ try {
   ok('Newer version: flag "Update 1.0.50" directly after the version number, as a button', f && f.text === 'Update 1.0.50' && f.next && f.tag === 'BUTTON' && f.title.includes('1.0.50'));
   ok('Newer version: nothing is downloaded or opened by itself', await page.evaluate(() => window.downloadCalls === 0 && document.getElementById('native-update-download').hidden));
   ok('The flag is flat and readable (no shadow, no emoji, at most 24px high)', await page.locator('#pbUpdateFahne').evaluate(e => { const c = getComputedStyle(e), r = e.getBoundingClientRect(); return c.boxShadow === 'none' && r.height <= 24 && r.width > 0 && !/\p{Extended_Pictographic}/u.test(e.textContent + e.title) && c.color !== c.backgroundColor; }));
+  const settingsVisible = () => page.evaluate(() => { const b = document.getElementById('native-update-check'); return !!b && b.getBoundingClientRect().height > 0 && getComputedStyle(b).visibility !== 'hidden' && !b.closest('[hidden]'); });
+  const settingsBefore = await settingsVisible();
   await page.locator('#pbUpdateFahne').click();
-  await page.locator('#native-update-download').waitFor({ state: 'visible' });
-  ok('Tap on the flag opens the existing update path: settings with the new version and the download button', await page.locator('.native-updates').textContent().then(t => t.includes('1.0.50') && t.includes('1.0.49')) && await page.evaluate(() => document.activeElement?.id === 'native-update-download' && window.downloadCalls === 0));
+  await page.waitForFunction(() => window.installCalls === 1);
+  ok('Tap on the flag loads and installs directly (no detour through settings, no second check)', await page.evaluate(() => window.installCalls === 1 && window.downloadCalls === 0 && window.updateCalls === 1) && await settingsVisible() === settingsBefore);
+  await page.locator('#pbVersion').click();
+  await page.waitForFunction(() => window.installCalls === 2);
+  ok('Tap on the version number takes the same direct path', await page.evaluate(() => window.installCalls === 2) && await settingsVisible() === settingsBefore);
+  await page.evaluate(() => { window.installAnswer = { erlaubnis: true }; });
+  await page.locator('#pbUpdateFahne').click();
+  await page.waitForFunction(() => window.installCalls === 3);
+  await page.waitForTimeout(200);
+  ok('Without the install permission a short notice says what to do', await page.evaluate(() => /Apps installieren/.test(document.body.textContent)));
+  await page.evaluate(() => { window.installAnswer = null; });
+  await page.evaluate(() => window.PBWorkspace?.navigate?.('settings'));
+  await page.locator('#native-update-check').click();
+  await page.waitForFunction(() => !document.getElementById('native-update-check').disabled);
   await page.locator('#native-update-download').click();
-  ok('The download button calls the checked native target once', await page.evaluate(() => window.downloadCalls === 1));
+  ok('The download button in the settings still calls the checked native target once', await page.evaluate(() => window.downloadCalls === 1));
   await page.evaluate(() => { window.updateMode = 'current'; });
   await page.locator('#native-update-check').click();
   await page.waitForFunction(() => !document.getElementById('native-update-check').disabled);
   ok('After a check that reports the current version the flag is gone', await flag(page) === null);
+  await page.context().close();
+
+  // 2b · aktuelle Fassung: Tipp auf die Version → kurze Meldung, nichts geladen, keine Einstellungen
+  page = await open({ mode: 'current' });
+  await page.locator('#pbVersion').click();
+  await page.waitForFunction(() => window.updateCalls === 2);
+  await page.waitForTimeout(200);
+  ok('Current version: tap on the version checks once and says "Aktuelle Version"', await page.evaluate(() => /Aktuelle Version v1\.0\.49/.test(document.body.textContent) && window.installCalls === 0 && window.downloadCalls === 0));
   await page.context().close();
 
   // 3 · Internetschalter „getrennt“: kein Abruf, kein Fähnchen, keine Meldung

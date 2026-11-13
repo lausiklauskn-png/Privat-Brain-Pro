@@ -48,7 +48,8 @@
     const shown = 'v' + (m ? m[1] + '.' + m[2] + '.' + m[3] : name);
     tag.type = 'button'; tag.className = 'pb-version'; tag.id = 'pbVersion'; tag.textContent = shown;
     tag.title = tag.ariaLabel = 'Private Brain Pro ' + shown;
-    tag.onclick = () => { window.PBWorkspace?.navigate?.('settings'); const b = document.getElementById('native-update-check'); b?.scrollIntoView({ block: 'center' }); b?.focus(); };
+    // Klaus 2026-11-13: die Versionsnummer öffnet nicht mehr die Einstellungen (dafür ist das Zahnrad da) – sie prüft und lädt ein Update direkt.
+    tag.onclick = () => { if (window.PBUpdateFahne?.direkt) { void window.PBUpdateFahne.direkt(); return; } window.PBWorkspace?.navigate?.('settings'); const b = document.getElementById('native-update-check'); b?.scrollIntoView({ block: 'center' }); b?.focus(); };
     if (!tag.isConnected) document.querySelector('header .brand h1')?.append(' ', tag);
     window.PBVersionShown = shown; render();
   } else document.getElementById('pbVersion')?.remove();
@@ -155,12 +156,7 @@
     if (!fahne) {
       fahne = document.createElement('button');
       fahne.type = 'button'; fahne.id = 'pbUpdateFahne'; fahne.className = 'pb-update-fahne';
-      fahne.addEventListener('click', () => {
-        // Der vorhandene Update-Weg: Einstellungen mit „Neu: …“ und dem Herunterladen-Knopf.
-        state = 'available'; latest = fahneVersion; renderUpdates();
-        window.PBWorkspace?.navigate?.('settings');
-        download.scrollIntoView({ block: 'center' }); download.focus();
-      });
+      fahne.addEventListener('click', () => void direkt());
     }
     const t = fahneWort[document.documentElement.lang] || fahneWort.de, number = fahneVersion.replace(/^v/, '');
     fahne.textContent = t[0] + ' ' + number;
@@ -185,7 +181,35 @@
     } catch { /* Still: ohne Netz oder bei einem Fehler bleibt alles, wie es ist. */ }
     finally { fahneBusy = false; }
   }
-  window.PBUpdateFahne = { pruefen: stillPruefen };
+  // Direkt laden (Klaus 2026-11-13: „nicht in den Einstellungen … direkt soll es geladen werden, genau wie bei Familienakte und
+  // BookLedgerPro“): Tipp auf Fähnchen oder Versionsnummer → prüfen (falls nötig) → ProUpdates.install → Androids Installieren-Fenster.
+  // Aktuell: kurze Meldung. Ohne install (Windows, ältere Hülle): der vorhandene Download. Nichts startet ohne Tipp.
+  const direktWort = {
+    de: ['Aktuelle Version {v}', 'Lädt {p} %', 'Erlaube „Apps installieren“ und tippe dann noch einmal auf das Update.', 'Update ließ sich nicht laden. Später noch einmal antippen.', 'Die App ist vom Internet getrennt. Internetzugriff im App-Menü wieder erlauben.'],
+    en: ['Current version {v}', 'Loading {p} %', 'Allow “Install apps”, then tap the update again.', 'The update could not be loaded. Tap again later.', 'The app is offline. Allow internet access in the app menu.'],
+    ru: ['Текущая версия {v}', 'Загрузка {p} %', 'Разрешите «Установку приложений» и нажмите обновление ещё раз.', 'Не удалось загрузить обновление. Нажмите позже ещё раз.', 'Приложение отключено от интернета. Разрешите доступ в меню.'],
+    pl: ['Aktualna wersja {v}', 'Pobieranie {p} %', 'Zezwól na „Instalowanie aplikacji” i dotknij aktualizacji ponownie.', 'Nie udało się pobrać aktualizacji. Spróbuj później.', 'Aplikacja jest odłączona od internetu. Zezwól na dostęp w menu.']
+  };
+  const melden = (i, v = '') => { const t = direktWort[document.documentElement.lang] || direktWort.de; const text = t[i].replace('{v}', v); if (typeof window.toast === 'function') window.toast(text, 5000); else { message.textContent = text; } };
+  let direktBusy = false;
+  async function direkt() {
+    if (direktBusy || busy) return;
+    direktBusy = true;
+    try {
+      if (!fahneVersion) {
+        const result = await updates.check();
+        fahneVersion = result?.status === 'available' ? shownVersion(result.version) : '';
+        fahneNext = Date.now() + FAHNE_STUNDE; renderFahne();
+        if (!fahneVersion) { melden(0, window.PBVersionShown || ''); return; }
+      }
+      if (typeof updates.install !== 'function') { await updates.openDownload(); return; }
+      const hoerer = await updates.addListener?.('stand', e => { const t = direktWort[document.documentElement.lang] || direktWort.de; if (fahne && e?.groesse) fahne.textContent = t[1].replace('{p}', String(Math.min(99, Math.floor(e.geladen * 100 / e.groesse)))); });
+      try { const aus = await updates.install(); if (aus?.erlaubnis) melden(2); }
+      finally { try { await hoerer?.remove?.(); } catch { /* egal */ } renderFahne(); }
+    } catch (error) { melden(error?.code === 'APP_OFFLINE' ? 4 : 3); }
+    finally { direktBusy = false; }
+  }
+  window.PBUpdateFahne = { pruefen: stillPruefen, direkt };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') stillPruefen(); });
   setInterval(stillPruefen, FAHNE_STUNDE);
   stillPruefen();
