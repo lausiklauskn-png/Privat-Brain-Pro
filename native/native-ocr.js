@@ -8,7 +8,7 @@
   const LANGUAGES = Object.freeze(['deu', 'eng', 'rus', 'pol']);
   const ENGINE = 'tesseract-7.0.0-lstm-deu-eng-rus-pol-native-v1';
   const LIMIT = 64 * 1048576, RAW_PIXELS = 40000000, CANVAS_PIXELS = 9000000;
-  const DEADLINE = 90000, IDLE_MS = 30000, CACHE_SIZE = 4, CACHE_CHARS = 1500000;
+  const DEADLINE = 90000, IDLE_MS = 180000, CACHE_SIZE = 4, CACHE_CHARS = 1500000;
   const MARKER = 'pb_ocr_in_progress_v1';
   const words = {
     de: {title:'Texterkennung', installed:'Integriert · lokal · Deutsch, Englisch, Russisch und Polnisch',
@@ -116,9 +116,15 @@
     dedicatedWorkers.clear();
     try { old?.terminate(); } catch { /* already stopped */ }
   }
+  // Kept ready for 3 minutes between files (reloading the four language models
+  // and the WASM core for every file was the main pause); released at once
+  // when the app goes to the background and nothing is being recognized.
   function scheduleIdle() {
     clearTimeout(idle); idle = setTimeout(stopWorker, IDLE_MS);
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && worker && !active && !queue.length) stopWorker();
+  });
   async function loadLibrary() {
     if (library) return library;
     if (!loading) loading = new Promise((resolve, reject) => {

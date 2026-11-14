@@ -19,6 +19,13 @@ wird als solcher erklärt. Fehlt das Original, bleibt die Datei nicht prüfbar;
 ein alter Bericht ersetzt keine neue Prüfung. Ein fehlgeschlagener oder leerer
 OCR-Lauf überschreibt vorhandenen Suchtext nicht mit einem leeren Ergebnis.
 
+## Arbeiter bleibt bereit (14.11.2026, nicht veröffentlicht)
+
+Bisher wurde die Texterkennung nach **30 Sekunden** ohne Arbeit beendet; die nächste Datei lud die WASM-Engine und alle vier
+Sprachdaten neu. Jetzt bleibt sie **3 Minuten** bereit (`IDLE_MS` in `native/native-ocr.js`) und wird sofort beendet, sobald die App
+in den Hintergrund geht und gerade nichts erkannt wird (Speicher am Handy). Erkennung, Sprachen und Prüfkern sind unverändert.
+Nicht am Gerät gemessen.
+
 ## Offline und Sprachen
 
 Tesseract.js 7.0.0 und Tesseract.js-core 7.0.0 verwenden lokale LSTM-Sprachdaten
