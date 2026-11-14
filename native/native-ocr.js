@@ -151,11 +151,9 @@
   }
   async function getWorker(job) {
     clearTimeout(idle);
-    // A language change (interface or input language) takes effect with the next file.
-    if (worker && workerLanguages !== job.languages.join('+')) stopWorker();
     if (worker) return worker;
     if (!starting) {
-      const epoch = workerEpoch;
+      const epoch = workerEpoch; workerLanguages = job.languages.join('+');
       starting = (async () => {
         const T = await loadLibrary();
         if (job.cancelled || epoch !== workerEpoch) throw aborted();
@@ -168,7 +166,7 @@
           errorHandler:error => { if (epoch === workerEpoch && active) active.errors.push(reason(error)); }
         });
         if (job.cancelled || epoch !== workerEpoch) { try { await created.terminate(); } catch {} throw aborted(); }
-        worker = created; workerLanguages = job.languages.join('+'); return created;
+        worker = created; return created;
       })().catch(error => { if (epoch === workerEpoch) starting = null; throw error; });
     }
     return starting;
@@ -190,6 +188,9 @@
       mark(job); job.ocrStarted = true; job.passes++;
       if (!job.activity) job.activity = window.PBActivity?.start({label:() => label(job)});
       announce(job, 'preparing'); await job.activity?.ready;
+      // A language change (interface or input language) takes effect with the next file. The old worker is
+      // stopped here, before this recognition registers its own abort, so stopping never cancels this file.
+      if ((worker || starting) && workerLanguages !== job.languages.join('+')) stopWorker(); // workerLanguages is set when a start begins
       const stopped = new Promise((_, reject) => { recognitionAbort = reject; });
       const timeout = new Promise((_, reject) => { timer = setTimeout(() => {
         const error = new Error('Zeit abgelaufen (90 s).'); stopWorker(error); reject(error);
