@@ -101,14 +101,21 @@ try{
     {id:'rus',line:'Ремонт квартиры Москва Ноябрь 2026',words:['ремонт','квартиры']},
     {id:'pol',line:'Faktura za naprawę mieszkania listopad 2026',words:['faktura','mieszkania']}
   ];
+  // Klaus 14.11.2026: ab Werk Deutsch + Englisch; Russisch/Polnisch, wenn Oberfläche oder Eingabesprache darauf steht.
+  const setLang=code=>page.evaluate(code=>{document.documentElement.lang=code;},code);
+  const uiFor={deu:'de',eng:'de',rus:'ru',pol:'pl'};
   const scans=[];
   for(const c of cases){
     const scan=await make('raster-'+c.id+'.png',[c.line]);scans.push(scan);
+    await setLang(uiFor[c.id]);
     const out=await analyze(scan.name,scan.bytes);
     ok(`${c.id}: real raster words read by bundled Tesseract`,c.words.every(w=>folded(out.result.text).includes(w)),{text:out.result.text,ocr:out.result.ocr});
     ok(`${c.id}: source bytes unchanged`,out.before===hash(scan.bytes)&&out.after===out.before);
-    ok(`${c.id}: OCR provenance names real engine and all bundled languages`,/tesseract/i.test(out.result.ocr?.engine)&&['deu','eng','rus','pol'].every(l=>out.result.ocr.languages?.includes(l)),out.result.ocr);
+    const expected=uiFor[c.id]==='de'?['deu','eng']:['deu','eng',c.id];
+    ok(`${c.id}: OCR provenance names real engine and the languages in use`,/tesseract/i.test(out.result.ocr?.engine)&&JSON.stringify(out.result.ocr.languages)===JSON.stringify(expected),out.result.ocr);
   }
+  await setLang('de');
+  ok('German interface reads with German and English only (all four stay bundled)',await page.evaluate(()=>JSON.stringify(PBOCR.languages)==='["deu","eng"]'&&JSON.stringify(PBOCR.bundledLanguages)==='["deu","eng","rus","pol"]'));
   ok('Inference used a real local OCR worker',await page.evaluate(()=>window.__ocrRecognitions>0&&window.__ocrWorkers.some(s=>s.includes('vendor/tesseract/worker.min.js'))));
   const calls=await page.evaluate(()=>window.__ocrRecognitions);
   const cached=await analyze(scans[0].name,scans[0].bytes);
@@ -124,12 +131,14 @@ try{
     'Rechnung bezahlt. Lieferung am Montag.','Invoice approved. Delivery tomorrow.',
     'Счет оплачен. Доставка завтра.','Faktura zapłacona. Dostawa jutro.'
   ],{font:52,top:40,lineHeight:100,padding:70});
+  await setLang('ru');
   const combined=await analyze(nativeMix.name,nativeMix.bytes);
   ok('The native instrumentation multilingual fixture is actually readable', ['rechnung','invoice','доставка','faktura'].every(word=>folded(combined.result.text).includes(word)),combined.result);
 
   const pdfBytes=scannedPdf([scans[0].jpeg,scans[2].jpeg]);
   ok('Scanned PDF fixture has no text layer or plaintext expected phrase',!pdfBytes.includes(Buffer.from('Gartenhaus'))&&!pdfBytes.includes(Buffer.from('/Font')));
   const pdf=await analyze('raster-two-pages.pdf',pdfBytes);
+  await setLang('de');
   ok('Image-only PDF reads both German and Cyrillic pages',folded(pdf.result.text).includes('gartenhaus')&&folded(pdf.result.text).includes('квартиры'),pdf.result);
   ok('Scanned page provenance is retained',pdf.result.seiten?.length===2&&pdf.result.seiten.every(p=>p.bild===true)&&pdf.result.seiten.map(p=>p.seite).join(',')==='1,2',pdf.result.seiten);
   ok('Original PDF bytes remain unchanged',pdf.before===hash(pdfBytes)&&pdf.after===pdf.before);

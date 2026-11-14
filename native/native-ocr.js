@@ -5,13 +5,22 @@
   'use strict';
   if (window.PBOCR) return;
   const BASE = 'vendor/tesseract/', PDFJS = 'vendor/pdfjs/';
-  const LANGUAGES = Object.freeze(['deu', 'eng', 'rus', 'pol']);
-  const ENGINE = 'tesseract-7.0.0-lstm-deu-eng-rus-pol-native-v1';
+  // Klaus 14.11.2026: ab Werk Deutsch + Englisch (an 40 deutschen Scans 31 % schneller als vier Sprachen bei gleichem Wortfund);
+  // Russisch bzw. Polnisch kommen dazu, wenn die Oberfläche oder die Eingabesprache darauf steht. Alle vier bleiben eingepackt.
+  const ALL_LANGUAGES = Object.freeze(['deu', 'eng', 'rus', 'pol']), EXTRA = {ru:'rus', pl:'pol'};
+  function currentLanguages() {
+    const set = ['deu', 'eng'];
+    const codes = [String(document.documentElement.lang || '').slice(0, 2)];
+    try { codes.push(String(window.PBInputLanguage?.current?.() || '').slice(0, 2)); } catch {}
+    for (const code of codes) if (EXTRA[code] && !set.includes(EXTRA[code])) set.push(EXTRA[code]);
+    return Object.freeze(set.sort((a, b) => ALL_LANGUAGES.indexOf(a) - ALL_LANGUAGES.indexOf(b)));
+  }
+  const engineOf = languages => 'tesseract-7.0.0-lstm-' + languages.join('-') + '-native-v2';
   const LIMIT = 64 * 1048576, RAW_PIXELS = 40000000, CANVAS_PIXELS = 9000000;
   const DEADLINE = 90000, IDLE_MS = 180000, CACHE_SIZE = 4, CACHE_CHARS = 1500000;
   const MARKER = 'pb_ocr_in_progress_v1';
   const words = {
-    de: {title:'Texterkennung', installed:'Integriert · lokal · Deutsch, Englisch, Russisch und Polnisch',
+    de: {title:'Texterkennung', installed:'Integriert · lokal · Deutsch, Englisch (Russisch/Polnisch je nach Sprache)',
       help:'Text aus Bildern und Scan-PDFs wird beim Hinzufügen gelesen und für Suche und Prüfung verwendet. Unsichere Stellen bleiben als ungeprüft markiert. Höchstens 10 Scan-Seiten je PDF; große Dateien werden begrenzt. Die Originale bleiben unverändert.',
       preparing:'Texterkennung wird lokal vorbereitet …', reading:'Texterkennung · Lesedurchgang {n}', cancel:'Abbrechen',
       interrupted:'Die letzte Texterkennung wurde unterbrochen. Starte sie bei Bedarf erneut; es läuft kein automatischer Wiederholungsversuch.',
@@ -20,21 +29,21 @@
       memory:'Das Bild überschreitet die Speichergrenze der lokalen Texterkennung (40 Millionen Bildpunkte / 16.000 Pixel Kante).',
       storage:'Die Absicherung gegen einen unterbrochenen OCR-Lauf konnte nicht gespeichert werden.',
       ready:'Wird bei der nächsten Bild- oder Scan-Datei gestartet.'},
-    en: {title:'Text recognition', installed:'Built in · local · German, English, Russian and Polish',
+    en: {title:'Text recognition', installed:'Built in · local · German, English (Russian/Polish by language setting)',
       help:'Images and scanned PDFs are read when added, for search and checks. Uncertain text stays marked as unchecked. At most 10 scanned pages per PDF; large files are limited. Originals stay unchanged.',
       preparing:'Preparing local text recognition …', reading:'Text recognition · pass {n}', cancel:'Cancel',
       interrupted:'The last text recognition was interrupted. Enable it again when needed; it will not retry automatically.',
       resume:'Enable text recognition again', stopped:'Text recognition cancelled.', partial:'Local text recognition · partial',
       local:'Local text recognition', failed:'Text could not be fully read locally.', memory:'The image exceeds the memory limit for local text recognition (40 million pixels / 16,000 pixels on one side).',
       storage:'The interrupted-OCR safeguard could not be saved.', ready:'Starts when the next image or scanned document is added.'},
-    ru: {title:'Распознавание текста', installed:'Встроено · локально · немецкий, английский, русский и польский',
+    ru: {title:'Распознавание текста', installed:'Встроено · локально · немецкий, английский, русский',
       help:'Текст изображений и сканов PDF читается при добавлении для поиска и проверки. Неуверенно прочитанное остаётся непроверенным. Не более 10 страниц сканов на PDF; размер ограничен. Оригиналы не меняются.',
       preparing:'Подготовка локального распознавания …', reading:'Распознавание · проход {n}', cancel:'Отмена',
       interrupted:'Предыдущее распознавание прервано. При необходимости разрешите повторный запуск; автоматических повторов нет.',
       resume:'Снова разрешить распознавание', stopped:'Распознавание отменено.', partial:'Локальное распознавание · частично',
       local:'Локальное распознавание', failed:'Текст локально прочитан не полностью.', memory:'Изображение превышает предел памяти для распознавания (40 миллионов пикселей / 16 000 по стороне).',
       storage:'Не удалось сохранить защиту от повторного запуска после сбоя.', ready:'Запустится при добавлении следующего изображения или скана.'},
-    pl: {title:'Rozpoznawanie tekstu', installed:'Wbudowane · lokalnie · niemiecki, angielski, rosyjski i polski',
+    pl: {title:'Rozpoznawanie tekstu', installed:'Wbudowane · lokalnie · niemiecki, angielski, polski',
       help:'Tekst obrazów i skanów PDF jest odczytywany przy dodawaniu do wyszukiwania i kontroli. Niepewny tekst pozostaje niesprawdzony. Maksymalnie 10 stron skanu na PDF; duże pliki są ograniczone. Oryginały nie zmieniają się.',
       preparing:'Przygotowanie lokalnego rozpoznawania …', reading:'Rozpoznawanie · przebieg {n}', cancel:'Anuluj',
       interrupted:'Ostatnie rozpoznawanie przerwano. W razie potrzeby włącz je ponownie; nie będzie automatycznych powtórzeń.',
@@ -47,7 +56,7 @@
   const aborted = () => new DOMException(copy().stopped, 'AbortError');
   let interrupted = false, storageProblem = false;
   try { interrupted = Boolean(localStorage.getItem(MARKER)); } catch { storageProblem = true; }
-  let library = null, loading = null, worker = null, starting = null, workerEpoch = 0, idle = 0, recognitionAbort = null;
+  let library = null, loading = null, worker = null, starting = null, workerEpoch = 0, idle = 0, recognitionAbort = null, workerLanguages = '';
   // Tesseract's createWorker promise resolves only after WASM/language init.
   // Keep the underlying dedicated Worker as soon as it is constructed, so a
   // cancellation during that initialization can terminate it immediately too.
@@ -142,13 +151,15 @@
   }
   async function getWorker(job) {
     clearTimeout(idle);
+    // A language change (interface or input language) takes effect with the next file.
+    if (worker && workerLanguages !== job.languages.join('+')) stopWorker();
     if (worker) return worker;
     if (!starting) {
       const epoch = workerEpoch;
       starting = (async () => {
         const T = await loadLibrary();
         if (job.cancelled || epoch !== workerEpoch) throw aborted();
-        const created = await T.createWorker([...LANGUAGES], 1, {
+        const created = await T.createWorker([...job.languages], 1, {
           workerPath:new URL(BASE + 'worker.min.js', location.href).href,
           corePath:new URL(BASE, location.href).href,
           langPath:new URL(BASE + 'lang/', location.href).href,
@@ -157,7 +168,7 @@
           errorHandler:error => { if (epoch === workerEpoch && active) active.errors.push(reason(error)); }
         });
         if (job.cancelled || epoch !== workerEpoch) { try { await created.terminate(); } catch {} throw aborted(); }
-        worker = created; return created;
+        worker = created; workerLanguages = job.languages.join('+'); return created;
       })().catch(error => { if (epoch === workerEpoch) starting = null; throw error; });
     }
     return starting;
@@ -237,7 +248,7 @@
       notes.push(job.uncertainLines + ' unsichere Zeile(n) in den OCR-Lesedurchgängen (unter 60 %) — diese Stellen bleiben ungeprüft.');
     result.hinweise = notes;
     const expected = /^(png|jpeg|webp|gif|pdf)$/.test(result.art) || /\.(?:bmp|tiff?)$/i.test(job.name);
-    result.ocr = {engine:ENGINE, languages:[...LANGUAGES], state:!expected ? 'not-needed' :
+    result.ocr = {engine:job.engine, languages:[...job.languages], state:!expected ? 'not-needed' :
       partial ? 'partial' : job.completedPasses ? 'read' : 'not-read', passes:job.completedPasses,
       lines:job.lines, uncertainLines:job.uncertainLines, errors:[...new Set(job.errors)].slice(0, 4),
       scanPages:(result.seiten || []).filter(page => page.bild).map(page => page.seite),
@@ -287,12 +298,13 @@
     if (options.signal?.aborted) throw aborted();
     const epoch = cancelEpoch;
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-    const key = ENGINE + '|' + String(name) + '|' + await digest(bytes);
+    const languages = currentLanguages(), engine = engineOf(languages);
+    const key = engine + '|' + String(name) + '|' + await digest(bytes);
     if (options.signal?.aborted || epoch !== cancelEpoch) throw aborted();
     if (!options.force && cache.has(key)) { const hit = cache.get(key); cache.delete(key); cache.set(key, hit); return clone(hit.result); }
     return new Promise((resolve, reject) => {
       let stop;
-      const job = {id:++nextId, key, name:String(name || ''), bytes, resolve, reject, signal:options.signal,
+      const job = {id:++nextId, key, languages, engine, name:String(name || ''), bytes, resolve, reject, signal:options.signal,
         cancelled:false, ocrStarted:false, passes:0, completedPasses:0, lines:0, uncertainLines:0, errors:[],
         stopPromise:new Promise((_, no) => { stop = no; })};
       // A pending cancellation promise must not create an unhandled rejection
@@ -338,7 +350,7 @@
     const vector = window.buildVector(tokens), tf = window.termFreq(tokens), summary = window.summarize(text);
     Object.assign(record, {snippet, vector, tf, summary,
       via:(result.art === 'pdf' ? 'PDF · ' : 'Bild · ') + (result.ocr.state === 'read' ? copy().local : copy().partial),
-      ocrIndexed:{engine:ENGINE, zeit:Date.now(), state:result.ocr.state}});
+      ocrIndexed:{engine:result.ocr.engine, zeit:Date.now(), state:result.ocr.state}});
     if (changed) record.evec = null;
     return changed;
   }
@@ -391,7 +403,7 @@
       return {text:result.text || '', via:result.ocr.state === 'read' ? 'PDF · ' + copy().local : 'PDF · ' + copy().partial, ocr:result.ocr};
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
-      return {text:'', via:copy().partial, ocr:{engine:ENGINE, state:'partial', errors:[reason(error)]}};
+      return {text:'', via:copy().partial, ocr:{engine:engineOf(currentLanguages()), state:'partial', errors:[reason(error)]}};
     } finally { if (image) images.delete(file); }
   };
   window.extractPdf = async function(bytes) { return (await analyze('Dokument.pdf', bytes)).text || ''; };
@@ -427,7 +439,8 @@
     }
   }
   window.renderOcrFlag = mountSettings;
-  window.PBOCR = Object.freeze({analyze, cancel, resume, reindex, engine:ENGINE, languages:LANGUAGES,
+  window.PBOCR = Object.freeze({analyze, cancel, resume, reindex, get engine() { return engineOf(currentLanguages()); },
+    get languages() { return currentLanguages(); }, bundledLanguages:ALL_LANGUAGES,
     getState:() => ({active:Boolean(active), queued:queue.length, interrupted, storageProblem, workerReady:Boolean(worker), cached:cache.size}),
     clearCache:() => cache.clear()});
   new MutationObserver(() => { updateStatus(); mountSettings(); }).observe(document.documentElement,

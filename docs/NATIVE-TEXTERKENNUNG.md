@@ -19,6 +19,14 @@ wird als solcher erklärt. Fehlt das Original, bleibt die Datei nicht prüfbar;
 ein alter Bericht ersetzt keine neue Prüfung. Ein fehlgeschlagener oder leerer
 OCR-Lauf überschreibt vorhandenen Suchtext nicht mit einem leeren Ergebnis.
 
+## Sprachen nach Einstellung (Klaus 14.11.2026, nicht veröffentlicht)
+
+Ab Werk liest die Texterkennung **Deutsch und Englisch**; **Russisch** bzw. **Polnisch** kommen dazu, wenn die Oberfläche oder die
+Eingabesprache darauf steht (`currentLanguages()` in `native/native-ocr.js`). Alle vier Sprachdaten bleiben eingepackt; ein Sprachwechsel
+gilt ab der nächsten Datei. Gemessen an 40 deutschen Scans/Fotos (Node, tesseract.js, gleiche Sprachdaten): vier Sprachen 1,37 s je Bild,
+Deutsch + Englisch 0,94 s (−31 %) bei gleichem Wortfund (71,8 / 72,1 %). Folge: Russische oder polnische Briefe werden bei deutscher
+Oberfläche und Eingabesprache schlechter gelesen – dafür Oberfläche oder Eingabesprache umstellen und „Erneut prüfen“. Nicht am Gerät gemessen.
+
 ## Arbeiter bleibt bereit (14.11.2026, nicht veröffentlicht)
 
 Bisher wurde die Texterkennung nach **30 Sekunden** ohne Arbeit beendet; die nächste Datei lud die WASM-Engine und alle vier

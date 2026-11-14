@@ -85,6 +85,9 @@ public class NativeOcrTest {
                         const remember=async bytes=>{
                           const hash=await sha256(bytes);fixture.hashes.push(hash);return hash;
                         };
+                        // Klaus 14.11.2026: Russisch/Polnisch lesen mit, wenn die Oberfläche darauf steht; ab Werk Deutsch + Englisch.
+                        fixture.defaultLanguages=JSON.stringify(PBOCR.languages);
+                        fixture.lang=document.documentElement.lang;document.documentElement.lang='ru';
                         fixture.phase='multilingual PNG import';
                         const pixels=await pngOf(canvasOf([
                           'Rechnung bezahlt. Lieferung am Montag.',
@@ -111,7 +114,8 @@ public class NativeOcrTest {
                           &&originalHash===await sha256(await file.arrayBuffer())
                           &&Boolean(resolved)&&originalHash===await sha256(await resolved.arrayBuffer());
                         const metadata=recognized.ocr||{};
-                        const imported={text:recognized.text||'',snippet:persisted.snippet||'',
+                        document.documentElement.lang=fixture.lang;
+                        const imported={defaultLanguages:fixture.defaultLanguages,text:recognized.text||'',snippet:persisted.snippet||'',
                           engine:metadata.engine||'',languages:metadata.languages||[],indexed,
                           persistedCheck:Boolean(persisted.pruefung?.zeit),
                           unchanged,hash:rec.hash,originalHash,
@@ -177,10 +181,11 @@ public class NativeOcrTest {
                 JSONObject imported = result.getJSONObject("imported");
                 assertTrue("the shipped engine is Tesseract", imported.getString("engine").toLowerCase(Locale.ROOT).contains("tesseract"));
                 JSONArray languages = imported.getJSONArray("languages");
-                for (String language : new String[]{"deu", "eng", "rus", "pol"}) {
+                assertEquals("German interface reads German and English by default", "[\"deu\",\"eng\"]", imported.getString("defaultLanguages"));
+                for (String language : new String[]{"deu", "eng", "rus"}) {
                     boolean present = false;
                     for (int i = 0; i < languages.length(); i++) present |= language.equals(languages.getString(i));
-                    assertTrue("bundled recognition language " + language, present);
+                    assertTrue("recognition language with Russian interface " + language, present);
                 }
                 String text = imported.getString("text").toLowerCase(Locale.ROOT);
                 String snippet = imported.getString("snippet").toLowerCase(Locale.ROOT);
