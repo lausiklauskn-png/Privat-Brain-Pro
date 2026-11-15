@@ -463,6 +463,7 @@
     const k=e.r.kern,art=window.PBSuchFrage?PBSuchFrage.artVon(e.r):'';
     if(k||e.r.eigeneKategorie){const kz=document.createElement('div');kz.className='explorer-kern';kz.textContent=[e.r.eigeneKategorie,art&&art!=='Unklar'?art.replace('/Werbung',''):'',kind==='mail'?'':k?.absender,k?.bereich].filter(Boolean).join(' · ');if(kz.textContent)info.append(kz);}
     info.prepend(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view&&!view.category)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
+    window.PBEigeneKategorien?.zeile?.(row,e.r);
     return row;
   }
   // Punkt 5: unter den sicheren Treffern „Ähnlich nach Bedeutung“ – mit dem Modell, das die App ohnehin lädt (Modul 03 bzw.
@@ -526,6 +527,8 @@
     if(categories.length)tree.append(heading(text('categoriesHead')));
     for(const category of categories){const b=button('',()=>addChip(categoryChip(category.label,category.key)));iconText(b,'folder','📁',category.label+' ('+category.count+')');b.dataset.category=category.key;b.setAttribute('aria-current',chips.some(c=>c.quelle===category.key)?'location':'false');tree.append(b);}
     // Categories (native): views over the catalog, nothing is moved. Path "topic:<key>".
+    // Eigene Kategorien (Klaus 15.11.2026): links mit Zahl, Klick setzt ein Kästchen
+    window.PBEigeneKategorien?.baum?.(tree,heading,chips);
     if(views.length)tree.append(heading(text('topicsHead')));
     for(const v of views){const b=button(v.label+' ('+v.count+')',()=>openFolder('topic:'+v.key));b.dataset.topic=v.key;b.setAttribute('aria-current',folderPath==='topic:'+v.key?'location':'false');tree.append(b);}
     el('panel-explorer').classList.toggle('explorer-tree-hidden',treeHidden);
@@ -622,7 +625,7 @@
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('pb-originals-change',refresh);
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,explorerSections,explorerSection,overview:overviewSummary};
+  window.PBWorkspace={addChip:c=>addChip(c),renderExplorer:()=>renderExplorer(),prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,explorerSections,explorerSection,overview:overviewSummary};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();

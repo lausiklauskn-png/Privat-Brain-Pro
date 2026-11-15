@@ -65,3 +65,7 @@ header .tools{max-width:100%;min-width:0}
 .explorer-best{border-color:var(--accent,#3b6fd8)!important;box-shadow:0 0 0 1px var(--accent,#3b6fd8) inset}
 .explorer-kern{font-size:.8rem;opacity:.85;margin-top:2px;overflow-wrap:anywhere}
 .explorer-without{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pb-eigene-knopf{font-size:.8rem;padding:4px 8px}
+.pb-eigene-knopf[data-eigene]:not([data-eigene=""]){border-color:var(--accent,#3b6fd8)}
+.pb-eigene-menue,.pb-eigene-frage{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px;padding:8px;border:1px dashed var(--line);border-radius:8px}
+.pb-eigene-menue input{flex:1 1 140px;min-width:0;padding:6px 8px}

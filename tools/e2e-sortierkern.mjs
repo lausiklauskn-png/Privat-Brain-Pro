@@ -89,6 +89,32 @@ try{
   await page.evaluate(()=>{const s=document.getElementById('explorerSort');s.value='art';s.dataset.chosen='1';s.dispatchEvent(new Event('change'));});
   ok('Sortierung „Art“ bildet Gruppen mit Überschrift',(await page.$$eval('#explorerFiles .explorer-group',h=>h.map(x=>x.textContent))).includes('Rechnung'));
   ok('Zustand merkt Kästchen und Sortierung',await page.evaluate(()=>{const st=PBWorkspace.explorerState();return st.sort==='art'&&Array.isArray(st.chips);}));
+  // ---------- Eigene Kategorien (Punkt 3, Klaus 15.11.) ----------
+  await page.evaluate(()=>{const s=document.getElementById('explorerSort');s.value='date';s.dataset.chosen='';s.dispatchEvent(new Event('change'));});
+  await page.fill('#explorerFilter','Receipt-2817-0001');
+  const zeileR=page.locator('#explorerFiles .explorer-row').first();
+  await zeileR.locator('.pb-eigene-knopf').click();
+  await page.fill('.pb-eigene-menue input','Abos');await page.click('.pb-eigene-menue button:has-text("Anlegen")');
+  ok('Eigene Kategorie anlegen: danach Frage „Alles von Nordlicht Labs …?“',/Alles von „Nordlicht Labs/.test(await page.locator('.pb-eigene-frage').innerText().catch(()=>'')));
+  await page.click('.pb-eigene-frage button.primary');
+  await page.waitForFunction(()=>CATALOG.filter(r=>r.eigeneKategorie==='Abos').length>=3,null,{timeout:5000}).catch(async()=>console.log('DBG',await page.evaluate(()=>JSON.stringify({abos:CATALOG.filter(r=>r.eigeneKategorie).map(r=>[r.name,r.eigeneKategorie,PBEigeneKategorien.absender(r)]),st:PBEigeneKategorien.stand,alle:CATALOG.map(r=>[r.name,PBEigeneKategorien.absender(r)])}))));
+  ok('Ja: alle Nordlicht-Belege und die Mail bekommen „Abos“, die übrigen nicht',await page.evaluate(()=>CATALOG.filter(r=>r.eigeneKategorie==='Abos').length===3&&!CATALOG.some(r=>/Abschlag|Mietvertrag/.test(r.name)&&r.eigeneKategorie)));
+  await page.fill('#explorerFilter','');
+  ok('Links „Eigene Kategorien“ mit Zahl',await page.locator('#explorerTree [data-eigene-kategorie="Abos"]').innerText().then(t=>t.includes('(3)')));
+  await page.click('#explorerTree [data-eigene-kategorie="Abos"]');
+  ok('Klick setzt das Kästchen „Abos“, Liste zeigt die drei',await page.locator('#explorerChips .explorer-chip[data-feld="eigene"]').count()===1&&(await namen()).length===3);
+  await page.click('#explorerChips .explorer-chip[data-feld="eigene"]');
+  n=await suche('abos');
+  ok('Eigene Kategorie als Wort im Suchfeld wird zum Kästchen',n.length===3&&await page.locator('#explorerChips .explorer-chip-erkannt[data-feld="eigene"]').count()===1,n.join(' | '));
+  const gesichert=await page.evaluate(async()=>{const r=CATALOG.find(x=>x.eigeneKategorie==='Abos');return (await idbGet('catalog',r.hash)).eigeneKategorie;});
+  ok('Eigene Kategorie steht im gespeicherten Katalog',gesichert==='Abos');
+  // Regel lösen
+  await page.fill('#explorerFilter','Invoice-AB12CD');
+  await page.locator('#explorerFiles .explorer-row').first().locator('.pb-eigene-knopf').click();
+  await page.click('.pb-eigene-menue button:has-text("Regel für")');
+  await page.waitForFunction(()=>CATALOG.filter(r=>r.eigeneKategorie==='Abos').length===1);
+  ok('Regel lösen: nur die von Hand zugeordnete Datei behält „Abos“',await page.evaluate(()=>CATALOG.find(r=>r.eigeneKategorie==='Abos')?.name==='Receipt-2817-0001.txt'));
+  await page.fill('#explorerFilter','');
   ok('Zeile zeigt die Einordnung (Art · Absender · Bereich)',(await page.locator('#explorerFiles .explorer-kern').first().textContent()).length>3);
   ok('Keine Seitenfehler',errors.length===0,errors.join(' | '));
 }finally{await browser.close();server.close();}
