@@ -352,14 +352,16 @@
     return !dirty || confirm(T("discard"));
   }
   async function run(fn) {
-    if (busy) return;
+    if (busy) return false;
     busy = true;
+    let ok = false;
     if (nativeNotice) nativeNotice.textContent = "";
     app.inert = true;
     if (native) accountTools.inert = true;
     app.setAttribute("aria-busy", "true");
     try {
       await fn();
+      ok = true;
     } catch (e) {
       notice.textContent = T("error") + " " + e.message;
       if (nativeNotice) nativeNotice.textContent = e.message;
@@ -380,6 +382,7 @@
       if (native) accountTools.inert = false;
       app.removeAttribute("aria-busy");
     }
+    return ok;
   }
   async function api(path, body, method) {
     if (native) return native.request(path, body, method);
@@ -1320,9 +1323,13 @@
   window.PBLiveMail = {
     disconnect,
     /** Opens one mail of any connected account in the device mailbox (used by "Alle Konten"). */
-    openRemote(ref) {
-      if (!native) return Promise.resolve();
-      return run(async () => {
+    /** Resolves true when the mail is open, false otherwise (the reason stands in the mailbox notice). */
+    async openRemote(ref) {
+      if (!native) return false;
+      // Läuft gerade der Abruf alle 60 Sekunden, kurz warten statt still nichts zu tun.
+      for (let i = 0; busy && i < 50; i++) await new Promise((r) => setTimeout(r, 200));
+      let shown = false;
+      const ok = await run(async () => {
         if (!leave()) return;
         accounts = await native.accounts();
         if (!accounts.some((a) => a.id === ref.account)) throw new Error(native.text("ACCOUNT_MISSING"));
@@ -1331,12 +1338,23 @@
         accountSelect.replaceChildren(...accounts.map((a) => new Option(a.email, a.id)));
         account = ref.account; accountSelect.value = account; accountTools.hidden = false;
         await loadFolders();
+        // Klaus 15.11.2026: „Beim Anbieter öffnen“ tat nichts. Nach dem Kontowechsel wurde die Liste nur neu geladen, wenn der
+        // Ordner wechselte – der alte Ordnerstand passte dann nicht. Jetzt immer frisch laden; hat der Anbieter den Ordner neu
+        // nummeriert, wird die Mail über ihre Message-ID wiedergefunden.
         const entry = entries.find((e) => e.path === ref.folder);
-        if (entry && entry.path !== folder) { viewKey = entry.id; folder = entry.path; drawFolders(); await loadList(); }
-        if (folder !== ref.folder || validity !== ref.validity) throw new Error(native.text("FOLDER_CHANGED"));
-        const item = items.find((i) => i.uid === ref.uid) || { uid: ref.uid, subject: ref.subject || "", from: ref.from || "", flags: [], date: ref.date || "" };
+        if (!entry) throw new Error(native.text("FOLDER_CHANGED"));
+        viewKey = entry.id; folder = entry.path; drawFolders(); await loadList();
+        let uid = ref.uid;
+        if (validity !== ref.validity) {
+          const found = ref.messageId && native.locate ? await native.locate({ account, folder, messageId: ref.messageId }) : null;
+          if (!found?.uid) throw new Error(native.text("FOLDER_CHANGED"));
+          uid = found.uid;
+        }
+        const item = items.find((i) => i.uid === uid) || { uid, subject: ref.subject || "", from: ref.from || "", flags: [], date: ref.date || "" };
         await open(item);
+        shown = !!current;
       });
+      return ok && shown;
     },
     async getRaw(ref) {
       if (

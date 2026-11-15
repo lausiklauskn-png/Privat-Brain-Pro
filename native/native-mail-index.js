@@ -49,6 +49,7 @@
     account: ['Konto', 'Account', 'Аккаунт', 'Konto'],
     folder: ['Ordner', 'Folder', 'Папка', 'Folder'],
     textMissing: ['Der Text ist zu groß oder nur als Bild vorhanden. Beim Anbieter öffnen.', 'The text is too large or only an image. Open with provider.', 'Текст слишком большой или только картинка. Откройте у провайдера.', 'Tekst jest za duży lub tylko jako obraz. Otwórz u dostawcy.'],
+    remoteFailed: ['Beim Anbieter gerade nicht zu öffnen. Hier steht der gespeicherte Text; „Beim Anbieter öffnen“ versucht es noch einmal.', 'Cannot open with the provider right now. This is the stored text; “Open with provider” tries again.', 'Сейчас не открывается у провайдера. Здесь сохранённый текст; «Открыть у провайдера» попробует снова.', 'Teraz nie da się otworzyć u dostawcy. To zapisany tekst; „Otwórz u dostawcy” spróbuje ponownie.'],
     textScope: ['Gespeicherter Mailtext. Der Abruf liest höchstens 8.000 Zeichen je Mail; Original und Anhänge werden hier nicht geladen.', 'Stored email text. Fetching reads up to 8,000 characters per email; the original and attachments are not downloaded here.', 'Сохранённый текст письма. Загружается не более 8 000 символов на письмо; оригинал и вложения здесь не загружаются.', 'Zapisany tekst e-maila. Pobieranie odczytuje do 8 000 znaków na wiadomość; oryginał i załączniki nie są tu pobierane.'],
     dupesTitle: ['✉️ Mails, die doppelt sein könnten', '✉️ Emails that may be duplicates', '✉️ Письма, которые могут повторяться', '✉️ Wiadomości, które mogą się powtarzać'],
     dupesHelp: ['Gleicher Absender und Betreff, aber anderer Text und keine Mail-Kennung. Nichts wurde überschrieben. Bitte entscheiden:', 'Same sender and subject, but different text and no message ID. Nothing was overwritten. Please decide:', 'Тот же отправитель и тема, но другой текст и нет идентификатора. Ничего не перезаписано. Решите:', 'Ten sam nadawca i temat, ale inny tekst i brak identyfikatora. Nic nie nadpisano. Zdecyduj:'],
@@ -592,7 +593,7 @@
       subject,
       el('span', 'mail-preview', [senderName(r.mail.from), chip(r), (r.mailBody || '').replace(/\s+/g, ' ').slice(0, 80)].filter(Boolean).join(' · ')),
       el('time', 'mail-date', fmtDate(r.date)));
-    b.onclick = () => { openRecord = r.hash; draw(); };
+    b.onclick = () => openMail(r);
     row.append(el('span'), b); return row;
   }
   function drawReader(r) {
@@ -623,11 +624,22 @@
     box.append(tools);
     box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
-    if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), async () => {
-      const l = r.mailRemotes[0]; show(false);
-      await PBLiveMail.openRemote({ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, subject: r.name, from: r.mail.from, date: r.date });
-    }, 'mail-primary'));
+    if (remoteFailed === r.hash) box.insertBefore(el('p', 'mail-notice', t('remoteFailed')), box.children[2] || null);
+    if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), () => openMail(r, true), 'mail-primary'));
     return box;
+  }
+  // Klaus 15.11.2026: „Alle Konten“ öffnet eine Mail wie das einzelne Konto – ganz, mit Anhängen, vom Anbieter.
+  // Nur wenn das nicht geht (kein Netz, Konto getrennt, Mail gelöscht), steht der gespeicherte Text da, mit einem Satz dazu.
+  let remoteFailed = null;
+  async function openMail(r, again = false) {
+    const l = r.mailRemotes?.[0];
+    if (l && window.PBLiveMail?.openRemote && (again || remoteFailed !== r.hash)) {
+      show(false);
+      const ok = await PBLiveMail.openRemote({ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, messageId: r.mailMessageId || '', subject: r.name, from: r.mail.from, date: r.date });
+      if (ok) { remoteFailed = null; return; }
+      remoteFailed = r.hash; show(true);
+    }
+    openRecord = r.hash; draw();
   }
   function draw() {
     for (const b of host.querySelectorAll('[data-mail-all=open]')) {
@@ -742,5 +754,5 @@
     if (!syncedSinceStart) autoRun();
   }, 5000);
   drawDupes();
-  window.PBMailIndex = { entry, sync, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
+  window.PBMailIndex = { entry, sync, read: hash => { if (!indexed().some(r => r.hash === hash)) return false; openRecord = hash; show(true); return true; }, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
 })();

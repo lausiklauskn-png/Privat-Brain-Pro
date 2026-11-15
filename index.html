@@ -1743,8 +1743,13 @@ async function renderResults(query){
   let qe=null;
   if(hasQ && MODE==="mean" && embedder()){
     const myseq = (renderResults._seq = (renderResults._seq||0) + 1);
-    qe = await embedQueryCached(query);
-    if(myseq !== renderResults._seq) return; // eine neuere Eingabe hat übernommen
+    const key=query.trim().toLowerCase();
+    // Klaus 15.11.2026 („Anthropic“ fand nichts): Treffer aus Name und Text sofort zeigen, nicht auf das Modell warten.
+    // Rechnet das Modell, kommen seine Treffer danach dazu; hängt oder scheitert es, bleibt die Wortsuche stehen.
+    if(_qeCache.has(key)) qe=_qeCache.get(key);
+    else if(!(renderResults._failed||(renderResults._failed=new Set())).has(key)){
+      embedQueryCached(query).then(v=>{ if(!v) renderResults._failed.add(key); else if(myseq===renderResults._seq) renderResults(query); });
+    }
   }
   let results;
   if(hasQ) results = search(query, qe);

@@ -124,13 +124,15 @@ try{
   const senders=await panel.locator('[data-mail-sender]').evaluateAll(n=>n.map(x=>x.dataset.mailSender));
   ok('Bundles are sorted by their newest mail',senders[0]==='news@aldi.invalid');
   await panel.locator('[data-mail-sender="news@aldi.invalid"]').click();
+  // Den gespeicherten Text öffnet ein Tipp nur noch, wenn der Anbieter nicht erreichbar ist; die Probe öffnet ihn direkt.
+  const lesen=async loc=>{const id=await loc.first().getAttribute('data-mail-all-id');await page.evaluate(id=>PBMailIndex.read(id),id);};
   const subjects=async()=>panel.locator('[data-mail-all-id] .mail-subject').allTextContents();
   await capture(page,'3-buendel-aldi');
   ok('Inside a bundle the newest mail is on top',JSON.stringify(await subjects())===JSON.stringify(['Angebote neu','Angebote alt']));
   await panel.locator('[data-mail-all=order]').click();
   ok('↕ turns the order around',JSON.stringify(await subjects())===JSON.stringify(['Angebote alt','Angebote neu']));
   await panel.locator('[data-mail-all=order]').click();
-  await panel.locator('[data-mail-all-id]').first().click();
+  await lesen(panel.locator('[data-mail-all-id]'));
   ok('Reader shows text, both accounts and the newsletter mark',(await panel.textContent()).includes('Gültig bis '+await page.evaluate(()=>dateIn(5)))&&(await panel.textContent()).includes('zweit@example.invalid')&&(await panel.textContent()).includes('📰'));
   // Search over all accounts
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
@@ -154,7 +156,7 @@ try{
   // An equal-length subject edit must invalidate the current check and rebuild searchable text.
   const checkedHash=await page.evaluate(()=>CATALOG.find(r=>r.mailMessageId==='<m1000@example.invalid>').hash);
   await panel.locator('[data-mail-all=search]').fill('Notiz 0');
-  await panel.locator(`[data-mail-all-id="${checkedHash}"]`).click();
+  await lesen(panel.locator(`[data-mail-all-id="${checkedHash}"]`));
   const textStatus=panel.locator('.pb-mail-index-status'),checkReport=page.locator('dialog.pb-check-report');
   ok('Indexed reader names stored text and the absence of locally confirmed attachment originals',(await textStatus.textContent()).includes('8.000')&&(await textStatus.textContent()).includes('Anhänge'));
   await textStatus.locator('.pb-check-badge').click();
@@ -168,7 +170,7 @@ try{
   ok('Equal-length server header refresh preserves the historical result but marks it stale',await page.evaluate(({hash,when})=>{const r=CATALOG.find(r=>r.hash===hash);return r.name==='Bericht'&&r.pruefung.mailStale===true&&r.pruefung.zeit===when;},{hash:checkedHash,when:checkBefore}));
   ok('The same-length header edit rebuilds and persists current searchable text',await page.evaluate(async hash=>{const r=CATALOG.find(r=>r.hash===hash),saved=await idbGet('catalog',hash);return r.snippet.startsWith('Bericht\n')&&saved.snippet.startsWith('Bericht\n')&&saved.pruefung.mailStale===true&&saved.name==='Bericht';},checkedHash));
   await panel.locator('[data-mail-all=search]').fill('Bericht');
-  await panel.locator(`[data-mail-all-id="${checkedHash}"]`).click();
+  await lesen(panel.locator(`[data-mail-all-id="${checkedHash}"]`));
   ok('The reader visibly identifies the prior mailtext check',(await textStatus.locator('.pb-check-badge').textContent()).includes('Früherer Mailtext-Prüfstand'));
   await textStatus.locator('.pb-check-badge').click();
   await checkReport.waitFor();
@@ -230,7 +232,7 @@ try{
   // Marks per sender
   await page.evaluate(()=>{PBMailIndex.show(true);});
   const yfood=await hashOf('<m50@example.invalid>');
-  await panel.locator(`[data-mail-all-id="${yfood}"]`).first().click();
+  await lesen(panel.locator(`[data-mail-all-id="${yfood}"]`));
   await panel.locator('[data-mail-mark=important]').click();
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
   await panel.locator('[data-mail-all=clean]').click();
@@ -239,7 +241,7 @@ try{
   await panel.locator('[data-mail-all=clean]').click();
   ok('A sender without newsletter mark is not in clean-up',!(await section('checkH')).includes(bill));
   await panel.locator('[data-mail-all=list]').click();
-  await panel.locator(`[data-mail-all-id="${bill}"]`).click();
+  await lesen(panel.locator(`[data-mail-all-id="${bill}"]`));
   await panel.locator('[data-mail-mark=ad]').click();
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
   await panel.locator('[data-mail-all=clean]').click();
@@ -260,10 +262,19 @@ try{
   await panel.locator('[data-mail-all=senders]').click();
   await panel.locator('[data-mail-sender="mama@example.invalid"]').click();
   await panel.locator('[data-mail-all-id]').first().click();
-  await panel.getByRole('button',{name:'Beim Anbieter öffnen'}).click();
   await page.waitForFunction(()=>window.mailCalls.some(c=>c.method==='message'));
   const opened=await page.evaluate(()=>window.mailCalls.find(c=>c.method==='message').args);
-  ok('"Beim Anbieter öffnen" opens exactly this mail in its account',opened.account==='22222222-2222-4222-8222-222222222222'&&opened.folder==='INBOX'&&opened.uid===3000&&await panel.isHidden());
+  ok('A tap on a mail in "Alle Konten" opens it whole, like in its own account (Klaus 15.11.)',opened.account==='22222222-2222-4222-8222-222222222222'&&opened.folder==='INBOX'&&opened.uid===3000&&await panel.isHidden());
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  // Anbieter nicht erreichbar: der gespeicherte Text erscheint, mit einem Satz dazu – nichts bleibt still hängen.
+  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await panel.locator('[data-mail-all=list]').click();
+  await page.evaluate(()=>{window.offline=true;});
+  await panel.locator('[data-mail-all-id]').first().click();
+  await panel.locator('.mail-all-reader').waitFor();
+  ok('Provider unreachable: the stored text opens with a sentence why',await panel.isVisible()&&(await panel.textContent()).includes('Beim Anbieter gerade nicht zu öffnen'));
+  await page.evaluate(()=>{window.offline=false;});
+  await page.evaluate(()=>PBMailIndex.show(false));
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   // A background redraw keeps the reading position
   await mail.locator('.live-mail [data-mail-all=open]').click();
