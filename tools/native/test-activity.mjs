@@ -142,6 +142,17 @@ try{
     observer.disconnect();return records;
   });
   ok('A late diagnostic update does not rewrite unchanged toolbar or help classes and visibility',diagnosticWrites.length===0||console.error(diagnosticWrites));
+  // Klaus 15.11.2026: überall sichtbar laden, wo es dauert – mit Prozent, wo der Fortschritt bekannt ist.
+  const pct=await page.evaluate(async()=>{const t=PBActivity.start({label:'Lädt',percent:0});t.update({percent:45});const row=document.getElementById('pb-activity');
+    const out={text:row.querySelector('.pb-activity-pct').textContent,bar:row.querySelector('.pb-activity-bar>i').style.width,visible:!row.querySelector('.pb-activity-pct').hidden};t.finish();return out;});
+  ok('A job with known progress shows the percent and a thin bar',pct.visible&&pct.text==='45 %'&&pct.bar==='45%');
+  const calls=await page.evaluate(async()=>{const row=document.getElementById('pb-activity'),seen=()=>!!row&&!row.hidden,send=(id,phase,name)=>dispatchEvent(new CustomEvent('pb-native-call',{detail:{id,phase,name}}));
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={};
+    send('q1','start','ProFiles.open');await wait(100);send('q1','end');await wait(600);out.quick=seen();
+    send('s1','start','ProFiles.open');await wait(700);out.slow=seen();send('s1','end');await wait(50);out.after=seen();
+    send('u1','start','ProUpdates.check');await wait(700);out.silent=seen();send('u1','end');return out;});
+  ok('A device call over half a second shows the circling dots, and they go away at the end',calls.slow&&!calls.after);
+  ok('Quick calls and silent background checks show nothing',!calls.quick&&!calls.silent);
   ok('No unhandled app errors occur across overlap, failures and progress changes',errors.length===0||console.log(errors));
   console.log(`${count} activity feedback checks passed (real DOM/CSS; synthetic asynchronous work, not a physical-device speed claim).`);
 }finally{await browser?.close();}

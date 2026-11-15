@@ -8,7 +8,7 @@
   };
   const waiting = () => words[String(document.documentElement.lang || 'de').slice(0, 2)] || words.de;
   const jobs = new Map(), targets = new WeakMap();
-  let next = 0, row = null, rowText = null;
+  let next = 0, row = null, rowText = null, rowPct = null, rowBar = null;
   function dots() {
     const icon = document.createElement('span'); icon.className = 'pb-activity-dots'; icon.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < 3; i++) icon.append(document.createElement('i'));
@@ -31,7 +31,10 @@
     if (!row) {
       row = document.createElement('div'); row.id = 'pb-activity'; row.className = 'pb-activity'; row.hidden = true;
       row.setAttribute('role', 'status'); row.setAttribute('aria-live', 'polite'); row.setAttribute('aria-atomic', 'true');
-      rowText = document.createElement('span'); rowText.className = 'pb-activity-text'; row.append(dots(), rowText);
+      rowText = document.createElement('span'); rowText.className = 'pb-activity-text';
+      rowPct = document.createElement('span'); rowPct.className = 'pb-activity-pct'; rowPct.hidden = true;
+      rowBar = document.createElement('span'); rowBar.className = 'pb-activity-bar'; rowBar.hidden = true; rowBar.append(document.createElement('i'));
+      row.append(dots(), rowText, rowPct, rowBar);
     }
     if (!job) {
       if (!row.hidden) row.hidden = true;
@@ -43,6 +46,11 @@
     if (anchor) { if (anchor.nextElementSibling !== row) anchor.after(row); }
     else if (row.parentElement !== host) host.append(row);
     const text = label(job); if (rowText.textContent !== text) rowText.textContent = text;
+    // Klaus 15.11.2026: wo der Fortschritt bekannt ist, auch die Prozentzahl und ein dünner Balken.
+    let pct = null; try { pct = typeof job.percent === 'function' ? job.percent() : job.percent; } catch { pct = null; }
+    const has = Number.isFinite(pct); pct = has ? Math.max(0, Math.min(100, Math.round(pct))) : 0;
+    if (rowPct.hidden === has) { rowPct.hidden = !has; rowBar.hidden = !has; }
+    if (has) { const p = pct + ' %'; if (rowPct.textContent !== p) rowPct.textContent = p; rowBar.firstChild.style.width = pct + '%'; }
     if (row.hidden) row.hidden = false;
   }
   function paint() {
@@ -61,7 +69,7 @@
   }
   function start(options = {}) {
     const target = options.target?.nodeType === 1 ? options.target : null;
-    const job = {id: ++next, label: options.label, target}; jobs.set(job.id, job);
+    const job = {id: ++next, label: options.label, percent: options.percent, target}; jobs.set(job.id, job);
     if (target) {
       let state = targets.get(target);
       if (!state) {
@@ -72,7 +80,12 @@
     }
     render();
     let done = false;
-    return Object.freeze({ready: paint(), finish() {
+    return Object.freeze({ready: paint(), update(next = {}) {
+      if (done) return;
+      if ('label' in next) job.label = next.label;
+      if ('percent' in next) job.percent = next.percent;
+      render();
+    }, finish() {
       if (done) return; done = true; jobs.delete(job.id);
       if (target) {
         const state = targets.get(target); state?.jobs.delete(job.id);
@@ -93,6 +106,38 @@
     finally { token.finish(); }
   }
   window.PBActivity = Object.freeze({start, run});
+
+  // Klaus 15.11.2026: „Überall, wo es zu Ladeverzögerungen kommt, muss man sehen, dass gerade geladen wird.“
+  // Jeder Aufruf ans Gerät (Android/Windows), der länger als eine halbe Sekunde dauert, zeigt die kreisenden Punkte.
+  // Stille Hintergrund-Abfragen bleiben still; Aufgaben mit eigenem Fortschrittsbalken zeigen ihn weiter selbst.
+  const SILENT = /^(ProUpdates\.check|ProNetwork\.getState|ProDevice\.getInfo|ProVault\.(state|tresorZustand|diagnose)|ProMeaning\.getState|ProSemantic\.getState|ProCaption\.getState|ProShare\.(pending|take)|ProSpeech\.inputs|.*\.addListener|.*\.removeAllListeners)$/;
+  const calls = new Map();
+  function callStart(id, name) {
+    if (SILENT.test(name)) return;
+    calls.set(id, setTimeout(() => { calls.set(id, start({})); }, 500));
+  }
+  function callEnd(id) {
+    const c = calls.get(id); if (c === undefined) return; calls.delete(id);
+    if (typeof c === 'object' && c) c.finish(); else clearTimeout(c);
+  }
+  window.addEventListener('pb-native-call', event => {
+    const d = event.detail || {}; if (d.phase === 'start') callStart(d.id, d.name); else callEnd(d.id);
+  });
+  // Android: Capacitor ruft jede Promise-Methode über Capacitor.nativePromise auf.
+  try {
+    const cap = window.Capacitor;
+    if (cap && typeof cap.nativePromise === 'function' && !cap.nativePromise.pbActivity) {
+      const original = cap.nativePromise; let n = 0;
+      const wrapped = function (plugin, method, options) {
+        const id = 'a' + (++n); callStart(id, plugin + '.' + method);
+        let result;
+        try { result = original.apply(this, arguments); } catch (e) { callEnd(id); throw e; }
+        Promise.resolve(result).finally(() => callEnd(id)).catch(() => {});
+        return result;
+      };
+      wrapped.pbActivity = true; cap.nativePromise = wrapped;
+    }
+  } catch { /* fremde Hülle: dann nur die gemeldeten Aufrufe */ }
 
   // Keep the proven progress counters and original DOM nodes. Only their old
   // bars are visually replaced; data/phase/error text and cancel buttons stay.
