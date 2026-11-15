@@ -7,7 +7,7 @@
   window.addEventListener('pb-native',event=>{
     for(const listener of listeners.get(event.detail?.name)||[])listener(event.detail.data);
   });
-  const plugins={};
+  const plugins={};let callCount=0;
   for(const name of ['ProDevice','ProFiles','ProFolders','ProVault','ProMail','ProLinks','ProNetwork','ProProtect','ProSemantic','ProCaption','ProMeaning','ProSpeech','ProShare','ProUpdates']){
     plugins[name]=new Proxy(Object.freeze({}),{get(_,method){
       if(method==='then')return undefined;
@@ -16,12 +16,15 @@
         return{remove:async()=>callbacks.delete(listener)};
       };
       return async(options={})=>{
+        // Ladeanzeige der App (native-activity.js): Beginn und Ende jedes Aufrufs melden.
+        const callId='w'+(++callCount);window.dispatchEvent(new CustomEvent('pb-native-call',{detail:{id:callId,phase:'start',name:name+'.'+String(method)}}));
         try{
           const result=await invoke('pb_call',{plugin:name,method:String(method),options:{...options,_language:document.documentElement?.lang||'de'}},{headers:{'x-pb-session':TOKEN}});
           if(name==='ProNetwork'&&typeof result?.offline==='boolean')window.dispatchEvent(new CustomEvent('pb-host-network',{detail:{offline:result.offline}}));
           return result;
         }
         catch(error){const code=typeof error==='string'?error:error?.code||'APP_RUNTIME_UNAVAILABLE';throw Object.assign(new Error(code),{code});}
+        finally{window.dispatchEvent(new CustomEvent('pb-native-call',{detail:{id:callId,phase:'end'}}));}
       };
     }});
   }

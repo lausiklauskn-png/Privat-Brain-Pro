@@ -116,6 +116,12 @@ try{
   ok('Regel lösen: nur die von Hand zugeordnete Datei behält „Abos“',await page.evaluate(()=>CATALOG.find(r=>r.eigeneKategorie==='Abos')?.name==='Receipt-2817-0001.txt'));
   await page.fill('#explorerFilter','');
   ok('Zeile zeigt die Einordnung (Art · Absender · Bereich)',(await page.locator('#explorerFiles .explorer-kern').first().textContent()).length>3);
+  // Klaus 15.11.2026: „Anthropic“ fand auf der ersten Seite nichts. Hängt das Bedeutungs-Modell, darf die Wortsuche nicht warten.
+  const sofort=await page.evaluate(async()=>{window.__CB_EMBED_STUB__={embedQuery:()=>new Promise(()=>{})};MODE='mean';
+    const t=Date.now();await renderResults('Nordlicht');return {n:document.querySelectorAll('#results .card').length,ms:Date.now()-t};});
+  ok('Erste Seite: Treffer sofort, auch wenn das Modell nicht antwortet',sofort.n>=3&&sofort.ms<1000,JSON.stringify(sofort));
+  ok('Erste Seite: schon „anth“-artige Anfänge finden (hier „nordl“)',await page.evaluate(async()=>{await renderResults('nordl');return document.querySelectorAll('#results .card').length>=1;}));
+  await page.evaluate(()=>{delete window.__CB_EMBED_STUB__;});
   ok('Keine Seitenfehler',errors.length===0,errors.join(' | '));
 }finally{await browser.close();server.close();}
 console.log(`Sortier-Kern in Private Brain: ${checks} grün · ${rot} ROT`);

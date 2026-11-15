@@ -1743,8 +1743,23 @@ async function renderResults(query){
   let qe=null;
   if(hasQ && MODE==="mean" && embedder()){
     const myseq = (renderResults._seq = (renderResults._seq||0) + 1);
-    qe = await embedQueryCached(query);
-    if(myseq !== renderResults._seq) return; // eine neuere Eingabe hat übernommen
+    const key=query.trim().toLowerCase();
+    // Klaus 15.11.2026 („Anthropic“ fand nichts): Treffer aus Name und Text sofort zeigen, nicht auf das Modell warten.
+    // Rechnet das Modell, kommen seine Treffer danach dazu; hängt oder scheitert es, bleibt die Wortsuche stehen.
+    // embedQueryCached kennt den eigenen Vorrat (und in der App zuerst das zweite Modell); ein Vorrat-Treffer kommt sofort.
+    {
+      // Antwortet das Modell schnell (unter 0,4 s), gilt seine Reihenfolge gleich; sonst erst die Wortsuche, dann nachreichen.
+      const pending=embedQueryCached(query);
+      qe=await Promise.race([pending,new Promise(r=>setTimeout(()=>r(undefined),400))]);
+      if(myseq !== renderResults._seq) return; // eine neuere Eingabe hat übernommen
+      if(qe===undefined){
+        qe=null;
+        // Sichtbar warten (Klaus 15.11.2026): kreisende Punkte, solange die Bedeutung berechnet wird.
+        const job=window.PBActivity?.start({label:({de:"Suche nach Bedeutung …",en:"Searching by meaning …",ru:"Поиск по смыслу …",pl:"Szukanie według znaczenia …"})[(document.documentElement.lang||"de").slice(0,2)]||"Suche nach Bedeutung …"});
+        const stop=setTimeout(()=>job?.finish(),20000);
+        renderResults._pending=pending.then(v=>{ clearTimeout(stop); job?.finish(); if(v && myseq===renderResults._seq) return renderResults(query); });
+      }
+    }
   }
   let results;
   if(hasQ) results = search(query, qe);

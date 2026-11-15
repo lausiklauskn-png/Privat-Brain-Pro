@@ -68,7 +68,7 @@ try{
     rebuildIndex();refreshAll();await embedBackfill();
   },{A,B});
   const settings=()=>page.evaluate(()=>window.PBWorkspace.navigate('settings'));
-  const first=async q=>{await page.evaluate(()=>window.PBWorkspace.navigate('search'));return page.evaluate(async q=>{const el=document.getElementById('q');el.value=q;await renderResults(q);return document.querySelector('#results > .card')?.dataset.hash||'';},q);};
+  const first=async q=>{await page.evaluate(()=>window.PBWorkspace.navigate('search'));return page.evaluate(async q=>{const el=document.getElementById('q');el.value=q;await renderResults(q);await renderResults._pending;return document.querySelector('#results > .card')?.dataset.hash||'';},q);};
   ok('Modul 03 is ready and its vectors at the entries have 384 values (Mycel/seal model unchanged)',await page.evaluate(()=>CATALOG.every(r=>r.evec&&r.evec.length===384)));
   ok('Without the second model the search uses Modul 03 (here deliberately the rent contract first)',await first('Gebiss Preis')===B);
   // ---------- the box ----------
