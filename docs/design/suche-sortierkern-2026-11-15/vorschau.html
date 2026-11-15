@@ -204,6 +204,7 @@ Stadtwerke Beispielstadt (3)
       <li>Oben die sicheren Treffer (Wort und Felder), darunter „ähnlich nach Bedeutung“.</li>
       <li>Die Kästchen gelten für beide Teile.</li>
       <li>Ohne geladenes Bedeutungs-Modell fehlt der untere Teil, mit einem Satz, wo man es lädt.</li>
+      <li>Der untere Teil nutzt die Bedeutungs-Modelle, die die App schon heute per Schalter lädt: zuerst von deinem Server family-projekt.de, sonst von Hugging Face, jede Datei mit Fingerabdruck geprüft (e5-small; auf Wunsch e5-base oder e5-large). Es kommt kein neues Modell dazu. Der Sortier-Kern selbst braucht kein Modell (Regeln und kleine Lerndaten im Paket, etwa 0,6 MB).</li>
     </ul>
     <div class="skizze">
       <div class="feld"><span class="kast art">Rechnung ×</span><span class="eingabe">KI Abo</span></div>
