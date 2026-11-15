@@ -1,6 +1,6 @@
 {
  "quelle": "lausiklauskn-png/Datei-Organizer kern-js/",
- "commit": "e4205faf373ced17891ad300c49649c9fa200f68",
+ "commit": "70eb44b0bc13fcf0165095a1a58fae3a297820c4",
  "werkzeug": "tools/sortierkern-nachziehen.mjs",
  "hinweis": "Nie von Hand ändern. Kern im Datei-Organizer pflegen, dann neu ziehen.",
  "dateien": {
