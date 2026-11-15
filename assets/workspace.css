@@ -55,3 +55,15 @@ header .tools{max-width:100%;min-width:0}
   #explorerTree,#explorerTreeToggle{display:none!important}
   .explorer-layout{grid-template-columns:1fr}
 }
+/* Klaus 15.11.2026: ein Suchfeld für alles – Kästchen im Feld, Gruppen, beste Antwort, Einordnung des Sortier-Kerns */
+.explorer-search{flex:1 1 220px;min-width:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.explorer-search input{flex:1 1 140px;min-width:0}
+.explorer-chips{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
+.explorer-chips[hidden]{display:none}
+.explorer-chip{font:inherit;font-size:.85rem;line-height:1.2;padding:4px 9px;border-radius:7px;border:1px solid var(--accent,#3b6fd8);background:color-mix(in srgb,var(--accent,#3b6fd8) 14%,transparent);color:var(--ink);cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.explorer-chip-erkannt{border-style:dashed;background:transparent}
+.explorer-chip:focus-visible{outline:2px solid var(--accent,#3b6fd8);outline-offset:2px}
+.explorer-group{margin:14px 0 4px;font-weight:600}
+.explorer-best{border-color:var(--accent,#3b6fd8)!important;box-shadow:0 0 0 1px var(--accent,#3b6fd8) inset}
+.explorer-kern{font-size:.8rem;opacity:.85;margin-top:2px;overflow-wrap:anywhere}
+.explorer-without{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
