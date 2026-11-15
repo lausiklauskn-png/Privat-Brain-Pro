@@ -29,47 +29,47 @@
   const webCapable = mode === 'web' && typeof media?.enumerateDevices === 'function' && typeof media?.getUserMedia === 'function' && chromiumMajor() >= 135;
   const KEY = 'pb_microphone_v1';
   const words = {
-    de: {label:'Mikrofon fürs Diktat', search:'Neu suchen', away:'nicht verbunden', deviceMic:'Mikrofon im Gerät', unnamed:'Mikrofon',
+    de: {label:'Mikrofon fürs Diktat', search:'Mikrofone suchen', searchTitle:'Sucht alle Mikrofone neu, auch Bluetooth-Headsets und Mikrofone am Kabel oder USB.', away:'nicht verbunden', deviceMic:'Mikrofon im Gerät', unnamed:'Mikrofon',
       standard:{windows:'Windows-Standard (wechselt mit Windows)', android:'Android-Standard (Android wählt selbst)', web:'Browser-Standard (wie im Browser eingestellt)'},
       follows:{windows:'Diktat folgt dem Windows-Standardmikrofon.', android:'Diktat folgt der Wahl von Android.', web:'Diktat folgt dem im Browser eingestellten Mikrofon.'},
       fixed:{windows:'Diktat hört nur auf: {name}', android:'Diktat wird an dieses Mikrofon geleitet: {name}', web:'Diktat hört nur auf: {name}'},
       help:'Das System wechselt sein Standardmikrofon zum Beispiel, wenn sich ein Bluetooth-Headset verbindet. Mit einer festen Wahl nutzt das Diktat dieses eine Gerät.',
       missing:'Nicht verbunden: {name}. Bitte anschließen oder hier ein anderes wählen.',
       none:'Das Gerät meldet kein Mikrofon.', failed:'Die Mikrofonliste konnte nicht gelesen werden.',
-      names:'Namen erscheinen nach der Mikrofon-Freigabe: „Neu suchen“ tippen.',
+      names:'Namen erscheinen nach der Mikrofon-Freigabe: „Mikrofone suchen“ tippen.',
       unsupported:'Dieser Browser nimmt fürs Diktat immer das im Browser eingestellte Mikrofon. Eine feste Wahl geht in Chrome oder Edge ab Version 135 und in den Apps.',
       unsaved:'Die Wahl gilt in dieser Sitzung; sie konnte nicht gespeichert werden.',
       kind:{bluetooth:'Bluetooth', usb:'USB-Kabel', radio:'Funk/WLAN', builtin:'eingebaut oder Klinke', wired:'Kabel'}},
-    en: {label:'Microphone for dictation', search:'Search again', away:'not connected', deviceMic:'Device microphone', unnamed:'Microphone',
+    en: {label:'Microphone for dictation', search:'Find microphones', searchTitle:'Looks for all microphones again, including Bluetooth headsets and wired or USB microphones.', away:'not connected', deviceMic:'Device microphone', unnamed:'Microphone',
       standard:{windows:'Windows default (changes with Windows)', android:'Android default (Android decides)', web:'Browser default (as set in the browser)'},
       follows:{windows:'Dictation follows the Windows default microphone.', android:'Dictation follows Android’s choice.', web:'Dictation follows the microphone set in the browser.'},
       fixed:{windows:'Dictation listens only to: {name}', android:'Dictation is routed to this microphone: {name}', web:'Dictation listens only to: {name}'},
       help:'The system changes its default microphone, for example when a Bluetooth headset connects. With a fixed choice, dictation uses this one device.',
       missing:'Not connected: {name}. Plug it in or choose another one here.',
       none:'The device reports no microphone.', failed:'The microphone list could not be read.',
-      names:'Names appear after microphone access is allowed: tap “Search again”.',
+      names:'Names appear after microphone access is allowed: tap “Find microphones”.',
       unsupported:'This browser always uses the microphone set in the browser for dictation. A fixed choice works in Chrome or Edge 135 and later and in the apps.',
       unsaved:'The choice applies to this session; it could not be saved.',
       kind:{bluetooth:'Bluetooth', usb:'USB cable', radio:'wireless/Wi-Fi', builtin:'built-in or jack', wired:'cable'}},
-    ru: {label:'Микрофон для диктовки', search:'Искать снова', away:'не подключён', deviceMic:'Микрофон устройства', unnamed:'Микрофон',
+    ru: {label:'Микрофон для диктовки', search:'Найти микрофоны', searchTitle:'Ищет все микрофоны заново, в том числе Bluetooth и проводные или USB.', away:'не подключён', deviceMic:'Микрофон устройства', unnamed:'Микрофон',
       standard:{windows:'По умолчанию Windows (меняется вместе с Windows)', android:'По умолчанию Android (Android выбирает сам)', web:'По умолчанию браузера (как в браузере)'},
       follows:{windows:'Диктовка следует микрофону Windows по умолчанию.', android:'Диктовка следует выбору Android.', web:'Диктовка следует микрофону, выбранному в браузере.'},
       fixed:{windows:'Диктовка слушает только: {name}', android:'Диктовка направляется на этот микрофон: {name}', web:'Диктовка слушает только: {name}'},
       help:'Система меняет микрофон по умолчанию, например при подключении Bluetooth-гарнитуры. При постоянном выборе диктовка использует это устройство.',
       missing:'Не подключён: {name}. Подключите его или выберите другой здесь.',
       none:'Устройство не сообщает ни одного микрофона.', failed:'Не удалось прочитать список микрофонов.',
-      names:'Названия появятся после разрешения доступа к микрофону: нажмите «Искать снова».',
+      names:'Названия появятся после разрешения доступа к микрофону: нажмите «Найти микрофоны».',
       unsupported:'Этот браузер для диктовки всегда берёт микрофон из настроек браузера. Постоянный выбор работает в Chrome или Edge от версии 135 и в приложениях.',
       unsaved:'Выбор действует в этом сеансе; сохранить его не удалось.',
       kind:{bluetooth:'Bluetooth', usb:'USB-кабель', radio:'радио/Wi-Fi', builtin:'встроенный или разъём', wired:'кабель'}},
-    pl: {label:'Mikrofon do dyktowania', search:'Szukaj ponownie', away:'nie podłączono', deviceMic:'Mikrofon urządzenia', unnamed:'Mikrofon',
+    pl: {label:'Mikrofon do dyktowania', search:'Szukaj mikrofonów', searchTitle:'Szuka ponownie wszystkich mikrofonów, także Bluetooth i na kabel lub USB.', away:'nie podłączono', deviceMic:'Mikrofon urządzenia', unnamed:'Mikrofon',
       standard:{windows:'Domyślny Windows (zmienia się z Windows)', android:'Domyślny Android (Android wybiera sam)', web:'Domyślny przeglądarki (jak w przeglądarce)'},
       follows:{windows:'Dyktowanie używa domyślnego mikrofonu Windows.', android:'Dyktowanie używa wyboru Androida.', web:'Dyktowanie używa mikrofonu ustawionego w przeglądarce.'},
       fixed:{windows:'Dyktowanie słucha tylko: {name}', android:'Dyktowanie jest kierowane do tego mikrofonu: {name}', web:'Dyktowanie słucha tylko: {name}'},
       help:'System zmienia domyślny mikrofon, na przykład gdy połączy się zestaw Bluetooth. Przy stałym wyborze dyktowanie używa tego jednego urządzenia.',
       missing:'Nie podłączono: {name}. Podłącz go lub wybierz tu inny.',
       none:'Urządzenie nie zgłasza żadnego mikrofonu.', failed:'Nie udało się odczytać listy mikrofonów.',
-      names:'Nazwy pojawią się po zezwoleniu na mikrofon: dotknij „Szukaj ponownie”.',
+      names:'Nazwy pojawią się po zezwoleniu na mikrofon: dotknij „Szukaj mikrofonów”.',
       unsupported:'Ta przeglądarka do dyktowania zawsze używa mikrofonu ustawionego w przeglądarce. Stały wybór działa w Chrome lub Edge od wersji 135 i w aplikacjach.',
       unsaved:'Wybór obowiązuje w tej sesji; nie udało się go zapisać.',
       kind:{bluetooth:'Bluetooth', usb:'kabel USB', radio:'radio/Wi-Fi', builtin:'wbudowany lub gniazdo', wired:'kabel'}}
@@ -139,6 +139,7 @@
     const label = document.createElement('label'); label.htmlFor = 'pb-microphone-setting'; label.dataset.microphoneCopy = 'label';
     const select = document.createElement('select'); select.id = 'pb-microphone-setting'; select.className = 'pb-microphone-select';
     const again = document.createElement('button'); again.type = 'button'; again.id = 'pb-microphone-search'; again.className = 'ghost compact-tool'; again.dataset.microphoneCopy = 'search';
+    again.dataset.microphoneTitle = 'searchTitle';
     const status = document.createElement('p'); status.className = 'hint pb-microphone-status'; status.setAttribute('role','status');
     const controls = document.createElement('div'); controls.className = 'btnrow pb-microphone-controls'; controls.append(select, again);
     row.append(label, controls, status);
@@ -158,6 +159,7 @@
     if (!mount()) return;
     const text = copy(), select = document.getElementById('pb-microphone-setting'), controls = select.parentElement;
     for (const node of document.querySelectorAll('[data-microphone-copy]')) setText(node, text[node.dataset.microphoneCopy]);
+    for (const node of document.querySelectorAll('[data-microphone-title]')) { const t = text[node.dataset.microphoneTitle] || ''; if (node.title !== t) { node.title = t; node.setAttribute('aria-description', t); } }
     select.setAttribute('aria-label', text.label); if (select.title !== text.help) select.title = text.help;
     const status = document.querySelector('.pb-microphone-status');
     const hide = state === 'unsupported';
@@ -183,7 +185,8 @@
       : chosen && state === 'ready' && !found ? text.missing.replace('{name}', chosen.name)
       : chosen ? text.fixed[mode].replace('{name}', chosen.name)
       : unnamed ? text.names
-      : text.follows[mode];
+      // Klaus 15.11.2026: folgt das Diktat der Wahl des Systems, steht dort kein eigener Satz mehr.
+      : '';
     setText(status, line);
   }
   const note = message => (typeof window.toast === 'function' ? window.toast(message) : alert(message));
