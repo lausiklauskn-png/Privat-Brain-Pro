@@ -8,10 +8,10 @@
 (() => {
   'use strict';
   const words = {
-    de: { title: '🔏 Siegel und 🌐 Mycel', help: 'Beide lassen sich ziehen. Oben an der Leiste rasten sie ein. „−“ macht sie klein, „✕“ blendet sie aus.', seal: '🔏 Siegel wieder zeigen', net: '🌐 Mycel-Fenster öffnen', menu: 'Mycel-Netz' },
-    en: { title: '🔏 Seal and 🌐 Mycel', help: 'Both can be dragged. At the top bar they snap in. “−” makes them small, “✕” hides them.', seal: '🔏 Show seal again', net: '🌐 Open Mycel window', menu: 'Mycel network' },
-    ru: { title: '🔏 Печать и 🌐 Mycel', help: 'Оба можно перетаскивать. У верхней панели они закрепляются. «−» уменьшает, «✕» скрывает.', seal: '🔏 Снова показать печать', net: '🌐 Открыть окно Mycel', menu: 'Сеть Mycel' },
-    pl: { title: '🔏 Pieczęć i 🌐 Mycel', help: 'Oba można przeciągać. Przy górnym pasku się zaczepiają. „−” zmniejsza, „✕” ukrywa.', seal: '🔏 Pokaż pieczęć ponownie', net: '🌐 Otwórz okno Mycel', menu: 'Sieć Mycel' }
+    de: { title: '🔏 Siegel und 🌐 SBKIM', help: 'Beide lassen sich ziehen. Oben an der Leiste rasten sie ein. „−“ macht sie klein, „✕“ blendet sie aus.', seal: '🔏 Siegel wieder zeigen', net: '🌐 SBKIM-Fenster öffnen', menu: 'SBKIM-Netz' },
+    en: { title: '🔏 Seal and 🌐 SBKIM', help: 'Both can be dragged. At the top bar they snap in. “−” makes them small, “✕” hides them.', seal: '🔏 Show seal again', net: '🌐 Open SBKIM window', menu: 'SBKIM network' },
+    ru: { title: '🔏 Печать и 🌐 SBKIM', help: 'Оба можно перетаскивать. У верхней панели они закрепляются. «−» уменьшает, «✕» скрывает.', seal: '🔏 Снова показать печать', net: '🌐 Открыть окно SBKIM', menu: 'Сеть SBKIM' },
+    pl: { title: '🔏 Pieczęć i 🌐 SBKIM', help: 'Oba można przeciągać. Przy górnym pasku się zaczepiają. „−” zmniejsza, „✕” ukrywa.', seal: '🔏 Pokaż pieczęć ponownie', net: '🌐 Otwórz okno SBKIM', menu: 'Sieć SBKIM' }
   };
   const t = key => (words[document.documentElement.lang] || words.de)[key];
   const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
