@@ -65,6 +65,23 @@ können – mit derselben Einordnung.
 7. **Ehrlich zur Verschlüsselung:** im Kasten „Tresor & Ablage“ in einem Satz sagen, ob die Originale gerade verschlüsselt im Tresor oder
    nur als lokale Kopie liegen.
 
+## Frage von Klaus: Kann der Sortier-Kern auch für die Suche dienen, in Kombination?
+
+Meine Einschätzung (vor dem Bau zu prüfen und zu messen): **ja, als dritter Weg neben Wort- und Bedeutungssuche.**
+
+- **Beim Einlesen** liefert der Kern je Datei feste Angaben: Fach, Art, Absender, Frist, Person, Nummern (Kunden-, Rechnungs-,
+  Aktenzeichen). Diese gehören in den Suchindex als **Felder** – das sind die Kästchen zum Anklicken (Punkt 3) und die Gruppen
+  „nach Absender“, „nach Fach“ (Punkt 4).
+- **Bei der Suche** kann derselbe Kern die **Frage** lesen: „Rechnungen von Anthropic aus dem Oktober“ → Art = Rechnung (Wortliste des
+  Kerns, auch „Invoice/Receipt“), Absender ≈ Anthropic (Abgleich mit den bekannten Absendern), Zeitraum = Oktober (Datumsleser des Kerns).
+  Erkannte Teile werden zu Kästchen, der Rest geht an die Wort- und die Bedeutungssuche.
+- **Zusammen gerechnet:** zuerst die Treffer, die alle erkannten Felder erfüllen; darin nach Wort- und Bedeutungsnähe ordnen; darunter
+  „ähnlich nach Bedeutung“, wenn die Felder nichts finden. So stört kein Füllwort, und die Bedeutungssuche bekommt einen engeren Raum.
+- **Grenze:** Der Kern ist für ganze Schriftstücke gebaut, nicht für kurze Fragen; das Lesen der Frage braucht eigene Proben
+  (z. B. 50 Fragen in Alltagssprache mit erwarteten Treffern, Regel 11–13 aus `PRUEFREGELN-GRUPPE.md` im Datei-Organizer).
+  Messen: Treffer an erster Stelle / unter den ersten drei, mit und ohne Kern-Felder.
+- Dieselbe Kombination könnte später die Familienakte und der Datei-Organizer („Finden“) bekommen – ein Weg für alle Apps.
+
 ## Proben, die es braucht
 
 - „Rechnung“, „Rechnungen“, „rechnungen von anthropic“, „ich suche alle Rechnungen von Anthropic“, „Invoice“ → die zwei Belege;
@@ -86,7 +103,8 @@ Zuerst lesen: CLAUDE.md, BRIEF_SITZUNG_2026-11-15_SUCHE-SORTIERKERN.md (Ursachen
 Auftrag (Klaus 15.11.): Private Brain soll Dokumente so finden und einordnen wie die Familienakte – Sortier-Kern des Datei-Organizers
 byte-gleich mit Pin einbauen (wie BookLedgerPro tools/sortierkern-nachziehen.mjs), ein Suchfeld für alles (Füllwörter, Grundformen,
 Rechnung↔Invoice, Kategorie/Absender als Suchtext, Kategorie als Kästchen im Suchfeld), Wort- und Bedeutungssuche in einer Liste,
-Übergabe an die Familienakte mit Einordnung.
+Übergabe an die Familienakte mit Einordnung. Klaus' Frage prüfen: Sortier-Kern auch für die Suche (Frage lesen → Felder als Kästchen,
+Rest an Wort- und Bedeutungssuche), mit eigenen Such-Proben messen.
 Erste Schritte: 1) Ursachen am Code bestätigen (assets/workspace.js explorerMatch, index.html CATS/suggestCategory). 2) Vorschau (HTML)
 der Punkte 1–7 für Klaus, Ja je Punkt abwarten. 3) Kern vor dem Einbau messen (alt CATS gegen neu, Stapel mit drei Einordnern aus dem
 Datei-Organizer). 4) Bauen, Proben „Rechnungen von Anthropic“ usw.
