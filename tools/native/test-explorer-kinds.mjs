@@ -129,6 +129,8 @@ try{
   }
   await page.setViewportSize({width:1280,height:900});
   await page.locator('[data-tab="explorer"]').click();
+  // Der Sortier-Kern ordnet im Hintergrund nach (rec.kern); vorher fertig werden lassen, sonst misst der Vergleich das Nachordnen statt des Sprachwechsels.
+  await page.evaluate(async()=>{for(let i=0;i<5&&window.PBSortierkern?.nachordnen;i++)await PBSortierkern.nachordnen();});
   const beforeIconState=await page.evaluate(()=>({catalog:JSON.stringify(CATALOG),path:PBWorkspace.explorerState?.()?.path||'',icons:document.querySelectorAll('#explorerTree svg').length}));
   for(const lang of ['ru','pl','de','en'])await page.evaluate(lang=>{document.documentElement.lang=lang;},lang);
   await page.waitForFunction(()=>document.querySelector('#explorerTree [data-pb-icon=person]>svg[data-icon-key=person]'));
