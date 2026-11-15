@@ -31,7 +31,7 @@ Zweig `ccr-ade42157-vnxn18`, Entwurf PR #142. **Nichts veröffentlicht, nichts a
 Neu: `e2e-sortierkern` 33, `test-einstellungen-themen` 13, `test-tresor-hilfe` 16, `test-familienakte-begleitung` 8, `messen-suche`,
 `sortierkern-nachziehen --pruefen` – alle in `npm test` bzw. `test:native-web`. Angepasst an Klaus' Ja: `test-explorer-order`,
 `test-overview`, `test-design-26`, `test-microphone`, `test-tresor-plan`, `test-tresor-ein-schritt`, `test-mycel`, `test-meaning`.
-CI auf PR #142 grün bis `bb4ba0c` (danach laufen neue Läufe). Lokal nicht laufend: `e2e-ki-reinigung` (WFPDF_KLON fehlt),
+CI auf PR #142 grün auf `620c686` (alle 15 Prüfungen, auch native-smoke, Android-Update-Probe und Windows). Lokal nicht laufend: `e2e-ki-reinigung` (WFPDF_KLON fehlt),
 `e2e-workspace` (Browser schließt beim Neuladen, auch auf `main`).
 
 ## Grenzen (ehrlich)
