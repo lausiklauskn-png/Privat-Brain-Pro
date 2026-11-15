@@ -1,0 +1,131 @@
+<title>Einstellungen kompakt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Vorher/Nachher der drei Kästen in den Einstellungen; je Kasten Ja/Nein. */
+:root{--bg:#f5f6f8;--card:#fff;--fg:#1d2330;--mute:#5c6577;--line:#d9dde5;--accent:#1f6f5c;--accent-soft:#e2f1ec;--field:#fff;--ok:#1f7a4d;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#13161c;--card:#1b1f27;--fg:#e4e8ef;--mute:#9aa3b3;--line:#2e3441;--accent:#6cc5ad;--accent-soft:#17302a;--field:#151920;--ok:#6cc597;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13161c;--card:#1b1f27;--fg:#e4e8ef;--mute:#9aa3b3;--line:#2e3441;--accent:#6cc5ad;--accent-soft:#17302a;--field:#151920;--ok:#6cc597;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+main{max-width:980px;margin:0 auto;display:grid;gap:24px}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance} h1{font-size:1.55rem;font-weight:600} h2{font-size:1.15rem;font-weight:600} h3{font-size:.98rem;font-weight:600}
+p{margin:0} ul{margin:0;padding-left:1.2em;display:grid;gap:3px}
+.lead{color:var(--mute);max-width:70ch} .stand{font-family:var(--mono);font-size:.78rem;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0}
+.nr{font-family:var(--mono);font-size:.85rem;color:var(--accent);font-weight:500}
+.skizze{background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:10px;display:grid;gap:8px;min-width:0}
+.titel{font-size:.75rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+/* App-Nachbau */
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;min-width:0}
+.box h4{margin:0;font-size:.92rem;font-weight:600;white-space:nowrap}
+.sel{border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--fg);font:inherit;font-size:.86rem;padding:3px 8px;display:inline-flex;gap:6px;align-items:center;white-space:nowrap;max-width:100%}
+.kn{border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--fg);font-size:.84rem;padding:3px 9px;white-space:nowrap;display:inline-flex;gap:5px;align-items:center}
+.kn.voll{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.info{margin-left:auto;width:22px;height:22px;border:1px solid var(--mute);border-radius:50%;display:inline-grid;place-items:center;font-size:.75rem;color:var(--mute);flex:none}
+.zust{font-size:.84rem;color:var(--mute);display:inline-flex;gap:5px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.mono{font-family:var(--mono);font-size:.82rem}
+svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alt{opacity:.75}
+.wahl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.wahl span{font-size:.85rem;color:var(--mute)}
+.wahl label{display:inline-flex;gap:5px;align-items:center;font-size:.9rem;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.wahl label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.wahl input{accent-color:var(--accent)} .wahl input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.antwort{font-family:var(--mono);font-size:.9rem;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
+button.k{font:inherit;font-size:.88rem;border:1px solid var(--accent);background:var(--accent);color:var(--card);border-radius:6px;padding:5px 12px;cursor:pointer}
+</style>
+<main>
+<header style="display:grid;gap:8px">
+  <div class="stand">Vorschau · Private Brain Pro · Einstellungen · 15.11.2026 · nichts davon ist gebaut</div>
+  <h1>Einstellungen kompakt: je Kasten eine Reihe</h1>
+  <p class="lead">Nach deinen Worten: große Kästen mit wenig Inhalt werden je eine Reihe, Erklärungen kommen hinter das „i“. Auf dem Handy brechen die Reihen um, sobald sie nicht mehr passen.</p>
+</header>
+
+<article class="card">
+  <div><span class="nr">Punkt D</span> <h3 style="display:inline">Einstellungen nach Themen statt einer langen Seite (dein Wunsch 15.11.)</h3></div>
+  <ul>
+    <li>Das Zahnrad öffnet zuerst nur Themen-Knöpfe. Ein Tipp zeigt genau dieses Thema, oben „‹ Alle Themen“ führt zurück. Kein langes Scrollen mehr.</li>
+    <li>Die heutigen 20 Kästen werden zu 12 Themen zusammengefasst (Vorschlag unten). Inhalt und Knöpfe bleiben, nur die Ordnung ändert sich.</li>
+    <li>Ein Thema mit Fehler (zum Beispiel Ablage nicht erreichbar) trägt einen roten Punkt, damit man sieht, wo es hakt.</li>
+  </ul>
+  <div class="skizze">
+    <div class="titel">Zahnrad öffnet</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
+      <span class="kn">Tresor &amp; Ablage</span><span class="kn">Pro-Apps</span><span class="kn">Sprache &amp; Diktat</span><span class="kn">Bedeutungssuche</span>
+      <span class="kn">Texterkennung</span><span class="kn">Bildbeschreibung</span><span class="kn">KI-Schlüssel (EU)</span><span class="kn">E-Mail-Anhänge</span>
+      <span class="kn">Ordner &amp; Katalog</span><span class="kn">Siegel, Mycel, Chefcode</span><span class="kn">Werkzeuge</span><span class="kn">Aussehen &amp; App</span>
+    </div>
+    <div class="titel">nach Tipp auf „Sprache &amp; Diktat“</div>
+    <div class="box"><span class="kn">‹ Alle Themen</span><h4>Sprache &amp; Diktat</h4></div>
+    <div class="box"><h4>Sprache</h4><span class="sel">Deutsch ▾</span><h4>Mikrofon</h4><span class="sel">Android-Standard ▾</span><span class="kn">Mikrofone suchen</span><span class="info">i</span></div>
+  </div>
+  <p class="lead">Zuordnung im Vorschlag: „Aussehen &amp; App“ = Erscheinungsbild, Zustand, Analyse, Installieren, Was hier offline läuft. „Ordner &amp; Katalog“ = Verbundene Ordner, Katalog verwalten, Mehrere Rechner. „Tresor &amp; Ablage“ = Ablage, Tresor-Verschlüsselung, Tresor-Inhalt, Tresor-Hilfe. „Pro-Apps“ = Zusammenarbeit und Pro-App-Verbund (Karte).</p>
+  <div class="wahl"><span>Punkt D:</span><label><input type="radio" name="pD" value="Ja" id="pDja">Ja</label><label><input type="radio" name="pD" value="Nein" id="pDnein">Nein</label><label><input type="radio" name="pD" value="Ändern" id="pDaendern">Ändern</label></div>
+</article>
+
+<article class="card">
+  <div><span class="nr">Punkt A</span> <h3 style="display:inline">„Welche Sprache sprichst du?“</h3></div>
+  <ul>
+    <li>Sprache, Mikrofon und Suchknopf in einer Reihe, das Mikrofon-Feld nur so breit wie sein Text.</li>
+    <li>„Neu suchen“ heißt künftig <b>„Mikrofone suchen“</b> mit Zeichen (Mikrofon mit Kreispfeil). Hinter dem „i“ steht, dass damit auch Bluetooth- und Kabelmikrofone gefunden werden.</li>
+    <li>Der Satz „Diktat folgt der Wahl von Android“ fällt weg.</li>
+  </ul>
+  <div class="skizze">
+    <div class="titel">Nachher</div>
+    <div class="box"><h4>Sprache</h4><span class="sel">Deutsch ▾</span><h4>Mikrofon</h4><span class="sel">Android-Standard ▾</span>
+      <span class="kn"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 11 5.7"/><path d="M19 4v4h-4"/><path d="M19 8a7 7 0 0 0-3-4"/></svg>Mikrofone suchen</span><span class="info">i</span></div>
+  </div>
+  <div class="wahl"><span>Punkt A:</span><label><input type="radio" name="pA" value="Ja" id="pAja">Ja</label><label><input type="radio" name="pA" value="Nein" id="pAnein">Nein</label><label><input type="radio" name="pA" value="Ändern" id="pAaendern">Ändern</label></div>
+</article>
+
+<article class="card">
+  <div><span class="nr">Punkt B</span> <h3 style="display:inline">„Zusammenarbeit mit Pro-Apps“</h3></div>
+  <ul>
+    <li>Der Satz „Freiwillig verbinden: Nur ausgewählte Dateien … Wähle den Ordner, in dem tresorordner.json liegt“ kommt hinter das „i“.</li>
+    <li>Zustand und Knöpfe in einer Reihe; die selteneren Knöpfe („Bestätigungen prüfen“, „Eigene Ablage zusätzlich einziehen“) hinter „Mehr ▾“.</li>
+  </ul>
+  <div class="skizze">
+    <div class="titel">Nachher</div>
+    <div class="box"><h4>Pro-Apps</h4><span class="zust"><span class="dot"></span>Verbunden: <span class="mono">Family_Projekt_de</span></span>
+      <span class="kn">Eingang prüfen und übernehmen</span><span class="kn">Anderen Ordner wählen …</span><span class="kn">Sperren</span><span class="kn">Mehr ▾</span><span class="info">i</span></div>
+  </div>
+  <div class="wahl"><span>Punkt B:</span><label><input type="radio" name="pB" value="Ja" id="pBja">Ja</label><label><input type="radio" name="pB" value="Nein" id="pBnein">Nein</label><label><input type="radio" name="pB" value="Ändern" id="pBaendern">Ändern</label></div>
+</article>
+
+<article class="card">
+  <div><span class="nr">Punkt C</span> <h3 style="display:inline">„Tresor — Verschlüsselung“</h3></div>
+  <ul>
+    <li>Statt des großen Kastens mit dem Wort „entsperrt“ und einem Knopf darunter: eine Reihe mit Zustand und „Sperren“.</li>
+  </ul>
+  <div class="skizze">
+    <div class="titel">Nachher</div>
+    <div class="box"><h4>Verschlüsselung</h4><span class="zust"><span class="dot"></span>entsperrt</span><span class="kn">Sperren</span><span class="info">i</span></div>
+  </div>
+  <div class="wahl"><span>Punkt C:</span><label><input type="radio" name="pC" value="Ja" id="pCja">Ja</label><label><input type="radio" name="pC" value="Nein" id="pCnein">Nein</label><label><input type="radio" name="pC" value="Ändern" id="pCaendern">Ändern</label></div>
+</article>
+
+<article class="card">
+  <div><span class="nr">Zusammen mit der Tresor-Hilfe</span></div>
+  <p>Der Kasten „Tresor &amp; Ablage“ bekommt dabei die Reihe aus Punkt 5 der Tresor-Hilfe: Zustand der Ablage, Knopf „Tresor-Hilfe“ (darin „Wo liegt was?“ und die Landkarte), die übrigen Knöpfe hinter „Mehr ▾“.</p>
+  <div class="skizze">
+    <div class="box"><h4>Ablage</h4><span class="zust"><span class="dot"></span>Entsperrt · <span class="mono">SD-Karte/Family_Projekt_de/Private Brain</span></span>
+      <span class="kn voll">Tresor-Hilfe</span><span class="kn">Jetzt sichern</span><span class="kn">In Dateien öffnen</span><span class="kn">Mehr ▾</span><span class="info">i</span></div>
+  </div>
+</article>
+
+<article class="card">
+  <h2>Deine Antwort</h2>
+  <div class="antwort" id="antwort">Punkt D – · A – · B – · C –</div>
+  <div><button type="button" class="k" id="kopieren">Antwort kopieren</button> <span id="kopiert" class="stand" hidden>kopiert</span></div>
+</article>
+<p class="stand">Nachbau, nicht die App selbst. Die echten Knöpfe behalten ihre Wörter und Wege; nur Anordnung, Größe und Erklärtexte ändern sich.</p>
+</main>
+<script>
+(function(){const out=document.getElementById('antwort');
+const z=()=>{const t=k=>{const x=document.querySelector('input[name="p'+k+'"]:checked');return x?x.value:'–';};out.textContent='Punkt D '+t('D')+' · A '+t('A')+' · B '+t('B')+' · C '+t('C');};
+document.addEventListener('change',e=>{if(e.target.matches('.wahl input'))z();});
+document.getElementById('kopieren').addEventListener('click',()=>{const zeig=()=>{const s=document.getElementById('kopiert');s.hidden=false;setTimeout(()=>{s.hidden=true;},1600);};const w=()=>{const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);};try{navigator.clipboard.writeText(out.textContent).then(zeig,w);}catch(e){w();}});})();
+</script>
