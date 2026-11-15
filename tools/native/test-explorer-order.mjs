@@ -59,9 +59,9 @@ try{
   ok('Size also reverses through the same menu',(await names())[0]==='Rechnung-Stadtwerke.pdf');
   await chooseSort('date');
   await page.fill('#explorerFilter','bandscheibe');
-  ok('Without the content switch only names are searched',(await names()).length===0);
-  await page.locator('#explorerContent').check();
-  ok('"auch im Inhalt" finds the doctor\'s letter by its text',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf']));
+  // Klaus 15.11.2026: kein Haken „auch im Inhalt“ mehr – der Inhalt wird von selbst mit durchsucht.
+  ok('The content is searched without a switch; the switch is no longer shown',JSON.stringify(await names())===JSON.stringify(['Arztbrief-Orthopaedie.pdf'])&&!await page.locator('#explorerContent').isVisible());
+  await page.locator('#explorerContent').evaluate(b=>{b.checked=true;b.dispatchEvent(new Event('change'));});
   await page.fill('#explorerFilter','lohnsteuer brutto');
   ok('All words must occur in the content',JSON.stringify(await names())===JSON.stringify(['Gehaltsabrechnung-September.pdf']));
   await page.fill('#explorerFilter','zahlerstand');
@@ -87,7 +87,7 @@ try{
   ok('History restores the same visible sort description',(await summary.getAttribute('aria-label'))==='Sort: Date · Oldest first'&&(await page.evaluate(()=>PBWorkspace.explorerState())).reverse===true);
   await page.setViewportSize({width:360,height:740});
   ok('Toolbar fits a phone without sideways scrolling',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-  ok('One compact Sort target follows the pointer profile and the content switch stays flat',await page.evaluate(()=>{const rect=document.querySelector('#pb-explorer-sort>summary').getBoundingClientRect(),toolbar=document.querySelector('.explorer-toolbar').getBoundingClientRect(),h=document.querySelector('.explorer-content').getBoundingClientRect().height;const target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+1&&rect.width<toolbar.width*.8&&h>=26&&h<=32;}));
+  ok('One compact Sort target follows the pointer profile; the content switch is no longer shown (Klaus 15.11.2026)',await page.evaluate(()=>{const rect=document.querySelector('#pb-explorer-sort>summary').getBoundingClientRect(),toolbar=document.querySelector('.explorer-toolbar').getBoundingClientRect(),h=document.querySelector('.explorer-content').getBoundingClientRect().height;const target=matchMedia('(any-pointer:fine)').matches?32:44;return rect.height>=target&&rect.height<=target+1&&rect.width<toolbar.width*.8&&h===0;}));
   for(const [lang,label] of [['de','D ↑'],['en','D ↑'],['ru','Д ↑'],['pl','D ↑']]){
     await page.evaluate(lang=>{document.documentElement.lang=lang;PBWorkspace.refresh();},lang);
     let fits=true;

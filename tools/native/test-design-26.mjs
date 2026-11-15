@@ -68,7 +68,8 @@ try{
   const bar=await page.evaluate(()=>{const b=document.querySelector('#panel-explorer .explorer-toolbar'),shown=[...b.children].filter(c=>c.getClientRects().length);const id=c=>c.id||(c.querySelector('#explorerFilter')?'explorerFilter':c.classList.contains('explorer-order')?'content':c.classList.contains('pb-check-all-button')?'check':c.classList.contains('pb-arrange')?'arrange':c.className);
     const hidden=['explorerUp','explorerHome','explorerTreeToggle','explorerSort'].every(i=>!document.getElementById(i).getClientRects().length);
     const tops=shown.map(c=>Math.round(c.getBoundingClientRect().top));return {order:shown.map(id),hidden,oneRow:Math.max(...tops)-Math.min(...tops)<=4,emoji:/\p{Extended_Pictographic}/u.test(shown.map(c=>c.innerText).join(" "))};});
-  ok('Point 3: toolbar order is choice · layout · search · sort · also in content · Prüfstand',bar.order.join()==='pb-explorer-view,arrange,explorerFilter,pb-explorer-sort,content,check');
+  // Klaus 15.11.2026: der Haken „auch im Inhalt“ entfällt, der Inhalt wird von selbst durchsucht.
+  ok('Point 3: toolbar order is choice · layout · search · sort · Prüfstand',bar.order.join()==='pb-explorer-view,arrange,explorerFilter,pb-explorer-sort,check');
   ok('Point 3: the small ↑, the old ⌂/◨ buttons and the long sort field are no longer shown',bar.hidden);
   ok('Point 3: at 1000 px the toolbar is one flat row without emojis',bar.oneRow&&!bar.emoji);
   const field=await page.evaluate(()=>{const f=document.getElementById('explorerFilter'),cs=getComputedStyle(f);return {ph:f.placeholder,icon:cs.backgroundImage.includes('svg'),label:!!f.closest('.explorer-toolbar').querySelector('label[for=explorerFilter]')};});

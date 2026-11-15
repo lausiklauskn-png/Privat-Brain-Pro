@@ -191,9 +191,9 @@
   for(const [key,label] of [['absender','bySender'],['bereich','byArea'],['art','byArt']]){const o=document.createElement('option');o.value=key;o.dataset.ws=label;o.textContent=text(label);el('explorerSort').append(o);}
   // Kästchen im Suchfeld (Punkt 3): fest = per Klick gesetzt, erkannt = aus der Frage gelesen (× liest das Wort als Text)
   let chips=[],chipIgnore=new Set();
-  const searchWrap=document.createElement('span');searchWrap.className='explorer-search';
-  const chipBar=document.createElement('span');chipBar.className='explorer-chips';chipBar.id='explorerChips';
-  el('explorerFilter').before(searchWrap);searchWrap.append(chipBar,el('explorerFilter'));
+  // Die Kästchen stehen in einer eigenen Zeile direkt unter dem Suchfeld: das Feld selbst bleibt, wie die Pro-App es anordnet.
+  const chipBar=document.createElement('div');chipBar.className='explorer-chips';chipBar.id='explorerChips';chipBar.hidden=true;
+  el('explorerFilter').closest('.explorer-toolbar').after(chipBar);
   contentLabel.hidden=true;contentLabel.style.display='none'; // Klaus 15.11.2026: der Inhalt wird von selbst mit durchsucht
   function addChip(chip){if(!chips.some(c=>c.feld===chip.feld&&c.wert===chip.wert))chips.push(chip);folderPath='';revealSelectedPath=true;renderExplorer();}
   function chipNode(c,erkannt){const b=document.createElement('button');b.type='button';b.className='explorer-chip'+(erkannt?' explorer-chip-erkannt':'');b.dataset.feld=c.feld;b.dataset.wert=String(c.wert);
@@ -508,7 +508,8 @@
   // Eine alte Kategorie, die auch eine Art des Kerns ist, wird zum Art-Kästchen; die übrigen bleiben Kategorie-Kästchen.
   const ART_AUS_KATEGORIE={Rechnung:'Rechnung',Vertrag:'Vertrag',Angebot:'Angebot/Werbung'};
   function categoryChip(label,key){const raw=decodeURIComponent(String(key).replace(/^category:/,''));const art=ART_AUS_KATEGORIE[raw];
-    return art?{feld:'art',wert:art,label:raw,quelle:key}:{feld:'kategorie',wert:raw,label,quelle:key};}
+    const name=String(label).startsWith('category:')?raw:label;
+    return art?{feld:'art',wert:art,label:raw,quelle:key}:{feld:'kategorie',wert:raw,label:name,quelle:key};}
   function renderExplorer() {
     if(folderPath.startsWith('category:')){const c=categoryChip(folderPath,folderPath);if(!chips.some(x=>x.feld===c.feld&&x.wert===c.wert))chips.push(c);folderPath='';}
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
@@ -562,6 +563,8 @@
     else{list=[...here.files];vaultList=[...here.vault];}
     chipBar.replaceChildren(...chips.map(c=>chipNode(c,false)),...(found?found.frage.kaestchen.map(c=>chipNode(c,true)):[]));
     chipBar.hidden=!chipBar.childElementCount;
+    // Ohne sichtbaren Inhalt (Pro-App: ↕ im Sortier-Menü, Haken entfallen) nimmt die leere Hülle keinen Platz ein.
+    orderBox.style.display=[...orderBox.children].some(c=>getComputedStyle(c).display!=='none')?'':'none';
     if(!view&&!searching)for(const k of here.kids)if(k.tally.n)files.append(folderRow(k));
     if(here?.mail){list=list.filter(e=>e!==here.mail);files.append(fileRow(here.mail,null));}
     // Reihenfolge: mit Suchwörtern zuerst nach Passung; Einzahl („Rechnung“) = die passendste oben, Mehrzahl („Rechnungen“) = alle nach Absender.

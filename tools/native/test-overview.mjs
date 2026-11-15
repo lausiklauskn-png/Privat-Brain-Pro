@@ -46,8 +46,9 @@ try{
   ok('Refreshing an unchanged catalog preserves real category-folder links',await page.locator('#groups button[data-overview-category]').count()===2);
   const path='category:'+encodeURIComponent('Rechnung / Verträge');
   await page.locator('#groups [data-overview-path]').filter({hasText:'Rechnung / Verträge'}).click();
-  await page.waitForFunction(path=>PBWorkspace.explorerState().path===path,path);
-  ok('Category names containing slashes open their real category view',await page.locator('#explorerFiles .explorer-row').count()===2&&(await page.locator('#explorerPath .explorer-crumb-here').textContent())==='Rechnung / Verträge'&&await page.locator('#explorerPath .explorer-crumb').count()===1);
+  // Klaus 15.11.2026 (Punkt 3): eine Kategorie öffnet sich als Kästchen „Rechnung / Verträge ×“ im Suchfeld über allen Dateien.
+  await page.waitForFunction(()=>PBWorkspace.explorerState().chips.some(c=>c.feld==='kategorie'&&c.wert==='Rechnung / Verträge'));
+  ok('Category names containing slashes open as a filter chip with their real files',await page.locator('#explorerFiles .explorer-row').count()===2&&(await page.locator('#explorerChips .explorer-chip').first().textContent()).startsWith('Rechnung / Verträge'));
   ok('Category views do not offer the unrelated semantic-topic removal action',await page.locator('#explorerFiles [data-topic-not]').count()===0);
   await page.locator('.main-pages [data-tab="dupes"]').click();
   ok('Duplicates remain directly reachable from their original primary button',await page.locator('#panel-dupes').evaluate(panel=>panel.classList.contains('on'))&&await page.locator('.main-pages [data-tab="dupes"]').count()===1);

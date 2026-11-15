@@ -967,6 +967,8 @@
       el("h3", "", mail.subject),
       el("p", "mail-muted", mail.from + " → " + mail.to),
     );
+    // Klaus 15.11.2026: Speicherort nicht erreichbar → Mail direkt vom Server gezeigt, nicht gesichert. Das wird gesagt.
+    if (mail.vaultUnavailable) reader.append(el("p", "mail-muted mail-vault-hint", ({de:"Diese Mail ist nur angezeigt, nicht im Speicherort gesichert: Die App erreicht den Ordner gerade nicht. Einstellungen › Tresor & Ablage › „Vorhandenen Ordner öffnen“ stellt den Zugriff wieder her.",en:"This email is only shown, not saved to your storage location: the app cannot reach the folder right now. Settings › Vault & storage › “Open existing folder” restores access."})[(document.documentElement.lang||"de").slice(0,2)==="en"?"en":"de"]));
     const actions = el("div", "mail-reader-actions");
     const catalogButton = btn("catalogOne", () => catalogOne(mail, current));
     catalogButton.dataset.mailCaption = "true";

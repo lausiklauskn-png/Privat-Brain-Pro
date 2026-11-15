@@ -12,29 +12,29 @@
   if (window.PBArrange || !ws?.explorerState || !ws.restoreExplorer) return;
   const W = {
     de: { choose: 'Ansicht wählen', search: 'Suche', sort: 'Sortieren', by: 'Sortieren nach', direction: 'Reihenfolge',
-      name: 'Name', date: 'Datum', size: 'Größe', type: 'Typ', letters: { name: 'N', date: 'D', size: 'G', type: 'T' },
-      dirs: { date: ['Neueste oben', 'Älteste oben'], size: ['Größte oben', 'Kleinste oben'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
+      name: 'Name', date: 'Datum', size: 'Größe', type: 'Typ', absender: 'Absender', bereich: 'Bereich', art: 'Art', letters: { name: 'N', date: 'D', size: 'G', type: 'T', absender: 'A', bereich: 'B', art: 'R' },
+      dirs: { absender: ['A → Z', 'Z → A'], bereich: ['A → Z', 'Z → A'], art: ['A → Z', 'Z → A'], date: ['Neueste oben', 'Älteste oben'], size: ['Größte oben', 'Kleinste oben'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
       legend: 'D Datum · N Name · G Größe · T Typ · ↓ absteigend: neueste, größte oder Z oben · ↑ aufsteigend: älteste, kleinste oder A oben',
       arrange: 'Anordnung', side: 'Nebeneinander', stack: 'Übereinander', tree: 'Ordnerbaum anzeigen', folders: 'Ordner anzeigen',
       collapse: 'Alle Ordner einklappen', grip: 'Höhe ändern: ziehen oder Pfeiltasten · Doppelklick: zurücksetzen',
       open: 'Aufklappen', close: 'Zuklappen', none: 'Ohne Kategorie', categories: 'Kategorien', content: 'Inhalt' },
     en: { choose: 'Choose view', search: 'Search', sort: 'Sort', by: 'Sort by', direction: 'Order',
-      name: 'Name', date: 'Date', size: 'Size', type: 'Type', letters: { name: 'N', date: 'D', size: 'S', type: 'T' },
-      dirs: { date: ['Newest first', 'Oldest first'], size: ['Largest first', 'Smallest first'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
+      name: 'Name', date: 'Date', size: 'Size', type: 'Type', absender: 'Sender', bereich: 'Area', art: 'Kind', letters: { name: 'N', date: 'D', size: 'S', type: 'T', absender: 'S', bereich: 'A', art: 'K' },
+      dirs: { absender: ['A → Z', 'Z → A'], bereich: ['A → Z', 'Z → A'], art: ['A → Z', 'Z → A'], date: ['Newest first', 'Oldest first'], size: ['Largest first', 'Smallest first'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
       legend: 'D date · N name · S size · T type · ↓ descending: newest, largest or Z on top · ↑ ascending: oldest, smallest or A on top',
       arrange: 'Layout', side: 'Side by side', stack: 'Stacked', tree: 'Show folder tree', folders: 'Show folders',
       collapse: 'Collapse all folders', grip: 'Change height: drag or arrow keys · double-click: reset',
       open: 'Expand', close: 'Collapse', none: 'Uncategorized', categories: 'Categories', content: 'Content' },
     ru: { choose: 'Выбрать вид', search: 'Поиск', sort: 'Сортировка', by: 'Сортировать по', direction: 'Порядок',
-      name: 'Имя', date: 'Дата', size: 'Размер', type: 'Тип', letters: { name: 'И', date: 'Д', size: 'Р', type: 'Т' },
-      dirs: { date: ['Сначала новые', 'Сначала старые'], size: ['Сначала большие', 'Сначала маленькие'], name: ['А → Я', 'Я → А'], type: ['А → Я', 'Я → А'] },
+      name: 'Имя', date: 'Дата', size: 'Размер', type: 'Тип', absender: 'Отправитель', bereich: 'Раздел', art: 'Вид', letters: { name: 'И', date: 'Д', size: 'Р', type: 'Т', absender: 'О', bereich: 'Р', art: 'В' },
+      dirs: { absender: ['А → Я', 'Я → А'], bereich: ['А → Я', 'Я → А'], art: ['А → Я', 'Я → А'], date: ['Сначала новые', 'Сначала старые'], size: ['Сначала большие', 'Сначала маленькие'], name: ['А → Я', 'Я → А'], type: ['А → Я', 'Я → А'] },
       legend: 'Д дата · И имя · Р размер · Т тип · ↓ по убыванию: новые, большие или Я сверху · ↑ по возрастанию: старые, маленькие или А сверху',
       arrange: 'Расположение', side: 'Рядом', stack: 'Друг под другом', tree: 'Показать дерево папок', folders: 'Показать папки',
       collapse: 'Свернуть все папки', grip: 'Изменить высоту: перетащите или стрелки · двойной щелчок: сброс',
       open: 'Развернуть', close: 'Свернуть', none: 'Без категории', categories: 'Категории', content: 'Содержимое' },
     pl: { choose: 'Wybierz widok', search: 'Szukaj', sort: 'Sortuj', by: 'Sortuj według', direction: 'Kolejność',
-      name: 'Nazwa', date: 'Data', size: 'Rozmiar', type: 'Typ', letters: { name: 'N', date: 'D', size: 'R', type: 'T' },
-      dirs: { date: ['Najnowsze u góry', 'Najstarsze u góry'], size: ['Największe u góry', 'Najmniejsze u góry'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
+      name: 'Nazwa', date: 'Data', size: 'Rozmiar', type: 'Typ', absender: 'Nadawca', bereich: 'Obszar', art: 'Rodzaj', letters: { name: 'N', date: 'D', size: 'R', type: 'T', absender: 'N', bereich: 'O', art: 'R' },
+      dirs: { absender: ['A → Z', 'Z → A'], bereich: ['A → Z', 'Z → A'], art: ['A → Z', 'Z → A'], date: ['Najnowsze u góry', 'Najstarsze u góry'], size: ['Największe u góry', 'Najmniejsze u góry'], name: ['A → Z', 'Z → A'], type: ['A → Z', 'Z → A'] },
       legend: 'D data · N nazwa · R rozmiar · T typ · ↓ malejąco: najnowsze, największe lub Z u góry · ↑ rosnąco: najstarsze, najmniejsze lub A u góry',
       arrange: 'Układ', side: 'Obok siebie', stack: 'Jeden pod drugim', tree: 'Pokaż drzewo folderów', folders: 'Pokaż foldery',
       collapse: 'Zwiń wszystkie foldery', grip: 'Zmień wysokość: przeciągnij lub strzałki · dwuklik: reset',
@@ -114,7 +114,8 @@
     sort.summary.append(icon('sort'), make('span', 'pb-sort-short'));
     const criteria = make('fieldset'), directions = make('fieldset');
     criteria.append(make('legend')); directions.append(make('legend'));
-    for (const key of ['date', 'name', 'size', 'type']) {
+    // Klaus 15.11.2026: auch Absender, Bereich und Art – nur, wenn die Seite sie anbietet (sortKeys); sonst ausgeblendet wie bisher.
+    for (const key of ['date', 'name', 'size', 'type', 'absender', 'bereich', 'art']) {
       const b = make('button', 'ghost pb-pop-item'); b.type = 'button'; b.dataset.sortKey = key;
       b.append(make('span', 'pb-sort-letter'), make('span', 'pb-pop-label'), icon('check'));
       b.addEventListener('click', () => applySort({ sort: key, reverse: false })); criteria.append(b); sortButtons.set(key, b);

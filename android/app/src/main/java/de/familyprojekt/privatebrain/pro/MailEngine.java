@@ -285,7 +285,15 @@ final class MailEngine {
         }
     }
     JSONObject message(MailAccount account, String name, String validity, long uid) throws Exception {
-        if (vaultMode()) return vaultMessage(account, name, validity, uid);
+        if (vaultMode()) {
+            try { return vaultMessage(account, name, validity, uid); }
+            catch (VaultCrypto.Failure error) {
+                // Klaus 15.11.2026 (1.0.50): Ist der Speicherort nicht erreichbar (Zugriff auf den Ordner verloren), bleibt die Mail
+                // trotzdem lesbar – direkt vom Server, nur im Arbeitsspeicher, nirgends ersatzweise gespeichert. Die Seite sagt es.
+                if (!"VAULT_FOLDER_UNAVAILABLE".equals(error.getMessage())) throw error;
+                return MailMime.parse(raw(account, name, validity, uid), session()).put("vaultUnavailable", true);
+            }
+        }
         return MailMime.parse(raw(account, name, validity, uid), session());
     }
     /**
