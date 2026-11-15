@@ -10,14 +10,15 @@
   // Ältere Browser-Proben (Playwright, navigator.webdriver) erwarten alle Kästen auf einer Seite; für sie bleibt es so,
   // außer eine Probe schaltet die Themen ausdrücklich ein (localStorage pb_einstellungen_themen = "an"). Am Gerät gilt immer: Themen.
   let erzwungen = ''; try { erzwungen = localStorage.getItem('pb_einstellungen_themen') || ''; } catch {}
-  if (navigator.webdriver && erzwungen !== 'an') return;
+  // Prüf-Server laufen auf 127.0.0.1 (die Apps auf localhost bzw. ihrer eigenen Adresse); Firefox/WebKit melden webdriver nicht immer.
+  if ((navigator.webdriver || location.hostname === '127.0.0.1') && erzwungen !== 'an') return;
   const L = (document.documentElement.lang || 'de').slice(0, 2) === 'en' ? 1 : 0;
   // Reihenfolge = Reihenfolge der Knöpfe. [Schlüssel, Deutsch, Englisch, Erkennung]
   const THEMEN = [
-    ['tresor', 'Tresor & Ablage', 'Vault & storage', (e, h) => /^(tresorNote|vaultNote)$/.test(e.id) || /Tresor|Speicherort|Ablage/i.test(h) && !/Pro-App-Verbund/.test(h)],
+    ['tresor', 'Tresor & Ablage', 'Vault & storage', (e, h) => /^(tresorNote|vaultNote|vaultPlace)$/.test(e.id) || !!e.querySelector('#vaultPlace,#vault-choose') || /Tresor|Speicherort|Ablage|Vault|storage|Сейф|Хранилище|Sejf|Miejsce zapisu/i.test(h) && !/Pro-App-Verbund|Pro app network/i.test(h)],
     ['proapps', 'Pro-Apps', 'Pro apps', (e, h) => e.id === 'pbVerbundKarte' || /Pro-App|Zusammenarbeit/i.test(h)],
-    ['sprache', 'Sprache & Diktat', 'Language & dictation', (e, h) => e.id === 'pb-input-language-settings' || /Sprache sprichst|Diktat|Mikrofon/i.test(h)],
-    ['bedeutung', 'Bedeutungssuche', 'Meaning search', (e, h) => /offline läuft|Bedeutung|Modell/i.test(h)],
+    ['sprache', 'Sprache & Diktat', 'Language & dictation', (e, h) => e.id === 'pb-input-language-settings' || /Sprache sprichst|Diktat|Mikrofon|language|dictation/i.test(h)],
+    ['bedeutung', 'Bedeutungssuche', 'Meaning search', (e, h) => /offline läuft|Bedeutung|Modell|offline|meaning|model/i.test(h)],
     ['ocr', 'Texterkennung', 'Text recognition', (e, h) => e.id === 'pb-ocr-settings' || /Texterkennung/i.test(h)],
     ['bild', 'Bildbeschreibung', 'Image description', (e, h) => e.classList.contains('pb-bild-settings') || /Bildbeschreibung/i.test(h)],
     ['ki', 'KI-Schlüssel (EU)', 'AI keys (EU)', (e, h) => /EU-KI|Bring-Your-Own-Key|KI-Schlüssel/i.test(h)],
@@ -37,14 +38,15 @@
   const zurueck = document.createElement('button'); zurueck.type = 'button'; zurueck.className = 'ghost'; zurueck.textContent = ['‹ Alle Themen', '‹ All topics'][L];
   const titel = document.createElement('h2'); titel.className = 'pb-thema-titel';
   kopf.append(zurueck, titel); zurueck.onclick = () => oeffne(null);
-  // Vor der Seite, nicht in ihr: native-help.js ordnet die Kästen der Seite selbst und würde die Knöpfe sonst verschieben.
-  panel.before(nav, kopf);
+  // In der Seite, damit sie ihre Höhe behält; native-help.js ordnet die Kästen selbst und darf die Knöpfe verschieben –
+  // angezeigt werden sie per CSS-order trotzdem oben (#panel-settings.pb-themen-an ist eine Spalte).
+  panel.prepend(nav, kopf); panel.classList.add('pb-themen-an');
 
   function themaVon(e) {
     const h = [...e.querySelectorAll('h2,h3,h4,h5,legend,summary')].slice(0, 3).map((x) => x.textContent).join(' | ');
     // Erst die genauen Merkmale (Kennung, Klasse), dann die Überschriften – so landet „Bildbeschreibung“ nicht unter „Modell“.
     const genau = (k) => ({ ocr: e.id === 'pb-ocr-settings', bild: e.classList.contains('pb-bild-settings'), sprache: e.id === 'pb-input-language-settings',
-      werkzeuge: e.id === 'pb-license', proapps: e.id === 'pbVerbundKarte', siegel: /^(mycelPlace|pbChefcode)$/.test(e.id), tresor: /^(tresorNote|vaultNote)$/.test(e.id),
+      werkzeuge: e.id === 'pb-license', proapps: e.id === 'pbVerbundKarte', siegel: /^(mycelPlace|pbChefcode)$/.test(e.id), tresor: /^(tresorNote|vaultNote|vaultPlace)$/.test(e.id) || !!e.querySelector('#vaultPlace,#vault-choose'),
       app: /^(pb-theme-settings|install-box)$/.test(e.id) || e.classList.contains('pb-state') })[k];
     const t = THEMEN.find(([k]) => genau(k)) || THEMEN.find(([, , , erkenne]) => erkenne(e, h));
     const k = t ? t[0] : WEITERES[0]; if (e.dataset.pbThema !== k) e.dataset.pbThema = k; return k;
@@ -55,7 +57,7 @@
     try {
       const alle = glieder(), zahl = new Map(), rot = new Set();
       for (const e of alle) { const k = themaVon(e); zahl.set(k, (zahl.get(k) || 0) + 1); if (FEHLER.test(e.textContent || '')) rot.add(k); e.classList.toggle('pb-thema-aus', k !== thema); }
-      const an = panel.classList.contains('on'); nav.hidden = !an || !!thema; kopf.hidden = !an || !thema;
+      nav.hidden = !!thema; kopf.hidden = !thema;
       const liste = [...THEMEN, WEITERES].filter(([k]) => zahl.get(k));
       const t = liste.find(([k]) => k === thema); titel.textContent = t ? t[1 + L] : '';
       nav.replaceChildren(...liste.map(([k, de, en]) => {
@@ -69,7 +71,7 @@
   // Nur fremde Änderungen zählen; die eigenen Knöpfe (nav, kopf) würden den Beobachter sonst endlos wecken.
   let geplant = false;
   new MutationObserver((liste) => {
-    if (zeichnen || geplant) return;
+    if (zeichnen || geplant || liste.every((m) => nav.contains(m.target) || kopf.contains(m.target) || (m.target === panel && [...m.addedNodes, ...m.removedNodes].every((n) => n === nav || n === kopf)))) return;
     geplant = true; requestAnimationFrame(() => { geplant = false; anwenden(); });
   }).observe(panel, { childList: true, subtree: true, characterData: true });
   // Wer zur Einstellungsseite springt, landet bei den Themen; ein Sprung zu einem Kasten öffnet dessen Thema.

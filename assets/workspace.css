@@ -125,3 +125,6 @@ header .tools{max-width:100%;min-width:0}
 .pb-tresor-blase{display:grid;gap:4px;max-width:340px;margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--accent,#1f6f5c);color:#fff}
 .pb-tresor-blase p{margin:0}.pb-tresor-blase button{justify-self:start}
 .pb-tresor-alt{display:none!important}
+#panel-settings.on.pb-themen-an{display:flex;flex-direction:column}
+#panel-settings.on.pb-themen-an>*{flex-shrink:0}
+#panel-settings.pb-themen-an>#pbThemen,#panel-settings.pb-themen-an>#pbThemaKopf{order:-1}
