@@ -112,7 +112,8 @@ try{
 
  // ---------- 4. Pro-Tresor verbinden: falscher Ordner → klare Meldung ----------
  await page.waitForSelector('#pro-verbund button');
- ok('Zusammenarbeit mit Pro-Apps nennt den Hinweissatz',/Wähle den Ordner, in dem „tresorordner.json“ liegt\./.test(await page.locator('#pro-verbund').innerText()));
+ // Klaus 15.11.2026 (Punkt B): der Hinweissatz steht hinter dem i der Zeile, nicht mehr offen im Kasten.
+ ok('Zusammenarbeit mit Pro-Apps nennt den Hinweissatz hinter dem i',/Wähle den Ordner, in dem „tresorordner.json“ liegt\./.test(await page.locator('#pro-verbund .pv-info').textContent())&&!/tresorordner\.json/.test(await page.locator('#pro-verbund').innerText()));
  await page.evaluate(()=>{window.einziehenError='TRESOR_ORDNER_VERWALTUNG';});
  await page.locator('#pro-verbund button',{hasText:'Pro-Tresor verbinden'}).click();
  await page.waitForFunction(()=>/Verwaltungsordner/.test(document.querySelector('#pro-verbund')?.textContent||''));

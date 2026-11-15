@@ -74,7 +74,7 @@ try{
   ok('Back to "Windows default" removes the stored choice and passes no device',await page.evaluate(()=>localStorage.getItem('pb_microphone_v1')===null&&!('input' in micCalls.at(-1))));
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.waitForFunction(()=>document.querySelector('[data-microphone-copy="label"]').textContent==='Microphone for dictation');
-  ok('Labels follow the interface language (English)',(await status()).includes('Windows default microphone')&&(await options())[0][1].startsWith('Windows default'));
+  ok('Labels follow the interface language (English)',(await options())[0][1].startsWith('Windows default')&&(await page.locator('#pb-microphone-search').textContent())==='Find microphones');
   ok('No emoji in the microphone setting',await page.evaluate(()=>!/\p{Extended_Pictographic}/u.test(document.getElementById('pb-microphone-row').textContent)));
   ok('No unhandled app errors (Windows)',errors.length===0);
   await page.close();
@@ -90,7 +90,7 @@ try{
   await android.waitForFunction(()=>document.querySelectorAll('#pb-microphone-setting option').length===4);
   const aOptions=await android.evaluate(()=>[...document.querySelectorAll('#pb-microphone-setting option')].map(o=>[o.value,o.textContent]));
   ok('Android lists the device microphone, Bluetooth and USB with the connection Android reports',aOptions[0][1].startsWith('Android-Standard')&&aOptions[1][1]==='Mikrofon im Gerät'&&aOptions[2][1]==='Galaxy Buds · Bluetooth'&&aOptions[3][1]==='USB-C Headset · USB-Kabel');
-  ok('Without a choice Android decides, as before',(await android.locator('.pb-microphone-status').textContent()).includes('Wahl von Android'));
+  ok('Without a choice Android decides, as before (no extra sentence, Klaus 15.11.2026)',(await android.locator('.pb-microphone-status').textContent())===''&&(await android.locator('#pb-microphone-setting').inputValue())==='');
   const aDictate=async()=>{await android.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await android.waitForFunction(()=>!document.querySelector('[data-speaking="true"]'));};
   await aDictate();
   ok('Android default dictation passes no device',await android.evaluate(()=>!('input' in micCalls.at(-1))));

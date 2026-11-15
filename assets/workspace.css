@@ -96,3 +96,15 @@ header .tools{max-width:100%;min-width:0}
 #tresorNote>p:has(#tresorState){order:2;flex:0 0 auto;margin:0!important}
 #tresorNote>.btnrow{order:3;flex:0 1 auto;margin:0!important;gap:6px}
 #tresorNote>:is(summary,.pb-help-toggle,button.pb-help-toggle){order:4;flex:0 0 auto;margin-left:auto}
+/* Zusammenarbeit mit Pro-Apps in einer Reihe (Klaus 15.11.2026, Punkt B) */
+#pro-verbund .pv-zeile{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+#pro-verbund .pv-zustand{font-size:.9rem;overflow-wrap:anywhere}
+#pro-verbund .pv-zeile>.btnrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0}
+#pro-verbund :is(.pv-mehr,.pv-info){position:relative}
+#pro-verbund :is(.pv-mehr,.pv-info)>summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:.85rem}
+#pro-verbund :is(.pv-mehr,.pv-info)>summary::-webkit-details-marker{display:none}
+#pro-verbund .pv-mehr>summary::after{content:" ▾"}
+#pro-verbund .pv-info>summary{width:26px;height:26px;padding:0;border-radius:50%;display:grid;place-items:center;font-style:italic}
+#pro-verbund .pv-mehr[open]>.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+#pro-verbund .pv-info[open]{flex:1 0 100%}
+#pro-verbund .pv-info>p{margin:6px 0 0;font-size:.85rem;opacity:.85}

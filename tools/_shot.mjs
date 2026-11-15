@@ -4,7 +4,7 @@ const s=createServer(async(q,r)=>{const pth=new URL(q.url,'http://l').pathname.r
 await new Promise(x=>s.listen(0,'127.0.0.1',x));const u=`http://127.0.0.1:${s.address().port}/`;
 const b=await chromium.launch({executablePath:process.env.CB_CHROMIUM,args:['--no-sandbox']});const p=await b.newPage({viewport:{width:1280,height:900}});
 const err=[];p.on('pageerror',e=>err.push(e.message));
-await p.route('**/*',x=>x.request().url().startsWith(u)?x.continue():x.abort());await p.goto(u);await p.waitForTimeout(2500);
+await p.addInitScript(()=>{try{localStorage.setItem('pb_einstellungen_themen','an')}catch{}});await p.route('**/*',x=>x.request().url().startsWith(u)?x.continue():x.abort());await p.goto(u);await p.waitForTimeout(2500);
 await p.evaluate(()=>PBWorkspace.navigate('settings'));await p.waitForTimeout(800);
 await p.screenshot({path:process.argv[2]+'/themen.png'});
 const knoepfe=await p.$$eval('#pbThemen button',b=>b.map(x=>x.textContent));console.log(knoepfe.join(' | '));

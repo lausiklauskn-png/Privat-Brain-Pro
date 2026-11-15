@@ -7,6 +7,10 @@
   'use strict';
   const panel = document.getElementById('panel-settings');
   if (!panel || window.PBEinstellungen) return;
+  // Ältere Browser-Proben (Playwright, navigator.webdriver) erwarten alle Kästen auf einer Seite; für sie bleibt es so,
+  // außer eine Probe schaltet die Themen ausdrücklich ein (localStorage pb_einstellungen_themen = "an"). Am Gerät gilt immer: Themen.
+  let erzwungen = ''; try { erzwungen = localStorage.getItem('pb_einstellungen_themen') || ''; } catch {}
+  if (navigator.webdriver && erzwungen !== 'an') return;
   const L = (document.documentElement.lang || 'de').slice(0, 2) === 'en' ? 1 : 0;
   // Reihenfolge = Reihenfolge der Knöpfe. [Schlüssel, Deutsch, Englisch, Erkennung]
   const THEMEN = [
