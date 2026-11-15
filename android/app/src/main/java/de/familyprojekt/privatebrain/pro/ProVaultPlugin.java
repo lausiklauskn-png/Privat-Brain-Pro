@@ -63,6 +63,44 @@ public class ProVaultPlugin extends Plugin {
     }
 
     @PluginMethod public void state(PluginCall call) { work(reader, call, () -> vault.state()); }
+    /** Tresor-Hilfe (Klaus 15.11.2026): welcher Fall – Karte fehlt, Erlaubnis zurückgenommen, Ordner fehlt – oder alles da. Nur lesen. */
+    @PluginMethod public void diagnose(PluginCall call) { work(reader, call, this::diagnoseAblage); }
+    private JSONObject diagnoseAblage() {
+        JSONObject d = new JSONObject();
+        try {
+            if (!vault.configured()) return d.put("fall", "nicht-eingerichtet");
+            String[] adresse = vault.ordnerAdresse();
+            Uri tree = Uri.parse(adresse[0]); String root = adresse[1];
+            d.put("pfad", vault.pfad()).put("ort", Vault.location(getContext(), tree));
+            if ("com.android.externalstorage.documents".equals(tree.getAuthority())) {
+                String id = DocumentsContract.getTreeDocumentId(tree), volume = id.contains(":") ? id.substring(0, id.indexOf(':')) : id;
+                d.put("volume", "primary".equalsIgnoreCase(volume) ? "primary" : volume);
+                if (!"primary".equalsIgnoreCase(volume)) {
+                    boolean da = false;
+                    StorageManager storage = (StorageManager) getContext().getSystemService(Context.STORAGE_SERVICE);
+                    if (storage != null) for (StorageVolume v : storage.getStorageVolumes())
+                        if (volume.equalsIgnoreCase(String.valueOf(v.getUuid())) && android.os.Environment.MEDIA_MOUNTED.equals(v.getState())) da = true;
+                    if (!da) return d.put("fall", "karte");
+                }
+            }
+            boolean erlaubt = false;
+            for (android.content.UriPermission p : getContext().getContentResolver().getPersistedUriPermissions())
+                if (p.getUri().equals(tree) && p.isReadPermission() && p.isWritePermission()) erlaubt = true;
+            if (!erlaubt) return d.put("fall", "erlaubnis");
+            String[] spalten = {DocumentsContract.Document.COLUMN_DOCUMENT_ID};
+            try (Cursor c = getContext().getContentResolver().query(DocumentsContract.buildDocumentUriUsingTree(tree, root), spalten, null, null, null)) {
+                if (c == null || !c.moveToFirst()) return d.put("fall", "ordner");
+            } catch (Exception weg) { return d.put("fall", "ordner"); }
+            boolean einstellungen = false;
+            try (Cursor c = getContext().getContentResolver().query(DocumentsContract.buildChildDocumentsUriUsingTree(tree, root),
+                    new String[] {DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                while (c != null && c.moveToNext()) if (Vault.SETTINGS.equals(c.getString(0))) einstellungen = true;
+            } catch (Exception weg) { return d.put("fall", "ordner"); }
+            return d.put("fall", einstellungen ? "ok" : "ordner");
+        } catch (Exception error) {
+            try { return d.put("fall", "unbekannt").put("problem", String.valueOf(error.getMessage())); } catch (Exception ignored) { return d; }
+        }
+    }
     @PluginMethod public void volumes(PluginCall call) {
         work(reader, call, () -> {
             JSONArray items = new JSONArray();
@@ -533,6 +571,7 @@ public class ProVaultPlugin extends Plugin {
          "Hasło sejfu (to samo co w innych aplikacjach Pro). Miejsce Private Brain Pro w nim dostaje to samo hasło.",
          "Znaleziono: ", "Nowy: ", "Dalej", "Błędne hasło. Nic nie zmieniono."}
     };
+    private volatile boolean reparatur;
     @PluginMethod public void tresorEinrichten(PluginCall call) {
         if (!tresorBusy.compareAndSet(false, true)) { call.reject("VAULT_BUSY", "VAULT_BUSY"); return; }
         Intent intent = null;
@@ -616,7 +655,10 @@ public class ProVaultPlugin extends Plugin {
     }
     /** Arbeits-Thread: nur lesend planen, dann das eine Passwort-Fenster. */
     private void einrichtenPlanen(PluginCall call, Uri tree, de.familyprojekt.tresor.SafAblage s, de.familyprojekt.tresor.Hauptordner.Ergebnis e, String name) throws Exception {
-        TresorEinrichtung.Plan plan = TresorEinrichtung.planen(s, e, name, vault.configured() ? vault.tresorId() : null);
+        // Tresor-Hilfe (Klaus 15.11.2026): ist die eigene Ablage nachweislich weg (Ordner gelöscht), darf die Reparatur
+        // im Tresor eine neue anlegen bzw. die dort vorhandene öffnen – sonst bleibt die alte Regel „zieht nie still um“.
+        reparatur = call.getBoolean("reparatur", false) && vault.configured() && "ordner".equals(diagnoseAblage().optString("fall"));
+        TresorEinrichtung.Plan plan = TresorEinrichtung.planen(s, e, name, vault.configured() && !reparatur ? vault.tresorId() : null);
         String zeige = plan.pfad.isEmpty() ? ordnerName(tree) : plan.pfad;
         getActivity().runOnUiThread(() -> einrichtenPasswort(call, tree, s, plan, zeige));
     }
@@ -692,7 +734,7 @@ public class ProVaultPlugin extends Plugin {
             if (w == null) throw new java.io.IOException("TRESOR_ORDNER_NICHT_ERREICHBAR");
             try {
                 // Vault.open schreibt nur die eigenen Einstellungen, und erst nach dem richtigen Passwort.
-                if (!vault.configured()) { vault.open(tree, w, p, keep); geoeffnet = true; }
+                if (!vault.configured() || reparatur) { vault.open(tree, w, p, keep); geoeffnet = true; }
                 else if (!vault.unlocked()) vault.unlock(p, keep);
             } catch (Exception falsch) {
                 if ("VAULT_PASSWORD_WRONG".equals(tresorCode(falsch))) throw new java.io.IOException("TRESOR_ABLAGE_PASSWORT_ANDERS");

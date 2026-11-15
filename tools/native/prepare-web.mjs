@@ -72,6 +72,9 @@ html = html.replace('</body>', '<script src="native-overview.js"></script>\n</bo
 html = html.replace('</body>', '<script src="native-state.js"></script>\n</body>');
 html = html.replace('</body>', '<script src="native-pro-verbund.js"></script>\n</body>');
 await cp(join(root, 'native/native-pro-verbund.js'), join(out, 'native-pro-verbund.js'));
+// Klaus 15.11.2026: Tresor-Hilfe (Gegenprobe des Ordnerbaums, „Beheben ›“, geführte Schritte, Knopf „Tresor-Hilfe“).
+html = html.replace('</body>', '<script src="native-tresor-hilfe.js"></script>\n</body>');
+await cp(join(root, 'native/native-tresor-hilfe.js'), join(out, 'native-tresor-hilfe.js'));
 // Klaus 2026-11-09: Pro-App-Verbund (Vorschau) – Kasten in den Einstellungen, Karte assets/pro-verbund.html (byte-1:1 aus BookLedgerPro) im Vollbild-Rahmen.
 html = html.replace('</body>', '<script src="native-verbund-karte.js"></script>\n</body>');
 await cp(join(root, 'native/native-verbund-karte.js'), join(out, 'native-verbund-karte.js'));

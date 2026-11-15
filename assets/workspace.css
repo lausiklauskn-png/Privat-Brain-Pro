@@ -108,3 +108,20 @@ header .tools{max-width:100%;min-width:0}
 #pro-verbund .pv-mehr[open]>.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 #pro-verbund .pv-info[open]{flex:1 0 100%}
 #pro-verbund .pv-info>p{margin:6px 0 0;font-size:.85rem;opacity:.85}
+/* Tresor-Hilfe (Klaus 15.11.2026) */
+.pb-tresor-band{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0;padding:10px 12px;border-radius:10px;border-left:4px solid #c62828;background:color-mix(in srgb,#c62828 10%,var(--card,#fff))}
+.pb-tresor-band[hidden]{display:none}
+.pb-tresor-satz{flex:1 1 260px;min-width:0}
+.pb-tresor-code>summary,.pb-tresor-mehr>summary{cursor:pointer;list-style:none;display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid var(--line);border-radius:50%;font-size:.8rem}
+.pb-tresor-code>summary::-webkit-details-marker,.pb-tresor-mehr>summary::-webkit-details-marker{display:none}
+.pb-tresor-code span{font-family:ui-monospace,monospace;font-size:.75rem;margin-left:6px}
+.pb-tresor-dialog{max-width:min(560px,94vw)}
+.pb-tresor-tipp{font-weight:600}
+.pb-tresor-liste{display:grid;gap:6px;margin:8px 0}
+.pb-tresor-zeile{display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow-wrap:anywhere}
+.pb-tresor-punkt{width:10px;height:10px;border-radius:50%;background:#2e7d32;flex:none}
+.pb-tresor-zeile.rot .pb-tresor-punkt{background:#c62828}.pb-tresor-zeile.grau .pb-tresor-punkt{background:#9e9e9e}
+.pb-tresor-leucht{outline:3px solid var(--accent,#1f6f5c)!important;outline-offset:3px;box-shadow:0 0 0 7px color-mix(in srgb,var(--accent,#1f6f5c) 25%,transparent)!important}
+.pb-tresor-blase{display:grid;gap:4px;max-width:340px;margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--accent,#1f6f5c);color:#fff}
+.pb-tresor-blase p{margin:0}.pb-tresor-blase button{justify-self:start}
+.pb-tresor-alt{display:none!important}
