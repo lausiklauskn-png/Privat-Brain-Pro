@@ -139,7 +139,7 @@ button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
     <div class="punkt-kopf"><span class="nr">Punkt 2</span><h3>Ein Suchfeld, das Sätze versteht</h3></div>
     <ul>
       <li>Füllwörter fallen weg: ich, suche, alle, von, mir, bitte, die, der …</li>
-      <li>Grundformen: „Rechnungen“ findet „Rechnung“.</li>
+      <li>Einzahl und Mehrzahl (dein Hinweis 15.11.): <b>„Rechnungen“</b> = du willst alle sehen, also die ganze Liste, gruppiert nach Absender. <b>„Rechnung“</b> = du erwartest eine bestimmte, also die passendste ganz oben und groß, die übrigen klein darunter.</li>
       <li>Kleines Wörterbuch: Rechnung = Invoice = Receipt = Quittung = Beleg; Vertrag = Contract; Kündigung = Cancellation …</li>
       <li>Art, Absender, Bereich und alte Kategorie zählen als Suchtext.</li>
       <li>Der Inhalt wird von selbst mit durchsucht, sobald Name und Felder allein nichts finden. Der Haken „auch im Inhalt“ fällt weg.</li>
@@ -162,7 +162,15 @@ button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
       <li>Weitere Wörter grenzen ein. Das Kästchen bleibt, bis man auf × tippt.</li>
       <li>Genauso für „PDF“, „E-Mail“, einen Absender, einen Bereich.</li>
       <li>Wer „Rechnung“ tippt, bekommt das Kästchen als Vorschlag zum Antippen.</li>
+      <li><b>Eigene Kategorien (dein Wunsch 15.11.):</b> Knopf „+ Kategorie“, Namen frei wählen, zum Beispiel „Versicherung“. Eine Datei oder Mail ordnest du mit einem Tipp zu.</li>
+      <li>Lässt sich etwas leicht zuordnen, fragt die App einmal: „Alles von HUK-Coburg künftig zu Versicherung?“ Ein Ja gilt auch für neue Mails von diesem Absender. Du kannst es jederzeit wieder lösen.</li>
+      <li>Deine eigenen Kategorien gehen immer vor dem Kern. Sie erscheinen links und als Kästchen im Suchfeld wie alle anderen.</li>
     </ul>
+    <div class="skizze">
+      <div class="skizze-titel">Eigene Kategorie, Vorschlag nach dem ersten Zuordnen</div>
+      <div class="zeile"><span class="n">Beitragsrechnung_2027.pdf</span><span class="m">Versicherung (von dir) · HUK-Coburg · Mail-Anhang</span></div>
+      <div class="note info">Alles von HUK-Coburg künftig zu „Versicherung“? &nbsp;<b>Ja</b> · Nur diese Datei</div>
+    </div>
     <div class="skizze">
       <div class="skizze-titel">Nach Klick auf „Rechnung“ und Eingabe „anthropic“</div>
       <div class="feld"><span class="kast art">Rechnung ×</span><span class="kast">PDF ×</span><span class="eingabe">anthropic</span></div>
