@@ -34,6 +34,8 @@
   art('Kassenbon', ['kassenbon', 'kassenzettel'], ['kassenbons', 'kassenzettel']);
   art('Bescheinigung', ['bescheinigung', 'urkunde', 'certificate'], ['bescheinigungen', 'urkunden', 'certificates']);
   const ART_LANG = Object.keys(ARTEN).filter((a) => a.length >= 6).sort((x, y) => y.length - x.length);
+  /** Art eines einzelnen Wortes: genau („Rechnung“) oder als längstes Endstück („Beitragsrechnung“; „Jahresabrechnung“ ist Abrechnung). */
+  const artAusWort = (t) => (ARTEN[t] || ARTEN[ART_LANG.find((a) => t.length > a.length && t.endsWith(a))] || [])[0];
   // Formen der Datei
   const FORMEN = {};
   for (const w of ['pdf', 'pdfs']) FORMEN[w] = ['pdf', w === 'pdfs'];
@@ -80,8 +82,8 @@
       if (ohneFelder && ARTEN[w]) { rest.push(w); if (mehrzahl === null) mehrzahl = ARTEN[w][1]; continue; }
       // Zusammengesetzt: „Handyrechnung“, „Nebenkostenabrechnung“ → Art + Vorderteil als Hinweis für die Reihenfolge
       const teil = !ohneFelder && ART_LANG.find((a) => a !== w && w.length - a.length >= 4 && w.endsWith(a));
-      if (teil) { const [a, m] = ARTEN[w] || ARTEN[teil]; dazu({ feld: 'art', wert: a, label: a.replace('/Werbung', ''), wort: w }); if (mehrzahl === null) mehrzahl = m; bonus.push(w, w.slice(0, w.length - teil.length)); nachVon = false; continue; }
-      if (ARTEN[w]) { const [a, m] = ARTEN[w]; bonus.push(w); dazu({ feld: 'art', wert: a, label: a.replace('/Werbung', ''), wort: w }); if (mehrzahl === null) mehrzahl = m; nachVon = false; continue; }
+      if (teil) { const [a, m] = ARTEN[w] || ARTEN[teil]; dazu({ feld: 'art', wert: a, label: a.replace('/Werbung', ''), wort: w, weich: true }); if (mehrzahl === null) mehrzahl = m; bonus.push(w, w.slice(0, w.length - teil.length)); nachVon = false; continue; }
+      if (ARTEN[w]) { const [a, m] = ARTEN[w]; bonus.push(w); dazu({ feld: 'art', wert: a, label: a.replace('/Werbung', ''), wort: w, weich: true }); if (mehrzahl === null) mehrzahl = m; nachVon = false; continue; }
       if (FORMEN[w]) { const [f, m] = FORMEN[w]; dazu({ feld: 'form', wert: f, label: FORM_NAME[f], wort: w }); if (mehrzahl === null) mehrzahl = m; nachVon = false; continue; }
       if (MONAT[w]) { const jahr = /^(19|20)\d\d$/.test(roh[i + 1] || '') ? Number(roh[++i]) : null; dazu({ feld: 'monat', wert: MONAT[w], jahr, label: MONAT_NAME[MONAT[w] - 1] + (jahr ? ' ' + jahr : ''), wort: w }); nachVon = false; continue; }
       if (/^(19|20)\d\d$/.test(w)) { dazu({ feld: 'jahr', wert: Number(w), label: w, wort: w }); nachVon = false; continue; }
@@ -109,7 +111,8 @@
 
   function kastchenPasst(r, k, ctx) {
     switch (k.feld) {
-      case 'art': return artVon(r) === k.wert;
+      // Eine getippte Art gilt auch, wenn das Wort im Namen oder Betreff steht („Angebot“ findet „Fahrzeug-Angebot“), ein angeklicktes Kästchen nur nach Art.
+      case 'art': return artVon(r) === k.wert || (!!k.weich && worte([r.name, r.mail?.subject].join(' ')).some((t) => artAusWort(t) === k.wert));
       case 'form': return k.wert === 'pdf' ? isPdf(r) : k.wert === 'mail' ? !!r.mail || String(r.ext || '') === 'eml' : isBild(r);
       case 'absender': return absenderText(r, ctx).split(/[^\p{L}\p{N}-]+/u).includes(k.wert);
       case 'bereich': return r.kern?.bereich === k.wert || (k.weich && trifft(feldText(r, ctx) + ' ' + inhaltText(r), k.wort));
