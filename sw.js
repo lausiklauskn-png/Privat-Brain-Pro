@@ -17,6 +17,7 @@ const SHELL = [
   "./assets/sortierkern-anschluss.js",
   "./assets/such-frage.js",
   "./assets/eigene-kategorien.js",
+  "./assets/familienakte-begleitung.js",
   "./assets/sortierkern/HERKUNFT.json",
   "./assets/sortierkern/absenderwahl-daten.js",
   "./assets/sortierkern/absenderwahl.js",
