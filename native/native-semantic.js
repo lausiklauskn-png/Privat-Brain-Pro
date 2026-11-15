@@ -27,8 +27,8 @@
       goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.',
       bgTitle: 'Einordnen läuft',
       bgText: 'Bedeutung wird berechnet – du kannst weiterarbeiten',
-      need: 'Für diesen Schritt (Mycel, Siegel-Identität oder Bedeutungssuche) braucht die App einmal das Modell für die Bedeutungssuche, etwa {mb} MB. Jetzt laden?',
-      missing: 'Das Modell für Mycel, Siegel und Bedeutungssuche ist auf diesem Gerät noch nicht geladen. In den Einstellungen unter „Modell für die Bedeutungssuche“ laden.' },
+      need: 'Für diesen Schritt (SBKIM, Siegel-Identität oder Bedeutungssuche) braucht die App einmal das Modell für die Bedeutungssuche, etwa {mb} MB. Jetzt laden?',
+      missing: 'Das Modell für SBKIM, Siegel und Bedeutungssuche ist auf diesem Gerät noch nicht geladen. In den Einstellungen unter „Modell für die Bedeutungssuche“ laden.' },
     en: { title: 'Model for meaning search', load: 'Load model', cancel: 'Cancel', remove: 'Remove model', retry: 'Start again',
       none: 'Not loaded yet. About {mb} MB once, ideally on Wi-Fi. Works without internet afterwards.',
       partial: 'Partly loaded ({done} of {mb} MB). “Load model” continues there.',
@@ -42,8 +42,8 @@
       goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.',
       bgTitle: 'Indexing',
       bgText: 'Computing meaning – you can keep working',
-      need: 'This step (Mycel, seal identity or meaning search) needs the meaning-search model once, about {mb} MB. Load it now?',
-      missing: 'The model for Mycel, seal and meaning search is not loaded on this device yet. Load it in Settings under “Model for meaning search”.' },
+      need: 'This step (SBKIM, seal identity or meaning search) needs the meaning-search model once, about {mb} MB. Load it now?',
+      missing: 'The model for SBKIM, seal and meaning search is not loaded on this device yet. Load it in Settings under “Model for meaning search”.' },
     ru: { title: 'Модель для поиска по смыслу', load: 'Загрузить модель', cancel: 'Отмена', remove: 'Удалить модель', retry: 'Запустить снова',
       none: 'Ещё не загружена. Один раз около {mb} МБ, лучше по Wi-Fi. Потом работает без интернета.',
       partial: 'Загружено частично ({done} из {mb} МБ). «Загрузить модель» продолжит.',
@@ -57,8 +57,8 @@
       goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.',
       bgTitle: 'Идёт индексирование',
       bgText: 'Вычисление смысла – можно продолжать работу',
-      need: 'Для этого шага (Mycel, личность печати или поиск по смыслу) приложению один раз нужна модель поиска по смыслу, около {mb} МБ. Загрузить сейчас?',
-      missing: 'Модель для Mycel, печати и поиска по смыслу на этом устройстве ещё не загружена. Загрузите её в настройках: «Модель для поиска по смыслу».' },
+      need: 'Для этого шага (SBKIM, личность печати или поиск по смыслу) приложению один раз нужна модель поиска по смыслу, около {mb} МБ. Загрузить сейчас?',
+      missing: 'Модель для SBKIM, печати и поиска по смыслу на этом устройстве ещё не загружена. Загрузите её в настройках: «Модель для поиска по смыслу».' },
     pl: { title: 'Model do wyszukiwania znaczeniowego', load: 'Pobierz model', cancel: 'Anuluj', remove: 'Usuń model', retry: 'Uruchom ponownie',
       none: 'Jeszcze nie pobrany. Jednorazowo około {mb} MB, najlepiej przez Wi-Fi. Potem działa bez internetu.',
       partial: 'Pobrano częściowo ({done} z {mb} MB). „Pobierz model” kontynuuje.',
@@ -72,8 +72,8 @@
       goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Pobierz go w ustawieniach.',
       bgTitle: 'Trwa indeksowanie',
       bgText: 'Obliczanie znaczenia – możesz dalej pracować',
-      need: 'Ten krok (Mycel, tożsamość pieczęci lub wyszukiwanie znaczeniowe) wymaga jednorazowo modelu wyszukiwania znaczeniowego, około {mb} MB. Pobrać teraz?',
-      missing: 'Model dla Mycel, pieczęci i wyszukiwania znaczeniowego nie jest jeszcze pobrany na tym urządzeniu. Pobierz go w ustawieniach: „Model do wyszukiwania znaczeniowego”.' }
+      need: 'Ten krok (SBKIM, tożsamość pieczęci lub wyszukiwanie znaczeniowe) wymaga jednorazowo modelu wyszukiwania znaczeniowego, około {mb} MB. Pobrać teraz?',
+      missing: 'Model dla SBKIM, pieczęci i wyszukiwania znaczeniowego nie jest jeszcze pobrany na tym urządzeniu. Pobierz go w ustawieniach: „Model do wyszukiwania znaczeniowego”.' }
   };
   const t = (k, v = {}) => ((W[document.documentElement.lang] || W.de)[k] || W.de[k]).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
   const mb = n => String(Math.round((n || 0) / 1048576));

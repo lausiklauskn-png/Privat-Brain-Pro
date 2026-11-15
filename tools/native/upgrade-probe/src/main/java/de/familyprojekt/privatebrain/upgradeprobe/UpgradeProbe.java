@@ -133,7 +133,7 @@ public final class UpgradeProbe extends Instrumentation {
                 js("window.Capacitor.Plugins.ProMail.accounts().then(a=>window.__probeAccount=a.items.some(x=>x.id==='"+ID+"'));true");
                 await("window.__probeAccount === true");
                 if("verify".equals(phase)) {
-                js("window.Capacitor.Plugins.ProMail.accounts().then(a=>window.__probeAccount=a.items.some(x=>x.id==='"+ID+"'));PBWorkspace.navigate('settings');true");
+                js("window.Capacitor.Plugins.ProMail.accounts().then(a=>window.__probeAccount=a.items.some(x=>x.id==='"+ID+"'));PBWorkspace.navigate('settings');window.PBEinstellungen?.oeffne?.('tresor');true");
                 await("window.__probeAccount === true && document.querySelector('#vaultPlace h3')?.textContent.includes('Vault & storage') && document.querySelector('#vault-choose')?.getBoundingClientRect().width > 0 && window.PBVault?.active() === false");
                 js("document.querySelector('[data-lang=de]').click();true");
                 await("document.querySelector('#vaultPlace h3')?.textContent === 'Tresor & Ablage'");

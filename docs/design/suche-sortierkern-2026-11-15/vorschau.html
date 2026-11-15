@@ -1,0 +1,295 @@
+<title>Private Brain: Finden und Einordnen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Ruhige Arbeitsvorschau: ein Kopf, dann Befund, Messung, sieben Punkte mit Skizze und Ja/Nein-Feld, am Ende Klaus' Frage. */
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --fg:#1d2330; --mute:#5c6577; --line:#d9dde5;
+  --accent:#2f5fb3; --accent-soft:#e6edf9; --good:#1f7a4d; --good-soft:#e3f3ea; --warn:#9a5b00; --warn-soft:#fbf0dc; --bad:#a3302a; --bad-soft:#f8e4e2;
+  --chip:#eef1f6; --field:#ffffff;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13161c; --card:#1b1f27; --fg:#e4e8ef; --mute:#9aa3b3; --line:#2e3441;
+  --accent:#7fa6ea; --accent-soft:#1f2b42; --good:#6cc597; --good-soft:#18301f; --warn:#e2b061; --warn-soft:#33281a; --bad:#ef8a83; --bad-soft:#3a1f1d;
+  --chip:#262c38; --field:#151920; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161c; --card:#1b1f27; --fg:#e4e8ef; --mute:#9aa3b3; --line:#2e3441;
+  --accent:#7fa6ea; --accent-soft:#1f2b42; --good:#6cc597; --good-soft:#18301f; --warn:#e2b061; --warn-soft:#33281a; --bad:#ef8a83; --bad-soft:#3a1f1d;
+  --chip:#262c38; --field:#151920; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+main{max-width:860px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:1.65rem;font-weight:600}
+h2{font-size:1.2rem;font-weight:600}
+h3{font-size:1rem;font-weight:600}
+p{margin:0}
+.lead{color:var(--mute);max-width:65ch}
+.stand{font-family:var(--mono);font-size:.78rem;color:var(--mute);letter-spacing:.02em}
+section{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.num{font-family:var(--mono);white-space:nowrap}
+.gut{color:var(--good)} .schlecht{color:var(--bad)} .mitte{color:var(--warn)}
+.note{border-radius:8px;padding:10px 12px;font-size:.92rem}
+.note.warn{background:var(--warn-soft);color:var(--fg);border-left:3px solid var(--warn)}
+.note.info{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.punkt{display:grid;gap:12px}
+.punkt-kopf{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.nr{font-family:var(--mono);font-size:.85rem;color:var(--accent);font-weight:500}
+.skizze{background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:12px;display:grid;gap:8px;min-width:0}
+.skizze-titel{font-size:.75rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+/* Skizze: Suchfeld mit Kästchen */
+.feld{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:5px 8px;min-height:34px}
+.feld .eingabe{flex:1 1 140px;min-width:0;color:var(--fg);font-size:.92rem}
+.feld .eingabe.leer{color:var(--mute)}
+.kast{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:1px 7px;font-size:.82rem;font-weight:500;white-space:nowrap}
+.kast.art{background:var(--good-soft);color:var(--good)}
+.kast.zeit{background:var(--warn-soft);color:var(--warn)}
+.kast b{font-weight:400;opacity:.7}
+.zeilen{display:grid;gap:4px}
+.zeile{display:flex;gap:8px;align-items:baseline;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:.88rem;min-width:0;flex-wrap:wrap}
+.zeile .n{font-weight:500;overflow-wrap:anywhere}
+.zeile .m{color:var(--mute);font-size:.8rem;overflow-wrap:anywhere}
+.trenner{font-size:.78rem;color:var(--mute);padding-top:4px}
+.zwei{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.zwei{grid-template-columns:1fr}}
+.baum{font-family:var(--mono);font-size:.84rem;line-height:1.7;white-space:pre;overflow-x:auto}
+/* Antwortfeld */
+.wahl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.wahl span{font-size:.85rem;color:var(--mute);margin-right:4px}
+.wahl label{display:inline-flex;align-items:center;gap:5px;font-size:.9rem;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.wahl input{accent-color:var(--accent)}
+.wahl label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.wahl input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.antwort{font-family:var(--mono);font-size:.9rem;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
+button{font:inherit;font-size:.88rem;border:1px solid var(--accent);background:var(--accent);color:var(--card);border-radius:6px;padding:5px 12px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+</style>
+
+<main>
+<header style="display:grid;gap:8px">
+  <div class="stand">Vorschau · Private Brain Pro · 15.11.2026 · nichts davon ist gebaut</div>
+  <h1>Dokumente finden und einordnen wie in der Familienakte</h1>
+  <p class="lead">Sieben Punkte. Zu jedem bitte Ja oder Nein (oder eine Änderung). Gebaut wird nur, was ein Ja hat. Unten steht die Antwortzeile zum Kopieren.</p>
+</header>
+
+<section>
+  <h2>Warum die zwei Anthropic-Rechnungen nicht gefunden werden</h2>
+  <div class="card">
+    <p>Im Code nachgesehen (Stand <span class="num">main f371aed</span>):</p>
+    <ul>
+      <li>Das Suchfeld im Explorer verlangt, dass <b>jedes</b> eingegebene Wort im Dateinamen oder Pfad steht. „ich“, „suche“, „alle“, „von“ stehen in keinem Namen, also kommt nichts.</li>
+      <li>„Rechnungen“ ist nicht „Rechnung“, und „Rechnung“ steht nicht in „Receipt-…“ oder „Invoice-…“.</li>
+      <li>Die Kategorie „Rechnung“ zählt nicht als Suchtext. Sie ist ein eigener Zustand links; wer ihn verlässt, verliert den Filter.</li>
+      <li>„auch im Inhalt“ ist ab Werk aus. Der Absender steht oft nur im Text.</li>
+      <li>Die Lupe (Bedeutungssuche) ist ein zweiter, getrennter Weg.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Messung vor dem Einbau: alte Einordnung gegen den Sortier-Kern</h2>
+  <div class="card">
+    <p>Fremder Stapel aus dem Datei-Organizer (<span class="num">pruefstapel-stadt-4</span>, 200 erfundene Schriftstücke, drei unabhängige Einordner, gezählt wird ihre Mehrheit). Alt = heutige Regelliste in Private Brain. Neu = Sortier-Kern auf <span class="num">main 4a98166</span>, unverändert. In Klammern die Spanne, in der der wahre Wert mit 95 % liegt.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Was</th><th>Alt</th><th>Kern</th></tr></thead>
+      <tbody>
+        <tr><td>Art richtig (nur Rechnung, Vertrag, Angebot: die drei, die beide kennen)</td><td class="num schlecht">7/45 = 16 % (8–29)</td><td class="num gut">38/45 = 84 % (71–92)</td></tr>
+        <tr><td>Rechnungen als Rechnung erkannt</td><td class="num schlecht">2 von 25</td><td class="num gut">23 von 25</td></tr>
+        <tr><td>Andere Schriftstücke fälschlich als Rechnung/Vertrag/Angebot</td><td class="num">3 von 155</td><td class="num mitte">9 von 155</td></tr>
+        <tr><td>Art (alle 16 Arten)</td><td class="num">gibt es nicht</td><td class="num">76 % (69–81)</td></tr>
+        <tr><td>Bereich (Fach der Familienakte)</td><td class="num">gibt es nicht</td><td class="num">79 % (73–84)</td></tr>
+        <tr><td>Absender</td><td class="num">gibt es nicht</td><td class="num">84 % (78–88)</td></tr>
+        <tr><td>Frist</td><td class="num">gibt es nicht</td><td class="num">94 % (90–97)</td></tr>
+      </tbody>
+    </table></div>
+    <p class="lead">Bei der Art ist der Unterschied gesichert: in 32 Fällen hat nur der Kern recht, in einem nur die alte Liste. Zwei ältere Stapel (Familie, Vermieterin) zeigen dasselbe Bild, zählen aber nur als Hinweis, weil der Kern an ihnen gelernt hat.</p>
+    <div class="note warn"><b>Gefunden: Der Kern erkennt englische Belege noch nicht.</b> Zwei erfundene Belege im Aufbau der Anthropic-Belege („Receipt from …“, „Invoice number …“, „Amount due“): der Kern liest den Absender richtig, sagt aber „Angebot/Werbung“ und „Brief“ statt Rechnung. Die alte Liste erkennt sie über „invoice number“. Darum Punkt 1 in zwei Schritten (siehe dort).</div>
+  </div>
+</section>
+
+<section>
+  <h2>Die sieben Punkte</h2>
+
+  <article class="card punkt" id="p1">
+    <div class="punkt-kopf"><span class="nr">Punkt 1</span><h3>Sortier-Kern einbauen</h3></div>
+    <ul>
+      <li>Der Kern des Datei-Organizers kommt Byte für Byte mit Fingerabdruck in die App, über ein Werkzeug wie in BookLedgerPro. Hier wird er nie von Hand geändert.</li>
+      <li>Jede Datei bekommt: Bereich, Art, Absender, Frist, Person. Bei Mails ist der Absender der aus „Von:“.</li>
+      <li>Die alten Kategorien bleiben zuerst daneben stehen. Ist der Kern unsicher und die alte Liste sagt „Rechnung“, gilt „Rechnung“.</li>
+      <li><b>Vorher</b> bringe ich dem Kern im Datei-Organizer englische Rechnungen bei (Invoice, Receipt, Amount due, Total) und messe dort, dass nichts schlechter wird. Erst dann ziehe ich ihn hierher.</li>
+      <li>Bereits eingelesene Dateien werden einmal nachgeordnet (nur der Katalog, Originale bleiben unberührt).</li>
+    </ul>
+    <div class="skizze">
+      <div class="skizze-titel">So sieht eine Datei danach aus</div>
+      <div class="zeile"><span class="n">Invoice-….pdf</span><span class="m">Rechnung · Anthropic · Bereich Finanzen &amp; Verträge · 3.11.2026 · 20,00 $</span></div>
+    </div>
+    <div class="wahl" data-p="1"><span>Punkt 1:</span><label><input type="radio" name="p1" value="Ja" id="p1ja">Ja</label><label><input type="radio" name="p1" value="Nein" id="p1nein">Nein</label><label><input type="radio" name="p1" value="Ändern" id="p1aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p2">
+    <div class="punkt-kopf"><span class="nr">Punkt 2</span><h3>Ein Suchfeld, das Sätze versteht</h3></div>
+    <ul>
+      <li>Füllwörter fallen weg: ich, suche, alle, von, mir, bitte, die, der …</li>
+      <li>Einzahl und Mehrzahl (dein Hinweis 15.11.): <b>„Rechnungen“</b> = du willst alle sehen, also die ganze Liste, gruppiert nach Absender. <b>„Rechnung“</b> = du erwartest eine bestimmte, also die passendste ganz oben und groß, die übrigen klein darunter.</li>
+      <li>Kleines Wörterbuch: Rechnung = Invoice = Receipt = Quittung = Beleg; Vertrag = Contract; Kündigung = Cancellation …</li>
+      <li>Art, Absender, Bereich und alte Kategorie zählen als Suchtext.</li>
+      <li>Der Inhalt wird von selbst mit durchsucht, sobald Name und Felder allein nichts finden. Der Haken „auch im Inhalt“ fällt weg.</li>
+    </ul>
+    <div class="skizze">
+      <div class="skizze-titel">Eingabe und Treffer</div>
+      <div class="feld"><span class="eingabe">ich suche alle Rechnungen von anthropic</span></div>
+      <div class="zeilen">
+        <div class="zeile"><span class="n">Receipt-….pdf</span><span class="m">Rechnung · Anthropic · Mail-Anhang</span></div>
+        <div class="zeile"><span class="n">Invoice-….pdf</span><span class="m">Rechnung · Anthropic · Mail-Anhang</span></div>
+      </div>
+    </div>
+    <div class="wahl" data-p="2"><span>Punkt 2:</span><label><input type="radio" name="p2" value="Ja" id="p2ja">Ja</label><label><input type="radio" name="p2" value="Nein" id="p2nein">Nein</label><label><input type="radio" name="p2" value="Ändern" id="p2aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p3">
+    <div class="punkt-kopf"><span class="nr">Punkt 3</span><h3>Kategorie als Kästchen im Suchfeld</h3></div>
+    <ul>
+      <li>Ein Klick links auf „Rechnung“ setzt ein Kästchen „Rechnung ×“ ins Suchfeld.</li>
+      <li>Weitere Wörter grenzen ein. Das Kästchen bleibt, bis man auf × tippt.</li>
+      <li>Genauso für „PDF“, „E-Mail“, einen Absender, einen Bereich.</li>
+      <li>Wer „Rechnung“ tippt, bekommt das Kästchen als Vorschlag zum Antippen.</li>
+      <li><b>Eigene Kategorien (dein Wunsch 15.11.):</b> Knopf „+ Kategorie“, Namen frei wählen, zum Beispiel „Versicherung“. Eine Datei oder Mail ordnest du mit einem Tipp zu.</li>
+      <li>Lässt sich etwas leicht zuordnen, fragt die App einmal: „Alles von HUK-Coburg künftig zu Versicherung?“ Ein Ja gilt auch für neue Mails von diesem Absender. Du kannst es jederzeit wieder lösen.</li>
+      <li>Deine eigenen Kategorien gehen immer vor dem Kern. Sie erscheinen links und als Kästchen im Suchfeld wie alle anderen.</li>
+    </ul>
+    <div class="skizze">
+      <div class="skizze-titel">Eigene Kategorie, Vorschlag nach dem ersten Zuordnen</div>
+      <div class="zeile"><span class="n">Beitragsrechnung_2027.pdf</span><span class="m">Versicherung (von dir) · HUK-Coburg · Mail-Anhang</span></div>
+      <div class="note info">Alles von HUK-Coburg künftig zu „Versicherung“? &nbsp;<b>Ja</b> · Nur diese Datei</div>
+    </div>
+    <div class="skizze">
+      <div class="skizze-titel">Nach Klick auf „Rechnung“ und Eingabe „anthropic“</div>
+      <div class="feld"><span class="kast art">Rechnung ×</span><span class="kast">PDF ×</span><span class="eingabe">anthropic</span></div>
+      <div class="skizze-titel">Nach Tipp auf „Rechnung ×“</div>
+      <div class="feld"><span class="kast">PDF ×</span><span class="eingabe">anthropic</span></div>
+    </div>
+    <div class="wahl" data-p="3"><span>Punkt 3:</span><label><input type="radio" name="p3" value="Ja" id="p3ja">Ja</label><label><input type="radio" name="p3" value="Nein" id="p3nein">Nein</label><label><input type="radio" name="p3" value="Ändern" id="p3aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p4">
+    <div class="punkt-kopf"><span class="nr">Punkt 4</span><h3>Zusammen, was zusammengehört</h3></div>
+    <ul>
+      <li>Geändert nach deinem Wunsch 15.11.: keine neuen Sichten links, sondern die Sortierung neben dem Suchfeld. Zur Wahl stehen: Datum, Absender, Bereich, Art (dazu wie bisher Name und Größe).</li>
+      <li>Bei Absender, Bereich und Art stehen die Treffer in Gruppen mit Überschrift. Das gilt für jede Suche und auch ohne Suchwort. Aus dem Kern berechnet, nichts wird verschoben.</li>
+      <li>Der Absender-Baum der Mails bleibt wie er ist.</li>
+    </ul>
+    <div class="skizze">
+      <div class="skizze-titel">Suche „Rechnungen“, sortiert nach: Absender</div>
+      <div class="baum">Anthropic (2)
+  Rechnung  Receipt-….pdf
+  Rechnung  Invoice-….pdf
+Stadtwerke Beispielstadt (3)
+  Rechnung  Abschlag_November.pdf
+  ...</div>
+    </div>
+    <div class="wahl" data-p="4"><span>Punkt 4:</span><label><input type="radio" name="p4" value="Ja" id="p4ja">Ja</label><label><input type="radio" name="p4" value="Nein" id="p4nein">Nein</label><label><input type="radio" name="p4" value="Ändern" id="p4aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p5">
+    <div class="punkt-kopf"><span class="nr">Punkt 5</span><h3>Wortsuche und Bedeutungssuche in einer Liste</h3></div>
+    <ul>
+      <li>Oben die sicheren Treffer (Wort und Felder), darunter „ähnlich nach Bedeutung“.</li>
+      <li>Die Kästchen gelten für beide Teile.</li>
+      <li>Ohne geladenes Bedeutungs-Modell fehlt der untere Teil, mit einem Satz, wo man es lädt.</li>
+      <li>Der untere Teil nutzt die Bedeutungs-Modelle, die die App schon heute per Schalter lädt: zuerst von deinem Server family-projekt.de, sonst von Hugging Face, jede Datei mit Fingerabdruck geprüft (e5-small; auf Wunsch e5-base oder e5-large). Es kommt kein neues Modell dazu. Der Sortier-Kern selbst braucht kein Modell (Regeln und kleine Lerndaten im Paket, etwa 0,6 MB).</li>
+    </ul>
+    <div class="skizze">
+      <div class="feld"><span class="kast art">Rechnung ×</span><span class="eingabe">KI Abo</span></div>
+      <div class="zeilen">
+        <div class="zeile"><span class="n">Invoice-….pdf</span><span class="m">Rechnung · Anthropic</span></div>
+        <div class="trenner">ähnlich nach Bedeutung</div>
+        <div class="zeile"><span class="n">Mistral_Rechnung_Oktober.pdf</span><span class="m">Rechnung · Mistral AI</span></div>
+      </div>
+    </div>
+    <div class="wahl" data-p="5"><span>Punkt 5:</span><label><input type="radio" name="p5" value="Ja" id="p5ja">Ja</label><label><input type="radio" name="p5" value="Nein" id="p5nein">Nein</label><label><input type="radio" name="p5" value="Ändern" id="p5aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p6">
+    <div class="punkt-kopf"><span class="nr">Punkt 6</span><h3>An die Familienakte geben, mit Einordnung</h3></div>
+    <ul>
+      <li>Nicht nur die ganze Mail: auch einzelne Anhänge und eingefügte Dateien.</li>
+      <li>Mit dabei: Bereich, Art, Absender, Frist aus dem Kern, damit die Familienakte nichts neu raten muss.</li>
+      <li>Im Eingang der Familienakte nach der Einordnung unterteilt (dein Wunsch 15.11.): E-Mails, Mail-Anhänge, eingefügte Dateien, Fotos, und darunter je Kategorie (Rechnung, Vertrag, Versicherung …, auch deine eigenen).</li>
+      <li>Weg wie heute: über den Pro-Tresor ins Fach „Eingang-Familienakte“. Die Familienakte liest die Angaben erst, wenn sie dort eingebaut sind (eigene Sitzung dort, mit deinem Ja).</li>
+    </ul>
+    <div class="wahl" data-p="6"><span>Punkt 6:</span><label><input type="radio" name="p6" value="Ja" id="p6ja">Ja</label><label><input type="radio" name="p6" value="Nein" id="p6nein">Nein</label><label><input type="radio" name="p6" value="Ändern" id="p6aendern">Ändern</label></div>
+  </article>
+
+  <article class="card punkt" id="p7">
+    <div class="punkt-kopf"><span class="nr">Punkt 7</span><h3>Klar sagen, wo die Originale liegen</h3></div>
+    <ul>
+      <li>Im Kasten „Tresor &amp; Ablage“ ein Satz zum jetzigen Zustand, zum Beispiel:</li>
+    </ul>
+    <div class="zwei">
+      <div class="note info">Originale liegen verschlüsselt im Tresor auf der SD-Karte (Ordner „Family-Projekt“).</div>
+      <div class="note warn">Originale liegen nur als lokale Kopie im App-Speicher, nicht verschlüsselt. Tresor einrichten ›</div>
+    </div>
+    <ul>
+      <li>Tresor selbst finden (dein Wunsch 15.11.): Die App merkt sich den Tresor und verbindet sich beim Start von allein. Android erlaubt keiner App, den Speicher ohne Erlaubnis zu durchsuchen. Nach einer Neuinstallation wählst du darum einmal nur das Laufwerk (Gerät oder SD-Karte), den Tresor findet die App darin am Inhalt.</li>
+      <li>Fehlt der Tresor (SD-Karte entnommen), speichert die App nicht still woanders hin. Sie sagt es und wartet.</li>
+      <li>Die „Ablageordner“-Kopien heißen künftig „unverschlüsselte Zusatzkopie“, damit sie niemand für den Tresor hält.</li>
+    </ul>
+    <div class="wahl" data-p="7"><span>Punkt 7:</span><label><input type="radio" name="p7" value="Ja" id="p7ja">Ja</label><label><input type="radio" name="p7" value="Nein" id="p7nein">Nein</label><label><input type="radio" name="p7" value="Ändern" id="p7aendern">Ändern</label></div>
+  </article>
+</section>
+
+<section>
+  <h2>Deine Frage: Kann der Sortier-Kern auch beim Suchen helfen?</h2>
+  <div class="card">
+    <p>Ja, als dritter Weg neben Wort und Bedeutung. Der Kern liest dann nicht nur Dokumente, sondern auch die Frage:</p>
+    <div class="skizze">
+      <div class="skizze-titel">Eingabe „Rechnungen von Anthropic aus dem Oktober“ wird zu</div>
+      <div class="feld"><span class="kast art">Rechnung ×</span><span class="kast">Anthropic ×</span><span class="kast zeit">Oktober 2026 ×</span><span class="eingabe leer">(kein Rest)</span></div>
+    </div>
+    <ul>
+      <li>Erkannte Teile werden Kästchen (Art, bekannter Absender, Zeitraum, Bereich). Der Rest geht an Wort- und Bedeutungssuche.</li>
+      <li>Absender werden nur erkannt, wenn sie schon in deinen Dateien vorkommen. So wird aus „von Lisa“ kein falscher Filter.</li>
+      <li>Ein Kästchen, das nichts findet, wird nicht stumm angewendet: die Liste sagt „ohne Oktober: 2 Treffer“.</li>
+    </ul>
+    <p><b>Wie ich es prüfe:</b> 50 erfundene Fragen in Alltagssprache (Deutsch und Englisch gemischt) mit vorher festgelegten richtigen Treffern auf einem erfundenen Bestand. Gezählt wird: richtiger Treffer an erster Stelle und unter den ersten drei, einmal mit und einmal ohne Kästchen aus dem Kern. Eingebaut wird es nur, wenn es messbar besser ist.</p>
+    <div class="wahl" data-p="F"><span>Frage-Weg:</span><label><input type="radio" name="pF" value="Ja" id="pFja">Ja</label><label><input type="radio" name="pF" value="Nein" id="pFnein">Nein</label><label><input type="radio" name="pF" value="Ändern" id="pFaendern">Ändern</label></div>
+  </div>
+</section>
+
+<section>
+  <h2>Deine Antwort</h2>
+  <div class="card">
+    <p class="lead">Die Zeile füllt sich mit deinen Klicks. Kopieren und in den Chat einfügen; bei „Ändern“ einen Satz dazuschreiben.</p>
+    <div class="antwort" id="antwort">Punkt 1 – · 2 – · 3 – · 4 – · 5 – · 6 – · 7 – · Frage-Weg –</div>
+    <div><button type="button" id="kopieren">Antwort kopieren</button> <span id="kopiert" class="stand" hidden>kopiert</span></div>
+  </div>
+</section>
+
+<p class="stand">Grenzen: nur Code gelesen und am erfundenen Stapel gemessen, nichts am Gerät. Ob deine Originale gerade im Tresor liegen, sehe ich von hier nicht. Nichts wird veröffentlicht ohne dein Wort.</p>
+</main>
+
+<script>
+(function(){
+  const out=document.getElementById('antwort');
+  function zeile(){
+    const teil=k=>{const x=document.querySelector('input[name="p'+k+'"]:checked');return x?x.value:'–';};
+    out.textContent='Punkt 1 '+teil(1)+' · 2 '+teil(2)+' · 3 '+teil(3)+' · 4 '+teil(4)+' · 5 '+teil(5)+' · 6 '+teil(6)+' · 7 '+teil(7)+' · Frage-Weg '+teil('F');
+  }
+  document.addEventListener('change',e=>{if(e.target.matches('.wahl input'))zeile();});
+  zeile();
+  document.getElementById('kopieren').addEventListener('click',()=>{
+    const zeig=()=>{const s=document.getElementById('kopiert');s.hidden=false;setTimeout(()=>{s.hidden=true;},1600);};
+    try{navigator.clipboard.writeText(out.textContent).then(zeig,()=>{waehle();});}catch(e){waehle();}
+    function waehle(){const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+  });
+})();
+</script>

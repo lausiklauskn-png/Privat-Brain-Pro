@@ -41,7 +41,8 @@ try{
   at('tresorPasswortPruefen')>0&&at('tresorPasswortPruefen')<at('vault.open(tree, w')&&at('vault.open(tree, w')<at('hauptAnlegen')&&at('hauptAnlegen')<at('vault.create(tree, wurzel')&&at('vault.create(tree, wurzel')<at('mitPasswort'));
  ok('Java: falsches Passwort der Ablage wird TRESOR_ABLAGE_PASSWORT_ANDERS, nicht „falsch“ im Fenster',/VAULT_PASSWORD_WRONG[^\n]*TRESOR_ABLAGE_PASSWORT_ANDERS/.test(aus));
  ok('Java: Tresor wird mit dem Hauptordner als Wurzel gemerkt',at('tresor().baumSetzen(tree, wurzel)')>at('vault.create(tree, wurzel'));
- ok('Java: Planen bekommt die Kennung der schon eingerichteten Ablage (nie still umziehen)',/TresorEinrichtung\.planen\(s, e, name, vault\.configured\(\) \? vault\.tresorId\(\) : null\)/.test(plug));
+ // Tresor-Hilfe (Klaus 15.11.2026): Ausnahme nur bei reparatur, und nur wenn die Gegenprobe den alten Ordner wirklich vermisst.
+ ok('Java: Planen bekommt die Kennung der schon eingerichteten Ablage (nie still umziehen; Ausnahme nur bei nachweislich gelöschtem Ordner)',/TresorEinrichtung\.planen\(s, e, name, vault\.configured\(\) && !reparatur \? vault\.tresorId\(\) : null\)/.test(plug)&&/reparatur = call\.getBoolean\("reparatur", false\) && vault\.configured\(\) && "ordner"\.equals\(diagnoseAblage\(\)\.optString\("fall"\)\)/.test(plug));
  ok('Java: Vault sucht/legt an/öffnet ab einem Ordner innerhalb der Freigabe',/String find\(Uri chosen, String base\)/.test(vault)&&/JSONObject create\(Uri chosen, String base,/.test(vault)&&/JSONObject open\(Uri chosen, String base,/.test(vault));
  ok('Java: ProTresorordner nutzt die gemerkte Wurzel, alte Verbindungen ohne Eintrag die Freigabe',/new SafAblage\(context\.getContentResolver\(\), b, wurzel\(b\)\)/.test(tro)&&/w == null \|\| w\.isEmpty\(\) \? DocumentsContract\.getTreeDocumentId\(baum\) : w/.test(tro));
 

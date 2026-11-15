@@ -55,3 +55,76 @@ header .tools{max-width:100%;min-width:0}
   #explorerTree,#explorerTreeToggle{display:none!important}
   .explorer-layout{grid-template-columns:1fr}
 }
+/* Klaus 15.11.2026: ein Suchfeld für alles – Kästchen im Feld, Gruppen, beste Antwort, Einordnung des Sortier-Kerns */
+.explorer-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-8px 0 10px;min-width:0}
+.explorer-chips[hidden]{display:none}
+.explorer-chip{font:inherit;font-size:.85rem;line-height:1.2;padding:4px 9px;border-radius:7px;border:1px solid var(--accent,#3b6fd8);background:color-mix(in srgb,var(--accent,#3b6fd8) 14%,transparent);color:var(--ink);cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.explorer-chip-erkannt{border-style:dashed;background:transparent}
+.explorer-chip:focus-visible{outline:2px solid var(--accent,#3b6fd8);outline-offset:2px}
+.explorer-group{margin:14px 0 4px;font-weight:600}
+.explorer-best{border-color:var(--accent,#3b6fd8)!important;box-shadow:0 0 0 1px var(--accent,#3b6fd8) inset}
+.explorer-kern{font-size:.8rem;opacity:.85;margin-top:2px;overflow-wrap:anywhere}
+.explorer-without{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pb-eigene-knopf{font-size:.8rem;padding:4px 8px}
+.pb-eigene-knopf[data-eigene]:not([data-eigene=""]){border-color:var(--accent,#3b6fd8)}
+.pb-eigene-menue,.pb-eigene-frage{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px;padding:8px;border:1px dashed var(--line);border-radius:8px}
+.pb-eigene-menue input{flex:1 1 140px;min-width:0;padding:6px 8px}
+/* Einstellungen nach Themen (Klaus 15.11.2026) */
+#panel-settings .pb-thema-aus{display:none!important}
+.pb-themen{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin:0 0 14px}
+.pb-themen[hidden],.pb-thema-kopf[hidden]{display:none}
+.pb-thema-knopf{position:relative;font:inherit;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card,var(--field));color:var(--ink);cursor:pointer}
+.pb-thema-knopf:hover,.pb-thema-knopf:focus-visible{border-color:var(--accent,#3b6fd8)}
+.pb-thema-rot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%;background:#c62828}
+.pb-thema-kopf{display:flex;gap:10px;align-items:center;margin:0 0 10px}
+.pb-thema-titel{margin:0;font-size:1.1rem}
+/* Sprache & Diktat in einer Reihe (Klaus 15.11.2026, Punkt A): Sprache, Mikrofon und „Mikrofone suchen“ nebeneinander, gleich hoch */
+#pb-input-language-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+#pb-input-language-settings>h3,#pb-input-language-settings>.hint,#pb-input-language-settings>details,#pb-input-language-settings>.pb-help-content{flex:1 0 100%}
+#pb-input-language-settings>label,#pb-microphone-row>label{display:inline-block!important;margin:0!important;font-size:.85rem}
+#pb-microphone-row{display:contents}
+#pb-microphone-row .pb-microphone-controls{display:inline-flex;flex-wrap:nowrap;gap:8px;align-items:stretch;margin:0;min-width:0;max-width:100%}
+#pb-input-language-settings select{width:auto!important;max-width:min(320px,100%);min-width:0;height:36px!important;min-height:36px!important;box-sizing:border-box;padding-block:2px!important}
+#pb-microphone-search{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;width:auto!important;min-width:0!important;max-width:none!important;min-height:0!important;height:auto!important;padding:0 10px!important;line-height:1.2;overflow:visible!important;font-size:.85rem!important}
+#pb-microphone-search::before{content:"";width:16px;height:16px;flex:none;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a6 6 0 0 0 9.5 4.9'/%3E%3Cpath d='M11 17v4'/%3E%3Cpath d='M21 4v4h-4'/%3E%3Cpath d='M21 8a6 6 0 0 0-3.5-4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='8' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a6 6 0 0 0 9.5 4.9'/%3E%3Cpath d='M11 17v4'/%3E%3Cpath d='M21 4v4h-4'/%3E%3Cpath d='M21 8a6 6 0 0 0-3.5-4'/%3E%3C/svg%3E") center/contain no-repeat}
+#pb-input-language-settings .pb-input-language-status,#pb-input-language-settings .pb-microphone-status{flex:1 0 100%;margin:0}
+#pb-input-language-settings .pb-input-language-status:empty,#pb-input-language-settings .pb-microphone-status:empty{display:none}
+/* Tresor — Verschlüsselung in einer Reihe (Klaus 15.11.2026, Punkt C): Titel, Zustand, Knöpfe; die Erklärung bleibt hinter dem i */
+#tresorNote{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+#tresorNote>*{order:5;flex:1 0 100%}
+#tresorNote>:is(h3,:has(>h3)){order:1;flex:0 1 auto;margin:0!important;display:flex;align-items:center;gap:8px}
+#tresorNote>p:has(#tresorState){order:2;flex:0 0 auto;margin:0!important}
+#tresorNote>.btnrow{order:3;flex:0 1 auto;margin:0!important;gap:6px}
+#tresorNote>:is(summary,.pb-help-toggle,button.pb-help-toggle){order:4;flex:0 0 auto;margin-left:auto}
+/* Zusammenarbeit mit Pro-Apps in einer Reihe (Klaus 15.11.2026, Punkt B) */
+#pro-verbund .pv-zeile{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+#pro-verbund .pv-zustand{font-size:.9rem;overflow-wrap:anywhere}
+#pro-verbund .pv-zeile>.btnrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0}
+#pro-verbund :is(.pv-mehr,.pv-info){position:relative}
+#pro-verbund :is(.pv-mehr,.pv-info)>summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:.85rem}
+#pro-verbund :is(.pv-mehr,.pv-info)>summary::-webkit-details-marker{display:none}
+#pro-verbund .pv-mehr>summary::after{content:" ▾"}
+#pro-verbund .pv-info>summary{width:26px;height:26px;padding:0;border-radius:50%;display:grid;place-items:center;font-style:italic}
+#pro-verbund .pv-mehr[open]>.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+#pro-verbund .pv-info[open]{flex:1 0 100%}
+#pro-verbund .pv-info>p{margin:6px 0 0;font-size:.85rem;opacity:.85}
+/* Tresor-Hilfe (Klaus 15.11.2026) */
+.pb-tresor-band{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0;padding:10px 12px;border-radius:10px;border-left:4px solid #c62828;background:color-mix(in srgb,#c62828 10%,var(--card,#fff))}
+.pb-tresor-band[hidden]{display:none}
+.pb-tresor-satz{flex:1 1 260px;min-width:0}
+.pb-tresor-code>summary,.pb-tresor-mehr>summary{cursor:pointer;list-style:none;display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid var(--line);border-radius:50%;font-size:.8rem}
+.pb-tresor-code>summary::-webkit-details-marker,.pb-tresor-mehr>summary::-webkit-details-marker{display:none}
+.pb-tresor-code span{font-family:ui-monospace,monospace;font-size:.75rem;margin-left:6px}
+.pb-tresor-dialog{max-width:min(560px,94vw)}
+.pb-tresor-tipp{font-weight:600}
+.pb-tresor-liste{display:grid;gap:6px;margin:8px 0}
+.pb-tresor-zeile{display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow-wrap:anywhere}
+.pb-tresor-punkt{width:10px;height:10px;border-radius:50%;background:#2e7d32;flex:none}
+.pb-tresor-zeile.rot .pb-tresor-punkt{background:#c62828}.pb-tresor-zeile.grau .pb-tresor-punkt{background:#9e9e9e}
+.pb-tresor-leucht{outline:3px solid var(--accent,#1f6f5c)!important;outline-offset:3px;box-shadow:0 0 0 7px color-mix(in srgb,var(--accent,#1f6f5c) 25%,transparent)!important}
+.pb-tresor-blase{display:grid;gap:4px;max-width:340px;margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--accent,#1f6f5c);color:#fff}
+.pb-tresor-blase p{margin:0}.pb-tresor-blase button{justify-self:start}
+.pb-tresor-alt{display:none!important}
+#panel-settings.on.pb-themen-an{display:flex;flex-direction:column}
+#panel-settings.on.pb-themen-an>*{flex-shrink:0}
+#panel-settings.pb-themen-an>#pbThemen,#panel-settings.pb-themen-an>#pbThemaKopf{order:-1}

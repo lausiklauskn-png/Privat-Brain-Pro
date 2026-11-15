@@ -49,7 +49,8 @@ try{
   ok('Windows lists every reported microphone after a "Windows default" entry',list[0][0]===''&&list.length===4&&list.slice(1).every((o,i)=>o[0]===DEVICES[i].id));
   ok('The connection named in the device name is shown as a hint (Bluetooth, USB cable, built-in)',/Bluetooth$/.test(list[2][1])&&/USB-Kabel$/.test(list[3][1])&&/eingebaut oder Klinke$/.test(list[1][1]));
   ok('The setting sits in the dictation-language section in the settings',await page.evaluate(()=>document.getElementById('pb-input-language-settings').contains(document.getElementById('pb-microphone-setting'))));
-  ok('Without a choice the app follows the Windows default and says so',(await status()).includes('Windows-Standardmikrofon'));
+  // Klaus 15.11.2026: ohne feste Wahl steht kein eigener Satz mehr da (der Auswahlwert sagt es schon).
+  ok('Without a choice the app follows the Windows default without an extra sentence',(await status())===''&&(await page.locator('#pb-microphone-setting').inputValue())==='');
   const dictate=async()=>{await page.evaluate(()=>{const q=document.getElementById('q');q.value='';});await page.evaluate(()=>document.getElementById('mic').click());await page.waitForFunction(()=>!document.querySelector('[data-speaking="true"]'));};
   await dictate();
   ok('Default dictation passes no device, exactly as before',await page.evaluate(()=>{const c=micCalls.at(-1);return c&&!('input' in c)&&!('inputName' in c)&&c.language==='de-DE';}));
@@ -73,7 +74,7 @@ try{
   ok('Back to "Windows default" removes the stored choice and passes no device',await page.evaluate(()=>localStorage.getItem('pb_microphone_v1')===null&&!('input' in micCalls.at(-1))));
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.waitForFunction(()=>document.querySelector('[data-microphone-copy="label"]').textContent==='Microphone for dictation');
-  ok('Labels follow the interface language (English)',(await status()).includes('Windows default microphone')&&(await options())[0][1].startsWith('Windows default'));
+  ok('Labels follow the interface language (English)',(await options())[0][1].startsWith('Windows default')&&(await page.locator('#pb-microphone-search').textContent())==='Find microphones');
   ok('No emoji in the microphone setting',await page.evaluate(()=>!/\p{Extended_Pictographic}/u.test(document.getElementById('pb-microphone-row').textContent)));
   ok('No unhandled app errors (Windows)',errors.length===0);
   await page.close();
@@ -89,7 +90,7 @@ try{
   await android.waitForFunction(()=>document.querySelectorAll('#pb-microphone-setting option').length===4);
   const aOptions=await android.evaluate(()=>[...document.querySelectorAll('#pb-microphone-setting option')].map(o=>[o.value,o.textContent]));
   ok('Android lists the device microphone, Bluetooth and USB with the connection Android reports',aOptions[0][1].startsWith('Android-Standard')&&aOptions[1][1]==='Mikrofon im Gerät'&&aOptions[2][1]==='Galaxy Buds · Bluetooth'&&aOptions[3][1]==='USB-C Headset · USB-Kabel');
-  ok('Without a choice Android decides, as before',(await android.locator('.pb-microphone-status').textContent()).includes('Wahl von Android'));
+  ok('Without a choice Android decides, as before (no extra sentence, Klaus 15.11.2026)',(await android.locator('.pb-microphone-status').textContent())===''&&(await android.locator('#pb-microphone-setting').inputValue())==='');
   const aDictate=async()=>{await android.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await android.waitForFunction(()=>!document.querySelector('[data-speaking="true"]'));};
   await aDictate();
   ok('Android default dictation passes no device',await android.evaluate(()=>!('input' in micCalls.at(-1))));
@@ -132,10 +133,10 @@ try{
   };
   const web=await openWeb(140),w=web.p;
   await w.waitForFunction(()=>document.querySelectorAll('#pb-microphone-setting option').length===3);
-  ok('PWA lists microphones without asking first and explains how names appear',(await w.locator('.pb-microphone-status').textContent()).includes('Neu suchen')&&await w.evaluate(()=>gumCalls.length===0));
+  ok('PWA lists microphones without asking first and explains how names appear',(await w.locator('.pb-microphone-status').textContent()).includes('Mikrofone suchen')&&await w.evaluate(()=>gumCalls.length===0));
   await w.click('#pb-microphone-search');
   await w.waitForFunction(()=>[...document.querySelectorAll('#pb-microphone-setting option')].some(o=>o.textContent.startsWith('Headset (Jabra Bluetooth)')));
-  ok('"Neu suchen" asks for microphone access once and then shows the real names',await w.evaluate(()=>gumCalls.length===1&&gumCalls[0].audio===true));
+  ok('"Mikrofone suchen" asks for microphone access once and then shows the real names',await w.evaluate(()=>gumCalls.length===1&&gumCalls[0].audio===true));
   const wDictate=async()=>{await w.evaluate(()=>{document.getElementById('q').value='';document.getElementById('mic').click();});await w.waitForTimeout(200);};
   await wDictate();
   ok('PWA default dictation starts the browser recognizer without a device, as before',await w.evaluate(()=>srCalls.at(-1)===null));

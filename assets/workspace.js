@@ -41,6 +41,13 @@
     collapseAll:['Alle zuklappen','Collapse all','Свернуть всё','Zwiń wszystko'],collapse:['Zuklappen','Collapse','Свернуть','Zwiń'],expand:['Aufklappen','Expand','Развернуть','Rozwiń'],
     hideTree:['Ordnerbaum ausblenden','Hide folder tree','Скрыть дерево папок','Ukryj drzewo folderów'],showTree:['Ordnerbaum zeigen','Show folder tree','Показать дерево папок','Pokaż drzewo folderów'],
     openFolder:['Ordner öffnen','Open folder','Открыть папку','Otwórz folder'],categoriesHead:['Kategorien','Categories','Категории','Kategorie'],uncategorized:['Ohne Kategorie','Uncategorized','Без категории','Bez kategorii'],categoryHelp:['Kategorieansicht. Die Dateien bleiben an ihrem bisherigen Ort.','Category view. Files stay in their existing locations.','Вид по категории. Файлы остаются на своих местах.','Widok kategorii. Pliki pozostają w dotychczasowych miejscach.'],topicsHead:['Kategorien (Vorschlag)','Categories (suggestion)','Категории (предложение)','Kategorie (propozycja)'],
+    // Klaus 15.11.2026: ein Suchfeld für alles (Sortier-Kern, Kästchen, Sortierung nach Absender/Bereich/Art)
+    bySender:['Absender','Sender','Отправитель','Nadawca'],byArea:['Bereich','Area','Раздел','Obszar'],byArt:['Art','Kind','Вид','Rodzaj'],
+    chipRemove:['Kästchen entfernen','Remove filter','Убрать фильтр','Usuń filtr'],chipWord:['Nicht als Kästchen lesen, als Wort suchen','Do not read as a filter, search as a word','Искать как слово','Szukaj jako słowa'],
+    recognized:['erkannt','recognized','распознано','rozpoznano'],inContentFound:['nur im Inhalt gefunden','found in the content only','найдено только в тексте','znaleziono tylko w treści'],
+    partly:['Nichts passt ganz. Diese enthalten einen Teil der Wörter:','Nothing matches fully. These contain some of the words:','Полных совпадений нет. Частично:','Brak pełnych trafień. Częściowo:'],
+    without:['Ohne „{x}“: {n} Treffer','Without “{x}”: {n} results','Без «{x}»: {n}','Bez „{x}”: {n}'],best:['Am besten passend','Best match','Лучшее совпадение','Najlepsze dopasowanie'],more:['Weitere','More','Ещё','Więcej'],
+    meaning:['Ähnlich nach Bedeutung','Similar by meaning','Похоже по смыслу','Podobne znaczeniowo'],noSenderGroup:['Absender unbekannt','Unknown sender','Отправитель неизвестен','Nieznany nadawca'],noGroup:['Ohne Angabe','Not set','Не указано','Brak'],
     doneClose:['Hinweis schließen','Close note','Закрыть','Zamknij'],documents:['Dateien','Files','Файлы','Pliki'],stored:['lokal verknüpft','linked locally','локальные ссылки','powiązane lokalnie']
   };
   function text(key) { return (words[key] || [key])[Math.max(0,['de','en','ru','pl'].indexOf(document.documentElement.lang.slice(0,2)))] || key; }
@@ -181,15 +188,27 @@
   const contentText=document.createElement('span');contentLabel.append(contentBox,contentText);orderBox.append(orderButton,contentLabel);
   el('explorerSort').after(orderBox);
   const typeOption=document.createElement('option');typeOption.value='type';typeOption.dataset.ws='byType';typeOption.textContent=text('byType');el('explorerSort').append(typeOption);
+  for(const [key,label] of [['absender','bySender'],['bereich','byArea'],['art','byArt']]){const o=document.createElement('option');o.value=key;o.dataset.ws=label;o.textContent=text(label);el('explorerSort').append(o);}
+  // Kästchen im Suchfeld (Punkt 3): fest = per Klick gesetzt, erkannt = aus der Frage gelesen (× liest das Wort als Text)
+  let chips=[],chipIgnore=new Set();
+  // Die Kästchen stehen in einer eigenen Zeile direkt unter dem Suchfeld: das Feld selbst bleibt, wie die Pro-App es anordnet.
+  const chipBar=document.createElement('div');chipBar.className='explorer-chips';chipBar.id='explorerChips';chipBar.hidden=true;
+  el('explorerFilter').closest('.explorer-toolbar').after(chipBar);
+  contentLabel.hidden=true;contentLabel.style.display='none'; // Klaus 15.11.2026: der Inhalt wird von selbst mit durchsucht
+  function addChip(chip){if(!chips.some(c=>c.feld===chip.feld&&c.wert===chip.wert))chips.push(chip);folderPath='';revealSelectedPath=true;renderExplorer();}
+  function chipNode(c,erkannt){const b=document.createElement('button');b.type='button';b.className='explorer-chip'+(erkannt?' explorer-chip-erkannt':'');b.dataset.feld=c.feld;b.dataset.wert=String(c.wert);
+    b.textContent=c.label+' ×';b.title=erkannt?text('recognized')+' · '+text('chipWord'):text('chipRemove');b.setAttribute('aria-label',b.title+': '+c.label);
+    b.onclick=()=>{if(erkannt)chipIgnore.add(c.wort);else chips=chips.filter(x=>x!==c);renderExplorer();el('explorerFilter').focus();};return b;}
   if(!el('explorerSort').dataset.chosen)el('explorerSort').value='date';
   function orderLabel(){const k={name:'orderName',date:'orderDate',size:'orderSize',type:'orderType'}[el('explorerSort').value]||'orderDate';orderButton.textContent=text(k+(explorerReverse?'R':''));orderButton.setAttribute('aria-pressed',String(explorerReverse));iconText(contentText,'search','🔎',text('inContent').replace(/^🔎\s*/,''));}
   orderButton.onclick=()=>{explorerReverse=!explorerReverse;renderExplorer();};
   contentBox.onchange=()=>renderExplorer();
-  function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value,reverse:explorerReverse,content:contentBox.checked};}
+  function explorerState(){return {path:folderPath,filter:el('explorerFilter').value,sort:el('explorerSort').value,reverse:explorerReverse,content:contentBox.checked,chips:chips.map(c=>({...c})),ignore:[...chipIgnore]};}
   function restoreExplorer(state){
     folderPath=String(state?.path||'');el('explorerFilter').value=String(state?.filter||'');
     revealSelectedPath=true;
-    el('explorerSort').value=['name','date','size','type'].includes(state?.sort)?state.sort:'date';
+    el('explorerSort').value=['name','date','size','type','absender','bereich','art'].includes(state?.sort)?state.sort:'date';
+    chips=Array.isArray(state?.chips)?state.chips.filter(c=>c&&c.feld&&c.label):[];chipIgnore=new Set(Array.isArray(state?.ignore)?state.ignore:[]);
     explorerReverse=state?.reverse===true;contentBox.checked=state?.content===true;renderExplorer();
   }
   const foldText=s=>String(s||'').toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss');
@@ -440,8 +459,29 @@
     const where=window.PBRecordStatus?'':window.PBOriginals?.stored.has(e.r.hash)?PBOriginals.label():e.dirId?text('local'):SESSION_FILES.has(e.r.hash)?text('session'):text('catalog');
     const from=kind==='attach'?'📎 '+text('fromMail')+' '+senderLabel(sender).slice(3):kind==='mail'?text('from')+' '+tidy(e.r.mail?.from||e.path.split('/')[1]||'?'):'';
     meta.textContent=[from,kind==='mail'||kind==='attach'?'':e.path.split('/').slice(0,-1).join('/'),fmtKB(e.r.size||0),date,where].filter(Boolean).join(' · ');
-    info.append(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view&&!view.category)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
+    // Einordnung des Sortier-Kerns (Klaus 15.11.2026): Art · Absender · Bereich, eigene Kategorie zuerst
+    const k=e.r.kern,art=window.PBSuchFrage?PBSuchFrage.artVon(e.r):'';
+    if(k||e.r.eigeneKategorie){const kz=document.createElement('div');kz.className='explorer-kern';kz.textContent=[e.r.eigeneKategorie,art&&art!=='Unklar'?art.replace('/Werbung',''):'',kind==='mail'?'':k?.absender,k?.bereich].filter(Boolean).join(' · ');if(kz.textContent)info.append(kz);}
+    info.prepend(name,meta);row.append(info,button(text('open'),()=>openEntry(e)));if(view&&!view.category)row.append(window.PBExplorerTopics.rowTool(e.r,view.key));
+    window.PBEigeneKategorien?.zeile?.(row,e.r);
     return row;
+  }
+  // Punkt 5: unter den sicheren Treffern „Ähnlich nach Bedeutung“ – mit dem Modell, das die App ohnehin lädt (Modul 03 bzw.
+  // das zweite Modell der Pro-App). Dieselben Kästchen gelten. Ohne Modell fehlt der Abschnitt.
+  let meaningRun=0;
+  async function meaningRows(found,files,shown,pool){
+    const run=++meaningRun;
+    if(typeof embedQueryCached!=='function')return;
+    const qe=await embedQueryCached(found.frage.rest.join(' '));
+    if(!qe||run!==meaningRun||!files.isConnected)return;
+    const score=r=>typeof ecoOf==='function'?ecoOf(qe,r):(Array.isArray(r.evec)&&typeof cosineE==='function'?cosineE(qe,r.evec):0);
+    const seen=new Set(),frage={...found.frage,rest:[],bonus:[]};
+    const near=pool.filter(e=>!shown.has(e.r.hash)&&!seen.has(e.r.hash)&&seen.add(e.r.hash)&&window.PBSuchFrage.passt(e.r,frage,found.kaestchen,found.ctx))
+      .map(e=>({e,s:score(e.r)})).filter(x=>x.s>=0.78).sort((a,b)=>b.s-a.s).slice(0,8);
+    if(!near.length)return;
+    files.querySelector('.explorer-empty')?.remove();
+    const h=heading(text('meaning'));h.classList.add('explorer-group','explorer-meaning');files.append(h);
+    for(const x of near){const row=fileRow(x.e,null);row.dataset.hit='bedeutung';files.append(row);}
   }
   let lastModel=null,currentView=null;
   // Klaus 2026-10-26 (Sitzung 2, Punkt 3): the explorer's choice of view also offers „PDF“; nothing is moved.
@@ -466,12 +506,18 @@
     const here=document.createElement('span');here.className='explorer-crumb-here';here.textContent=label;
     box.replaceChildren(back,sep,here);
   }
+  // Eine alte Kategorie, die auch eine Art des Kerns ist, wird zum Art-Kästchen; die übrigen bleiben Kategorie-Kästchen.
+  const ART_AUS_KATEGORIE={Rechnung:'Rechnung',Vertrag:'Vertrag',Angebot:'Angebot/Werbung'};
+  function categoryChip(label,key){const raw=decodeURIComponent(String(key).replace(/^category:/,''));const art=ART_AUS_KATEGORIE[raw];
+    const name=String(label).startsWith('category:')?raw:label;
+    return art?{feld:'art',wert:art,label:raw,quelle:key}:{feld:'kategorie',wert:raw,label:name,quelle:key};}
   function renderExplorer() {
+    if(folderPath.startsWith('category:')){const c=categoryChip(folderPath,folderPath);if(!chips.some(x=>x.feld===c.feld&&x.wert===c.wert))chips.push(c);folderPath='';}
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
     const nodes=buildModel(all);lastModel=nodes;
     const topics=window.PBExplorerTopics, views=topics?.views()||[], categories=categoryViews(all);
-    const view=folderPath===PDF_VIEW.key?PDF_VIEW:folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):categories.find(v=>v.key===folderPath)||null;currentView=view||null;
+    const view=folderPath===PDF_VIEW.key?PDF_VIEW:folderPath.startsWith('topic:')?views.find(v=>'topic:'+v.key===folderPath):null;currentView=view||null;
     if(!view){const real=resolvePath(nodes,folderPath);if(real!==folderPath){folderPath=real;revealSelectedPath=true;}}
     const here=view?null:nodes.get(folderPath);
     if(here&&revealSelectedPath)for(const n of chain(nodes,folderPath))openNodes.add(n.path);
@@ -479,8 +525,10 @@
     treeView(nodes,tree);
     // The existing catalog categories are direct explorer views as well.
     if(categories.length)tree.append(heading(text('categoriesHead')));
-    for(const category of categories){const b=button('',()=>openFolder(category.key));iconText(b,'folder','📁',category.label+' ('+category.count+')');b.dataset.category=category.key;b.setAttribute('aria-current',folderPath===category.key?'location':'false');tree.append(b);}
+    for(const category of categories){const b=button('',()=>addChip(categoryChip(category.label,category.key)));iconText(b,'folder','📁',category.label+' ('+category.count+')');b.dataset.category=category.key;b.setAttribute('aria-current',chips.some(c=>c.quelle===category.key)?'location':'false');tree.append(b);}
     // Categories (native): views over the catalog, nothing is moved. Path "topic:<key>".
+    // Eigene Kategorien (Klaus 15.11.2026): links mit Zahl, Klick setzt ein Kästchen
+    window.PBEigeneKategorien?.baum?.(tree,heading,chips);
     if(views.length)tree.append(heading(text('topicsHead')));
     for(const v of views){const b=button(v.label+' ('+v.count+')',()=>openFolder('topic:'+v.key));b.dataset.topic=v.key;b.setAttribute('aria-current',folderPath==='topic:'+v.key?'location':'false');tree.append(b);}
     el('panel-explorer').classList.toggle('explorer-tree-hidden',treeHidden);
@@ -496,19 +544,52 @@
     const words=foldText(el('explorerFilter').value).split(/\s+/).filter(Boolean);
     const sort=el('explorerSort').value, flip=explorerReverse?-1:1;
     const typeKey=r=>String(r.ext||String(r.name||'').match(/\.([^./]+)$/)?.[1]||r.type||'').replace(/^\./,'').trim().toLocaleLowerCase();
-    const order=(a,b)=>flip*(sort==='date'?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):sort==='type'?(typeKey(a.r).localeCompare(typeKey(b.r))||a.r.name.localeCompare(b.r.name)):a.r.name.localeCompare(b.r.name));
+    const SF=window.PBSuchFrage, artOf=r=>SF?SF.artVon(r):String(r.category||'');
+    const groupKey=sort==='absender'?r=>r.kern?.absender||(r.mail?.from&&SF?SF.mailName(r.mail.from):''):sort==='bereich'?r=>r.kern?.bereich||'':sort==='art'?r=>artOf(r):null;
+    const byGroup=(a,b)=>{const x=groupKey(a.r),y=groupKey(b.r);return (!x)-(!y)||x.localeCompare(y);};
+    const order=(a,b)=>flip*(sort==='date'||groupKey?(b.r.date||0)-(a.r.date||0):sort==='size'?(b.r.size||0)-(a.r.size||0):sort==='type'?(typeKey(a.r).localeCompare(typeKey(b.r))||a.r.name.localeCompare(b.r.name)):a.r.name.localeCompare(b.r.name));
     const extra=window.PBExplorerExtra;
     if(here?.kind==='mail')extra?.head?.(files);
-    // "Alle Dateien" holds everything; a search looks through the whole folder below; otherwise one level.
-    let list, vaultList=[];
-    if(view){const seen=new Set();list=all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r)&&explorerMatch(e,words));}
-    else if(!folderPath||words.length){const a=allFiles(here);list=a.files.filter(e=>explorerMatch(e,words));
-      const needle=foldText(el('explorerFilter').value);vaultList=a.vault.filter(v=>!needle||foldText(v.name+' '+(v.subject||'')+' '+(v.from||'')).includes(needle));}
+    // Klaus 15.11.2026: ein Suchfeld für alles. Die Frage wird gelesen (Füllwörter weg, Kästchen für Art, Absender, Monat …);
+    // gesucht wird in Name, Feldern des Sortier-Kerns und von selbst im Inhalt. Ohne PBSuchFrage bleibt die alte Wortsuche.
+    let list, vaultList=[], found=null;
+    const searching=words.length||chips.length;
+    const pool=view?(()=>{const seen=new Set();return all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r));})():(!folderPath||searching)?(()=>{const a=allFiles(here);vaultList=a.vault;return a.files;})():null;
+    if(pool&&searching&&SF){
+      const first=new Map();for(const e of pool)if(!first.has(e.r.hash))first.set(e.r.hash,e);
+      const byHash=new Map(CATALOG.map(r=>[r.hash,r])),ctx=SF.kontext(CATALOG,r=>r.fromMail?byHash.get(r.fromMail):null);
+      found=SF.suchen([...first.values()].map(e=>e.r),el('explorerFilter').value,chips,ctx,chipIgnore);
+      found.ctx=ctx;list=found.treffer.map(t=>Object.assign(first.get(t.r.hash),{hit:t.p}));
+      const needle=foldText(el('explorerFilter').value);vaultList=chips.length?[]:vaultList.filter(v=>!needle||foldText(v.name+' '+(v.subject||'')+' '+(v.from||'')).includes(needle));
+    }else if(pool){list=pool.filter(e=>explorerMatch(e,words));
+      const needle=foldText(el('explorerFilter').value);vaultList=vaultList.filter(v=>!needle||foldText(v.name+' '+(v.subject||'')+' '+(v.from||'')).includes(needle));}
     else{list=[...here.files];vaultList=[...here.vault];}
-    if(!view&&!words.length)for(const k of here.kids)if(k.tally.n)files.append(folderRow(k));
+    chipBar.replaceChildren(...chips.map(c=>chipNode(c,false)),...(found?found.frage.kaestchen.map(c=>chipNode(c,true)):[]));
+    chipBar.hidden=!chipBar.childElementCount;
+    // Ohne sichtbaren Inhalt (Pro-App: ↕ im Sortier-Menü, Haken entfallen) nimmt die leere Hülle keinen Platz ein.
+    orderBox.style.display=[...orderBox.children].some(c=>getComputedStyle(c).display!=='none')?'':'none';
+    if(!view&&!searching)for(const k of here.kids)if(k.tally.n)files.append(folderRow(k));
     if(here?.mail){list=list.filter(e=>e!==here.mail);files.append(fileRow(here.mail,null));}
-    list.sort(order);
-    for(const e of list)files.append(fileRow(e,view));
+    // Reihenfolge: mit Suchwörtern zuerst nach Passung; Einzahl („Rechnung“) = die passendste oben, Mehrzahl („Rechnungen“) = alle nach Absender.
+    const chosen=el('explorerSort').dataset.chosen==='1';
+    const ranked=found&&(found.frage.rest.length||found.frage.bonus.length)&&!groupKey&&!(chosen&&sort!=='date');
+    const autoGroup=found&&found.frage.mehrzahl&&!chosen&&sort==='date'&&found.kaestchen.some(c=>c.feld==='art'||c.feld==='form')?(r=>r.kern?.absender||(r.mail?.from&&SF?SF.mailName(r.mail.from):'')):null;
+    const gk=groupKey||autoGroup;
+    if(!ranked)list.sort(order);
+    if(gk)list.sort((a,b)=>{const x=gk(a.r),y=gk(b.r);return (!x)-(!y)||x.localeCompare(y);});
+    if(found?.teilweise)files.append(Object.assign(document.createElement('p'),{className:'hint explorer-partly',textContent:text('partly')}));
+    const best=found&&found.frage.einzahl&&!gk&&list.length>1;
+    let lastGroup=null;
+    list.forEach((e,i)=>{
+      if(gk){const g=gk(e.r)||'';if(g!==lastGroup){lastGroup=g;const h=heading(g||text(sort==='absender'||autoGroup?'noSenderGroup':'noGroup'));h.classList.add('explorer-group');h.dataset.group=g;files.append(h);}}
+      else if(best&&(i===0||i===1)){const h=heading(text(i===0?'best':'more'));h.classList.add('explorer-group');files.append(h);}
+      const row=fileRow(e,view);if(best&&i===0)row.classList.add('explorer-best');
+      if(e.hit&&e.hit.wo!=='feld'){const m=row.querySelector('.explorer-meta');if(m)m.append(' · '+text('inContentFound'));row.dataset.hit=e.hit.wo;}
+      files.append(row);delete e.hit;
+    });
+    if(found&&!list.length&&found.ohne.length){const box=document.createElement('div');box.className='explorer-without';
+      for(const o of found.ohne){const b=button(text('without').replace('{x}',o.k.label).replace('{n}',o.n),()=>{if(chips.includes(o.k))chips=chips.filter(x=>x!==o.k);else chipIgnore.add(o.k.wort);renderExplorer();});box.append(b);}files.append(box);}
+    if(found&&found.frage.rest.length)meaningRows(found,files,new Set(list.map(e=>e.r.hash)),pool);
     if(extra?.row)for(const v of vaultList.sort((a,b)=>(Number(b.date)||b.stored||0)-(Number(a.date)||a.stored||0)))files.append(extra.row(v));
     if(here?.kind==='mail')extra?.lockedRow?.(files);
     if(here?.loose)files.append(Object.assign(document.createElement('p'),{className:'hint explorer-loose-hint',textContent:text('looseHint')}));
@@ -533,7 +614,10 @@
   }
   el('chooseLibrary').onclick=chooseLibrary;
   el('pauseLibrary').onclick=()=>{if(signing)return;library=null;localStorage.setItem('pb_library_enabled','0');refresh();};
-  el('explorerFilter').oninput=renderExplorer;el('explorerSort').onchange=()=>{el('explorerSort').dataset.chosen='1';explorerReverse=false;renderExplorer();};
+  el('explorerFilter').oninput=()=>{chipIgnore=new Set([...chipIgnore].filter(w=>foldText(el('explorerFilter').value).includes(w)));renderExplorer();};
+  // Rückschritt im leeren Feld nimmt das letzte feste Kästchen weg
+  el('explorerFilter').addEventListener('keydown',ev=>{if(ev.key==='Backspace'&&!el('explorerFilter').value&&chips.length){chips.pop();renderExplorer();}});
+  addEventListener('pb-kern-geordnet',()=>{if(el('panel-explorer')?.classList.contains('on')||el('explorerFiles')?.childElementCount)renderExplorer();});el('explorerSort').onchange=()=>{el('explorerSort').dataset.chosen='1';explorerReverse=false;renderExplorer();};
   el('explorerHome').onclick=()=>openFolder('',{clear:true});
   el('explorerUp').onclick=()=>openFolder(folderPath.startsWith('topic:')?'':lastModel?.get(folderPath)?.parent??'');
   new MutationObserver(refresh).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
@@ -541,7 +625,7 @@
   window.addEventListener('popstate',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'search',{record:false}));
   window.addEventListener('pb-originals-change',refresh);
-  window.PBWorkspace={prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,explorerSections,explorerSection,overview:overviewSummary};
+  window.PBWorkspace={addChip:c=>addChip(c),renderExplorer:()=>renderExplorer(),prepareImport,storeItem,refresh,navigate,explorerState,restoreExplorer,kindOf,importSummary,showKind,explorerSections,explorerSection,overview:overviewSummary};
   navigate(location.hash.slice(1)||'search',{replace:true});
   const wait=setInterval(()=>{if(db){clearInterval(wait);ready=restore().catch(()=>refresh());}},50);
   refresh();

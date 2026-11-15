@@ -1,0 +1,22 @@
+{
+ "quelle": "lausiklauskn-png/Datei-Organizer kern-js/",
+ "commit": "70eb44b0bc13fcf0165095a1a58fae3a297820c4",
+ "werkzeug": "tools/sortierkern-nachziehen.mjs",
+ "hinweis": "Nie von Hand ändern. Kern im Datei-Organizer pflegen, dann neu ziehen.",
+ "dateien": {
+  "absenderwahl-daten.js": "c1c8f54b8bed4bf5d1bfad4808ae9ad7f7dfaf743166b663b511a2682cf81560",
+  "absenderwahl.js": "3c49ad28aa41ef096969fbcd1cd4193db9cdc4c6e3c96ea236fc460d957f44e8",
+  "artmodell-daten.js": "abddffaeee8949b9dad2efa7a7c64e3a7b2577dd8ca3ec80cbd0c2d6b357a69c",
+  "artmodell.js": "0f03f5d41c52ae9e07c2555d27991d22eee8985d77f31c8bc85914d8708f6f7e",
+  "eml.js": "cf66ce717099e21cf5ed79abf76e01035461672e9676cf45a2f145ed6acb352f",
+  "erkennen.js": "68bf5b7849c16f910c38219d1a568c83b3e1cea7f075ecd43eca908f6ee99d10",
+  "fristwahl-daten.js": "e1cab5873f870dc5b73b4f7803f980aa70d0117154aed0855a5b4434b8509f41",
+  "fristwahl.js": "55aa84799f47c305d290fef88205b0fc6fabcd90b9deea800a596cf020f2f967",
+  "gehalt.js": "559a1644a2a82dc266fd1a586a7128232de67a7af3d5296fa2d7c187f6502b8b",
+  "kategorien.js": "0f22e721b36a3241e49ce485a0d639e1ac72159e449f7b0fed3d7d0dc983efd1",
+  "lernen.js": "d15e9fddb48c2ec67f13d96177a5e94ae82206f790069b39ac6a98106dbb0767",
+  "siebe.js": "0df5c094da66167dc3a189e83ec3225e8cdd199270c8bc009e4d6f48765cc99a",
+  "wortmodell-daten.js": "ac260398dfac4fa63bec7acf826ab381b588e8fd3399362e7684646534470e52",
+  "wortmodell.js": "1c91470a99660fa3badfe7c711a3da9ea9c4290ecb288c1b91319d85ca2778a6"
+ }
+}

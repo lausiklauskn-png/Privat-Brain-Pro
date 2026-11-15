@@ -99,9 +99,12 @@ async function render(){
  let z,own={},all;try{z=await api.tresorZustand({});if(z.offen)own=await api.state();all=await receipts();}catch{z={};all=[];note=t(20);}
  if(generation!==renderGeneration)return;
  if(!panel){panel=make('section');panel.id='pro-verbund';panel.className='note';host.append(panel);}
- panel.replaceChildren(make('h4',t(0)),make('p',t(1)+(window.PBOrdnerHinweis?' '+PBOrdnerHinweis.hinweis():'')));
- const status=make('p',z.erreichbar===false?t(9)+(z.ordner||''):z.offen?t(7)+(z.ordner||''):z.gewaehlt?t(8)+(z.ordner||''):t(6));status.setAttribute('role','status');panel.append(status);
- const row=make('div');row.className='btnrow';panel.append(row);
+ // Klaus 15.11.2026 (Punkt B): eine Reihe – Zustand, Knöpfe, seltene Knöpfe hinter „Mehr“, die Erklärung hinter dem i.
+ panel.replaceChildren(make('h4',t(0)));
+ const status=make('span',z.erreichbar===false?t(9)+(z.ordner||''):z.offen?t(7)+(z.ordner||''):z.gewaehlt?t(8)+(z.ordner||''):t(6));status.setAttribute('role','status');status.className='pv-zustand';
+ const zeile=make('div');zeile.className='pv-zeile';const row=make('div');row.className='btnrow';zeile.append(status,row);panel.append(zeile);
+ const mehr=make('details');mehr.className='pv-mehr';const mehrKopf=make('summary',({de:'Mehr',en:'More',ru:'Ещё',pl:'Więcej'})[document.documentElement.lang]||'Mehr');const mehrRow=make('div');mehrRow.className='btnrow';mehr.append(mehrKopf,mehrRow);
+ const info=make('details');info.className='pv-info';const infoKopf=make('summary','i');infoKopf.setAttribute('aria-label',t(0)+': '+(({de:'Erklärung',en:'Explanation',ru:'Пояснение',pl:'Wyjaśnienie'})[document.documentElement.lang]||'Erklärung'));info.append(infoKopf,make('p',t(1)+(window.PBOrdnerHinweis?' '+PBOrdnerHinweis.hinweis():'')));
  const connect=async other=>{
   // Gemeinsamer Tresor-Plan (Klaus 2026-11-03): falsch gewählter Ordner → klare Meldung statt Code.
   try{const r=await api.tresorEinziehen({...options(),nurVerbinden:true,...(other?{neuWaehlen:true}:{})});if(!r?.abgebrochen)note='';}
@@ -117,8 +120,9 @@ async function render(){
  }
  if(!z.offen)button(row,z.gewaehlt?t(4):t(2),()=>connect(false));
  if(z.gewaehlt)button(row,t(3),()=>connect(true));
- if(z.offen){button(row,t(5),()=>api.tresorSperren({}));button(row,t(10),receive);button(row,t(11),confirm);
- if(own.unlocked&&z.pruefung==='PASST'&&!z.eingezogen)button(row,t(26),async()=>{await api.tresorEinziehen(options());await window.PBTresorordner?.aktualisieren(true);});}
+ if(z.offen){button(row,t(5),()=>api.tresorSperren({}));button(row,t(10),receive);button(mehrRow,t(11),confirm);
+ if(own.unlocked&&z.pruefung==='PASST'&&!z.eingezogen)button(mehrRow,t(26),async()=>{await api.tresorEinziehen(options());await window.PBTresorordner?.aktualisieren(true);});}
+ if(mehrRow.childElementCount)row.append(mehr);row.append(info);
  const notice=make('p',note);notice.setAttribute('role','status');panel.append(notice);
  const out=all.filter(r=>r.kind==='ausgang'&&r.vaultId===z.kennung);
  if(out.length){panel.append(make('h5',t(27)));const list=make('ul');for(const r of out){const li=make('li',r.vertrag.name+' → '+names[r.vertrag.ziel]+': '+t(r.stand==='im-eingang'?14:r.stand==='weitergegeben'?13:12));li.style.overflowWrap='anywhere';if(z.offen&&r.stand!=='im-eingang')button(li,more(1),()=>deliver(r));list.append(li);}panel.append(list);}

@@ -1,0 +1,188 @@
+<title>Private Brain: Tresor-Hilfe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Arbeitsvorschau: Fall vom 15.11., dann sechs Punkte mit Skizze und Ja/Nein, unten die Antwortzeile. */
+:root{
+  --bg:#f5f6f8; --card:#fff; --fg:#1d2330; --mute:#5c6577; --line:#d9dde5;
+  --accent:#1f6f5c; --accent-soft:#e2f1ec; --warn:#9a5b00; --warn-soft:#fbf0dc; --bad:#a3302a; --bad-soft:#f8e4e2; --field:#fff;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13161c; --card:#1b1f27; --fg:#e4e8ef; --mute:#9aa3b3; --line:#2e3441; --accent:#6cc5ad; --accent-soft:#17302a;
+  --warn:#e2b061; --warn-soft:#33281a; --bad:#ef8a83; --bad-soft:#3a1f1d; --field:#151920; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161c; --card:#1b1f27; --fg:#e4e8ef; --mute:#9aa3b3; --line:#2e3441; --accent:#6cc5ad; --accent-soft:#17302a;
+  --warn:#e2b061; --warn-soft:#33281a; --bad:#ef8a83; --bad-soft:#3a1f1d; --field:#151920; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+main{max-width:860px;margin:0 auto;display:grid;gap:26px}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance}
+h1{font-size:1.6rem;font-weight:600} h2{font-size:1.2rem;font-weight:600} h3{font-size:1rem;font-weight:600}
+p{margin:0} ul,ol{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.lead{color:var(--mute);max-width:65ch}
+.stand{font-family:var(--mono);font-size:.78rem;color:var(--mute)}
+section{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+.nr{font-family:var(--mono);font-size:.85rem;color:var(--accent);font-weight:500}
+.kopf{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.skizze{background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:12px;display:grid;gap:10px;min-width:0}
+.skizze-titel{font-size:.75rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-radius:8px;padding:10px 12px;background:var(--bad-soft);border-left:3px solid var(--bad)}
+.band.gelb{background:var(--warn-soft);border-left-color:var(--warn)}
+.band.gruen{background:var(--accent-soft);border-left-color:var(--accent)}
+.knopf{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--field);color:var(--fg);border-radius:6px;padding:5px 11px;white-space:nowrap}
+.knopf.voll{background:var(--accent);border-color:var(--accent);color:var(--card)}
+.knopf.leucht{outline:3px solid var(--accent);outline-offset:2px;box-shadow:0 0 0 6px var(--accent-soft)}
+.reihe{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fenster{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;max-width:520px}
+.schritt{display:flex;gap:10px;align-items:baseline}
+.schritt b{font-family:var(--mono);font-size:.8rem;color:var(--accent);min-width:3.2em}
+.blase{position:relative;background:var(--accent);color:var(--card);border-radius:8px;padding:8px 11px;font-size:.88rem;max-width:300px}
+.mono{font-family:var(--mono);font-size:.85rem}
+.wahl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.wahl span{font-size:.85rem;color:var(--mute)}
+.wahl label{display:inline-flex;gap:5px;align-items:center;font-size:.9rem;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.wahl label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.wahl input{accent-color:var(--accent)}
+.wahl input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.antwort{font-family:var(--mono);font-size:.9rem;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
+button.k{font:inherit;font-size:.88rem;border:1px solid var(--accent);background:var(--accent);color:var(--card);border-radius:6px;padding:5px 12px;cursor:pointer}
+button.k:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+</style>
+
+<main>
+<header style="display:grid;gap:8px">
+  <div class="stand">Vorschau · Private Brain Pro · 15.11.2026 · nichts davon ist gebaut</div>
+  <h1>Tresor-Hilfe: von der Fehlermeldung direkt zur Lösung</h1>
+  <p class="lead">Dein Fall von heute: Der alte Ablageordner war gelöscht, die App wusste das nicht. Die Lösung waren zwei Knöpfe und zweimal derselbe Ordner. Diese Hilfe soll dich künftig ohne Anleitung dahin führen. Bitte Ja oder Nein je Punkt.</p>
+</header>
+
+<section>
+  <h2>Was heute passiert ist</h2>
+  <div class="card">
+    <ol>
+      <li>Oben stand rot: „Der Speicherort ist nicht erreichbar. SD-Karte eingesteckt? … (VAULT_FOLDER_UNAVAILABLE)“. Die Karte steckte aber, nur der Ordner fehlte.</li>
+      <li>Mails ließen sich nicht öffnen. Das ist schon behoben, aber noch nicht veröffentlicht: Mails gehen dann trotzdem auf.</li>
+      <li>Lösung: „Anderen Speicherort wählen“ › Family_Projekt_de, dann „Anderen Ordner wählen …“ › Family_Projekt_de, zweimal Passwort.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Die sieben Punkte</h2>
+
+  <article class="card" id="p1">
+    <div class="kopf"><span class="nr">Punkt 1</span><h3>Die Meldung sagt, was wirklich los ist</h3></div>
+    <p>Die App prüft selbst, welcher von drei Fällen es ist, und sagt es in einem Satz:</p>
+    <ul>
+      <li><b>Karte fehlt:</b> „Die SD-Karte ist nicht eingesteckt.“</li>
+      <li><b>Karte steckt, Ordner fehlt:</b> „Der Ordner ‚Privat Brain Pro Hauptablageordner‘ ist auf der SD-Karte nicht mehr da (gelöscht oder umbenannt).“</li>
+      <li><b>Ordner da, aber Android hat die Erlaubnis entzogen:</b> „Android hat den Zugriff auf den Ordner zurückgenommen.“</li>
+    </ul>
+    <p class="lead">Grenze: Android lässt keine App ohne Erlaubnis auf der Karte suchen. Ob der Ordner gelöscht ist oder nur die Erlaubnis fehlt, erkennt die App sicher erst nach einem Tipp in der Ordnerwahl. Vorher sagt sie ehrlich „vermutlich“.</p>
+    <div class="wahl"><span>Punkt 1:</span><label><input type="radio" name="p1" value="Ja" id="p1ja">Ja</label><label><input type="radio" name="p1" value="Nein" id="p1nein">Nein</label><label><input type="radio" name="p1" value="Ändern" id="p1aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p2">
+    <div class="kopf"><span class="nr">Punkt 2</span><h3>An der Meldung steht „Beheben ›“</h3></div>
+    <p>Kein langer Fehlertext mehr mit Fehlercode vorne. Ein Satz, ein Knopf. Der Code steht nur noch klein hinter „?“.</p>
+    <div class="skizze">
+      <div class="skizze-titel">So sieht die Meldung oben aus</div>
+      <div class="band"><span>Der Ablageordner auf der SD-Karte ist nicht mehr da. Mails gehen trotzdem auf, werden aber nicht gesichert.</span><span class="knopf voll">Beheben ›</span></div>
+    </div>
+    <div class="wahl"><span>Punkt 2:</span><label><input type="radio" name="p2" value="Ja" id="p2ja">Ja</label><label><input type="radio" name="p2" value="Nein" id="p2nein">Nein</label><label><input type="radio" name="p2" value="Ändern" id="p2aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p3">
+    <div class="kopf"><span class="nr">Punkt 3</span><h3>Reparatur in einem Zug (die „automatische Korrektur“)</h3></div>
+    <p>„Beheben ›“ öffnet ein kleines Fenster. Die App schlägt vor, was sie findet, und macht beide Schritte von heute zusammen:</p>
+    <div class="skizze">
+      <div class="fenster">
+        <h3>Tresor neu verbinden</h3>
+        <p>Die Ordnerwahl von Android öffnet sich gleich <b>auf der SD-Karte</b>. Tippe nur „Diesen Ordner verwenden“. Den Tresor darin sucht die App selbst.</p>
+        <div class="schritt"><b>findet</b><span class="mono">SD-Karte / Family_Projekt_de</span> (Tresor vom 11.11.)</div>
+        <div class="schritt"><b>legt an</b><span>darin „Private Brain“ für deine Ablage</span></div>
+        <div class="schritt"><b>verbindet</b><span>„Zusammenarbeit mit Pro-Apps“ mit demselben Tresor</span></div>
+        <div class="schritt"><b>fragt</b><span>einmal das Tresor-Passwort</span></div>
+        <div class="reihe"><span class="knopf voll">Weiter zur Ordnerwahl</span><span class="knopf">Abbrechen</span></div>
+      </div>
+    </div>
+    <ul>
+      <li>Nichts geschieht ohne deinen Tipp, nichts wird gelöscht oder überschrieben. Die App legt nie still einen Ersatzordner an.</li>
+      <li>Der alte, nicht mehr vorhandene Ort wird erst vergessen, wenn der neue funktioniert.</li>
+      <li>Ist der alte Ordner doch noch da (nur die Erlaubnis fehlte), verbindet sie ihn einfach wieder.</li>
+    </ul>
+    <div class="wahl"><span>Punkt 3:</span><label><input type="radio" name="p3" value="Ja" id="p3ja">Ja</label><label><input type="radio" name="p3" value="Nein" id="p3nein">Nein</label><label><input type="radio" name="p3" value="Ändern" id="p3aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p4">
+    <div class="kopf"><span class="nr">Punkt 4</span><h3>Geführte Schritte: der nächste Knopf leuchtet</h3></div>
+    <p>Klappt der eine Zug nicht (zum Beispiel ein anderer Ordner gewählt), führt die App Knopf für Knopf. Sie springt zur richtigen Stelle, der nächste Knopf leuchtet, daneben steht eine kurze Blase. Antippen musst du selbst.</p>
+    <div class="skizze">
+      <div class="skizze-titel">Schritt 1 von 2 · Einstellungen › Tresor &amp; Ablage</div>
+      <div class="reihe"><span class="knopf leucht">Anderen Speicherort wählen</span><span class="knopf">Vorhandenen Ordner öffnen</span><span class="knopf">Jetzt sichern</span></div>
+      <div class="blase">Hier tippen, dann auf der SD-Karte „Family_Projekt_de“ wählen.</div>
+      <div class="reihe"><span class="knopf">Hilfe beenden</span></div>
+    </div>
+    <div class="wahl"><span>Punkt 4:</span><label><input type="radio" name="p4" value="Ja" id="p4ja">Ja</label><label><input type="radio" name="p4" value="Nein" id="p4nein">Nein</label><label><input type="radio" name="p4" value="Ändern" id="p4aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p5">
+    <div class="kopf"><span class="nr">Punkt 5</span><h3>Knopf „Tresor-Hilfe“ immer da</h3></div>
+    <p>Im Kasten „Tresor &amp; Ablage“ statt „Wo liegt was?“ ein Knopf <b>„Tresor-Hilfe“</b>. Er zeigt den Zustand in drei Zeilen (Ablage, gemeinsamer Tresor, Karte) mit grün oder rot, und bei rot „Beheben ›“ wie oben. „Wo liegt was?“ steht dann darin.</p>
+    <div class="skizze">
+      <div class="band gruen"><span>Ablage: SD-Karte / Family_Projekt_de / Private Brain · verschlüsselt</span><span class="mono">in Ordnung</span></div>
+      <div class="band gruen"><span>Gemeinsamer Tresor: Family_Projekt_de · verbunden</span><span class="mono">in Ordnung</span></div>
+      <div class="band gelb"><span>Eigene Ablage im Tresor angemeldet: noch nicht</span><span class="knopf">Anmelden ›</span></div>
+    </div>
+    <div class="wahl"><span>Punkt 5:</span><label><input type="radio" name="p5" value="Ja" id="p5ja">Ja</label><label><input type="radio" name="p5" value="Nein" id="p5nein">Nein</label><label><input type="radio" name="p5" value="Ändern" id="p5aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p6">
+    <div class="kopf"><span class="nr">Punkt 6</span><h3>Dieselbe Hilfe in den anderen Pro-Apps</h3></div>
+    <p>Der Fall kann in Familienakte, Workflow PDF Pro, BookLedgerPro und Datei-Organizer genauso passieren. Die Hilfe als gemeinsamer Baustein, in Private Brain gebaut und byte-gleich verteilt (wie die anderen Bedien-Bausteine). Jede App erst nach eigener Sitzung und deinem Ja.</p>
+    <div class="wahl"><span>Punkt 6:</span><label><input type="radio" name="p6" value="Ja" id="p6ja">Ja</label><label><input type="radio" name="p6" value="Nein" id="p6nein">Nein</label><label><input type="radio" name="p6" value="Ändern" id="p6aendern">Ändern</label></div>
+  </article>
+
+  <article class="card" id="p7">
+    <div class="kopf"><span class="nr">Punkt 7</span><h3>Gegenprobe des Ordnerbaums (dein Wunsch 15.11.)</h3></div>
+    <p>Die App prüft ihren Ordnerbaum selbst: beim Start, nach jedem Einrichten und einmal am Tag. Sie liest nur, ändert nichts.</p>
+    <ul>
+      <li><b>Ablage da?</b> Der Ordner „Private Brain“ ist erreichbar, und seine Kennung (tresor.json) ist dieselbe wie gemerkt.</li>
+      <li><b>Tresor da?</b> „tresorordner.json“ im Hauptordner ist erreichbar und hat dieselbe Kennung.</li>
+      <li><b>Ein Baum?</b> Ablage und Tresor liegen im selben Hauptordner. Heute hätte das früh gewarnt: die alte Ablage lag in „Privat Brain Pro Hauptablageordner“, der Tresor in „Family_Projekt_de“, also zwei Bäume.</li>
+      <li><b>Nach dem Einrichten:</b> Die App liest sofort zurück, was sie geschrieben hat, und zeigt den fertigen Baum zum Abhaken.</li>
+    </ul>
+    <p>Fällt eine Probe durch, kommt die Meldung aus Punkt 2 mit „Beheben ›“, und zwar bevor du eine Mail öffnest.</p>
+    <div class="skizze">
+      <div class="skizze-titel">Ergebnis der Gegenprobe</div>
+      <div class="mono">SD-Karte<br>└ Family_Projekt_de &nbsp;&nbsp;✓ Tresor (Kennung stimmt)<br>&nbsp;&nbsp;&nbsp;├ Tresorordner &nbsp;✓<br>&nbsp;&nbsp;&nbsp;└ Private Brain ✓ Ablage (Kennung stimmt) · 10 Originale</div>
+      <div class="band gruen"><span>Gegenprobe heute 14:43: alles an seinem Platz, ein Baum.</span></div>
+    </div>
+    <div class="wahl"><span>Punkt 7:</span><label><input type="radio" name="p7" value="Ja" id="p7ja">Ja</label><label><input type="radio" name="p7" value="Nein" id="p7nein">Nein</label><label><input type="radio" name="p7" value="Ändern" id="p7aendern">Ändern</label></div>
+  </article>
+</section>
+
+<section>
+  <h2>Deine Antwort</h2>
+  <div class="card">
+    <div class="antwort" id="antwort">Punkt 1 – · 2 – · 3 – · 4 – · 5 – · 6 – · 7 –</div>
+    <div><button type="button" class="k" id="kopieren">Antwort kopieren</button> <span id="kopiert" class="stand" hidden>kopiert</span></div>
+  </div>
+</section>
+<p class="stand">Grenzen: aus Code und Unterlagen entworfen, nichts am Gerät. Android erlaubt keiner App, die SD-Karte ohne einen Tipp in der Ordnerwahl zu durchsuchen; ganz ohne Tipp geht es darum nie.</p>
+</main>
+<script>
+(function(){
+  const out=document.getElementById('antwort');
+  const zeile=()=>{const t=k=>{const x=document.querySelector('input[name="p'+k+'"]:checked');return x?x.value:'–';};out.textContent='Punkt 1 '+t(1)+' · 2 '+t(2)+' · 3 '+t(3)+' · 4 '+t(4)+' · 5 '+t(5)+' · 6 '+t(6)+' · 7 '+t(7);};
+  document.addEventListener('change',e=>{if(e.target.matches('.wahl input'))zeile();});
+  document.getElementById('kopieren').addEventListener('click',()=>{
+    const zeig=()=>{const s=document.getElementById('kopiert');s.hidden=false;setTimeout(()=>{s.hidden=true;},1600);};
+    const waehle=()=>{const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);};
+    try{navigator.clipboard.writeText(out.textContent).then(zeig,waehle);}catch(e){waehle();}
+  });
+})();
+</script>
