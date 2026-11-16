@@ -383,6 +383,8 @@ body .wrap { min-width:0;height:100vh;height:calc(100dvh - env(safe-area-inset-t
 .mail-count-badge { justify-self:center; min-width:26px; padding:2px 6px; border-radius:12px; background:var(--mail-soft); color:var(--ink); text-align:center; font-size:.8rem; font-weight:bold; }
 .mail-all-reader { padding:12px; }
 .mail-all-reader .mail-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+/* Stored text: a web address is a small flat button instead of a written-out line (Klaus 16.11.2026). */
+#mailWorkspace .mail-all-reader .mail-text .mail-link-open { display:inline-flex; align-items:center; min-height:0; height:24px; padding:0 8px; margin:0 2px; font:inherit; font-size:.85em; line-height:1; white-space:nowrap; vertical-align:baseline; box-shadow:none; }
 .mail-app.mail-all-dupes { padding:12px; display:block; }
 .mail-all-dupe { border-top:1px solid var(--line); padding:8px 0; display:flex; flex-wrap:wrap; gap:6px; }
 .mail-all-dupe > strong, .mail-all-dupe > p { flex-basis:100%; margin:0; }

@@ -150,6 +150,7 @@
       "Dodaj konto",
     ],
     check: ["Prüfung", "Checks", "Проверка", "Kontrola"],
+    attachmentChecking: ["wird geprüft …", "being checked …", "проверяется …", "sprawdzanie …"],
     limit: [
       "Regelprüfung, kein Virenscanner. Anhänge können ungeprüfte Inhalte enthalten.",
       "Rule checks, not antivirus. Attachments may contain unchecked content.",
@@ -350,6 +351,13 @@
   }
   function leave() {
     return !dirty || confirm(T("discard"));
+  }
+  // Klaus 16.11.2026: jede geöffnete Mail hat eine Nummer; ein Prüfergebnis gilt nur, solange seine Mail noch offen ist.
+  let openTicket = 0;
+  /** The opened mail leaves the reader: its attachment checks stop and write nothing any more. */
+  function endChecks() {
+    openTicket++;
+    delete reader.dataset.mailChecking;
   }
   async function run(fn) {
     if (busy) return false;
@@ -570,6 +578,7 @@
   }
   function disconnect() {
     if (!leave()) return;
+    endChecks();
     token = "";
     accounts = [];
     mail = null;
@@ -631,7 +640,7 @@
   }
   async function loadFolders() {
     if (!leave()) return;
-    draft=null; dirty=false;
+    draft=null; dirty=false; endChecks();
     if(native){current=null;mail=null;items=[];validity='';next=null;selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));accountTools.querySelector('[data-live-text=catalog]').disabled=true;}
     if(native&&lastAccount!==account) {
       // Clear account-bound server state before the first await, including failure paths.
@@ -716,6 +725,7 @@
     );
   }
   async function loadList(more = false) {
+    endChecks();
     if(native&&!more){current=null;mail=null;items=[];validity='';selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));}
     if(native&&!foldersReady&&!['outbox','draft','exported'].includes(viewKey))throw new Error(T('foldersUnavailable'));
     let page;
@@ -733,7 +743,10 @@
       if(!entries.find(entry=>entry.id===viewKey)?.remote&&!['outbox','draft','sent','exported'].includes(viewKey))notice.textContent+=' · '+T('folderUnavailable');
       drawFolders();
     }
+    const place=list.scrollTop;
     drawList();
+    // Ein Ordnerwechsel beginnt oben; „Weitere laden“ bleibt, wo es war.
+    list.scrollTop=more?place:0;listPlace=list.scrollTop;
     if(native)accountTools.querySelector('[data-live-text=catalog]').disabled=!entries.find(e=>e.id===viewKey)?.remote||!items.length;
   }
   async function batchAction(type,target) {
@@ -749,7 +762,25 @@
     finally{await loadList();await refreshCounts();}
     if(failed)throw failed;
   }
+  // Klaus 16.11.2026: die Liste bleibt beim Neuzeichnen an ihrer Stelle; nur ein Ordnerwechsel (loadList) beginnt oben.
+  let listPlace = 0;
+  /** The opened row stays fully inside the list. Only the list itself is moved, never the page. */
+  function showCurrentRow() {
+    const row = list.querySelector('[data-live-uid][aria-current="true"]')?.closest(".mail-item");
+    if (!row || !list.clientHeight) return;
+    const frame = list.getBoundingClientRect(), box = row.getBoundingClientRect();
+    if (box.top < frame.top) list.scrollTop -= frame.top - box.top;
+    else if (box.bottom > frame.bottom) list.scrollTop += Math.min(box.bottom - frame.bottom, box.top - frame.top);
+    listPlace = list.scrollTop;
+  }
+  /** Back from a mail on a narrow screen: the list was hidden meanwhile and stands where it was again. */
+  function backToList() {
+    app.dataset.view = "list";
+    list.scrollTop = listPlace;
+    showCurrentRow();
+  }
   function drawNativeList() {
+    const place = list.scrollTop;
     list.replaceChildren();
     const search=el('input');search.type='search';search.placeholder=S('filter');search.setAttribute('aria-label',S('filter'));search.value=filterText;
     const actions=el('div','mail-list-actions'), rows=el('div'), count=el('p','mail-count');
@@ -790,6 +821,7 @@
     search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
     actions.append(all,trash,back,move);list.append(search,actions,count,rows);drawRows();selection();
     if(next)list.append(btn('more',()=>loadList(true)));
+    list.scrollTop=place;
   }
   async function showSavedRecord(record) {
     if(!leave())return;dirty=false;draft=null;app.dataset.view='reader';
@@ -799,6 +831,7 @@
   }
   function drawList() {
     if (native) return drawNativeList();
+    const place = list.scrollTop;
     list.replaceChildren();
     const filter = el("input");
     filter.type = "search";
@@ -831,6 +864,7 @@
     }
     list.append(rows);
     if (next) list.append(btn("more", () => loadList(true)));
+    list.scrollTop = place;
   }
   async function fetchMail(item) {
     return api(prefix() + "/messages/" + item.uid + query());
@@ -874,7 +908,8 @@
   function attachmentBytes(a) {
     return Uint8Array.from(atob(a.data), (c) => c.charCodeAt(0));
   }
-  async function checks(data, container) {
+  /** Rule check of the message itself: fast, no reading of attachments. Returns true when something was found. */
+  function checkText(data, container) {
     container.replaceChildren(
       el("strong", "", T("check")),
       el("p", "", T("limit")),
@@ -896,56 +931,74 @@
       risky = true;
       container.append(el("p", "", finding.kennung + " · " + finding.satz));
     }
+    return risky;
+  }
+  /** One attachment: its report lines and whether it counts as risky (findings, unchecked parts, check failed). */
+  async function checkAttachment(a) {
+    const lines = [];
+    let risky = false;
+    // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
+    if (!a.data && window.PBVault) {
+      // 🛡 Klaus 2026-10-22: attachments in the folder are checked too (native/native-check.js).
+      const checked = window.PBCheck && a.stored && a.ref ? await PBCheck.checkVault(a).catch(() => null) : null;
+      if (!checked) return { risky: true, lines: [el("p", "", a.name + " · " + PBVault.uncheckedText())] };
+      if (checked.funde.length || checked.ungeprueft) risky = true;
+      return { risky, lines: [PBCheck.line(a.name, checked, a)] };
+    }
+    let result;
+    try {
+      const bytes = attachmentBytes(a);
+      result = await (window.PBOCR
+        ? PBOCR.analyze(a.name, bytes)
+        : PrueferAnhang.pruefe(a.name, bytes));
+    } catch {
+      risky = true;
+    }
+    if (
+      !result ||
+      result.befunde.length ||
+      result.textUngeprueft ||
+      result.bildUngeprueft
+    )
+      risky = true;
+    lines.push(
+      el(
+        "p",
+        "",
+        a.name +
+          " · " +
+          (result?.befunde
+            .map((f) => f.kennung + ": " + f.satz)
+            .join(" · ") || "–"),
+      ),
+    );
+    for (const hint of result?.hinweise || []) lines.push(el("p", "", hint));
+    if (result?.textUngeprueft || result?.bildUngeprueft)
+      lines.push(el("p", "", result.ungeprueftSatz || T("limit")));
+    return { risky, lines };
+  }
+  /** Attachments one after the other. `later` (opened mail): stale() stops as soon as another mail is shown, so a late
+      result is never written into it; done(a) is called once the result of this attachment stands in the report. */
+  async function checkAttachments(data, container, later) {
+    let risky = false;
     for (const a of data.attachments || []) {
-      // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
-      if (!a.data && window.PBVault) {
-        // 🛡 Klaus 2026-10-22: attachments in the folder are checked too (native/native-check.js).
-        const checked = window.PBCheck && a.stored && a.ref ? await PBCheck.checkVault(a).catch(() => null) : null;
-        if (!checked) {
-          risky = true;
-          container.append(el("p", "", a.name + " · " + PBVault.uncheckedText()));
-          continue;
-        }
-        if (checked.funde.length || checked.ungeprueft) risky = true;
-        container.append(PBCheck.line(a.name, checked, a));
-        continue;
-      }
-      let result;
-      try {
-        const bytes = attachmentBytes(a);
-        result = await (window.PBOCR
-          ? PBOCR.analyze(a.name, bytes)
-          : PrueferAnhang.pruefe(a.name, bytes));
-      } catch {
-        risky = true;
-      }
-      if (
-        !result ||
-        result.befunde.length ||
-        result.textUngeprueft ||
-        result.bildUngeprueft
-      )
-        risky = true;
-      container.append(
-        el(
-          "p",
-          "",
-          a.name +
-            " · " +
-            (result?.befunde
-              .map((f) => f.kennung + ": " + f.satz)
-              .join(" · ") || "–"),
-        ),
-      );
-      for (const hint of result?.hinweise || [])
-        container.append(el("p", "", hint));
-      if (result?.textUngeprueft || result?.bildUngeprueft)
-        container.append(el("p", "", result.ungeprueftSatz || T("limit")));
+      if (later?.stale()) break;
+      const result = await checkAttachment(a);
+      if (later?.stale()) break;
+      if (result.risky) risky = true;
+      container.append(...result.lines);
+      later?.done(a);
     }
     return risky;
   }
+  async function checks(data, container) {
+    const text = checkText(data, container);
+    return (await checkAttachments(data, container)) || text;
+  }
   async function open(item) {
     if (!leave()) return;
+    endChecks();
+    const ticket = openTicket;
     draft = null;
     dirty = false;
     current = null;
@@ -961,11 +1014,13 @@
       action: "read",
     });
     item.flags = [...new Set([...item.flags, "\\Seen"])];
+    listPlace = list.scrollTop;
     drawList();
+    showCurrentRow();
     app.dataset.view = "reader";
     reader.replaceChildren(
       btn("back", () => {
-        if (leave()) app.dataset.view = "list";
+        if (leave()) backToList();
       }),
       el("h3", "", mail.subject),
       el("p", "mail-muted", mail.from + " → " + mail.to),
@@ -1105,25 +1160,44 @@
     // Protection hints (rules, lists) stand between the actions and the message itself.
     reader.append(actions, ...(window.PBSchutz ? [PBSchutz.mailPanel(mail)] : []), window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:reader,actions,source:async()=>({subject:mail.subject || item.subject || '',from:mail.from,to:mail.to,cc:mail.cc,text:mail.text || ''})});
+    // Klaus 16.11.2026: Kopf und Text stehen sofort da; die Anhänge werden danach einzeln geprüft. Bis das Ergebnis eines
+    // Anhangs da ist, lässt er sich nicht öffnen oder herausgeben (vorher war dafür die ganze Mail gesperrt), und solange
+    // nicht alle geprüft sind, bleiben die Wege gesperrt, die die Mail samt Anhängen weitergeben.
+    const waiting = new Map(), opened = mail;
+    const hold = (nodes, on) => {
+      for (const node of nodes) {
+        node.inert = on; // also covers buttons that are added to a row later
+        for (const b of node.matches("button") ? [node] : node.querySelectorAll("button")) b.disabled = on;
+      }
+    };
+    const handsOut = ["forward", "download", "bookledger", "familienakte", ...(folders.find((f) => f.path === folder)?.specialUse === "\\Drafts" ? ["compose"] : [])]
+      .map((key) => actions.querySelector('[data-live-text="' + key + '"]')).filter(Boolean);
     for (const [index, a] of mail.attachments.entries()) {
-      if (a.inline) continue; // Still present in raw MIME and attachment checks.
+      if (a.inline) { waiting.set(a, null); continue; } // Still present in raw MIME and attachment checks.
+      const nodes = [];
       if (!a.data && window.PBVault) {
-        reader.append(PBVault.attachmentRow(a, () => run(async () => {
+        nodes.push(PBVault.attachmentRow(a, () => run(async () => {
           await native.forgetMessage({ account, folder, validity, uid: item.uid });
           await open(item);
         })));
-        continue;
+      } else {
+        const b = btn("download", () =>
+          native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
+            new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
+            a.name,
+          ),
+        );
+        b.textContent = "↓ " + a.name;
+        delete b.dataset.liveText;
+        nodes.push(b);
+        if (window.PBSchutz) nodes.push(PBSchutz.attachmentStatus(a));
       }
-      const b = btn("download", () =>
-        native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
-          new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
-          a.name,
-        ),
-      );
-      b.textContent = "↓ " + a.name;
-      delete b.dataset.liveText;
-      reader.append(b);
-      if (window.PBSchutz) reader.append(PBSchutz.attachmentStatus(a));
+      const wait = el("p", "mail-muted mail-attachment-wait", a.name + " · "), state = el("span", "", T("attachmentChecking"));
+      wait.dataset.mailAttachmentWait = ""; wait.setAttribute("role", "status");
+      state.dataset.liveText = "attachmentChecking"; wait.append(state);
+      hold(nodes, true);
+      waiting.set(a, { nodes, wait });
+      reader.append(...nodes, wait);
     }
     const report = el(native ? "details" : "div", "mail-report"), findings = el("div");
     if (native) report.append(el("summary", "", T("check")));
@@ -1132,10 +1206,30 @@
     native?.progress?.('checking');
     // Yield once so WebView can paint the real check phase before local parsing.
     if(native)await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-    await checks(mail, findings);
+    let risky = checkText(mail, findings);
+    if (!mail.attachments.length) { report.dataset.risky = String(risky); return; }
+    hold(handsOut, true);
+    reader.dataset.mailChecking = "true";
+    const stale = () => ticket !== openTicket || mail !== opened;
+    const release = (a) => {
+      const entry = waiting.get(a);
+      waiting.delete(a);
+      if (entry) { entry.wait.remove(); hold(entry.nodes, false); }
+    };
+    // Not awaited: the mail is usable from here on. The checks themselves are the same as before.
+    void checkAttachments(mail, findings, { stale, done: release })
+      .then((found) => { risky = risky || found; }, (error) => { risky = true; if (!stale()) notice.textContent = T("error") + " " + error.message; })
+      .finally(() => {
+        if (stale()) return; // another mail is shown: nothing of this one is written any more
+        for (const a of [...waiting.keys()]) release(a);
+        hold(handsOut, false);
+        report.dataset.risky = String(risky);
+        delete reader.dataset.mailChecking;
+      });
   }
   function compose(source = {}) {
     if (!leave()) return;
+    endChecks();
     draft = {
       submission: crypto.randomUUID(),
       to: "",

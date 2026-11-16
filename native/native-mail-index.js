@@ -34,6 +34,11 @@
     noAccounts: ['Noch kein Mailkonto eingetragen.', 'No mail account connected yet.', 'Почтовый аккаунт ещё не подключён.', 'Brak połączonego konta pocztowego.'],
     search: ['In allen Mails suchen', 'Search all emails', 'Поиск по всем письмам', 'Szukaj we wszystkich wiadomościach'],
     hits: ['Treffer', 'results', 'найдено', 'wyników'],
+    hitsFor: ['für „{q}“', 'for “{q}”', 'по запросу «{q}»', 'dla „{q}”'],
+    alsoAs: ['auch gesucht als „{q}“', 'also searched as “{q}”', 'также искали как «{q}»', 'szukano też jako „{q}”'],
+    senderOne: ['Absender', 'sender', 'отправитель', 'nadawca'],
+    senderMany: ['Absender', 'senders', 'отправителей', 'nadawców'],
+    cleanSearch: ['Die Suche gilt in „Aufräumen“ nicht. Für Treffer „Liste“ oder „Absender“ wählen.', 'The search does not apply in “Clean up”. Choose “List” or “Senders” for results.', 'В «Уборке» поиск не действует. Для результатов выберите «Список» или «Отправители».', 'Wyszukiwanie nie działa w „Porządkach”. Aby zobaczyć wyniki, wybierz „Lista” lub „Nadawcy”.'],
     list: ['📋 Liste', '📋 List', '📋 Список', '📋 Lista'],
     senders: ['👤 Absender', '👤 Senders', '👤 Отправители', '👤 Nadawcy'],
     newest: ['Neueste', 'Newest', 'Новые', 'Najnowsze'],
@@ -51,6 +56,8 @@
     textMissing: ['Der Text ist zu groß oder nur als Bild vorhanden. Beim Anbieter öffnen.', 'The text is too large or only an image. Open with provider.', 'Текст слишком большой или только картинка. Откройте у провайдера.', 'Tekst jest za duży lub tylko jako obraz. Otwórz u dostawcy.'],
     remoteFailed: ['Beim Anbieter gerade nicht zu öffnen. Hier steht der gespeicherte Text; „Beim Anbieter öffnen“ versucht es noch einmal.', 'Cannot open with the provider right now. This is the stored text; “Open with provider” tries again.', 'Сейчас не открывается у провайдера. Здесь сохранённый текст; «Открыть у провайдера» попробует снова.', 'Teraz nie da się otworzyć u dostawcy. To zapisany tekst; „Otwórz u dostawcy” spróbuje ponownie.'],
     textScope: ['Gespeicherter Mailtext. Der Abruf liest höchstens 8.000 Zeichen je Mail; Original und Anhänge werden hier nicht geladen.', 'Stored email text. Fetching reads up to 8,000 characters per email; the original and attachments are not downloaded here.', 'Сохранённый текст письма. Загружается не более 8 000 символов на письмо; оригинал и вложения здесь не загружаются.', 'Zapisany tekst e-maila. Pobieranie odczytuje do 8 000 znaków na wiadomość; oryginał i załączniki nie są tu pobierane.'],
+    linkOpen: ['Link öffnen ↗', 'Open link ↗', 'Открыть ссылку ↗', 'Otwórz link ↗'],
+    linkError: ['Der Link ließ sich nicht öffnen.', 'The link could not be opened.', 'Не удалось открыть ссылку.', 'Nie udało się otworzyć linku.'],
     dupesTitle: ['✉️ Mails, die doppelt sein könnten', '✉️ Emails that may be duplicates', '✉️ Письма, которые могут повторяться', '✉️ Wiadomości, które mogą się powtarzać'],
     dupesHelp: ['Gleicher Absender und Betreff, aber anderer Text und keine Mail-Kennung. Nichts wurde überschrieben. Bitte entscheiden:', 'Same sender and subject, but different text and no message ID. Nothing was overwritten. Please decide:', 'Тот же отправитель и тема, но другой текст и нет идентификатора. Ничего не перезаписано. Решите:', 'Ten sam nadawca i temat, ale inny tekst i brak identyfikatora. Nic nie nadpisano. Zdecyduj:'],
     same: ['Gleich – zusammenlegen', 'Same – merge', 'Одинаковые – объединить', 'Takie same – połącz'],
@@ -62,6 +69,7 @@
       'Newsletters and ads from all accounts. Expired offers can go to the provider\'s trash, where they can be restored until the provider empties it. Without a clear date nothing is deleted automatically. Starred mails and senders marked “Important” always stay.',
       'Рассылки и реклама всех аккаунтов. Истёкшие предложения можно переместить в корзину провайдера и восстановить, пока она не очищена. Без ясной даты ничего не удаляется автоматически. Письма со звездой и отправители «Важно» остаются всегда.',
       'Newslettery i reklamy ze wszystkich kont. Wygasłe oferty mogą trafić do kosza dostawcy i można je przywrócić, dopóki kosz nie zostanie opróżniony. Bez jasnej daty nic nie jest usuwane automatycznie. Wiadomości z gwiazdką i nadawcy „Ważne” zostają zawsze.'],
+    cleanEmpty: ['Nichts aufzuräumen. Abgelaufene Newsletter erscheinen hier von selbst.', 'Nothing to clean up. Expired newsletters appear here by themselves.', 'Убирать нечего. Истёкшие рассылки появятся здесь сами.', 'Nie ma nic do uporządkowania. Wygasłe newslettery pojawią się tutaj same.'],
     expiredH: ['⌛ Abgelaufen', '⌛ Expired', '⌛ Истекли', '⌛ Wygasłe'],
     checkH: ['❓ Zum Prüfen (kein eindeutiges Datum)', '❓ To check (no clear date)', '❓ Проверить (нет ясной даты)', '❓ Do sprawdzenia (brak jasnej daty)'],
     runningH: ['✅ Läuft noch', '✅ Still running', '✅ Ещё действуют', '✅ Nadal aktualne'],
@@ -477,7 +485,7 @@
     for (const r of shown().filter(isNewsletter)) { const a = senderAddress(r.mail.from); bySender.set(a, [...(bySender.get(a) || []), r]); }
     const rows = [...bySender].map(([address, mails]) => ({ address, mails, found: newestWay(mails), state: settings.get(address)?.unsubbed }))
       .sort((a, b) => Number(Boolean(a.state)) - Number(Boolean(b.state)) || b.mails.length - a.mails.length);
-    if (!rows.length) return;
+    if (!rows.length) return 0;
     const head = el('h3', 'mail-all-section', t('unsubH') + ' (' + rows.filter(x => !x.state).length + ')'); head.dataset.mailClean = 'unsubH'; list.append(head);
     list.append(el('p', 'mail-muted', t('unsubIntro')));
     const auto = load(KEYS.unsubAuto, null);
@@ -503,6 +511,7 @@
       else if (!state || still) { const b = button(still ? t('unsubAgain') : t('unsub'), () => unsubscribe(address, mails), 'mail-primary'); b.dataset.mailUnsubGo = found.w.kind; row.append(b); }
       list.append(row);
     }
+    return rows.length;
   }
   function runs() {
     const map = new Map();
@@ -526,8 +535,12 @@
         button(t('noAuto'), async () => { await setSender(address, 'mailSenderRule', 'no'); draw(); }));
       list.append(box);
     }
-    drawUnsub(list);
+    const unsubRows = drawUnsub(list);
+    // Klaus 16.11.2026: ohne Rückfragen, abgelaufene Newsletter und Abmelde-Zeilen steht ein Satz da statt leerer Überschriften.
+    const nothing = !asked.size && !unsubRows && !groupsBy.expired.length && !groupsBy.check.length && !groupsBy.running.length;
+    if (nothing) { const p = el('p', 'mail-muted mail-all-clean-empty', t('cleanEmpty')); p.dataset.mailCleanEmpty = '1'; list.append(p); }
     const section = (key, mails, extra) => {
+      if (nothing) return;
       const head = el('h3', 'mail-all-section', t(key) + ' (' + mails.length + ')'); head.dataset.mailClean = key; list.append(head);
       if (extra) list.append(extra);
       for (const r of mails.slice(0, 200)) {
@@ -569,10 +582,20 @@
     b.onclick = () => fn(); return b;
   }
   function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-  function matches(r) {
-    if (!query.trim()) return true;
+  function matches(r, text = query) {
+    if (!text.trim()) return true;
     const hay = fold(r.name + ' ' + (r.mail.from || '') + ' ' + (r.mailBody || ''));
-    return fold(query).split(/\s+/).filter(Boolean).every(word => hay.includes(word));
+    return fold(text).split(/\s+/).filter(Boolean).every(word => hay.includes(word));
+  }
+  // PBSuchFrage.zusammen erfindet nie ein Wort: es liefert nur eine Form, die in den gezeigten Mails vorkommt, sonst ''.
+  let joinMemo = null;
+  function joinedQuery(mails) {
+    const S = window.PBSuchFrage; if (typeof S?.zusammen !== 'function' || typeof S.kontext !== 'function') return '';
+    try {
+      // Der Wortschatz wird nur neu gebaut, wenn sich die gezeigten Mails geändert haben, nicht bei jedem Tastendruck.
+      if (!joinMemo || joinMemo.catalog !== CATALOG || joinMemo.size !== mails.length || joinMemo.account !== view.account) joinMemo = { catalog: CATALOG, size: mails.length, account: view.account, ctx: S.kontext(mails) };
+      return S.zusammen(query, joinMemo.ctx) || '';
+    } catch { return ''; }
   }
   const byOrder = (a, b) => view.order === 'newest' ? (b.date || 0) - (a.date || 0) : (a.date || 0) - (b.date || 0);
   function groups(mails) {
@@ -595,6 +618,32 @@
       el('time', 'mail-date', fmtDate(r.date)));
     b.onclick = () => openMail(r);
     row.append(el('span'), b); return row;
+  }
+  /** Stored mail text. A web address is not written out but becomes a small button "Link öffnen ↗" (Klaus 16.11.2026);
+      the address stands in its title. Opening goes only through the mail link way of the app (ProLinks, real tap, checked
+      http/https address). Without that way the text stays as it is. Foreign text only ever becomes text nodes. */
+  function storedText(text) {
+    const pre = el('pre', 'mail-text'), links = window.Capacitor?.Plugins?.ProLinks, safe = window.PBMailView?.webUrl;
+    if (typeof links?.open !== 'function' || typeof safe !== 'function') { pre.textContent = text; return pre; }
+    let at = 0;
+    for (const match of text.matchAll(/https?:\/\/[^\s<>"'\u0000-\u001f]+/gi)) {
+      let raw = match[0].replace(/[.,;!?]+$/g, '');
+      for (const [open, close] of [['(', ')'], ['[', ']']])
+        while (raw.endsWith(close) && raw.split(close).length > raw.split(open).length) raw = raw.slice(0, -1);
+      const url = safe(raw); if (!url) continue;
+      let start = match.index, end = start + raw.length;
+      // "[https://…]" and "<https://…>": the brackets only fenced the address and go with it.
+      if (start > at && ({ '[': ']', '<': '>' })[text[start - 1]] === text[end]) { start--; end++; }
+      pre.append(text.slice(at, start));
+      const b = button(t('linkOpen'), () => {}, 'mail-link-open'); b.title = url; b.dataset.mailLink = '1';
+      b.onclick = async event => {
+        if (!event.isTrusted) return;
+        try { await links.open({ url }); } catch { if (status) status.textContent = t('linkError'); }
+      };
+      pre.append(b); at = end;
+    }
+    pre.append(text.slice(at));
+    return pre;
   }
   function drawReader(r) {
     const box = el('div', 'mail-all-reader');
@@ -622,7 +671,7 @@
     else if (r.mailUnsubbed) tools.append(el('span', 'mail-muted', t('unsubbed') + ' ' + fmtDate(r.mailUnsubbed.at)));
     if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
     box.append(tools);
-    box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
+    box.append(storedText(r.mailBody || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
     if (remoteFailed === r.hash) box.insertBefore(el('p', 'mail-notice', t('remoteFailed')), box.children[2] || null);
     if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), () => openMail(r, true), 'mail-primary'));
@@ -676,7 +725,8 @@
     }
     if (!last && !all.length) { panel.append(el('p', 'mail-muted', t('intro'))); return; }
     const search = el('input'); search.type = 'search'; search.placeholder = t('search'); search.setAttribute('aria-label', t('search')); search.value = query; search.dataset.mailAll = 'search';
-    search.oninput = () => { query = search.value; selectedSender = query ? null : selectedSender; openRecord = null; draw(); };
+    // Eine neue Suche beginnt über alle Absender; beim Weitertippen bleibt ein gewählter Absender, solange er Treffer hat (draw).
+    search.oninput = () => { const fresh = !query.trim() && search.value.trim(); query = search.value; if (fresh) selectedSender = null; openRecord = null; draw(); };
     const switches = el('div', 'mail-list-actions mail-all-switch');
     const modeList = button(t('list'), () => { view.mode = 'list'; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); });
     const modeSenders = button(t('senders'), () => { view.mode = 'senders'; openRecord = null; store(KEYS.view, view); draw(); });
@@ -692,17 +742,28 @@
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
     const current = openRecord && all.find(r => r.hash === openRecord);
     if (current) { panel.append(drawReader(current)); return; }
-    const mails = all.filter(matches).sort(byOrder);
+    let mails = all.filter(r => matches(r)).sort(byOrder), also = '';
+    // Diktat trennt Wörter („an tropic“): findet die Wortsuche nichts, einmal mit der bekannten zusammengezogenen Form suchen.
+    if (query.trim() && !mails.length && view.mode !== 'clean') {
+      const joined = joinedQuery(all), again = joined ? all.filter(r => matches(r, joined)).sort(byOrder) : [];
+      if (again.length) { mails = again; also = joined; }
+    }
     const list = el('div', 'mail-all-list');
-    if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits')));
-    if (view.mode === 'clean' && !query.trim()) drawClean(list);
-    else if (view.mode === 'senders' && !query.trim()) {
-      const g = selectedSender && groups(mails).find(x => x.key === selectedSender);
+    // Klaus 16.11.2026: „Liste / Absender“ gelten auch bei einer Suche. „Aufräumen“ ordnet nach Ablaufdatum, dort gilt die Suche nicht.
+    const bundles = view.mode === 'senders' ? groups(mails) : null;
+    if (query.trim() && view.mode === 'clean') { const p = el('p', 'mail-muted', t('cleanSearch')); p.dataset.mailCleanSearch = '1'; panel.append(p); }
+    else if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits') + ' ' + t('hitsFor').replace('{q}', query.trim())
+      + (bundles ? ' · ' + bundles.length + ' ' + t(bundles.length === 1 ? 'senderOne' : 'senderMany') : '')
+      + (also ? ' · ' + t('alsoAs').replace('{q}', also) : '')));
+    if (view.mode === 'clean') drawClean(list);
+    else if (bundles) {
+      const g = selectedSender && bundles.find(x => x.key === selectedSender);
+      if (!g) selectedSender = null;
       if (g) {
         list.append(button(t('back'), () => { selectedSender = null; draw(); }, 'mail-back'), el('h3', '', g.name), el('p', 'mail-muted', g.key + ' · ' + many(g.mails.length)));
         for (const r of g.mails.sort(byOrder)) list.append(mailRow(r));
       } else {
-        for (const x of groups(mails)) {
+        for (const x of bundles) {
           const row = el('div', 'mail-item'), b = el('button'); b.type = 'button'; b.dataset.mailSender = x.key;
           const subject=el('span', 'mail-subject', (x.list ? '📰 ' : '') + x.name);if(x.list)subject.dataset.pbGeneratedPrefix='mail';
           b.append(el('span', 'mail-avatar', x.name.slice(0, 1).toUpperCase()), subject,
