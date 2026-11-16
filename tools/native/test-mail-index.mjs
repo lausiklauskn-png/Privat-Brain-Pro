@@ -251,6 +251,13 @@ try{
   ok('Provider without safe move: nothing happens and the reason is shown',await page.evaluate(()=>!CATALOG.find(r=>r.mailMessageId==='<m1994@example.invalid>').mailTrashed)&&(await panel.locator('[role=status]').textContent()).includes('MOVE_UNSUPPORTED'));
   await page.evaluate(()=>{window.noMove=false;});
   ok('Mails without ID are never moved',await page.evaluate(async()=>{const r=CATALOG.find(x=>x.mailIndex&&!x.mailMessageId);await PBMailIndex.trash([r]);return !r.mailTrashed;}));
+  // Punkt 20 (Klaus 16.11.2026): „Aufräumen“ ohne Inhalt sagt es in einem Satz.
+  await page.evaluate(()=>{window.savedMarks=[];for(const r of CATALOG)if(r.mailIndex&&(r.mailList||r.mailSenderMark)){window.savedMarks.push([r,r.mailList,r.mailSenderMark]);r.mailList=false;delete r.mailSenderMark;}});
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('Clean-up with nothing to do says so in one sentence instead of empty headings',(await panel.locator('[data-mail-clean-empty]').textContent().catch(()=>''))==='Nichts aufzuräumen. Abgelaufene Newsletter erscheinen hier von selbst.'&&await panel.locator('[data-mail-clean]').count()===0);
+  await page.evaluate(()=>{for(const [r,list,mark] of window.savedMarks){r.mailList=list;if(mark)r.mailSenderMark=mark;}});
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('With newsletters the sentence is gone and the sections are back',await panel.locator('[data-mail-clean-empty]').count()===0&&await panel.locator('[data-mail-clean]').count()>=3);
   // Offline: nothing breaks, the reason is shown
   await page.locator('[data-tab="mail"]').click();
   await page.evaluate(()=>{window.offline=true;});

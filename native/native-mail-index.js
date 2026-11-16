@@ -62,6 +62,7 @@
       'Newsletters and ads from all accounts. Expired offers can go to the provider\'s trash, where they can be restored until the provider empties it. Without a clear date nothing is deleted automatically. Starred mails and senders marked “Important” always stay.',
       'Рассылки и реклама всех аккаунтов. Истёкшие предложения можно переместить в корзину провайдера и восстановить, пока она не очищена. Без ясной даты ничего не удаляется автоматически. Письма со звездой и отправители «Важно» остаются всегда.',
       'Newslettery i reklamy ze wszystkich kont. Wygasłe oferty mogą trafić do kosza dostawcy i można je przywrócić, dopóki kosz nie zostanie opróżniony. Bez jasnej daty nic nie jest usuwane automatycznie. Wiadomości z gwiazdką i nadawcy „Ważne” zostają zawsze.'],
+    cleanEmpty: ['Nichts aufzuräumen. Abgelaufene Newsletter erscheinen hier von selbst.', 'Nothing to clean up. Expired newsletters appear here by themselves.', 'Убирать нечего. Истёкшие рассылки появятся здесь сами.', 'Nie ma nic do uporządkowania. Wygasłe newslettery pojawią się tutaj same.'],
     expiredH: ['⌛ Abgelaufen', '⌛ Expired', '⌛ Истекли', '⌛ Wygasłe'],
     checkH: ['❓ Zum Prüfen (kein eindeutiges Datum)', '❓ To check (no clear date)', '❓ Проверить (нет ясной даты)', '❓ Do sprawdzenia (brak jasnej daty)'],
     runningH: ['✅ Läuft noch', '✅ Still running', '✅ Ещё действуют', '✅ Nadal aktualne'],
@@ -477,7 +478,7 @@
     for (const r of shown().filter(isNewsletter)) { const a = senderAddress(r.mail.from); bySender.set(a, [...(bySender.get(a) || []), r]); }
     const rows = [...bySender].map(([address, mails]) => ({ address, mails, found: newestWay(mails), state: settings.get(address)?.unsubbed }))
       .sort((a, b) => Number(Boolean(a.state)) - Number(Boolean(b.state)) || b.mails.length - a.mails.length);
-    if (!rows.length) return;
+    if (!rows.length) return 0;
     const head = el('h3', 'mail-all-section', t('unsubH') + ' (' + rows.filter(x => !x.state).length + ')'); head.dataset.mailClean = 'unsubH'; list.append(head);
     list.append(el('p', 'mail-muted', t('unsubIntro')));
     const auto = load(KEYS.unsubAuto, null);
@@ -503,6 +504,7 @@
       else if (!state || still) { const b = button(still ? t('unsubAgain') : t('unsub'), () => unsubscribe(address, mails), 'mail-primary'); b.dataset.mailUnsubGo = found.w.kind; row.append(b); }
       list.append(row);
     }
+    return rows.length;
   }
   function runs() {
     const map = new Map();
@@ -526,8 +528,12 @@
         button(t('noAuto'), async () => { await setSender(address, 'mailSenderRule', 'no'); draw(); }));
       list.append(box);
     }
-    drawUnsub(list);
+    const unsubRows = drawUnsub(list);
+    // Klaus 16.11.2026: ohne Rückfragen, abgelaufene Newsletter und Abmelde-Zeilen steht ein Satz da statt leerer Überschriften.
+    const nothing = !asked.size && !unsubRows && !groupsBy.expired.length && !groupsBy.check.length && !groupsBy.running.length;
+    if (nothing) { const p = el('p', 'mail-muted mail-all-clean-empty', t('cleanEmpty')); p.dataset.mailCleanEmpty = '1'; list.append(p); }
     const section = (key, mails, extra) => {
+      if (nothing) return;
       const head = el('h3', 'mail-all-section', t(key) + ' (' + mails.length + ')'); head.dataset.mailClean = key; list.append(head);
       if (extra) list.append(extra);
       for (const r of mails.slice(0, 200)) {
