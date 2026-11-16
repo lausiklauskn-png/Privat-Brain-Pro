@@ -632,3 +632,32 @@ header .brand h1 .pb-update-fahne { display:inline-block; vertical-align:middle;
 /* Schriftgröße „A··A“ im ☰-Menü (Pro-Umbau 12): Regler im Menü selbst, nicht schwebend. */
 .native-options-panel .native-menu-schrift{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
 .native-options-panel .native-menu-schrift .pro-schrift-feld{position:static;box-shadow:none;width:100%;max-width:none}
+
+/* Suchleiste der Startseite (Klaus 2026-11-16, V1): × und Lupe im Feld, „Überall“ mit Zahnrad, Filter mit Namen. */
+#panel-search .pb-such-feld { flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:2px; padding:0 3px 0 0; border:1px solid var(--line); border-radius:8px; background:var(--field,var(--card)); }
+#panel-search .pb-such-feld:focus-within { border-color:var(--acc); }
+#panel-search .pb-such-feld>#q { flex:1 1 auto; min-width:0; border:0!important; background:transparent!important; box-shadow:none!important; outline:0; }
+#panel-search .pb-such-feld>#q::-webkit-search-cancel-button { display:none; }
+.pb-such-knopf { flex:none; display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--mut); cursor:pointer; }
+.pb-such-knopf:hover,.pb-such-knopf:focus-visible { border-color:var(--acc); color:var(--acc); }
+html[data-pb-theme] #panel-search .pb-such-knopf.pb-such-los, #panel-search .pb-such-knopf.pb-such-los { background:var(--acc)!important; border-color:var(--acc)!important; color:var(--pb-on-accent,#fff)!important; }
+#panel-search .pb-such-knopf.pb-such-los:hover,#panel-search .pb-such-knopf.pb-such-los:focus-visible { filter:brightness(1.08); }
+.pb-such-knopf.pb-such-los[aria-busy=true] { opacity:.6; }
+.pb-such-knopf.pb-such-rad { border-color:var(--line); background:var(--card); }
+.pb-such-knopf[disabled] { opacity:.45; cursor:default; }
+.pb-such-bild { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.pb-such-ueberall { display:inline-flex; align-items:center; min-height:30px; padding:0 10px; font-size:13px!important; line-height:1.2; border:1px solid var(--line); border-radius:7px; background:var(--card); color:var(--ink); font:inherit; font-weight:600; cursor:pointer; }
+.pb-such-ueberall[aria-pressed=true] { color:var(--acc); border-color:var(--acc); background:var(--pb-selected,var(--card2,var(--card))); }
+.pb-such-quellen[hidden] { display:none!important; }
+/* Die Lupe am Schalter „Bedeutung“ sah aus wie „Suchen“ (Klaus: man drückt Bedeutung und schaltet nur um). Suchen ist jetzt die Lupe im Feld. */
+html[data-pb-theme] #panel-search #mode .pb-search-mode-icon { display:none!important; }
+.pb-such-quellen { display:flex; flex-wrap:wrap; gap:4px 16px; margin:6px 0 0; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+.pb-such-andere { margin-top:12px; }
+.pb-such-andere .pro-ue-name { font-weight:600; }
+.pb-such-reihe { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 0; }
+#filterbar { align-items:flex-end; }
+#filterbar .pb-filter { display:inline-flex; flex-direction:column; gap:1px; min-width:0; }
+#filterbar .pb-filter>small { font-size:11px; line-height:1.2; font-weight:600; letter-spacing:.03em; color:var(--mut); padding-left:2px; }
+#filterbar .pb-filter>select { max-width:100%; }
+#filterbar .pb-filter-ende { margin-left:auto; }
+@media (pointer:coarse) { .pb-such-knopf { width:40px; height:40px; } .pb-such-ueberall { min-height:40px; } }
