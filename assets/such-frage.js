@@ -65,9 +65,39 @@
       if (r.category) kategorien.add(r.category);
     }
     const label = new Map([...absender].map(([w, m]) => [w, [...m].sort((a, b) => b[1] - a[1])[0][0]]));
-    return { absender: label, bereiche: [...bereiche], eigene: [...eigene], kategorien: [...kategorien], eltern: eltern || (() => null) };
+    // Wortschatz der Sammlung (Namen, Betreffs, Absender, Wörter des Inhalts) – erst gebaut, wenn das Zusammenziehen ihn braucht.
+    let schatz = null;
+    const vokabel = () => { if (schatz) return schatz; schatz = new Set(absender.keys());
+      for (const r of eintraege) { for (const w of worte([r.name, r.mail?.subject].filter(Boolean).join(' '))) if (w.length >= 4) schatz.add(w); for (const w in (r.tf || {})) if (w.length >= 4) schatz.add(w); }
+      return schatz; };
+    return { absender: label, bereiche: [...bereiche], eigene: [...eigene], kategorien: [...kategorien], eltern: eltern || (() => null), vokabel };
   }
   const mailName = (from) => { const s = String(from || ''); const m = s.match(/^\s*"?([^"<]+?)"?\s*<[^>]+>/); return (m ? m[1] : s.replace(/@.*/, '')).trim(); };
+
+  /** Höchstens ein Zeichen Unterschied (eines fehlt, ist zu viel oder ist ein anderes). */
+  function fastGleich(a, b) {
+    if (a === b) return true; const d = a.length - b.length; if (d > 1 || d < -1) return false;
+    let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    return d === 0 ? a.slice(i + 1) === b.slice(i + 1) : d > 0 ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+  }
+  /** Diktat trennt Wörter („An Tropic“ für „Anthropic“, Klaus 16.11.2026): zwei Nachbarwörter zusammenziehen, wenn die Sammlung
+      das zusammengeschriebene Wort kennt – genau, oder ab 7 Zeichen mit einem Zeichen Unterschied und gleichem Anfang.
+      Ergebnis: die Frage mit dem bekannten Wort, oder '' (nichts zusammenzuziehen). Erfindet nie ein Wort. */
+  function zusammen(text, ctx) {
+    const roh = worte(text), v = ctx && ctx.vokabel ? ctx.vokabel() : null; if (!v || roh.length < 2) return '';
+    const kennt = (w) => v.has(w) || v.has(stem(w));
+    const aus = []; let geaendert = false;
+    for (let i = 0; i < roh.length; i++) {
+      const a = roh[i], b = roh[i + 1];
+      if (b && !(kennt(a) && kennt(b) && !FUELL.has(a) && !FUELL.has(b)) && !/^\d+$/.test(a + b)) {
+        const z = a + b; let fund = z.length >= 5 && kennt(z) ? z : '';
+        if (!fund && z.length >= 7) for (const w of v) if (w[0] === z[0] && w.length >= 7 && fastGleich(w, z)) { fund = w; break; }
+        if (fund) { aus.push(fund); i++; geaendert = true; continue; }
+      }
+      aus.push(a);
+    }
+    return geaendert ? aus.join(' ') : '';
+  }
 
   /** Frage lesen. ignorieren = Wörter, die als Text bleiben sollen (× an einem erkannten Kästchen). */
   function lesen(text, ctx, ignorieren, { ohneFelder = false } = {}) {
@@ -91,7 +121,7 @@
         // „Nordlicht Labs“: zwei Wörter desselben Absenders bleiben ein Kästchen
         const vor = kaestchen[kaestchen.length - 1];
         if (vor && vor.feld === 'absender' && vor.label === ctx.absender.get(w) && roh[i - 1] === vor.letztes) { vor.letztes = w; (vor.mehr = vor.mehr || []).push(w); continue; }
-        dazu({ feld: 'absender', wert: w, label: ctx.absender.get(w), wort: w, letztes: w }); nachVon = false; continue; }
+        dazu({ feld: 'absender', wert: w, label: ctx.absender.get(w), wort: w, letztes: w, weich: !nachVon }); nachVon = false; continue; }
       const eig = ctx && !ohneFelder && ctx.eigene.find((e) => fold(e) === w || (w.length >= 5 && stem(fold(e)) === stem(w)));
       if (eig) { dazu({ feld: 'eigene', wert: eig, label: eig, wort: w }); continue; }
       const ber = ctx && !ohneFelder && !nachVon && w.length >= 5 && ctx.bereiche.find((b) => worte(b).some((t) => t.length >= 5 && (stem(t) === stem(w) || t.startsWith(w) || w.startsWith(t))));
@@ -109,12 +139,15 @@
   function datumVon(r) { const k = r.kern || {}; const d = r.mail?.date ? new Date(r.mail.date) : k.datum ? new Date(k.datum) : new Date(Number(r.date) || 0); return isNaN(d) ? null : d; }
   function absenderText(r, ctx) { const p = ctx?.eltern?.(r); return fold([r.kern?.absender, r.mail?.from && mailName(r.mail.from), r.mail?.from, p?.mail?.from && mailName(p.mail.from), p?.kern?.absender].filter(Boolean).join(' ')); }
 
+  const istAbsender = (r, k, ctx) => absenderText(r, ctx).split(/[^\p{L}\p{N}-]+/u).includes(k.wert);
   function kastchenPasst(r, k, ctx) {
     switch (k.feld) {
       // Eine getippte Art gilt auch, wenn das Wort im Namen oder Betreff steht („Angebot“ findet „Fahrzeug-Angebot“), ein angeklicktes Kästchen nur nach Art.
       case 'art': return artVon(r) === k.wert || (!!k.weich && worte([r.name, r.mail?.subject].join(' ')).some((t) => artAusWort(t) === k.wert));
       case 'form': return k.wert === 'pdf' ? isPdf(r) : k.wert === 'mail' ? !!r.mail || String(r.ext || '') === 'eml' : isBild(r);
-      case 'absender': return absenderText(r, ctx).split(/[^\p{L}\p{N}-]+/u).includes(k.wert);
+      // Getippt ohne „von“: der Name darf auch nur im Text stehen („Anthropic“ findet die Rechnung als PDF); „von Anthropic“ und ein
+      // angeklicktes Kästchen gelten nur für den echten Absender. Echte Absender stehen oben (passt: +3).
+      case 'absender': return istAbsender(r, k, ctx) || (!!k.weich && [k.wort, ...(k.mehr || [])].every((w) => trifft(feldText(r, ctx) + ' ' + inhaltText(r), w)));
       case 'bereich': return r.kern?.bereich === k.wert || (k.weich && trifft(feldText(r, ctx) + ' ' + inhaltText(r), k.wort));
       case 'eigene': return r.eigeneKategorie === k.wert;
       case 'kategorie': return String(r.category || '') === k.wert;
@@ -137,7 +170,8 @@
   function passt(r, frage, kaestchen, ctx, { teilweise = false } = {}) {
     for (const k of kaestchen) if (!kastchenPasst(r, k, ctx)) return null;
     const f = feldText(r, ctx), t = f + ' ' + inhaltText(r), tf = r.tf || {};
-    const extra = (frage.bonus || []).filter((w) => w.length >= 4 && t.includes(w)).length + frage.rest.filter((w) => fold(r.name).includes(w)).length;
+    const extra = (frage.bonus || []).filter((w) => w.length >= 4 && t.includes(w)).length + frage.rest.filter((w) => fold(r.name).includes(w)).length
+      + 3 * kaestchen.filter((k) => k.feld === 'absender' && k.weich && istAbsender(r, k, ctx)).length;
     if (!frage.rest.length) return { punkte: 1 + extra, wo: 'feld' };
     if (frage.rest.every((w) => trifft(f, w))) return { punkte: 10 + extra, wo: 'feld' };
     const imText = (w) => trifft(t, w) || Object.prototype.hasOwnProperty.call(tf, stem(w));
@@ -149,6 +183,13 @@
 
   /** Ganze Suche über eine Liste. Findet sie nichts, kommen Einträge, die mindestens die Hälfte der Wörter enthalten. */
   function suchen(eintraege, text, fest, ctx, ignorieren, wahl) {
+    const erst = suchenGenau(eintraege, text, fest, ctx, ignorieren, wahl);
+    if (erst.treffer.length && !erst.teilweise) return erst;
+    const anders = zusammen(text, ctx); if (!anders) return erst;
+    const zweit = suchenGenau(eintraege, anders, fest, ctx, ignorieren, wahl);
+    return zweit.treffer.length && !zweit.teilweise ? Object.assign(zweit, { verstanden: anders }) : erst;
+  }
+  function suchenGenau(eintraege, text, fest, ctx, ignorieren, wahl) {
     const frage = lesen(text, ctx, ignorieren, wahl || {}), alle = [...(fest || []), ...frage.kaestchen];
     const lauf = (teilweise, ks) => eintraege.map((r) => ({ r, p: passt(r, frage, ks, ctx, { teilweise }) })).filter((x) => x.p);
     let treffer = lauf(false, alle), teil = false;
@@ -159,5 +200,5 @@
     return { frage, kaestchen: alle, treffer, teilweise: teil, imInhalt: treffer.some((x) => x.p.wo !== 'feld'), ohne };
   }
 
-  wurzel.PBSuchFrage = { fold, stem, lesen, kontext, passt, suchen, artVon, datumVon, mailName, feldText };
+  wurzel.PBSuchFrage = { fold, stem, lesen, kontext, passt, suchen, zusammen, artVon, datumVon, mailName, feldText };
 })(typeof window !== 'undefined' ? window : globalThis);

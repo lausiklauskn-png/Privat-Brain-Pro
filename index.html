@@ -1761,8 +1761,22 @@ async function renderResults(query){
       }
     }
   }
-  let results;
-  if(hasQ) results = search(query, qe);
+  let results, verstanden="";
+  if(hasQ){
+    results = search(query, qe);
+    // Klaus 16.11.2026: das Diktat trennt Wörter („An Tropic“ für „Anthropic“). Kennt die Sammlung das zusammengeschriebene Wort,
+    // wird auch danach gesucht (assets/such-frage.js zusammen); die Treffer kommen dazu, und die Zeile oben sagt es.
+    try{
+      const SF=window.PBSuchFrage;
+      if(SF && SF.zusammen && /\s/.test(query.trim())){
+        const c=renderResults._ctx && renderResults._ctx.n===CATALOG.length ? renderResults._ctx : (renderResults._ctx={n:CATALOG.length, ctx:SF.kontext(CATALOG)});
+        verstanden=SF.zusammen(query, c.ctx);
+        if(verstanden){ const seen=new Map(results.map(h=>[h.r.hash,h]));
+          for(const h of search(verstanden, null)){ const o=seen.get(h.r.hash); if(!o){ results.push(h); seen.set(h.r.hash,h); } else if(h.score>o.score){ o.score=h.score; o.why=h.why; } }
+          results.sort((x,y)=>y.score-x.score); }
+      }
+    }catch{ verstanden=""; }
+  }
   else { // Stöber-Modus: alles, was die Filter durchlässt
     const s = FILTER.sort==="rel" ? "new" : FILTER.sort;
     results = CATALOG.map(r=>({r, score:0, kind:"browse", cos:0, why:{terms:[]}}));
@@ -1773,7 +1787,8 @@ async function renderResults(query){
   const dt=(performance.now()-t0);
   info.innerHTML = `<b>${results.length}</b> Treffer · ${dt.toFixed(dt<1?2:0)} ms · `
     + (hasQ ? (MODE==="name" ? "Namenssuche" : "Bedeutungssuche") : "Stöbern (Filter)")
-    + (filterActive() ? " · Filter aktiv" : "");
+    + (filterActive() ? " · Filter aktiv" : "")
+    + (verstanden ? " · auch gesucht als „"+escapeHtml(verstanden)+"“" : "");
   if(!results.length){
     ul.innerHTML = `<div class="empty"><div class="big">🔍</div><p>Kein Treffer.`
       + (hasQ && MODE==="name" ? ` Probier den Umschalter auf <b>Bedeutungssuche</b> — dieselbe Frage, mehr Sinn.` : "")
