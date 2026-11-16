@@ -130,7 +130,7 @@ try{
   ok('„jetzt schreiben“ ohne Änderung meldet aktuell',true);
   // ---------- Rechnungsmail ins Eingangsfach ----------
   await page.click('[data-tab=mail]');
-  await page.locator('#mailWorkspace [data-live-text=connect]').click();
+  /* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});
   await page.locator('#mailWorkspace [data-live-uid="9"]').click();
   const share={click:async()=>{
     const tools=page.locator('#mailWorkspace .mail-message-tools').first();await tools.waitFor();
@@ -146,6 +146,18 @@ try{
   ok('Die Mail geht als Verweis (Konto, Ordner, UID) an Android, nicht als Inhalt',abgelegt.uid===9&&abgelegt.folder==='INBOX'&&abgelegt.validity==='5'&&!('raw' in abgelegt)&&!('data' in abgelegt)&&abgelegt.name==='Schreiben vom Anwalt.eml');
   for(let i=0;i<20&&!A.dialogs.some(d=>d.includes('Eingang-BookLedgerPro'));i++)await page.waitForTimeout(100);
   ok('Rückmeldung nennt das Fach',A.dialogs.some(d=>d.includes('Eingang-BookLedgerPro/Mails')));
+  // Generalprüfung 16.11.2026: dieselbe Mail wird nicht bei jedem Tipp noch einmal ins Fach gelegt.
+  const meldungen=A.dialogs.length;
+  await share.click();await page.locator('#tresorordnerFrage').waitFor();
+  const zweit=await page.evaluate(()=>{const d=document.querySelector('#tresorordnerFrage');return {schon:d.dataset.schon,text:d.querySelector('p').textContent,knoepfe:[...d.querySelectorAll('button')].map(b=>[b.textContent,b.dataset.wahl,b.className])};});
+  ok('Zweiter Tipp bei derselben Mail: die App sagt „liegt schon im Tresorordner“ mit dem Zeitpunkt und legt sie nicht still noch einmal ab',zweit.schon==='1'&&/liegt schon im Tresorordner \(Fach „Eingang-BookLedgerPro“\), abgelegt am \d/.test(zweit.text)&&/nicht noch einmal abgelegt/.test(zweit.text)&&JSON.stringify(zweit.knoepfe)===JSON.stringify([['Schließen','','primary'],['Trotzdem noch einmal ablegen','tresor','ghost'],['Teilen …','teilen','ghost']]));
+  await page.click('#tresorordnerFrage [data-wahl=""]');await page.waitForTimeout(400);
+  ok('„Schließen“ legt nichts ab und meldet nichts',tresor.mails.length===1&&A.dialogs.length===meldungen&&await page.locator('#tresorordnerFrage').count()===0);
+  await share.click();await page.click('#tresorordnerFrage [data-wahl=tresor]');
+  for(let i=0;i<40&&tresor.mails.length<2;i++)await page.waitForTimeout(100);
+  ok('Wer es ausdrücklich will, kann sie trotzdem noch einmal ablegen (keine Funktion fällt weg)',tresor.mails.length===2&&tresor.mails[1].uid===9);
+  tresor.mails.length=1;
+  ok('Gemerkt wird nur der Verweis (Ordner-Kennung, Konto, Ordner, Nummer) mit dem Zeitpunkt, kein Inhalt',await page.evaluate(()=>{const v=JSON.parse(localStorage.getItem('pb_tresor_bookledger_mails'));const k=Object.keys(v);return k.length===1&&/\|INBOX\|5\|9$/.test(k[0])&&Number.isFinite(v[k[0]])&&!/Anwalt/.test(JSON.stringify(v));}));
   const vorher=folder.calls.filter(c=>c.method==='openOriginal').length;
   await share.click();await page.click('#tresorordnerFrage [data-wahl=teilen]');
   for(let i=0;i<20&&folder.calls.filter(c=>c.method==='openOriginal').length===vorher;i++)await page.waitForTimeout(100);

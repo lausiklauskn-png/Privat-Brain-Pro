@@ -180,13 +180,23 @@
     const leeren = knopf('pbSuchLeeren', 'kreuz', 'pb-such-knopf'), los = knopf('pbSuchLos', 'lupe', 'pb-such-knopf pb-such-los');
     huelle.append(leeren, los);
     const leerZeigen = () => { leeren.hidden = !feld.value; };
-    leeren.addEventListener('click', () => { feld.value = ''; feld.dispatchEvent(new Event('input', { bubbles: true })); leerZeigen(); lauf++; teile.liste.replaceChildren(); teile.status.textContent = ''; teile.bereich.hidden = true; feld.focus(); });
-    feld.addEventListener('input', leerZeigen);
+    // Treffer der anderen Programme gehören zu der Frage, die mit Lupe/Enter gestellt wurde. Ändert sich der Text im Feld,
+    // gelten sie nicht mehr: Bereich leeren, eine noch laufende Abfrage verwerfen (Generalprüfung 16.11.2026).
+    const andereLeeren = () => { lauf++; teile.liste.replaceChildren(); teile.status.textContent = ''; teile.bereich.hidden = true; teile.los.removeAttribute('aria-busy'); };
+    leeren.addEventListener('click', () => { feld.value = ''; feld.dispatchEvent(new Event('input', { bubbles: true })); leerZeigen(); andereLeeren(); feld.focus(); });
+    feld.addEventListener('input', () => { leerZeigen(); if (teile) andereLeeren(); });
+    // Das × gehört zu jedem gefüllten Feld, auch wenn die Frage eingesetzt wurde (gemerkte Suche, Diktat): dann kommt kein
+    // „input“, aber die Trefferliste wird neu gezeichnet – daran wird das × nachgezogen.
+    const beiListe = new MutationObserver(leerZeigen);
+    for (const id of ['results', 'searchInfo']) { const n = document.getElementById(id); if (n) beiListe.observe(n, { childList: true, characterData: true, subtree: true }); }
+    feld.addEventListener('change', leerZeigen);
     los.addEventListener('click', () => { void suchen(); });
     feld.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); void suchen(); } });
     // 2) „Überall“ und Zahnrad in der Reihe der Suchleiste
     const ueberall = el('button', 'pb-such-ueberall'); ueberall.type = 'button'; ueberall.id = 'pbUeberallKnopf';
-    const rad = knopf('pbUeberallRad', 'pfeil', 'pb-such-knopf pb-such-rad');   // kein zweites Zahnrad (Klaus 16.11.): ein kleiner Pfeil am Knopf rad.setAttribute('aria-expanded', 'false'); rad.setAttribute('aria-controls', 'pbUeberallQuellen');
+    // kein zweites Zahnrad (Klaus 16.11.): ein kleiner Pfeil am Knopf
+    const rad = knopf('pbUeberallRad', 'pfeil', 'pb-such-knopf pb-such-rad');
+    rad.setAttribute('aria-expanded', 'false'); rad.setAttribute('aria-controls', 'pbUeberallQuellen');
     const qBox = el('div', 'pb-such-quellen'); qBox.id = 'pbUeberallQuellen'; qBox.hidden = true; qBox.setAttribute('role', 'group');
     const q0 = quellen();
     const haken = (k, an, fest) => { const l = el('label', 'pro-ue-quelle'), cb = el('input'); l.dataset.pbQuelle = k; cb.type = 'checkbox'; cb.checked = an; cb.disabled = !!fest; cb.dataset.proUeQuelle = k;

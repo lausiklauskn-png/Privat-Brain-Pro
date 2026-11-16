@@ -14,7 +14,7 @@
     title: ['Alle Konten', 'All accounts', 'Все аккаунты', 'Wszystkie konta'],
     fetch: ['📥 Alle Konten abrufen und einordnen', '📥 Fetch and sort all accounts', '📥 Загрузить и упорядочить все аккаунты', '📥 Pobierz i uporządkuj wszystkie konta'],
     refresh: ['Jetzt aktualisieren', 'Update now', 'Обновить сейчас', 'Aktualizuj teraz'],
-    stop: ['⏹ Anhalten', '⏹ Stop', '⏹ Остановить', '⏹ Zatrzymaj'],
+    stop: ['Anhalten', 'Stop', 'Остановить', 'Zatrzymaj'],
     older: ['Ältere nachholen (weitere 12 Monate)', 'Fetch older (another 12 months)', 'Загрузить старше (ещё 12 месяцев)', 'Pobierz starsze (kolejne 12 miesięcy)'],
     more: ['Weitere Aktionen', 'More actions', 'Другие действия', 'Więcej działań'],
     intro: ['Holt Absender, Betreff und Text aller eingetragenen Konten der letzten 12 Monate. Anhänge werden nicht geladen. Auf dem Server wird nichts verschoben, gelöscht oder gesendet. Danach geht es von selbst: beim Öffnen und alle 30 Minuten, solange die App offen ist und ihr Internet an ist.',
@@ -49,8 +49,8 @@
     backList: ['← Zurück', '← Back', '← Назад', '← Wstecz'],
     empty: ['Keine Mails gefunden.', 'No emails found.', 'Писем не найдено.', 'Nie znaleziono wiadomości.'],
     provider: ['Beim Anbieter öffnen', 'Open with provider', 'Открыть у провайдера', 'Otwórz u dostawcy'],
-    attachments: ['📎 Anhang beim Anbieter', '📎 Attachment at provider', '📎 Вложение у провайдера', '📎 Załącznik u dostawcy'],
-    newsletter: ['📰 Newsletter', '📰 Newsletter', '📰 Рассылка', '📰 Newsletter'],
+    attachments: ['Anhang beim Anbieter', 'Attachment at provider', 'Вложение у провайдера', 'Załącznik u dostawcy'],
+    newsletter: ['Newsletter', 'Newsletter', 'Рассылка', 'Newsletter'],
     account: ['Konto', 'Account', 'Аккаунт', 'Konto'],
     folder: ['Ordner', 'Folder', 'Папка', 'Folder'],
     textMissing: ['Der Text ist zu groß oder nur als Bild vorhanden. Beim Anbieter öffnen.', 'The text is too large or only an image. Open with provider.', 'Текст слишком большой или только картинка. Откройте у провайдера.', 'Tekst jest za duży lub tylko jako obraz. Otwórz u dostawcy.'],
@@ -64,6 +64,8 @@
     different: ['Verschieden – beide behalten', 'Different – keep both', 'Разные – оставить оба', 'Różne – zachowaj oba'],
     merged: ['Zusammengelegt. Ihre Markierungen bleiben erhalten.', 'Merged. Your marks are kept.', 'Объединено. Ваши отметки сохранены.', 'Połączono. Twoje oznaczenia zostały zachowane.'],
     kept: ['Beide bleiben erhalten.', 'Both are kept.', 'Оба сохранены.', 'Oba zachowane.'],
+    // Generalprüfung 16.11.2026: keine sichtbaren Emojis. Ein Zeichen am Anfang steht hier nur noch, wo native-toolbar.js daraus
+    // ein Liniensymbol macht (Ansichtsknöpfe, Abschnitts-Überschriften, Absender-Marken); alle anderen Texte sind reine Worte.
     clean: ['🧹 Aufräumen', '🧹 Clean up', '🧹 Уборка', '🧹 Porządki'],
     cleanIntro: ['Newsletter und Werbung aller Konten. Abgelaufene Angebote können in den Papierkorb des Anbieters; dort lassen sie sich zurückholen, bis der Anbieter ihn leert. Ohne eindeutiges Datum wird nie von selbst gelöscht. Mails mit Stern und Absender mit „Ist wichtig“ bleiben immer.',
       'Newsletters and ads from all accounts. Expired offers can go to the provider\'s trash, where they can be restored until the provider empties it. Without a clear date nothing is deleted automatically. Starred mails and senders marked “Important” always stay.',
@@ -73,14 +75,14 @@
     expiredH: ['⌛ Abgelaufen', '⌛ Expired', '⌛ Истекли', '⌛ Wygasłe'],
     checkH: ['❓ Zum Prüfen (kein eindeutiges Datum)', '❓ To check (no clear date)', '❓ Проверить (нет ясной даты)', '❓ Do sprawdzenia (brak jasnej daty)'],
     runningH: ['✅ Läuft noch', '✅ Still running', '✅ Ещё действуют', '✅ Nadal aktualne'],
-    trashedH: ['↩ Zuletzt in den Papierkorb gelegt', '↩ Recently moved to trash', '↩ Недавно в корзине', '↩ Ostatnio przeniesione do kosza'],
+    trashedH: ['Zuletzt in den Papierkorb gelegt', 'Recently moved to trash', 'Недавно в корзине', 'Ostatnio przeniesione do kosza'],
     trashAll: ['Alle abgelaufenen in den Papierkorb', 'Move all expired to trash', 'Все истёкшие в корзину', 'Wszystkie wygasłe do kosza'],
-    trashOne: ['🗑 In den Papierkorb', '🗑 Move to trash', '🗑 В корзину', '🗑 Do kosza'],
+    trashOne: ['In den Papierkorb', 'Move to trash', 'В корзину', 'Do kosza'],
     confirmTrash: ['Mails in den Papierkorb des Anbieters legen? Rückgängig bleibt möglich, bis der Anbieter den Papierkorb leert.', 'Move emails to the provider\'s trash? Undo stays possible until the provider empties the trash.', 'Переместить письма в корзину провайдера? Отмена возможна, пока корзина не очищена.', 'Przenieść wiadomości do kosza dostawcy? Cofnięcie jest możliwe, dopóki kosz nie zostanie opróżniony.'],
     ask: ['abgelaufene Angebote. Künftig abgelaufene Angebote dieses Absenders selbst in den Papierkorb legen?', 'expired offers. Move this sender\'s expired offers to trash automatically from now on?', 'истёкших предложений. Впредь перемещать истёкшие предложения этого отправителя в корзину автоматически?', 'wygasłych ofert. Odtąd automatycznie przenosić wygasłe oferty tego nadawcy do kosza?'],
     yesAuto: ['Ja, künftig selbst', 'Yes, from now on', 'Да, впредь сами', 'Tak, odtąd samo'],
     noAuto: ['Nein, ich lösche selbst', 'No, I delete myself', 'Нет, удаляю сам', 'Nie, usuwam sam'],
-    autoOn: ['🤖 räumt selbst auf', '🤖 cleans up itself', '🤖 убирает само', '🤖 sprząta samo'],
+    autoOn: ['räumt selbst auf', 'cleans up itself', 'убирает само', 'sprząta samo'],
     until: ['gültig bis', 'valid until', 'действует до', 'ważne do'],
     noDate: ['kein eindeutiges Datum', 'no clear date', 'нет ясной даты', 'brak jasnej daty'],
     protected: ['geschützt', 'protected', 'защищено', 'chronione'],
@@ -94,23 +96,23 @@
     noTrash: ['Kein Papierkorb beim Anbieter gefunden; nichts wurde verschoben.', 'No provider trash found; nothing was moved.', 'Корзина у провайдера не найдена; ничего не перемещено.', 'Nie znaleziono kosza u dostawcy; nic nie przeniesiono.'],
     noId: ['Ohne Mail-Kennung wird nicht verschoben (kein sicherer Rückweg).', 'Without a message ID nothing is moved (no safe way back).', 'Без идентификатора письмо не перемещается (нет надёжного возврата).', 'Bez identyfikatora nic nie jest przenoszone (brak bezpiecznego powrotu).'],
     unsubH: ['📭 Newsletter abmelden', '📭 Unsubscribe newsletters', '📭 Отписаться от рассылок', '📭 Wypisz się z newsletterów'],
-    unsubIntro: ['Der Abmelde-Weg steht unsichtbar in der Mail. ⚡ direkt: die App meldet Sie selbst ab. ✉ per Mail: die App schickt nach Ihrer Bestätigung eine kurze Abmelde-Mail. 🌐 Webseite: die Abmelde-Seite öffnet sich, dort bestätigen Sie.', 'The unsubscribe way is hidden in the mail. ⚡ direct: the app unsubscribes for you. ✉ by mail: after you confirm, the app sends a short unsubscribe mail. 🌐 web page: the unsubscribe page opens and you confirm there.', 'Способ отписки скрыт в письме. ⚡ напрямую: приложение отпишет само. ✉ письмом: после подтверждения приложение отправит короткое письмо. 🌐 сайт: откроется страница отписки.', 'Sposób wypisania jest ukryty w mailu. ⚡ bezpośrednio: aplikacja wypisze sama. ✉ mailem: po potwierdzeniu aplikacja wyśle krótki mail. 🌐 strona: otworzy się strona wypisania.'],
+    unsubIntro: ['Der Abmelde-Weg steht unsichtbar in der Mail. Direkt: die App meldet Sie selbst ab. Per Mail: die App schickt nach Ihrer Bestätigung eine kurze Abmelde-Mail. Webseite: die Abmelde-Seite öffnet sich, dort bestätigen Sie.', 'The unsubscribe way is hidden in the mail. Direct: the app unsubscribes for you. By mail: after you confirm, the app sends a short unsubscribe mail. Web page: the unsubscribe page opens and you confirm there.', 'Способ отписки скрыт в письме. Напрямую: приложение отпишет само. Письмом: после подтверждения приложение отправит короткое письмо. Сайт: откроется страница отписки.', 'Sposób wypisania jest ukryty w mailu. Bezpośrednio: aplikacja wypisze sama. Mailem: po potwierdzeniu aplikacja wyśle krótki mail. Strona: otworzy się strona wypisania.'],
     unsub: ['Abmelden', 'Unsubscribe', 'Отписаться', 'Wypisz się'],
-    wayOne: ['⚡ direkt', '⚡ direct', '⚡ напрямую', '⚡ bezpośrednio'],
-    wayMail: ['✉ per Mail', '✉ by mail', '✉ письмом', '✉ mailem'],
-    wayPage: ['🌐 Webseite', '🌐 web page', '🌐 сайт', '🌐 strona'],
+    wayOne: ['direkt', 'direct', 'напрямую', 'bezpośrednio'],
+    wayMail: ['per Mail', 'by mail', 'письмом', 'mailem'],
+    wayPage: ['Webseite', 'web page', 'сайт', 'strona'],
     unsubbed: ['abgemeldet am', 'unsubscribed on', 'отписка', 'wypisano'],
     unsubPage: ['Seite geöffnet – dort bestätigen', 'Page opened – confirm there', 'Страница открыта – подтвердите там', 'Strona otwarta – potwierdź tam'],
     unsubDone: ['✓ Erledigt', '✓ Done', '✓ Готово', '✓ Gotowe'],
     unsubOk: ['Abgemeldet.', 'Unsubscribed.', 'Отписка выполнена.', 'Wypisano.'],
     unsubFail: ['Der Versender hat die Abmeldung nicht bestätigt. Bitte über die Webseite abmelden.', 'The sender did not confirm. Please unsubscribe on the web page.', 'Отправитель не подтвердил. Отпишитесь на сайте.', 'Nadawca nie potwierdził. Wypisz się na stronie.'],
-    unsubSuspect: ['⚠ Verdacht auf Spam oder Betrug – nicht abmelden, das bestätigt nur Ihre Adresse.', '⚠ Possible spam or fraud – do not unsubscribe, it only confirms your address.', '⚠ Подозрение на спам или мошенничество – не отписывайтесь, это лишь подтвердит адрес.', '⚠ Podejrzenie spamu lub oszustwa – nie wypisuj się, to tylko potwierdza adres.'],
+    unsubSuspect: ['Verdacht auf Spam oder Betrug – nicht abmelden, das bestätigt nur Ihre Adresse.', 'Possible spam or fraud – do not unsubscribe, it only confirms your address.', 'Подозрение на спам или мошенничество – не отписывайтесь, это лишь подтвердит адрес.', 'Podejrzenie spamu lub oszustwa – nie wypisuj się, to tylko potwierdza adres.'],
     confirmUnsubMail: ['Abmelde-Mail jetzt senden an', 'Send unsubscribe mail now to', 'Отправить письмо об отписке на', 'Wysłać teraz mail wypisania do'],
     unsubNoWay: ['kein Abmelde-Weg gefunden', 'no unsubscribe way found', 'способ отписки не найден', 'nie znaleziono sposobu wypisania'],
-    unsubAsk: ['Künftig Absender, die Sie als „📰 Ist Werbung“ markieren, selbst abmelden? Nur wo es direkt geht (⚡); Mails und Webseiten fragen weiter.', 'From now on, unsubscribe senders you mark as “📰 Is advertising” by yourself? Only where it works directly (⚡); mails and web pages still ask.', 'Впредь отписываться самостоятельно от отправителей с пометкой «📰 Это реклама»? Только где можно напрямую (⚡).', 'Odtąd samodzielnie wypisywać nadawców oznaczonych „📰 To reklama”? Tylko tam, gdzie da się bezpośrednio (⚡).'],
+    unsubAsk: ['Künftig Absender, die Sie als „Ist Werbung“ markieren, selbst abmelden? Nur wo es direkt geht; Mails und Webseiten fragen weiter.', 'From now on, unsubscribe senders you mark as “Is advertising” by yourself? Only where it works directly; mails and web pages still ask.', 'Впредь отписываться самостоятельно от отправителей с пометкой «Это реклама»? Только где можно напрямую.', 'Odtąd samodzielnie wypisywać nadawców oznaczonych „To reklama”? Tylko tam, gdzie da się bezpośrednio.'],
     unsubAutoYes: ['Ja, selbst abmelden', 'Yes, unsubscribe by itself', 'Да, отписываться самому', 'Tak, wypisuj sam'],
     unsubAutoNo: ['Nein, immer fragen', 'No, always ask', 'Нет, всегда спрашивать', 'Nie, zawsze pytaj'],
-    unsubAutoOn: ['Werbe-Absender werden selbst abgemeldet (nur ⚡ direkt).', 'Advertising senders are unsubscribed by themselves (⚡ direct only).', 'От рекламных отправителей отписка автоматически (только ⚡).', 'Nadawcy reklam są wypisywani automatycznie (tylko ⚡).'],
+    unsubAutoOn: ['Werbe-Absender werden selbst abgemeldet (nur direkt).', 'Advertising senders are unsubscribed by themselves (direct only).', 'От рекламных отправителей отписка автоматически (только напрямую).', 'Nadawcy reklam są wypisywani automatycznie (tylko bezpośrednio).'],
     unsubAutoOff: ['Ausschalten', 'Turn off', 'Выключить', 'Wyłącz'],
     unsubStill: ['kommt weiter, obwohl abgemeldet am', 'still arriving although unsubscribed on', 'продолжает приходить после отписки', 'nadal przychodzi mimo wypisania'],
     unsubAgain: ['Nochmals abmelden', 'Unsubscribe again', 'Отписаться снова', 'Wypisz ponownie'],
@@ -684,13 +686,19 @@
         const l = r.mailRemotes?.[0];
         const sum = l ? await PBLiveMail.familienakte([{ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, messageId: r.mailMessageId || '', date: r.date }]) : { gruende: { laden: 1 } };
         const text = !sum ? t('famBusy') : sum.gruende?.laden ? t('famStored') : sum.text;
-        if (status) status.textContent = text;
-        alert(text);
+        // Generalprüfung 16.11.2026: das Ergebnis steht einmal da – in einer Meldezeile direkt unter den Knöpfen (wird
+        // vorgelesen, bleibt beim Neuzeichnen stehen), nicht zusätzlich als Fenster zum Wegtippen.
+        famNote = { hash: r.hash, text, done: Boolean(sum && !sum.fehler && !sum.zuViele && !sum.geschlossen && !sum.gruende?.laden) };
+        const line = panel.querySelector('[data-mail-fam-note]');
+        if (line) { showFamNote(line); line.scrollIntoView?.({ block: 'nearest' }); } else draw();
       });
       fam.dataset.nativeSelection = 'familienakte'; fam.dataset.mailFamilienakte = ''; fam.dataset.mailCaption = 'true'; fam.hidden = true; tools.append(fam);
       PBLiveMail.familienakteTresor().then(z => { fam.hidden = z?.vorhanden !== true; }, () => {});
     }
     box.append(tools);
+    const famLine = el('p', 'mail-notice'); famLine.setAttribute('role', 'status'); famLine.dataset.mailFamNote = ''; famLine.hidden = true;
+    if (famNote?.hash === r.hash) showFamNote(famLine); else famNote = null;
+    box.append(famLine);
     box.append(storedText(r.mailBody || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
     if (remoteFailed === r.hash) box.insertBefore(el('p', 'mail-notice', t('remoteFailed')), box.children[2] || null);
@@ -699,7 +707,8 @@
   }
   // Klaus 15.11.2026: „Alle Konten“ öffnet eine Mail wie das einzelne Konto – ganz, mit Anhängen, vom Anbieter.
   // Nur wenn das nicht geht (kein Netz, Konto getrennt, Mail gelöscht), steht der gespeicherte Text da, mit einem Satz dazu.
-  let remoteFailed = null;
+  let remoteFailed = null, famNote = null;
+  function showFamNote(line) { line.textContent = famNote.text; line.dataset.mailResult = famNote.done ? 'fertig' : 'offen'; line.hidden = false; }
   async function openMail(r, again = false) {
     const l = r.mailRemotes?.[0];
     if (l && window.PBLiveMail?.openRemote && (again || remoteFailed !== r.hash)) {

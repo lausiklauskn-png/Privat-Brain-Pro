@@ -34,7 +34,7 @@ try{
     }};
   });
   await page.goto(origin);await page.waitForFunction(()=>window.PBNetwork?.ready&&window.PBWorkspace&&typeof db!=='undefined'&&db&&document.querySelector('.native-toolbar-row'));
-  await page.click('[data-tab=mail]');await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('[data-live-uid="7"]').click();
+  await page.click('[data-tab=mail]');/* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});await page.locator('[data-live-uid="7"]').click();
   await page.locator('.live-mail .mail-html').waitFor();
   ok('320px touch: Pro name with version fits and the green offline information is removed',await page.locator('.brand h1').evaluate(e=>[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())==='Private Brain Pro'&&await page.locator('#pbVersion').isVisible()&&await page.locator('.badge-off').count()===0&&await page.locator('.brand h1').evaluate(e=>e.getBoundingClientRect().right<=document.querySelector('header .tools').getBoundingClientRect().left));
   ok('The public version stays a plain app number in the actual debug build header',await page.locator('#pbVersion').textContent()==='v1.0.36'&&await page.locator('#pbVersion').getAttribute('aria-label')==='Private Brain Pro v1.0.36');

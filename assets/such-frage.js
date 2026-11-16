@@ -91,7 +91,11 @@
       const a = roh[i], b = roh[i + 1];
       if (b && !(kennt(a) && kennt(b) && !FUELL.has(a) && !FUELL.has(b)) && !/^\d+$/.test(a + b)) {
         const z = a + b; let fund = z.length >= 5 && kennt(z) ? z : '';
-        if (!fund && z.length >= 7) for (const w of v) if (w[0] === z[0] && w.length >= 7 && fastGleich(w, z)) { fund = w; break; }
+        // Ein Zeichen Unterschied nur, wenn die Teile selbst keine Wörter der Sammlung sind und das gefundene Wort nicht bloß
+        // eine andere Form eines Teils ist. Sonst wurde aus „brief an mama“ „briefen mama“ und aus „rechnung in berlin“
+        // „rechnungen berlin“ (Generalprüfung 16.11.2026). „an tropic“ → „anthropic“ bleibt: „tropic“ kennt die Sammlung nicht.
+        const frei = (w) => FUELL.has(w) || !kennt(w);
+        if (!fund && z.length >= 7 && frei(a) && frei(b)) for (const w of v) if (w[0] === z[0] && w.length >= 7 && fastGleich(w, z) && stem(w) !== stem(a) && stem(w) !== stem(b)) { fund = w; break; }
         if (fund) { aus.push(fund); i++; geaendert = true; continue; }
       }
       aus.push(a);

@@ -40,6 +40,32 @@ try{
   ok('The shared loading line names the import with the count, the file and a rising percentage',lines.some(l=>/0 von 1 Dateien gelesen · Heizung\.txt/.test(l)&&/\d+ %/.test(l))&&new Set(lines.map(l=>(l.match(/(\d+) %/)||[])[1]).filter(Boolean)).size>=3||console.log(lines.slice(0,8)));
   ok('The shared loading line is gone after the import',await page.evaluate(()=>{const r=document.getElementById('pb-activity');return !r||r.hidden;}));
   ok('No step hook is left behind after the import',await page.evaluate(()=>window.PBImportStep===undefined));
+  // Generalprüfung 16.11.2026: Dateien, die während eines laufenden Einlesens gewählt werden, verschwanden ohne Meldung.
+  // Jetzt warten sie sichtbar („wartet“) und werden nach dem laufenden Lauf eingelesen.
+  const big=n=>Buffer.from(('Bericht Nummer '+n+' über das Dach. ').repeat(40000));
+  const rows=()=>page.evaluate(()=>[...document.querySelectorAll('#recentList>li')].map(li=>li.querySelector('.ra-name').textContent+'='+li.dataset.state+'='+li.querySelector('.ra-tag').textContent));
+  await page.setInputFiles('#fileInput',{name:'lauf-1.txt',mimeType:'text/plain',buffer:big(1)});
+  await page.waitForFunction(()=>signing);await page.waitForTimeout(200);
+  ok('While one file is being read the file button stays usable',await page.evaluate(()=>signing&&!document.getElementById('pickFiles').disabled));
+  await page.setInputFiles('#fileInput',[{name:'spaeter-1.txt',mimeType:'text/plain',buffer:Buffer.from('Notiz eins über den Garten.')},{name:'spaeter-2.txt',mimeType:'text/plain',buffer:Buffer.from('Notiz zwei über den Keller.')}]);
+  await page.waitForTimeout(150);
+  let list=await rows();
+  ok('Files chosen during a running import are listed at once as „wartet“',await page.evaluate(()=>signing)&&list.includes('spaeter-1.txt=wait=wartet')&&list.includes('spaeter-2.txt=wait=wartet')&&list.some(r=>r.startsWith('lauf-1.txt=reading='))||console.log(list));
+  await page.waitForFunction(()=>!signing&&CATALOG.length===4,null,{timeout:30000}).catch(()=>{});
+  list=await rows();
+  ok('After the running import they are read by themselves: all in the catalogue and marked „eingelesen“',await page.evaluate(()=>!signing&&CATALOG.length===4&&['lauf-1.txt','spaeter-1.txt','spaeter-2.txt'].every(n=>CATALOG.some(r=>r.name===n)))
+    &&['lauf-1.txt','spaeter-1.txt','spaeter-2.txt'].every(n=>list.includes(n+'=done=eingelesen'))||console.log(list,await page.evaluate(()=>CATALOG.map(r=>r.name))));
+  // „Abbrechen“ nimmt auch die wartenden Dateien heraus – und sagt es an der Zeile.
+  await page.setInputFiles('#fileInput',[{name:'lauf-2.txt',mimeType:'text/plain',buffer:big(2)},{name:'lauf-3.txt',mimeType:'text/plain',buffer:big(3)}]);
+  await page.waitForFunction(()=>signing);await page.waitForTimeout(200);
+  await page.setInputFiles('#fileInput',{name:'spaeter-3.txt',mimeType:'text/plain',buffer:Buffer.from('Notiz drei über die Garage.')});
+  await page.waitForTimeout(100);await page.evaluate(()=>document.getElementById('cancelSign').click());
+  await page.waitForFunction(()=>!signing,null,{timeout:30000});await page.waitForTimeout(300);
+  list=await rows();
+  ok('„Abbrechen“ stops the waiting files too and the row says so; nothing stays on „wartet“',list.includes('spaeter-3.txt=fail=nicht gelesen: abgebrochen')&&!list.some(r=>/=wait=/.test(r))&&await page.evaluate(()=>!signing&&!CATALOG.some(r=>r.name==='spaeter-3.txt'||r.name==='lauf-3.txt'))||console.log(list));
+  await page.setInputFiles('#fileInput',{name:'danach.txt',mimeType:'text/plain',buffer:Buffer.from('Notiz danach über den Zaun.')});
+  await page.waitForFunction(()=>!signing&&CATALOG.some(r=>r.name==='danach.txt'),null,{timeout:30000});
+  ok('After a cancelled run the next import works as usual',await page.evaluate(()=>window.PBImportStep===undefined));
   ok('No runtime errors',errors.length===0||console.log(errors));
   console.log(`${count} import progress checks passed (native copy simulated with delays).`);
 }finally{await browser?.close();server.close();}

@@ -132,9 +132,13 @@
     const meaning = document.querySelector('#mode [data-m="mean"]');
     if (meaning) { if (state.installed) { meaning.removeAttribute('data-semantic-missing'); meaning.title = meaning.getAttribute('aria-label') || meaning.textContent.trim(); } else { meaning.dataset.semanticMissing = '1'; meaning.title = t('goLoad'); } }
     box.dataset.state = running ? 'loading' : state.installed ? (state.crashes > 0 ? 'crashed' : phase || 'ready') : state.present > 0 ? 'partial' : 'none';
+    flag();
   }
+  // Das Schild über dem Kasten (index.html renderEmbFlag) nennt denselben Zustand wie der Kasten: nicht geladen · bereit ·
+  // startet · aktiv. Vorher stand dort dauerhaft „lädt / Rückfall aktiv“, obwohl nichts lud (Generalprüfung 16.11.2026).
+  function flag() { try { if (typeof renderEmbFlag === 'function') renderEmbFlag(); } catch { /* nur Anzeige */ } }
 
-  async function refresh() { try { state = await plugin.getState(); } catch {} render(); }
+  async function refresh() { try { state = await plugin.getState(); } catch {} render(); flag(); }
 
   let loadJob = null;   // Klaus 2026-11-16 (V2, V8): ein Satz mit Größe, schmaler Balken mit Prozent, in der gemeinsamen Ladezeile
   plugin.addListener?.('progress', p => { live = p; render(); forwardProgress(p); loadJob?.update({}); });

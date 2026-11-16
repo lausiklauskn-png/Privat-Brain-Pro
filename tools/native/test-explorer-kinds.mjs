@@ -117,6 +117,8 @@ try{
   const unusual=page.locator('#explorerFiles .explorer-row').filter({hasText:'Keep this name.weird'}),ownFolder=node('dir:doc:📁 Personal');
   ok('An unknown file gets a neutral document SVG while its own leading emoji stays unchanged',(await unusual.locator('strong').innerText()).trim()==='👤 Keep this name.weird'&&await unusual.locator('strong [data-pb-icon=file]>svg').count()===1);
   ok('Only the generated folder decoration is replaced; a user folder keeps its own leading emoji',(await ownFolder.innerText()).trim()==='📁 Personal (1)');
+  // Das Warnsymbol setzt die Symbolleiste erst im nächsten Durchlauf nach dem Neuzeichnen des Baums; darauf warten, dann wie bisher prüfen.
+  await page.waitForFunction(()=>[...document.querySelectorAll('#explorerTree button.explorer-folder')].some(b=>b.querySelector(':scope>.native-folder-warning[data-icon-key=warning]')),null,{timeout:10000}).catch(()=>{});
   ok('Tree warnings use an actual line SVG and retain the finding count in the accessible description',await ownFolder.evaluate(b=>Boolean(b.querySelector(':scope>.native-folder-warning[data-icon-key=warning]'))&&getComputedStyle(b,'::after').content==='none'&&b.title.includes('1 with a finding')));
   await page.locator('[data-tab="mail"]').click();
   const mailRow=page.locator('[data-mail-id]').filter({hasText:'Keep this subject'});

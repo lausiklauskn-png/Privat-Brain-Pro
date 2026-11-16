@@ -101,7 +101,7 @@ try{
  const reached=await tabTo(page,'.native-toolbar-quick [data-tab=settings]');
  check('Tab reaches the direct Settings gear outside the scrolling strip',reached);
  if(reached){await page.keyboard.press('Enter');await page.locator('#panel-settings').waitFor({state:'visible'});check('Enter activates Settings and keeps the visible gear focused',await page.evaluate(()=>document.activeElement.matches('.native-toolbar-quick [data-tab=settings]')&&document.activeElement.getClientRects().length>0&&history.state?.pbPage==='settings'));}
- await navigateTo(page,'mail');await page.locator('#mailWorkspace [data-live-text=connect]').click();
+ await navigateTo(page,'mail');/* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});
  await page.locator('.live-mail [data-live-uid="1"]').waitFor();
  for(const [width,height]of sizes){
    await page.setViewportSize({width,height});

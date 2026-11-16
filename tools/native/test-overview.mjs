@@ -47,7 +47,7 @@ try{
   const path='category:'+encodeURIComponent('Rechnung / Verträge');
   await page.locator('#groups [data-overview-path]').filter({hasText:'Rechnung / Verträge'}).click();
   // Klaus 15.11.2026 (Punkt 3): eine Kategorie öffnet sich als Kästchen „Rechnung / Verträge ×“ im Suchfeld über allen Dateien.
-  await page.waitForFunction(()=>PBWorkspace.explorerState().chips.some(c=>c.feld==='kategorie'&&c.wert==='Rechnung / Verträge'));
+  await page.waitForFunction(()=>PBWorkspace.explorerState().chips.some(c=>c.feld==='gruppe'&&c.wert==='Rechnung / Verträge')) // Generalprüfung 16.11.2026: Kategorie-Kästchen heißt jetzt „gruppe“ (Zahl und Liste nach derselben Regel);
   ok('Category names containing slashes open as a filter chip with their real files',await page.locator('#explorerFiles .explorer-row').count()===2&&(await page.locator('#explorerChips .explorer-chip').first().textContent()).startsWith('Rechnung / Verträge'));
   ok('Category views do not offer the unrelated semantic-topic removal action',await page.locator('#explorerFiles [data-topic-not]').count()===0);
   await page.locator('.main-pages [data-tab="dupes"]').click();

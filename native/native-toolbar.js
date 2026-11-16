@@ -148,6 +148,8 @@
   for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
   prefixKeys.set('★','star');
   for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','search'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock'],['🔏','network']])prefixKeys.set(prefix,key);
+  // Generalprüfung 16.11.2026: „Aufräumen“ zeigte ⌛ ✅ ⭐ noch als bunte Zeichen – auch sie werden Liniensymbole.
+  for(const[prefix,key]of [['⌛','pending'],['✅','check'],['⭐','star']])prefixKeys.set(prefix,key);
   const prefixes=[...prefixKeys.keys()].sort((a,b)=>b.length-a.length);
   function decorateKnownPrefix(node,preferred){
     if(!node||node.querySelector(':scope>.compact-icon'))return;
@@ -371,4 +373,44 @@
     const primarySize=new ResizeObserver(()=>{if(!sizeFrame)sizeFrame=requestAnimationFrame(()=>{sizeFrame=0;primaryPage='';enhance();});});
     primarySize.observe(main);for(const button of main.querySelectorAll('.tab'))primarySize.observe(button);
   }
+  // Generalprüfung 16.11.2026: im schmalen Fenster passen nicht alle sieben Seiten in die Leiste. Solange links oder rechts noch
+  // Seiten liegen, steht dort ein Pfeil auf einer weichen Kante; ein Tipp schiebt die Leiste weiter. Wischen und Tab-Taste bleiben.
+  // Die Pfeile liegen über der Leiste (kein Platzbedarf, die Leiste selbst bleibt unverändert) und sind reine Zeigehilfen.
+  const moreWords={de:['Weitere Seiten links','Weitere Seiten rechts'],en:['More pages to the left','More pages to the right'],ru:['Ещё страницы слева','Ещё страницы справа'],pl:['Więcej stron po lewej','Więcej stron po prawej']};
+  const arrows=[-1,1].map(direction=>{
+    const arrow=make('button','pb-leiste-pfeil '+(direction<0?'pb-leiste-links':'pb-leiste-rechts'));arrow.type='button';arrow.hidden=true;arrow.tabIndex=-1;
+    arrow.dataset.richtung=direction<0?'links':'rechts';
+    const glyph=document.createElementNS('http://www.w3.org/2000/svg','svg');glyph.setAttribute('viewBox','0 0 24 24');glyph.setAttribute('aria-hidden','true');
+    const line=document.createElementNS('http://www.w3.org/2000/svg','path');line.setAttribute('d',direction<0?'M15 5l-7 7 7 7':'M9 5l7 7-7 7');glyph.append(line);arrow.append(glyph);
+    arrow.addEventListener('click',()=>{
+      // Die nächste angeschnittene oder verdeckte Seite rückt ganz ins Bild, direkt neben den Pfeil der anderen Seite.
+      const view=main.getBoundingClientRect(),tabs=[...main.querySelectorAll('.tab')].map(tab=>tab.getBoundingClientRect());
+      const edge=arrow.getBoundingClientRect().width,rest=main.scrollWidth-main.clientWidth;
+      const steps=(direction>0?tabs.filter(tab=>tab.right>view.right-edge+1).map(tab=>tab.left-view.left-edge):tabs.filter(tab=>tab.left<view.left+edge-1).reverse().map(tab=>tab.right-view.right+edge))
+        .filter(step=>direction*step>8);
+      let goal=Math.max(0,Math.min(rest,main.scrollLeft+(steps.length?steps[0]:direction*main.clientWidth)));
+      if(goal<16)goal=0;else if(goal>rest-16)goal=rest; // kein Rest von wenigen Pixeln, für den noch ein Pfeil stünde
+      main.scrollTo({left:goal,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
+    });
+    row.append(arrow);return arrow;
+  });
+  let arrowFrame=0;
+  function placeArrows(){
+    arrowFrame=0;
+    const words=moreWords[document.documentElement.lang]||moreWords.de,rest=main.scrollWidth-main.clientWidth,at=main.scrollLeft;
+    const box=main.getBoundingClientRect(),base=row.getBoundingClientRect(),tab=main.querySelector('.tab')?.getBoundingClientRect();
+    arrows.forEach((arrow,index)=>{
+      const show=rest>2&&(index?at<rest-2:at>2);
+      if(arrow.hidden===show)arrow.hidden=!show;
+      if(arrow.title!==words[index]){arrow.title=words[index];arrow.setAttribute('aria-label',words[index]);}
+      if(!show||!tab)return;
+      const top=Math.round(tab.top-base.top)+'px',height=Math.round(tab.height)+'px',left=Math.round(index?box.right-base.left-arrow.offsetWidth:box.left-base.left)+'px';
+      if(arrow.style.top!==top)arrow.style.top=top;if(arrow.style.height!==height)arrow.style.height=height;if(arrow.style.left!==left)arrow.style.left=left;
+    });
+  }
+  const scheduleArrows=()=>{if(!arrowFrame)arrowFrame=requestAnimationFrame(placeArrows);};
+  main.addEventListener('scroll',scheduleArrows,{passive:true});addEventListener('resize',scheduleArrows);
+  new MutationObserver(scheduleArrows).observe(document.documentElement,{attributes:true,attributeFilter:['lang','style','class']});
+  if(typeof ResizeObserver==='function'){const size=new ResizeObserver(scheduleArrows);size.observe(main);for(const button of main.querySelectorAll('.tab'))size.observe(button);}
+  placeArrows();
 })();

@@ -9,8 +9,8 @@ export function adaptSearch(source) {
   // Klaus 2026-10-26 (Sitzung 1, Punkt 1): counts as plain text in the one row with catalogue and Prüfstand.
   replace('    <div class="search-totals"><span id="searchMailCount"></span><span id="searchDocCount"></span><span id="searchLocalCount"></span></div>\n', '', 'boxed search totals');
   replace('<span id="corpusInfo"></span>', '<span id="searchMailCount" class="pb-meta-count"></span><span id="searchDocCount" class="pb-meta-count"></span><span id="searchLocalCount" class="pb-meta-count"></span><span id="corpusInfo" class="pb-meta-count"></span>', 'one status row');
-  replace('<span id="searchInfo" data-i18n="searchInfo">Wirf zuerst Dateien hinein — dann finde alles nach Sinn, nicht nach Dateinamen.</span>',
-    '<span id="searchInfo"></span>', 'initial search explanation');
+  replace('<span id="searchInfo" role="status" data-i18n="searchInfo">Wirf zuerst Dateien hinein — dann finde alles nach Sinn, nicht nach Dateinamen.</span>',
+    '<span id="searchInfo" role="status"></span>', 'initial search explanation');
   const emptyBlocks = [...html.matchAll(/<div class="empty" id="searchEmpty">[\s\S]*?<p data-i18n="searchEmpty">[\s\S]*?<\/p>\n    <\/div>/g)];
   if (emptyBlocks.length !== 1) throw new Error('Review native search adaptation: empty catalogue');
   replace(emptyBlocks[0][0], '<div class="empty" id="searchEmpty">\n      <p data-i18n="searchEmpty">Noch keine Dateien.</p>\n    </div>', 'compact empty catalogue');
@@ -34,7 +34,8 @@ export function adaptSearch(source) {
   replace(titles, titles + '\n    document.querySelectorAll("[data-i18n-aria]").forEach(function(el){ var v=t(el.getAttribute("data-i18n-aria")); if(v!=null) el.setAttribute("aria-label",v.replace(/<[^>]+>/g,"")); });', 'accessible translated label');
   replace('ul.innerHTML=""; info.textContent = MODE==="name"\n      ? "Namenssuche: findet nur, was im Dateinamen steht."\n      : "Bedeutungssuche: findet nach Sinn — auch Text aus PDF, Office und (wo möglich) Bildern. Oder nutze die Filter unten zum Stöbern.";',
     'ul.innerHTML=""; info.textContent = "";', 'idle search explanation');
-  replace('(MODE==="name" ? "Namenssuche" : "Bedeutungssuche")', '(MODE==="name" ? "Suche" : "Bedeutungssuche")', 'result status');
-  replace(' Probier den Umschalter auf <b>Bedeutungssuche</b> — dieselbe Frage, mehr Sinn.', ' Aktiviere <b>Bedeutung</b>, um auch nach Inhalt und Sinn zu suchen.', 'switch help');
+  // Trefferzeile und Hinweis „Bedeutung einschalten“ stehen seit der Generalprüfung (16.11.2026) viersprachig in SEARCH_T
+  // (index.html); der Pro-Bau wählt dort nur die Fassung für den einen Schalter („Suche“ statt „Namenssuche“).
+  replace('const SEARCH_PRO=false;', 'const SEARCH_PRO=true;', 'result status and switch help');
   return html;
 }

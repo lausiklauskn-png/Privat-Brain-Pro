@@ -99,5 +99,38 @@ try{
   await page.waitForFunction(()=>SbkimEmbedding.inits>=1,null,{timeout:15000});
   ok('"OK" loads with one sentence, the size and a percentage, then starts the model',await page.evaluate(()=>sem.log.filter(x=>x==='install').length===1&&lines.some(l=>/Modell wird geladen, etwa 118 MB/.test(l)&&/\d+ %/.test(l))&&lines.some(l=>/Modell wird gestartet/.test(l))));
   ok('No unhandled app errors (load on demand)',errors.length===0);
+  await page.close();
+
+  // Generalprüfung 16.11.2026: (a) das Schild in den Einstellungen nennt den wirklichen Zustand statt dauerhaft „lädt / Rückfall
+  // aktiv“; (b) wird das Modell nach dem Tippen bereit, sucht die App einmal von selbst neu (vorher blieb die Wortsuche stehen).
+  const schild=page=>page.evaluate(()=>document.getElementById('embFlag').textContent+'|'+document.getElementById('embInfo').textContent);
+  ({page,errors,dialogs}=await open(false,false));
+  await page.waitForTimeout(400);
+  let text=await schild(page);
+  ok('Model not on the device: the badge says „nicht geladen“, not „lädt“',/^nicht geladen\|/.test(text)&&!/lädt|Rückfall/.test(text)||console.log(text));
+  await page.close();
+  ({page,errors,dialogs}=await open(true,false));
+  await page.waitForTimeout(400);text=await schild(page);
+  ok('Model on the device, not started: the badge says „bereit“ and when it starts',/^bereit\|.*startet, sobald du mit „Bedeutung“ suchst/.test(text)&&!/lädt|Rückfall/.test(text)||console.log(text));
+  for(const [lang,word] of [['en','ready'],['ru','готова'],['pl','gotowy']]){
+    await page.evaluate(l=>{document.documentElement.lang=l;window.dispatchEvent(new CustomEvent('pblang',{detail:l}));},lang);await page.waitForTimeout(80);text=await schild(page);
+    ok(`The badge is translated (${lang})`,text.startsWith(word+'|')&&!/bereit|lädt|Suche/.test(text)||console.log(text));
+  }
+  await page.evaluate(()=>{document.documentElement.lang='de';window.dispatchEvent(new CustomEvent('pblang',{detail:'de'}));});
+  await page.evaluate(()=>{
+    CATALOG.push({hash:'a'.repeat(64),name:'Auto Kaufvertrag',ext:'pdf',type:'application/pdf',date:Date.UTC(2026,9,1),size:4096,snippet:'Kaufvertrag Auto',path:'Dokumente/auto.pdf',tags:[],dupes:[],evec:Array.from(new Float32Array(384))});
+    for(const r of CATALOG){const tk=tokens(r.name+' '+(r.snippet||''));r.tf=termFreq(tk);r.vector=buildVector(tk);r.nameTokens=tokens(r.name);HASHSET.add(r.hash);}rebuildIndex();
+    // the model takes 0.8 s to start; count every drawing of the result list
+    const init=SbkimEmbedding.init;SbkimEmbedding.init=async function(){await new Promise(r=>setTimeout(r,800));return init.apply(this,arguments);};
+    window.draws=[];const draw=window.renderResults;window.renderResults=function(q){draws.push({q,ready:SbkimEmbedding.inits>0});return draw.apply(this,arguments);};
+  });
+  await page.fill('#q','auto');await page.waitForTimeout(300);
+  text=await page.evaluate(()=>document.getElementById('searchInfo').textContent);
+  ok('While the model is still starting the line honestly says „Wortsuche“ and the badge „startet“',/1 Treffer/.test(text)&&/Wortsuche/.test(text)&&!/Bedeutungssuche/.test(text)&&/^startet/.test(await schild(page))||console.log(text,await schild(page)));
+  await page.waitForFunction(()=>SbkimEmbedding.inits>=1);await page.waitForTimeout(700);
+  ok('When the model becomes ready the same question is searched once more by itself, now as „Bedeutungssuche“',await page.evaluate(()=>draws.some(d=>d.ready&&d.q==='auto')&&/Bedeutungssuche/.test(document.getElementById('searchInfo').textContent))||console.log(await page.evaluate(()=>[draws,document.getElementById('searchInfo').textContent])));
+  text=await schild(page);
+  ok('After the start the badge says „aktiv“',/^aktiv/.test(text)||console.log(text));
+  ok('No unhandled app errors (badge and search again)',errors.length===0||console.log(errors));
   console.log(`${count} model-guard checks passed (ProSemantic and Modul 03 simulated; no real download).`);
 }finally{await browser?.close();server.close();}

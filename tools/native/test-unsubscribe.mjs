@@ -64,7 +64,7 @@ try{
   await page.goto(url);await page.waitForFunction(()=>window.PBMailDevice&&window.PBMailIndex&&window.PBUnsub&&typeof db!=='undefined'&&db);
   await page.locator('[data-tab="mail"]').click();
   const mail=page.locator('#mailWorkspace'), panel=mail.locator('#pb-mail-all');
-  await mail.locator('[data-live-text=connect]').click();
+  /* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});
   await page.waitForFunction(()=>document.querySelector('.live-mail [data-mail-all=open]'));
   await mail.locator('[data-mail-all=open]').click();
   await panel.getByRole('button',{name:'Alle Konten abrufen und einordnen'}).click();
@@ -78,7 +78,12 @@ try{
   ok('A normal mail gets no unsubscribe way',info['Treffen']===null);
   await panel.locator('[data-mail-all=clean]').click();
   const row=a=>panel.locator(`[data-mail-unsub="${a}"]`);
-  ok('"📭 Newsletter abmelden" lists the senders with their way',(await panel.textContent()).includes('📭 Newsletter abmelden')&&(await row('news@aldi.invalid').textContent()).includes('⚡ direkt')&&(await row('leave@yfood.invalid').count()===0)&&(await row('hello@yfood.invalid').textContent()).includes('✉ per Mail')&&(await row('info@mode.invalid').textContent()).includes('🌐 Webseite'));
+  ok('"Newsletter abmelden" lists the senders with their way',(await panel.textContent()).includes('Newsletter abmelden')&&(await row('news@aldi.invalid').textContent()).includes('· direkt')&&(await row('leave@yfood.invalid').count()===0)&&(await row('hello@yfood.invalid').textContent()).includes('· per Mail')&&(await row('info@mode.invalid').textContent()).includes('· Webseite'));
+  // Generalprüfung 16.11.2026: keine Emojis in „Aufräumen“ – die Abmelde-Wege stehen als Worte da, die Überschrift mit Liniensymbol.
+  const unsubEmojis=await page.evaluate(()=>{const root=document.getElementById('pb-mail-all'),found=[],walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+    while((n=walk.nextNode())){const v=n.nodeValue.replace(/[↗↔↕★✓]/g,'');if(!/\p{Extended_Pictographic}/u.test(v))continue;const e=n.parentElement;if(!e||e.closest('.pb-icon-fallback,[hidden]'))continue;
+      const r=document.createRange();r.selectNodeContents(n);const b=r.getBoundingClientRect();if(b.width<1||b.height<1)continue;found.push(v.trim().slice(0,40));}return found;});
+  ok('The unsubscribe part shows no emojis: ways and explanation are plain words, the heading has a line icon'+(unsubEmojis.length?' — still: '+unsubEmojis.join(' | '):''),unsubEmojis.length===0&&await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all [data-mail-clean=unsubH]');return h.querySelectorAll('svg').length===1&&/^Newsletter abmelden \(\d+\)$/.test(h.innerText.trim())&&/Direkt: .*Per Mail: .*Webseite: /.test(document.getElementById('pb-mail-all').innerText);}));
   ok('Suspected fraud (PayPal look-alike) gets no unsubscribe button',(await row('service@paypa1-konto.invalid').textContent()).includes('Verdacht')&&await row('service@paypa1-konto.invalid').locator('button').count()===0);
   // ⚡ one-click
   await row('news@aldi.invalid').getByRole('button',{name:'Abmelden'}).click();

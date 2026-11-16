@@ -113,6 +113,13 @@
       "Отметить звездой",
       "Przełącz gwiazdkę",
     ],
+    // Generalprüfung 16.11.2026: die Knöpfe sagen, was der Tipp tut (vorher „Gelesen / ungelesen“, „Stern umschalten“).
+    markRead: ["Als gelesen markieren", "Mark as read", "Отметить как прочитанное", "Oznacz jako przeczytane"],
+    markUnread: ["Als ungelesen markieren", "Mark as unread", "Отметить как непрочитанное", "Oznacz jako nieprzeczytane"],
+    starOn: ["Stern setzen", "Add star", "Поставить звезду", "Dodaj gwiazdkę"],
+    starOff: ["Stern entfernen", "Remove star", "Снять звезду", "Usuń gwiazdkę"],
+    // Nach dem Senden: ein klarer Satz; die Liste steht wieder da. Es wird nie von selbst noch einmal gesendet.
+    sentDone: ["Gesendet.", "Sent.", "Отправлено.", "Wysłano."],
     trash: ["In Papierkorb", "Move to trash", "В корзину", "Do kosza"],
     spam: ["Als Spam", "Mark as spam", "В спам", "Oznacz jako spam"],
     moreFolders: ["Weitere Ordner", "More folders", "Другие папки", "Więcej folderów"],
@@ -339,6 +346,7 @@
     list = el("section", "mail-list"),
     reader = el("section", "mail-reader");
   reader.id = "pb-live-reader";
+  notice.setAttribute("role", "status"); // Hinweiszeile über der Liste: wird vorgelesen, wenn sich ihr Text ändert
   accountSelect.setAttribute("aria-label", "Mailkonto");
   accountSelect.onchange = () =>
     run(async () => {
@@ -414,6 +422,7 @@
     busy = true;
     let ok = false;
     if (nativeNotice) nativeNotice.textContent = "";
+    delete notice.dataset.mailResult;
     app.inert = true;
     if (native) accountTools.inert = true;
     app.setAttribute("aria-busy", "true");
@@ -493,6 +502,33 @@
     d.addEventListener("close", () => d.remove());
     d.showModal();
     return { d, form };
+  }
+  // Generalprüfung 16.11.2026: ist schon ein Konto gespeichert, steht das Postfach beim Öffnen des Reiters Mail von selbst da
+  // (vorher ein Extra-Tipp auf den Briefumschlag). Gefragt werden nur die gespeicherten Konten; ohne Konto bleibt alles wie
+  // bisher. Der Internetschalter gilt weiter: getrennt lehnt die App den Abruf ab und sagt das. Wer das Postfach selbst
+  // schließt („Postfach schließen“), bekommt es bis zum nächsten App-Start nicht von selbst wieder.
+  let autoOpen = Boolean(native);
+  async function openSaved() {
+    const idle = () => autoOpen && !busy && app.hidden && !token;
+    if (!idle()) return;
+    let found = [];
+    try { found = await native.accounts(); } catch { return; } // Kontenablage nicht lesbar: der Knopf bleibt, dort steht der Grund
+    if (!found.length || !idle()) return;
+    autoOpen = false;
+    await run(async () => {
+      accounts = found;
+      base = native.base;
+      token = "device";
+      connect.hidden = true;
+      switchMode(true);
+      await accountList();
+    });
+  }
+  if (native) {
+    const mailPanel = document.getElementById("panel-mail");
+    const whenShown = () => { if (mailPanel?.classList.contains("on")) void openSaved(); };
+    if (mailPanel) new MutationObserver(whenShown).observe(mailPanel, { attributes: true, attributeFilter: ["class"] });
+    whenShown();
   }
   async function setup() {
     if (native) {
@@ -628,6 +664,7 @@
   }
   function disconnect() {
     if (!leave()) return;
+    autoOpen = false;
     endChecks();
     token = "";
     accounts = [];
@@ -951,12 +988,13 @@
   }
   /** refs: [{account, folder, validity, uid, messageId?, date?}] → numbers and one sentence (text). */
   async function handToFamilienakte(refs) {
-    const n = refs.length, sum = { n, uebergeben: 0, schon: 0, ohneSortierung: 0, befund: 0, fehler: 0, gruende: {}, text: "" };
+    const n = refs.length, sum = { n, uebergeben: 0, schon: 0, ohneSortierung: 0, befund: 0, fehler: 0, gruende: {}, offen: [], text: "" };
     if (!n) return sum;
     if (n > FAM_MAX) { sum.zuViele = true; sum.text = fill("famMax", { n }); return sum; }
     if (!native?.familienakteOeffnen || !(await native.familienakteOeffnen())) { sum.geschlossen = true; sum.text = T("famClosed"); return sum; }
-    const failed = (grund) => { sum.fehler++; sum.gruende[grund] = (sum.gruende[grund] || 0) + 1; };
     let i = 0, locked = false;
+    // offen: die Mails, die nicht übergeben wurden – die Liste lässt genau sie markiert.
+    const failed = (grund) => { sum.fehler++; sum.gruende[grund] = (sum.gruende[grund] || 0) + 1; sum.offen.push(refs[i]); };
     const job = window.PBActivity?.start({ label: () => fill("famProgress", { i: Math.min(i + 1, n), n }), percent: () => (i / n) * 100 });
     try {
       await job?.ready;
@@ -1003,9 +1041,16 @@
     const chosen = items.filter((item) => !item.local && selected.has(item.uid));
     if (!chosen.length) return;
     const sum = await handToFamilienakte(chosen.map((item) => ({ account, folder, validity, uid: item.uid, date: item.date })));
+    // Generalprüfung 16.11.2026: das Ergebnis steht einmal da (Hinweiszeile über der Liste, nicht zusätzlich als Fenster zum
+    // Wegtippen). Was nicht übergeben wurde, bleibt markiert – ein zweiter Tipp auf „An Familienakte“ genügt.
     notice.textContent = sum.text;
-    if (!sum.zuViele && !sum.geschlossen) { selected.clear(); drawNativeList(); }
-    alert(sum.text);
+    notice.dataset.mailResult = sum.fehler || sum.zuViele || sum.geschlossen ? "offen" : "fertig";
+    if (!sum.zuViele && !sum.geschlossen) {
+      const open = new Set(sum.offen.map((ref) => ref.uid));
+      for (const uid of [...selected]) if (!open.has(uid)) selected.delete(uid);
+      drawNativeList();
+    }
+    notice.scrollIntoView?.({ block: "nearest" });
   }
   async function fetchMail(item) {
     return api(prefix() + "/messages/" + item.uid + query());
@@ -1045,6 +1090,21 @@
     });
     await loadList();
     await refreshCounts();
+  }
+  // Generalprüfung 16.11.2026: Stern und Gelesen/ungelesen lassen die Mail offen. Nur ihre Zeile in der Liste und die beiden
+  // Knöpfe ändern sich; die Liste wird nicht neu geholt (Suchwort, Häkchen und nachgeladene Mails bleiben).
+  let relabelFlags = null;
+  async function flag(item, type) {
+    await api(prefix() + "/messages/" + item.uid + "/action", { folder, validity, action: type });
+    const name = type === "read" || type === "unread" ? "\\Seen" : "\\Flagged";
+    item.flags = type === "read" || type === "star" ? [...new Set([...item.flags, name])] : item.flags.filter((f) => f !== name);
+    const row = [...list.querySelectorAll("[data-live-uid]")].find((b) => b.dataset.liveUid === String(item.uid));
+    if (row) {
+      row.closest(".mail-item")?.classList.toggle("unread", !item.flags.includes("\\Seen"));
+      const subject = row.querySelector(".mail-subject");
+      if (subject) subject.textContent = (item.flags.includes("\\Flagged") ? "★ " : "") + item.subject;
+    }
+    relabelFlags?.();
   }
   function attachmentBytes(a) {
     return Uint8Array.from(atob(a.data), (c) => c.charCodeAt(0));
@@ -1188,12 +1248,21 @@
         }),
       ),
       btn("read", () =>
-        action(item.flags.includes("\\Seen") ? "unread" : "read"),
+        flag(item, item.flags.includes("\\Seen") ? "unread" : "read"),
       ),
       btn("star", () =>
-        action(item.flags.includes("\\Flagged") ? "unstar" : "star"),
+        flag(item, item.flags.includes("\\Flagged") ? "unstar" : "star"),
       ),
     );
+    const flagText = (key, text) => {
+      const b = actions.querySelector('[data-live-text="' + key + '"]');
+      if (b && (b.querySelector(":scope > .compact-label") || b).textContent !== text) b.textContent = text;
+    };
+    relabelFlags = () => {
+      flagText("read", T(item.flags.includes("\\Seen") ? "markUnread" : "markRead"));
+      flagText("star", T(item.flags.includes("\\Flagged") ? "starOff" : "starOn"));
+    };
+    relabelFlags();
     for (const [key, use] of [
       ["trash", "\\Trash"],
       ["spam", "\\Junk"],
@@ -1209,7 +1278,7 @@
       new Option(T("move"), ""),
       ...folders
         .filter((f) => f.path !== folder)
-        .map((f) => new Option(f.name, f.path)),
+        .map((f) => new Option(native ? folderTitle(f.path) : f.name, f.path)), // dieselben Namen wie in der Liste
     );
     move.onchange = () =>
       run(() => (move.value ? action("move", move.value) : null));
@@ -1295,7 +1364,11 @@
     if (native) {
       const tools = el("details", "mail-message-tools"), summary = el("summary", "mail-button", T("messageTools")), menu = el("div", "mail-message-menu");
       summary.dataset.liveText = "messageTools";
-      for (const node of [...actions.children].slice(2)) if (node !== catalogButton) menu.append(node);
+      // Generalprüfung 16.11.2026: „In Papierkorb“ bleibt neben Antworten/Weiterleiten sichtbar (1 Tipp statt 2). Es bleibt der
+      // Papierkorb des Anbieters; dort lässt sich die Mail zurückholen.
+      const trashNow = actions.querySelector(':scope > [data-live-text="trash"]');
+      for (const node of [...actions.children].slice(2)) if (node !== catalogButton && node !== trashNow) menu.append(node);
+      if (trashNow) actions.children[1].after(trashNow);
       menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
       tools.append(summary, menu); actions.append(tools);
     }
@@ -1486,18 +1559,21 @@
         if (!confirm(T("confirm"))) return;
         const data = await api(prefix() + "/send", draft);
         dirty = false;
+        // Generalprüfung 16.11.2026: nach dem Senden keine Sackgasse. Angenommen → ein klarer Satz und die Nachrichtenliste
+        // steht wieder da; sonst bleibt die Meldung stehen, mit dem Weg zurück darüber. „Zurück“ zeigt nur die Liste –
+        // gesendet wird dabei nie noch einmal (der Entwurf ist verworfen).
+        const toList = () => btn("back", () => { app.dataset.view = "list"; });
+        let sentText = "";
         if (data.status === "sent") {
+          const to = [draft.to, draft.cc, draft.bcc].filter(Boolean).join(", ");
+          sentText = T("sentDone") + (to ? " " + T("to") + ": " + to + "." : "") + (data.notice ? " " + data.notice : "");
           draft = null;
-          reader.replaceChildren(
-            el(
-              "p",
-              "mail-notice",
-              T("sent") + (data.notice ? " " + data.notice : ""),
-            ),
-          );
+          reader.replaceChildren(toList(), el("p", "mail-notice", sentText));
+          app.dataset.view = "list";
         } else {
           draft = null;
           reader.replaceChildren(
+            toList(),
             el(
               "p",
               "mail-notice",
@@ -1510,7 +1586,9 @@
           );
         }
         if (native) { savedCache=await native.saved(account);drawFolders(); }
-        notice.textContent = "SMTP · " + data.status;
+        // Die Hinweiszeile sagt den Stand in Worten (in der App z. B. „Versand unklar – nicht erneut senden“), nicht „SMTP · uncertain“.
+        notice.textContent = sentText || native?.text(data.status) || "SMTP · " + data.status;
+        if (sentText) notice.dataset.mailResult = "fertig"; // gut lesbar, wie das Ergebnis von „An Familienakte“
       }),
     );
     const sendButton = actions.querySelector('[data-live-text="send"]');
@@ -1526,6 +1604,7 @@
   new MutationObserver(() => {
     for (const b of host.querySelectorAll("[data-live-text]"))
       b.textContent = T(b.dataset.liveText);
+    if (current) relabelFlags?.();
     for (const label of reader.querySelectorAll("[data-live-field]"))
       label.firstChild.nodeValue = T(label.dataset.liveField);
     if(native) {
@@ -1545,19 +1624,25 @@
       e.returnValue = "";
     }
   });
-  setInterval(() => {
+  // Generalprüfung 16.11.2026: solange Mails angehakt sind, holt der Abruf alle 60 Sekunden die Liste nicht neu – sonst wären
+  // die Häkchen (auch die der nicht übergebenen Mails) und der Satz darüber nach spätestens einer Minute still weg.
+  function autoRefresh() {
     if (
       !busy &&
       !app.hidden &&
       !draft &&
       !current &&
+      !selected.size &&
       document.visibilityState === "visible" &&
       account
     )
-      run(() => loadList());
-  }, 60000);
+      return run(() => loadList());
+    return Promise.resolve(false);
+  }
+  setInterval(autoRefresh, 60000);
   window.PBLiveMail = {
     disconnect,
+    autoRefresh,
     /** Hands mails of any connected account to Familienakte without opening them (used by "Alle Konten"). Null while the mailbox is busy. */
     async familienakte(refs) {
       if (!native) return null;

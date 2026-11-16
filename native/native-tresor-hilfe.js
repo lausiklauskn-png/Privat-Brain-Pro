@@ -68,6 +68,7 @@
       const tresorOk = !z.gewaehlt ? null : z.erreichbar !== false;
       befund = { fall: d.fall || 'unbekannt', problem: d.problem || '', pfad: ablagePfad, volume: d.volume || '', tresor: tresorOk, tresorPfad, einBaum, zeit: Date.now() };
       befund.ok = ['ok', 'nicht-eingerichtet'].includes(befund.fall) && tresorOk !== false && einBaum !== false;
+      hilfeFarbe();
       zuletzt = Date.now(); zeichneBand(); window.dispatchEvent(new CustomEvent('pb-tresor-gegenprobe', { detail: befund }));
       return befund;
     })().finally(() => { laeuft = null; });
@@ -165,9 +166,16 @@
   }
   function knopfEinsetzen() {
     const alt = document.getElementById('woLiegtWasKnopf');
-    if (!alt || document.getElementById('pbTresorHilfeKnopf')) return;
+    if (!alt || document.getElementById('pbTresorHilfeKnopf')) return hilfeFarbe();
     const b = knopf(t('hilfe'), hilfeZeigen, 'primary'); b.id = 'pbTresorHilfeKnopf';
-    alt.before(b); alt.classList.add('pb-tresor-alt');
+    alt.before(b); alt.classList.add('pb-tresor-alt'); hilfeFarbe();
+  }
+  // Generalprüfung 16.11.2026: ist der Speicherort nur gesperrt und sonst alles in Ordnung, ist „Entsperren“ der eine blaue Hauptknopf.
+  function hilfeFarbe() {
+    const b = document.getElementById('pbTresorHilfeKnopf'), unlock = document.getElementById('vault-unlock');
+    if (!b) return;
+    const cls = unlock && !unlock.hidden && (!befund || befund.ok) ? 'ghost' : 'primary';
+    if (b.className !== cls) b.className = cls;
   }
   new MutationObserver(() => knopfEinsetzen()).observe(document.body, { childList: true, subtree: true });
   knopfEinsetzen();

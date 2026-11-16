@@ -509,7 +509,7 @@
     <div class="search-welcome"><h2 data-ws="find">Was möchtest du finden?</h2><p data-ws="findHelp">Durchsuche E-Mails, Dokumente und Bilder gemeinsam nach ihrer Bedeutung.</p></div>
     <div class="search-totals"><span id="searchMailCount"></span><span id="searchDocCount"></span><span id="searchLocalCount"></span></div>
     <div class="searchbox">
-      <input id="q" type="search" data-i18n-ph="qPlaceholder" placeholder="z. B. „das schwarze Auto, neulich bearbeitet, mit Radstand …“" autocomplete="off">
+      <input id="q" type="search" aria-label="Suche" data-i18n-ph="qPlaceholder" placeholder="z. B. „das schwarze Auto, neulich bearbeitet, mit Radstand …“" autocomplete="off">
       <button id="mic" class="ghost" data-i18n-title="micTitle" title="Per Sprache suchen" aria-label="Per Sprache suchen" style="padding:11px 13px">🎤</button>
       <div class="toggle" id="mode">
         <button data-m="name" data-i18n="modeName">Namenssuche</button>
@@ -544,7 +544,7 @@
     </div>
     <div class="savedrow" id="savedRow"></div>
     <div class="searchmeta">
-      <span id="searchInfo" data-i18n="searchInfo">Wirf zuerst Dateien hinein — dann finde alles nach Sinn, nicht nach Dateinamen.</span>
+      <span id="searchInfo" role="status" data-i18n="searchInfo">Wirf zuerst Dateien hinein — dann finde alles nach Sinn, nicht nach Dateinamen.</span>
       <span id="corpusInfo"></span>
     </div>
     <label class="combinerow" title="Findet zusätzlich Verwandtes über die Bedeutung der ersten Treffer — auch ohne die gesuchten Wörter.">
@@ -640,7 +640,7 @@
       <p><span class="flag ok">immer offline</span> Fingerabdruck (SHA-256), Text aus Text-/PDF-/Office-Dateien, Bedeutungs-Vektor, Vorfilter &amp; Ranking, Katalog — alles in diesem Browser.</p>
       <p><span id="ocrFlag" class="flag opt">prüfe…</span> Bild-Texterkennung (OCR) über die Browser-Texterkennung, wenn dein Gerät sie mitbringt.</p>
       <p><span id="embFlag" class="flag opt">prüfe…</span> <b>Echtes Bedeutungs-Modell</b> (neuronales Modell, mehrsprachig) — versteht Synonyme &amp; Umschreibung, nicht nur Stichworte. <span id="embInfo" style="color:var(--mut2)"></span></p>
-      <p><span class="flag opt">optional · BYOK</span> Stärkere Cloud-KI (EU) für OCR/Bedeutung — nur wenn du unten bewusst einen Schlüssel hinterlegst. <b>Standard: aus.</b></p>
+      <p><span class="flag opt">optional · BYOK</span> Stärkere Cloud-KI (EU) für OCR/Bedeutung — nur wenn du in den Einstellungen im Thema „KI-Schlüssel (EU)“ bewusst einen Schlüssel hinterlegst. <b>Standard: aus.</b></p>
     </div>
 
     <div class="note">
@@ -668,7 +668,7 @@
       <label class="field" style="max-width:520px"><span data-i18n="capServer">Modell-Server-Adresse (optional, z. B. dein Hetzner)</span>
         <input id="capServer" type="text" placeholder="https://dein-server.de/pb-models/" autocomplete="off"></label>
       <p class="hint" data-i18n="capServerP">Leer lassen = Modell liegt neben der App (models/). Für ein fremdes Gerät das Modell auf deinen Server legen und hier die Adresse eintragen — der Server muss dann CORS erlauben (Header <code>Access-Control-Allow-Origin</code>). Siehe <code>tools/fetch-image-model.sh</code>.</p>
-      <div class="switch"><input type="checkbox" id="capEU"><label for="capEU" style="color:var(--mut);font-size:.84rem">Bessere Beschreibung per <b>Mistral (EU)</b> — beschreibt auf <b>Deutsch</b> und deutlich genauer. Nutzt deinen Mistral-Schlüssel (oben); es wird <b>nur die verkleinerte Arbeitskopie</b> (max 1024 px) an Mistral (EU) gesendet, nie das Original. Das lokale Modell bleibt als Offline-Rückfall.</label></div>
+      <div class="switch"><input type="checkbox" id="capEU"><label for="capEU" style="color:var(--mut);font-size:.84rem">Bessere Beschreibung per <b>Mistral (EU)</b> — beschreibt auf <b>Deutsch</b> und deutlich genauer. Nutzt deinen Mistral-Schlüssel (Einstellungen, Thema „KI-Schlüssel (EU)“); es wird <b>nur die verkleinerte Arbeitskopie</b> (max 1024 px) an Mistral (EU) gesendet, nie das Original. Das lokale Modell bleibt als Offline-Rückfall.</label></div>
       <div class="hint" id="capStatus"></div>
       <div class="hint" id="capCrashHint" style="display:none">⚠️ Der Modell-Start ist <b>abgestürzt oder wiederholt gescheitert</b> („Can't create a session" = zu wenig Speicher — das lokale Modell ist für dieses Gerät zu schwer). Der Auto-Start ist pausiert, damit die App stabil bleibt. <b>Tipp:</b> Schalte oben „Bessere Beschreibung per Mistral (EU)" ein — die braucht das lokale Modell nicht. <button id="capRetry" class="ghost" style="margin-left:6px">▶ Trotzdem erneut versuchen</button></div>
     </div>
@@ -910,20 +910,25 @@ function cosineE(a,b){ let s=0; const n=Math.min(a.length,b.length); for(let i=0
 /* ---------- Echtes Bedeutungs-Modell (Adapter um Modul 03) ----------
    evec = neuronaler 384-dim-Vektor pro Datei. Fehlt Modell/Netz, bleibt alles
    auf dem lexikalischen Vektor + BM25 (Rückfall). Nichts blockiert. */
-const EMBED = { ready:false, tried:false, source:"", backfilling:false };
+const EMBED = { ready:false, tried:false, source:"", backfilling:false, loading:false, failed:false };
 // Test-Hook: eine Testseite darf window.__CB_EMBED_STUB__ setzen (deterministischer Ersatz).
 function embedder(){ return window.__CB_EMBED_STUB__ || (EMBED.ready ? window.SbkimEmbedding : null); }
 async function initEmbedding(){
   if(window.__CB_EMBED_STUB__){ EMBED.ready=true; EMBED.source="stub"; renderEmbFlag(); embedBackfill(); return; }
   if(!window.SbkimEmbedding){ EMBED.tried=true; renderEmbFlag(); return; }
-  EMBED.tried=true; renderEmbFlag();
+  EMBED.tried=true; EMBED.loading=true; EMBED.failed=false; renderEmbFlag();
   try{
     await window.SbkimEmbedding.init();
     EMBED.ready = !!window.SbkimEmbedding.isReady();
     try{ EMBED.source = window.SbkimEmbedding.getModelSource ? String(window.SbkimEmbedding.getModelSource()||"") : ""; }catch{}
-    renderEmbFlag();
-    if(EMBED.ready) embedBackfill();
-  }catch(e){ EMBED.ready=false; renderEmbFlag(); } // fail-soft: Rückfall auf Stichwort
+    EMBED.loading=false; EMBED.failed=!EMBED.ready; renderEmbFlag();
+    if(EMBED.ready){
+      embedBackfill();
+      // Generalprüfung 16.11.2026: das Modell startet erst beim Tippen. Wird es bereit und steht noch eine Frage im Feld,
+      // einmal neu suchen – sonst blieb die Wortsuche stehen, bis der Nutzer noch einen Buchstaben tippte.
+      try{ const q=$("#q").value; if(q.trim() && MODE==="mean") renderResults(q); }catch{}
+    }
+  }catch(e){ EMBED.ready=false; EMBED.loading=false; EMBED.failed=true; renderEmbFlag(); } // fail-soft: Rückfall auf Stichwort
 }
 function passageText(r){ return ((r.name||"")+". "+(r.snippet||"")).slice(0,1600); }
 // Briefende (Pro-Umbau 14 A2, Klaus: „Herr Meier am Ende wird nicht gefunden“): der Katalog merkt sich neben dem Anfang
@@ -965,10 +970,18 @@ async function embedQueryCached(q){
 }
 function renderEmbFlag(){
   const f=$("#embFlag"), info=$("#embInfo"); if(!f) return;
-  if(EMBED.ready){ f.className="flag ok"; f.textContent = EMBED.source==="local" ? "aktiv · selbst-gehostet" : (EMBED.source==="stub"?"aktiv · Test":"aktiv");
-    info && (info.textContent = EMBED.backfilling ? " — bettet Bestand ein…" : " — Suche versteht Bedeutung."); }
-  else if(EMBED.tried){ f.className="flag opt"; f.textContent="lädt / Rückfall aktiv"; info && (info.textContent=" — bis dahin Stichwort-Bedeutung."); }
-  else { f.className="flag opt"; f.textContent="prüfe…"; }
+  // Generalprüfung 16.11.2026: das Schild sagte dauerhaft „lädt / Rückfall aktiv“, obwohl nichts lud (das Modell startet in der
+  // App erst bei Bedarf). Jetzt nennt es den wirklichen Zustand: aktiv · lädt/startet · bereit · nicht geladen · nicht gestartet.
+  const set=(cls,flag,text)=>{ f.className="flag "+cls; f.textContent=sw(flag); f.dataset.pbState=flag; info && (info.textContent=text?sw(text):""); };
+  const sem=window.PBSemantic, st=sem && sem.state;
+  if(EMBED.ready) set("ok", EMBED.source==="local" ? "flagLocal" : (EMBED.source==="stub"?"flagTest":"flagActive"), EMBED.backfilling ? "infoBackfill" : "infoActive");
+  else if(EMBED.loading) set("opt", sem?"flagStarting":"flagLoading", "infoLoading");
+  else if(EMBED.tried){
+    if(st && st.installed && !EMBED.failed && !(st.crashes>0)) set("opt","flagReady","infoReady");   // auf dem Gerät, startet bei „Bedeutung“
+    else if(st && st.installed) set("opt","flagFailed","infoOff");
+    else set("opt","flagOff","infoOff");
+  }
+  else set("opt","flagCheck","");
 }
 
 /* ============================================================================
@@ -1517,15 +1530,15 @@ function termFreq(toks){ const m={}; for(const t of toks){ const s=stem(t); m[s]
    gleicher Inhalt schon bekannt, Fehler mit dem Grund. Wird nicht gespeichert. --- */
 const RECENT=[], RECENT_MAX=30;
 const RECENT_T={
-  de:{title:"Gerade hinzugefügt",reading:"wird gelesen …",done:"eingelesen",dup:"doppelt, schon vorhanden",fail:"nicht gelesen",more:"… und {n} weitere",mails:"{n} Mails",open:"Öffnen"},
-  en:{title:"Just added",reading:"being read …",done:"read",dup:"duplicate, already there",fail:"not read",more:"… and {n} more",mails:"{n} mails",open:"Open"},
-  ru:{title:"Только что добавлено",reading:"читается …",done:"прочитан",dup:"дубликат, уже есть",fail:"не прочитан",more:"… и ещё {n}",mails:"писем: {n}",open:"Открыть"},
-  pl:{title:"Właśnie dodane",reading:"trwa odczyt …",done:"odczytano",dup:"duplikat, już jest",fail:"nie odczytano",more:"… i jeszcze {n}",mails:"e-maile: {n}",open:"Otwórz"}
+  de:{title:"Gerade hinzugefügt",wait:"wartet",reading:"wird gelesen …",done:"eingelesen",dup:"doppelt, schon vorhanden",fail:"nicht gelesen",more:"… und {n} weitere",mails:"{n} Mails",open:"Öffnen"},
+  en:{title:"Just added",wait:"waiting",reading:"being read …",done:"read",dup:"duplicate, already there",fail:"not read",more:"… and {n} more",mails:"{n} mails",open:"Open"},
+  ru:{title:"Только что добавлено",wait:"ожидает",reading:"читается …",done:"прочитан",dup:"дубликат, уже есть",fail:"не прочитан",more:"… и ещё {n}",mails:"писем: {n}",open:"Открыть"},
+  pl:{title:"Właśnie dodane",wait:"czeka",reading:"trwa odczyt …",done:"odczytano",dup:"duplikat, już jest",fail:"nie odczytano",more:"… i jeszcze {n}",mails:"e-maile: {n}",open:"Otwórz"}
 };
 function recentWords(){ return RECENT_T[String(document.documentElement.lang||"de").slice(0,2)]||RECENT_T.de; }
-function recentStart(item){
+function recentStart(item, state){
   const path=String(item.path||item.file.name);
-  const e={name:item.file.name||path.split("/").pop(), path, state:"reading", step:"", hash:null, reason:"", mails:0};
+  const e={name:item.file.name||path.split("/").pop(), path, state:state||"reading", step:"", hash:null, reason:"", mails:0};
   RECENT.unshift(e); renderRecent(); return e;
 }
 function recentStep(e, word){ if(e && e.state==="reading" && e.step!==word){ e.step=word; renderRecent(); } }
@@ -1544,7 +1557,7 @@ function renderRecent(){
     if(rec){ name=el("button","ra-name",e.name); name.type="button"; name.addEventListener("click",()=>window.openFile(e.hash)); name.setAttribute("aria-label",w.open+": "+e.name); }
     else name=el("span","ra-name",e.name);
     name.title=e.path;
-    const tag=e.state==="reading" ? (e.step ? e.step+" …" : w.reading)
+    const tag=e.state==="wait" ? w.wait : e.state==="reading" ? (e.step ? e.step+" …" : w.reading)
       : e.state==="done" ? w.done+(e.mails ? " · "+w.mails.replace("{n}",e.mails) : "")
       : e.state==="dup" ? w.dup : w.fail+(e.reason ? ": "+e.reason : "");
     li.append(el("span","ra-ext",ext||"–"), name, el("span","ra-tag",tag));
@@ -1559,10 +1572,26 @@ window.addEventListener("pblang", renderRecent);
 window.addEventListener("pb-kern-geordnet", renderRecent);
 
 /* --- Fortschritt / Batch --- */
-async function signBatch(items, options={}){ // items: [{file, path, dirId}]
+/* Warteschlange (Generalprüfung 16.11.2026): Dateien, die während eines laufenden Einlesens gewählt wurden, verschwanden ohne
+   Meldung. Jetzt stehen sie in „Gerade hinzugefügt“ als „wartet“ und werden gleich nach dem laufenden Lauf eingelesen.
+   Der Aufrufer bekommt sein Ergebnis, sobald sein Stapel fertig ist. „Abbrechen“ nimmt auch die wartenden Stapel heraus. */
+const SIGN_QUEUE=[];
+function signBatch(items, options={}){ // items: [{file, path, dirId}]
+  if(!signing) return signBatchRun(items, options, null);
+  const rows=items.map(it=>{ try{ return recentStart(it,"wait"); }catch{ return null; } });
+  if(options.durable!==true && items.length) toast(sw("queued",{n:items.length}));
+  return new Promise((resolve,reject)=>SIGN_QUEUE.push({items,options,rows,resolve,reject}));
+}
+function signNext(cancelled){
+  if(cancelled){   // abgebrochen: wartende Stapel nicht mehr lesen, aber sichtbar sagen
+    for(const w of SIGN_QUEUE.splice(0)){ for(const e of w.rows) recentEnd(e,"fail",{reason:sw("cancelled"),hash:null}); w.resolve([]); }
+    return;
+  }
+  const w=SIGN_QUEUE.shift(); if(w) signBatchRun(w.items,w.options,w.rows).then(w.resolve,w.reject);
+}
+async function signBatchRun(items, options, rows){
   const accepted=[], durable=options.durable===true;
-  if(signing) return accepted;
-  signing=true;
+  signing=true; cancelReq=false;
   let lauf=null;   // gemeinsame Ladezeile (Klaus 16.11.2026, V8): auf jeder Seite sichtbar, was gerade eingelesen wird
   try {
   if(window.PBWorkspace && !await PBWorkspace.prepareImport(items)) return accepted;
@@ -1584,11 +1613,12 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
     fill.style.width=((done+x)/total*100).toFixed(1)+"%";
     if(phase!==undefined){ const w=(STEP[document.documentElement.lang]||STEP.de)[phase]; if(w){ cur.textContent=stepName+" · "+w+" …"; recentStep(recent, w); } }
   };
-  let recent=null;
+  let recent=null, nr=-1;
   for(const it of items){
+    nr++;
     if(cancelReq) break;
     cur.textContent = stepName = it.path||it.file.name;
-    recent = recentStart(it);
+    if(rows && rows[nr]){ recent=rows[nr]; recent.state="reading"; renderRecent(); } else recent = recentStart(it);
     diag("Import: "+(it.path||it.file.name)+" ("+((it.file.size||0)/1048576).toFixed(2)+" MB)");
     try{
       if(durable && !window.PBOriginals?.verifyStored) throw new Error("Dauerhafte Originalablage fehlt");
@@ -1636,7 +1666,13 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   toast(cancelReq ? `Abgebrochen · ${added} neu signiert`
                   : `Fertig · ${added} neu signiert, ${skipped} schon bekannt (übersprungen)${failed ? ` · ${failed} fehlgeschlagen — siehe Diagnose` : ""}`);
   return accepted;
-  } finally { signing=false; KI_LAUF=null; delete window.PBImportStep; lauf?.finish(); window.PBWorkspace?.refresh(); }
+  } finally {
+    // wartende Zeilen dieses Stapels, die nicht mehr gelesen wurden (Abbruch, Ablage abgelehnt), nicht auf „wartet“ stehen lassen
+    if(rows) for(const e of rows) if(e && e.state==="wait") recentEnd(e,"fail",{reason:sw("cancelled"),hash:null});
+    const cancelled=cancelReq;
+    signing=false; KI_LAUF=null; delete window.PBImportStep; lauf?.finish(); window.PBWorkspace?.refresh();
+    signNext(cancelled);
+  }
 }
 
 /* ============================================================================
@@ -1845,12 +1881,105 @@ function highlight(text, terms){
 }
 function escapeHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
+/* --- Wörter der Startsuche in vier Sprachen (Generalprüfung 16.11.2026): Trefferzeile, Trefferkarte, Schild des Modells.
+   Dieselbe Mechanik wie RECENT_T/STEP: Tabelle nach <html lang>, neu gezeichnet beim Ereignis „pblang“.
+   Eine Liste ist ein Zahlwort: [eins, viele] bzw. für Russisch/Polnisch [eins, wenige, viele] (Intl.PluralRules). --- */
+const SEARCH_PRO=false;   // der Pro-Bau setzt true (tools/native/adapt-search.mjs): dort gibt es nur den Schalter „Bedeutung“
+const SEARCH_T={
+  de:{hits:["{n} Treffer","{n} Treffer"],files:["{n} Datei","{n} Dateien"],catalog:["Katalog: {n} Datei","Katalog: {n} Dateien"],
+    byMeaning:"Bedeutungssuche",modeWord:"Wortsuche",modeName:"Namenssuche",modeNamePro:"Suche",browse:"Stöbern (Filter)",filterOn:"Filter aktiv",
+    also:"auch gesucht als „{x}“",none:"Kein Treffer.",hint:" Probier den Umschalter auf <b>Bedeutungssuche</b> — dieselbe Frage, mehr Sinn.",
+    hintPro:" Aktiviere <b>Bedeutung</b>, um auch nach Inhalt und Sinn zu suchen.",
+    open:"Öffnen",openThere:"dort öffnen",liesOn:"liegt auf {x}",ki:"KI",summary:"Kurzfassung",vaultTitle:"In den verschlüsselten Tresor legen",
+    delTitle:"Diese Datei an ihrem Ort löschen (Müll)",thumbTitle:"Antippen für Vollbild",
+    whyName:"Treffer im <b>Dateinamen</b>.",inName:"im <b>Namen</b>",inContent:"im <b>Inhalt</b>",ocr:" (aus Bild-Text)",meaning:"Bedeutung {p}%",model:"(Modell)",
+    related:"sinnverwandt ({p}%)",byModel:"Vom <b>Bedeutungs-Modell</b> gefunden{m} — auch ohne gemeinsames Wort.",similar:"semantisch ähnlich{c}, auch ohne exaktes Wort.",
+    because:"Gefunden, weil {x}{m}{c}.",alike:"bedeutungsähnlich",relHead:"Auch verwandt",relSub:"— über die Bedeutung der ersten Treffer gefunden, auch ohne die gesuchten Wörter",via:"gefunden über:",
+    save:"merken",saveTitle:"Diese Suche als Knopf speichern",saved:"Suche gemerkt.",combineTitle:"Findet zusätzlich Verwandtes über die Bedeutung der ersten Treffer — auch ohne die gesuchten Wörter.",
+    group:"Gruppe",onlyView:"nur Vorschlag, nichts verschoben",field:"Suche",
+    flagActive:"aktiv",flagLocal:"aktiv · selbst-gehostet",flagTest:"aktiv · Test",infoActive:" — Suche versteht Bedeutung.",infoBackfill:" — bettet Bestand ein…",
+    flagLoading:"lädt …",flagStarting:"startet …",infoLoading:" — bis dahin Stichwortsuche.",flagReady:"bereit",infoReady:" — startet, sobald du mit „Bedeutung“ suchst.",
+    flagOff:"nicht geladen",flagFailed:"nicht gestartet",infoOff:" — die Suche nutzt Stichworte.",flagCheck:"prüfe…",
+    queued:["{n} Datei wartet – sie wird nach dem laufenden Einlesen gelesen.","{n} Dateien warten – sie werden nach dem laufenden Einlesen gelesen."],cancelled:"abgebrochen"},
+  en:{hits:["{n} result","{n} results"],files:["{n} file","{n} files"],catalog:["Catalog: {n} file","Catalog: {n} files"],
+    byMeaning:"Meaning search",modeWord:"Keyword search",modeName:"Name search",modeNamePro:"Search",browse:"Browsing (filters)",filterOn:"filter active",
+    also:"also searched as “{x}”",none:"No results.",hint:" Try the switch to <b>Meaning search</b> — same question, more sense.",
+    hintPro:" Switch on <b>Meaning</b> to also search by content and sense.",
+    open:"Open",openThere:"open there",liesOn:"is on {x}",ki:"AI",summary:"Summary",vaultTitle:"Put into the encrypted vault",
+    delTitle:"Delete this file where it is (trash)",thumbTitle:"Tap for full screen",
+    whyName:"Match in the <b>file name</b>.",inName:"in the <b>name</b>",inContent:"in the <b>content</b>",ocr:" (from text in the image)",meaning:"meaning {p}%",model:"(model)",
+    related:"related in sense ({p}%)",byModel:"Found by the <b>meaning model</b>{m} — even without a shared word.",similar:"semantically similar{c}, even without the exact word.",
+    because:"Found because {x}{m}{c}.",alike:"similar in meaning",relHead:"Also related",relSub:"— found through the meaning of the first results, even without the words you searched for",via:"found via:",
+    save:"save",saveTitle:"Save this search as a button",saved:"Search saved.",combineTitle:"Also finds related items through the meaning of the first results — even without the words you searched for.",
+    group:"Group",onlyView:"suggestion only, nothing moved",field:"Search",
+    flagActive:"active",flagLocal:"active · self-hosted",flagTest:"active · test",infoActive:" — search understands meaning.",infoBackfill:" — indexing your files…",
+    flagLoading:"loading …",flagStarting:"starting …",infoLoading:" — keyword search until then.",flagReady:"ready",infoReady:" — starts as soon as you search with “Meaning”.",
+    flagOff:"not loaded",flagFailed:"not started",infoOff:" — search uses keywords.",flagCheck:"checking…",
+    queued:["{n} file is waiting – it will be read after the current run.","{n} files are waiting – they will be read after the current run."],cancelled:"cancelled"},
+  ru:{hits:["{n} результат","{n} результата","{n} результатов"],files:["{n} файл","{n} файла","{n} файлов"],catalog:["Каталог: {n} файл","Каталог: {n} файла","Каталог: {n} файлов"],
+    byMeaning:"Поиск по смыслу",modeWord:"Поиск по словам",modeName:"Поиск по имени",modeNamePro:"Поиск",browse:"Просмотр (фильтры)",filterOn:"фильтр включён",
+    also:"также искали как «{x}»",none:"Ничего не найдено.",hint:" Переключите на <b>поиск по смыслу</b> — тот же вопрос, больше смысла.",
+    hintPro:" Включите <b>Смысл</b>, чтобы искать и по содержанию.",
+    open:"Открыть",openThere:"открыть там",liesOn:"находится на {x}",ki:"ИИ",summary:"Кратко",vaultTitle:"Положить в зашифрованный сейф",
+    delTitle:"Удалить этот файл на его месте (в корзину)",thumbTitle:"Нажмите для полного экрана",
+    whyName:"Совпадение в <b>имени файла</b>.",inName:"в <b>имени</b>",inContent:"в <b>содержании</b>",ocr:" (из текста на изображении)",meaning:"смысл {p}%",model:"(модель)",
+    related:"близко по смыслу ({p}%)",byModel:"Найдено <b>моделью смысла</b>{m} — даже без общего слова.",similar:"похоже по смыслу{c}, даже без точного слова.",
+    because:"Найдено, потому что {x}{m}{c}.",alike:"похоже по смыслу",relHead:"Также связано",relSub:"— найдено по смыслу первых результатов, даже без искомых слов",via:"найдено через:",
+    save:"запомнить",saveTitle:"Сохранить этот поиск как кнопку",saved:"Поиск сохранён.",combineTitle:"Дополнительно находит связанное по смыслу первых результатов — даже без искомых слов.",
+    group:"Группа",onlyView:"только предложение, ничего не перемещено",field:"Поиск",
+    flagActive:"активна",flagLocal:"активна · свой сервер",flagTest:"активна · тест",infoActive:" — поиск понимает смысл.",infoBackfill:" — обрабатывает ваши файлы…",
+    flagLoading:"загружается …",flagStarting:"запускается …",infoLoading:" — пока поиск по словам.",flagReady:"готова",infoReady:" — запускается, как только вы ищете по смыслу.",
+    flagOff:"не загружена",flagFailed:"не запущена",infoOff:" — поиск по ключевым словам.",flagCheck:"проверка…",
+    queued:["{n} файл ждёт – он будет прочитан после текущего чтения.","{n} файла ждут – они будут прочитаны после текущего чтения.","{n} файлов ждут – они будут прочитаны после текущего чтения."],cancelled:"отменено"},
+  pl:{hits:["{n} wynik","{n} wyniki","{n} wyników"],files:["{n} plik","{n} pliki","{n} plików"],catalog:["Katalog: {n} plik","Katalog: {n} pliki","Katalog: {n} plików"],
+    byMeaning:"Szukanie po znaczeniu",modeWord:"Szukanie po słowach",modeName:"Szukanie po nazwie",modeNamePro:"Szukanie",browse:"Przeglądanie (filtry)",filterOn:"filtr aktywny",
+    also:"szukano też jako „{x}”",none:"Brak wyników.",hint:" Przełącz na <b>szukanie po znaczeniu</b> — to samo pytanie, więcej sensu.",
+    hintPro:" Włącz <b>Znaczenie</b>, aby szukać także według treści.",
+    open:"Otwórz",openThere:"otwórz tam",liesOn:"znajduje się na {x}",ki:"AI",summary:"Streszczenie",vaultTitle:"Włóż do zaszyfrowanego sejfu",
+    delTitle:"Usuń ten plik w jego miejscu (do kosza)",thumbTitle:"Stuknij, aby zobaczyć na pełnym ekranie",
+    whyName:"Trafienie w <b>nazwie pliku</b>.",inName:"w <b>nazwie</b>",inContent:"w <b>treści</b>",ocr:" (z tekstu na obrazie)",meaning:"znaczenie {p}%",model:"(model)",
+    related:"podobne znaczeniowo ({p}%)",byModel:"Znalezione przez <b>model znaczenia</b>{m} — nawet bez wspólnego słowa.",similar:"podobne znaczeniowo{c}, nawet bez dokładnego słowa.",
+    because:"Znaleziono, ponieważ {x}{m}{c}.",alike:"podobne znaczenie",relHead:"Także powiązane",relSub:"— znalezione przez znaczenie pierwszych wyników, nawet bez szukanych słów",via:"znalezione przez:",
+    save:"zapamiętaj",saveTitle:"Zapisz to wyszukiwanie jako przycisk",saved:"Wyszukiwanie zapamiętane.",combineTitle:"Dodatkowo znajduje powiązane przez znaczenie pierwszych wyników — nawet bez szukanych słów.",
+    group:"Grupa",onlyView:"tylko propozycja, nic nie przeniesiono",field:"Szukaj",
+    flagActive:"aktywny",flagLocal:"aktywny · własny serwer",flagTest:"aktywny · test",infoActive:" — wyszukiwanie rozumie znaczenie.",infoBackfill:" — przetwarza twoje pliki…",
+    flagLoading:"ładuje się …",flagStarting:"uruchamia się …",infoLoading:" — do tego czasu szukanie po słowach.",flagReady:"gotowy",infoReady:" — uruchamia się, gdy szukasz według znaczenia.",
+    flagOff:"nie pobrany",flagFailed:"nie uruchomiony",infoOff:" — wyszukiwanie po słowach kluczowych.",flagCheck:"sprawdzanie…",
+    queued:["{n} plik czeka – zostanie odczytany po bieżącym odczycie.","{n} pliki czekają – zostaną odczytane po bieżącym odczycie.","{n} plików czeka – zostaną odczytane po bieżącym odczycie."],cancelled:"przerwano"}
+};
+function searchLang(){ const l=String(document.documentElement.lang||"de").slice(0,2); return SEARCH_T[l]?l:"de"; }
+/** Wort der Startsuche; v = Platzhalter. Bei einem Zahlwort (Liste) wählt v.n die Form; {n} wird eingesetzt (v.nHtml für fett). */
+function sw(k, v){
+  const l=searchLang(); let s=SEARCH_T[l][k]; if(s==null) s=SEARCH_T.de[k];
+  if(Array.isArray(s)){
+    let f="other"; try{ f=new Intl.PluralRules(l).select(Number(v&&v.n)||0); }catch{ f=Number(v&&v.n)===1?"one":"other"; }
+    s = f==="one" ? s[0] : (f==="few" && s.length>2 ? s[1] : s[s.length-1]);
+  }
+  return String(s).replace(/\{(\w+)\}/g,(m,n)=> v && n==="n" && v.nHtml!=null ? v.nHtml : (v && v[n]!=null ? String(v[n]) : ""));
+}
+/** Feste Teile der Suchseite (Knopf „merken“, Tooltips, Name des Suchfelds, Katalogzahl) in der gewählten Sprache. */
+function searchWords(){
+  const q=$("#q"); if(q) q.setAttribute("aria-label", sw("field"));
+  const save=$("#fSave");
+  if(save){ save.title=sw("saveTitle"); const last=save.lastChild;
+    if(last && last.nodeType===3) last.nodeValue=(/^\s*💾/.test(last.nodeValue)?"💾 ":"")+sw("save"); }
+  const comb=document.querySelector("label.combinerow"); if(comb) comb.title=sw("combineTitle");
+  const info=$("#corpusInfo"); if(info) info.textContent = CATALOG.length ? sw("catalog",{n:CATALOG.length}) : "";
+}
+window.addEventListener("pblang", ()=>{ try{ searchWords(); renderEmbFlag(); if($("#searchInfo") && $("#searchInfo").dataset.pbMode) renderResults($("#q").value); }catch{} });
+
+let SEARCH_SEQ=0;   // Laufnummer: jede Zeichnung der Trefferliste zählt hoch, eine ältere Antwort zeichnet nie über eine neuere
 async function renderResults(query){
+  query=String(query==null?"":query);
   const ul=$("#results"), empty=$("#searchEmpty"), info=$("#searchInfo");
+  // Generalprüfung 16.11.2026: nach × kamen alte Treffer zurück, wenn das Modell spät antwortete. Die Nummer zählte nur bei
+  // einer Bedeutungs-Frage hoch, nicht beim Leeren oder Umschalten. Jetzt zählt jeder Aufruf.
+  const myseq = ++SEARCH_SEQ;
   if(!CATALOG.length){ empty.style.display="block"; ul.innerHTML=""; return; }
   empty.style.display="none";
   const hasQ = !!query.trim();
   if(!hasQ && !filterActive()){
+    delete info.dataset.pbMode;
     ul.innerHTML=""; info.textContent = MODE==="name"
       ? "Namenssuche: findet nur, was im Dateinamen steht."
       : "Bedeutungssuche: findet nach Sinn — auch Text aus PDF, Office und (wo möglich) Bildern. Oder nutze die Filter unten zum Stöbern.";
@@ -1860,8 +1989,6 @@ async function renderResults(query){
   // echte Bedeutung: Query-Embedding holen (async), mit Sequenz-Schutz gegen Tipp-Races
   let qe=null;
   if(hasQ && MODE==="mean" && embedder()){
-    const myseq = (renderResults._seq = (renderResults._seq||0) + 1);
-    const key=query.trim().toLowerCase();
     // Klaus 15.11.2026 („Anthropic“ fand nichts): Treffer aus Name und Text sofort zeigen, nicht auf das Modell warten.
     // Rechnet das Modell, kommen seine Treffer danach dazu; hängt oder scheitert es, bleibt die Wortsuche stehen.
     // embedQueryCached kennt den eigenen Vorrat (und in der App zuerst das zweite Modell); ein Vorrat-Treffer kommt sofort.
@@ -1869,13 +1996,13 @@ async function renderResults(query){
       // Antwortet das Modell schnell (unter 0,4 s), gilt seine Reihenfolge gleich; sonst erst die Wortsuche, dann nachreichen.
       const pending=embedQueryCached(query);
       qe=await Promise.race([pending,new Promise(r=>setTimeout(()=>r(undefined),400))]);
-      if(myseq !== renderResults._seq) return; // eine neuere Eingabe hat übernommen
+      if(myseq !== SEARCH_SEQ) return; // eine neuere Eingabe hat übernommen
       if(qe===undefined){
         qe=null;
         // Sichtbar warten (Klaus 15.11.2026): kreisende Punkte, solange die Bedeutung berechnet wird.
         const job=window.PBActivity?.start({label:({de:"Suche nach Bedeutung …",en:"Searching by meaning …",ru:"Поиск по смыслу …",pl:"Szukanie według znaczenia …"})[(document.documentElement.lang||"de").slice(0,2)]||"Suche nach Bedeutung …"});
         const stop=setTimeout(()=>job?.finish(),20000);
-        renderResults._pending=pending.then(v=>{ clearTimeout(stop); job?.finish(); if(v && myseq===renderResults._seq) return renderResults(query); });
+        renderResults._pending=pending.then(v=>{ clearTimeout(stop); job?.finish(); if(v && myseq===SEARCH_SEQ && $("#q").value===query) return renderResults(query); });   // nur, wenn noch dieselbe Frage im Feld steht
       }
     }
   }
@@ -1903,13 +2030,15 @@ async function renderResults(query){
   results = results.filter(hit=>passesFilter(hit.r));
   if(hasQ) results = sortHits(results);
   const dt=(performance.now()-t0);
-  info.innerHTML = `<b>${results.length}</b> Treffer · ${dt.toFixed(dt<1?2:0)} ms · `
-    + (hasQ ? (MODE==="name" ? "Namenssuche" : "Bedeutungssuche") : "Stöbern (Filter)")
-    + (filterActive() ? " · Filter aktiv" : "")
-    + (verstanden ? " · auch gesucht als „"+escapeHtml(verstanden)+"“" : "");
+  // Ehrliche Beschriftung: „Bedeutungssuche“ nur, wenn das Modell die Frage wirklich mitgerechnet hat (qe); sonst „Wortsuche“.
+  info.innerHTML = sw("hits",{n:results.length, nHtml:`<b>${results.length}</b>`}) + ` · ${dt.toFixed(dt<1?2:0)} ms · `
+    + (hasQ ? (MODE==="name" ? sw(SEARCH_PRO?"modeNamePro":"modeName") : sw(qe?"byMeaning":"modeWord")) : sw("browse"))
+    + (filterActive() ? " · "+sw("filterOn") : "")
+    + (verstanden ? " · "+sw("also",{x:escapeHtml(verstanden)}) : "");
+  info.dataset.pbMode = hasQ ? (MODE==="name" ? "name" : qe ? "mean" : "word") : "browse";
   if(!results.length){
-    ul.innerHTML = `<div class="empty"><div class="big">🔍</div><p>Kein Treffer.`
-      + (hasQ && MODE==="name" ? ` Probier den Umschalter auf <b>Bedeutungssuche</b> — dieselbe Frage, mehr Sinn.` : "")
+    ul.innerHTML = `<div class="empty"><div class="big">🔍</div><p>${sw("none")}`
+      + (hasQ && MODE==="name" ? sw(SEARCH_PRO?"hintPro":"hint") : "")
       + `</p></div>`;
     return;
   }
@@ -1918,7 +2047,7 @@ async function renderResults(query){
     const why = hit.kind==="browse" ? "" : renderWhy(hit);
     const snip = r.snippet ? `<div class="snip">${highlight(r.snippet.slice(0,SNIPPET_LEN), (hit.why.terms||[]).concat(tokens($("#q").value)))}</div>` : "";
     const origin = r.origin ? `<span class="origin">↗ ${escapeHtml(r.origin)}</span>` : "";
-    const thumb = r.thumb ? `<img class="thumbimg" src="${r.thumb}" alt="" data-hash="${r.hash}" title="Antippen für Vollbild">` : "";
+    const thumb = r.thumb ? `<img class="thumbimg" src="${r.thumb}" alt="" data-hash="${r.hash}" title="${sw("thumbTitle")}">` : "";
     return `<li class="card${hit.kind==="related"?" related":""}" data-hash="${r.hash}">
       <div class="h">
         ${thumb}<div>
@@ -1933,11 +2062,11 @@ async function renderResults(query){
       ${tagsHtml(r)}
       ${kiEntferntHtml(r)}
       <div class="cardbtns">
-        ${r.origin?`<button disabled title="liegt auf ${escapeHtml(r.origin)}">↗ dort öffnen</button>`:`<button class="openBtn" data-hash="${r.hash}">↗ Öffnen</button>`}
-        <button class="kiBtn" data-hash="${r.hash}">🔗 KI</button>
-        ${r.summary?`<button class="sumBtn" data-hash="${r.hash}">✎ Kurzfassung</button>`:""}
-        ${r.origin?"":`<button class="tresorBtn" data-hash="${r.hash}" title="In den verschlüsselten Tresor legen">🔒</button>`}
-        ${r.origin?"":`<button class="delBtn" data-hash="${r.hash}" title="Diese Datei an ihrem Ort löschen (Müll)" style="border-color:#5b2731;color:var(--bad)">🗑</button>`}
+        ${r.origin?`<button disabled title="${sw("liesOn",{x:escapeHtml(r.origin)})}">↗ ${sw("openThere")}</button>`:`<button class="openBtn" data-hash="${r.hash}">↗ ${sw("open")}</button>`}
+        <button class="kiBtn" data-hash="${r.hash}">🔗 ${sw("ki")}</button>
+        ${r.summary?`<button class="sumBtn" data-hash="${r.hash}">✎ ${sw("summary")}</button>`:""}
+        ${r.origin?"":`<button class="tresorBtn" data-hash="${r.hash}" title="${sw("vaultTitle")}" aria-label="${sw("vaultTitle")}">🔒</button>`}
+        ${r.origin?"":`<button class="delBtn" data-hash="${r.hash}" title="${sw("delTitle")}" aria-label="${sw("delTitle")}" style="border-color:#5b2731;color:var(--bad)">🗑</button>`}
       </div>
     </li>`;
   };
@@ -1948,9 +2077,9 @@ async function renderResults(query){
     const { related } = multiHopSearch(query, qe);
     const rel = related.filter(h=>!shown.has(h.r.hash) && passesFilter(h.r));
     if(rel.length){
-      html += `<li class="relhead">🔗 Auch verwandt <span>— über die Bedeutung der ersten Treffer gefunden, auch ohne die gesuchten Wörter</span></li>`;
+      html += `<li class="relhead">🔗 ${sw("relHead")} <span>${sw("relSub")}</span></li>`;
       html += rel.map(h=>{
-        const via = h.why.viaName ? `<div class="why viahop">gefunden über: <b>${escapeHtml(h.why.viaName)}</b>${h.why.viaCategory?` (${escapeHtml(h.why.viaCategory)})`:""}</div>` : "";
+        const via = h.why.viaName ? `<div class="why viahop">${sw("via")} <b>${escapeHtml(h.why.viaName)}</b>${h.why.viaCategory?` (${escapeHtml(h.why.viaCategory)})`:""}</div>` : "";
         // Herkunfts-Zeile direkt vor die Knopfleiste der Verwandten-Karte setzen
         return cardHtml(h).replace(/(<div class="cardbtns">)/, `${via}$1`);
       }).join("");
@@ -1959,18 +2088,19 @@ async function renderResults(query){
   ul.innerHTML = html;
 }
 function renderWhy(hit){
-  if(hit.kind==="name") return `<div class="why">Treffer im <b>Dateinamen</b>.</div>`;
+  if(hit.kind==="name") return `<div class="why">${sw("whyName")}</div>`;
   const w=hit.why; const bits=[];
-  if(w.inName && w.inName.length) bits.push(`im <b>Namen</b>: ${w.inName.map(chip).join("")}`);
-  if(w.inContent && w.inContent.length) bits.push(`im <b>Inhalt</b>${w.viaOCR?" (aus Bild-Text)":""}: ${w.inContent.map(chip).join("")}`);
+  if(w.inName && w.inName.length) bits.push(`${sw("inName")}: ${w.inName.map(chip).join("")}`);
+  if(w.inContent && w.inContent.length) bits.push(`${sw("inContent")}${w.viaOCR?sw("ocr"):""}: ${w.inContent.map(chip).join("")}`);
   const eco = hit.eco||0;
-  const modelTxt = eco>0.72 ? ` · <b>Bedeutung ${(eco*100|0)}%</b> (Modell)` : (eco>0.5 ? ` · Bedeutung ${(eco*100|0)}% (Modell)` : "");
-  const cosTxt = (!modelTxt && hit.cos>0.12) ? ` · sinnverwandt (${(hit.cos*100|0)}%)` : "";
+  const pct = sw("meaning",{p:(eco*100|0)});
+  const modelTxt = eco>0.72 ? ` · <b>${pct}</b> ${sw("model")}` : (eco>0.5 ? ` · ${pct} ${sw("model")}` : "");
+  const cosTxt = (!modelTxt && hit.cos>0.12) ? ` · ${sw("related",{p:(hit.cos*100|0)})}` : "";
   if(!bits.length){
-    if(eco>0.5) return `<div class="why">Vom <b>Bedeutungs-Modell</b> gefunden${modelTxt} — auch ohne gemeinsames Wort.</div>`;
-    if(hit.cos>0.1) return `<div class="why">semantisch ähnlich${cosTxt}, auch ohne exaktes Wort.</div>`;
+    if(eco>0.5) return `<div class="why">${sw("byModel",{m:modelTxt})}</div>`;
+    if(hit.cos>0.1) return `<div class="why">${sw("similar",{c:cosTxt})}</div>`;
   }
-  return `<div class="why">Gefunden, weil ${bits.join("; ")||"bedeutungsähnlich"}${modelTxt}${cosTxt}.</div>`;
+  return `<div class="why">${sw("because",{x:bits.join("; ")||sw("alike"), m:modelTxt, c:cosTxt})}</div>`;
 }
 function chip(t){ return `<span class="chip">${escapeHtml(t)}</span>`; }
 
@@ -2041,15 +2171,17 @@ function showGroup(cat){
   $$(".panel").forEach(p=>p.classList.remove("on")); $("#panel-search").classList.add("on");
   MODE="mean"; setToggle();
   const ul=$("#results"); $("#searchEmpty").style.display="none";
+  SEARCH_SEQ++;   // eine noch ausstehende Antwort des Modells darf diese Ansicht nicht überschreiben
+  delete $("#searchInfo").dataset.pbMode;
   const items = CATALOG.filter(r=>r.category===cat).sort((a,b)=>b.date-a.date);
-  $("#searchInfo").innerHTML = `Gruppe <b>${catIcon(cat)} ${escapeHtml(cat)}</b> · ${items.length} Datei(en) · <span style="color:var(--mut2)">nur Vorschlag, nichts verschoben</span>`;
+  $("#searchInfo").innerHTML = `${sw("group")} <b>${catIcon(cat)} ${escapeHtml(cat)}</b> · ${sw("files",{n:items.length})} · <span style="color:var(--mut2)">${sw("onlyView")}</span>`;
   ul.innerHTML = items.map(r=>{
-    const thumb = r.thumb ? `<img class="thumbimg" src="${r.thumb}" alt="" data-hash="${r.hash}" title="Antippen für Vollbild">` : "";
+    const thumb = r.thumb ? `<img class="thumbimg" src="${r.thumb}" alt="" data-hash="${r.hash}" title="${sw("thumbTitle")}">` : "";
     return `<li class="card" data-hash="${r.hash}">
       <div class="h">${thumb}<div><div class="fname">${catIcon(r.category)} ${escapeHtml(r.name)}</div>
       <div class="path">${escapeHtml(r.path)}</div></div></div>
       ${r.summary?`<div class="why">${escapeHtml(r.summary)}</div>`:""}
-      <div class="cardbtns"><button class="openBtn" data-hash="${r.hash}">↗ Öffnen</button>${r.origin?"":`<button class="delBtn" data-hash="${r.hash}" title="Wegwerfen" style="border-color:#5b2731;color:var(--bad)">🗑</button>`}</div></li>`;
+      <div class="cardbtns"><button class="openBtn" data-hash="${r.hash}">↗ ${sw("open")}</button>${r.origin?"":`<button class="delBtn" data-hash="${r.hash}" title="Wegwerfen" style="border-color:#5b2731;color:var(--bad)">🗑</button>`}</div></li>`;
   }).join("");
   $("#q").value="";
 }
@@ -2462,7 +2594,7 @@ function currentSearchLabel(){
 function saveCurrentSearch(){
   const list=loadSaved();
   list.unshift({ label:currentSearchLabel(), q:$("#q").value, mode:MODE, filter:{...FILTER} });
-  saveSaved(list); renderSaved(); toast("Suche gemerkt.");
+  saveSaved(list); renderSaved(); toast(sw("saved"));
 }
 function applySaved(i){
   const s=loadSaved()[i]; if(!s) return;
@@ -2738,7 +2870,7 @@ async function startReorg(){
 function setToggle(){ $$("#mode button").forEach(b=>b.classList.toggle("on", b.dataset.m===MODE)); }
 function refreshAll(){
   $("#tabCount").textContent = CATALOG.length?`· ${CATALOG.length}`:"";
-  $("#corpusInfo").textContent = CATALOG.length?`Katalog: ${CATALOG.length} Dateien`:"";
+  searchWords();   // Katalogzahl, „merken“, Tooltips und Name des Suchfelds in der gewählten Sprache
   const nd = dupeGroups().length;
   $("#dupCount").textContent = nd?`· ${nd}`:"";
   populateFilterSelects();

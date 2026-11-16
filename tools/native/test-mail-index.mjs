@@ -92,8 +92,11 @@ try{
   const before=await page.evaluate(()=>CATALOG.length);
   await page.locator('[data-tab="mail"]').click();
   const mail=page.locator('#mailWorkspace'), panel=mail.locator('#pb-mail-all');
-  await mail.locator('[data-live-text=connect]').click();
+  // Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach beim Öffnen des Reiters von selbst da.
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hidden&&document.querySelector('.live-mail [data-mail-all=open]'));
+  await mail.locator('.live-mail [data-live-uid]').first().waitFor();
+  ok('With a saved account the mailbox stands there by itself when the Mail tab opens – no tap on "Mailkonto verbinden"',await mail.locator('.live-mail').isVisible()&&await mail.locator('[data-live-text=connect]').isHidden()&&await mail.locator('.mail-app:not(.live-mail):not(.mail-all):not(.mail-account-bar)').first().isHidden()&&await mail.locator('.mail-account-bar select').first().inputValue()==='11111111-1111-4111-8111-111111111111');
+  ok('Only the saved accounts were read for that: no account dialog, the first account\'s folders and inbox are shown',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='accounts')&&!window.mailCalls.some(c=>c.method==='addAccount')&&window.mailCalls.some(c=>c.method==='folders'&&c.args.account==='11111111-1111-4111-8111-111111111111')));
   const allAccountsEntry=mail.locator('.live-mail .mail-folders > :first-child');
   await allAccountsEntry.locator('svg.native-folder-icon[data-icon-key="accounts"]').waitFor();
   ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&button.querySelector('.native-mail-all-label')?.innerText.trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
@@ -101,6 +104,16 @@ try{
   await capture(page,'1-erster-abruf');
   ok('First view explains reading only, 12 months and no attachments',(await panel.textContent()).includes('12 Monate')&&(await panel.textContent()).includes('Anhänge werden nicht geladen'));
   ok('Other mailbox parts are hidden while the overview is open',await mail.locator('.live-mail').isHidden()&&await mail.locator('.mail-account-bar').isHidden());
+  // Generalprüfung 16.11.2026: am Handy vor dem ersten Abruf – Überschrift in einer Zeile, der blaue Knopf darunter ganz lesbar.
+  await page.setViewportSize({width:360,height:740});
+  const firstHead=await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head'),t=h.querySelector('h2'),b=h.querySelector('.mail-primary'),box=e=>{const r=e.getBoundingClientRect();return {left:Math.round(r.left),right:Math.round(r.right),top:Math.round(r.top),width:Math.round(r.width),height:Math.round(r.height)};};
+    const lines=e=>{const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT),tops=new Set();for(let n;n=w.nextNode();){if(!n.nodeValue.trim())continue;const r=document.createRange();r.selectNodeContents(n);for(const c of r.getClientRects())if(c.width>0)tops.add(Math.round(c.top));}return tops.size;};
+    return {title:box(t),titleLines:lines(t),titleText:t.textContent,button:box(b),buttonLines:lines(b),buttonCut:b.scrollWidth>b.clientWidth+1,head:box(h),back:box(h.querySelector('.mail-back')),more:box(h.querySelector('details')),width:innerWidth,scroll:document.documentElement.scrollWidth};});
+  ok('Phone, before the first fetch: the heading "Alle Konten" stands in one line, not letter by letter',firstHead.titleText==='Alle Konten'&&firstHead.titleLines===1&&firstHead.title.height<=32&&firstHead.title.width>=80,firstHead);
+  ok('Phone, before the first fetch: the blue fetch button has its own row below, in full width, with its whole text in one line',firstHead.button.top>=firstHead.title.top+firstHead.title.height&&firstHead.button.width>=300&&firstHead.buttonLines===1&&!firstHead.buttonCut&&firstHead.button.right<=firstHead.width&&firstHead.button.height<=36,firstHead);
+  ok('Phone, before the first fetch: back, heading and the menu share the first row and nothing leaves the screen',Math.abs(firstHead.back.top-firstHead.more.top)<=8&&firstHead.more.right<=firstHead.width&&firstHead.scroll<=firstHead.width&&firstHead.head.height<=90,firstHead);
+  await page.setViewportSize({width:1280,height:900});
+  ok('Wide screen, before the first fetch: everything stays in one row as before',await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head');return new Set([...h.children].map(c=>Math.round(c.getBoundingClientRect().top/20))).size===1;}));
   await panel.getByRole('button',{name:'Alle Konten abrufen und einordnen'}).click();
   await page.waitForFunction(()=>!PBMailIndex.running()&&localStorage.getItem('pb_mail_index_last'));
   const calls=await page.evaluate(()=>window.mailCalls);
@@ -222,6 +235,21 @@ try{
   // The earlier star protects that Aldi mail; take it away again for the clean-up checks.
   await page.evaluate(async()=>{const r=CATALOG.find(x=>x.mailMessageId==='<aldi42@aldi.invalid>');r.mailStar=false;r.mailFlagged=false;window.server['11111111-1111-4111-8111-111111111111'].INBOX.find(y=>y.uid===2000).flagged=false;await idbPut('catalog',r);});
   await panel.locator('[data-mail-all=clean]').click();
+  // Generalprüfung 16.11.2026: „keine Emojis, nirgends“ gilt auch in „Alle Konten“. Sichtbarer Text und Namen der Knöpfe.
+  const shownEmojis=()=>page.evaluate(()=>{const root=document.getElementById('pb-mail-all'),found=[],walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),plain=/[↗©™®↔↕↺↻★✓]/g;let n;
+    while((n=walk.nextNode())){const v=n.nodeValue.replace(plain,'');if(!/\p{Extended_Pictographic}/u.test(v))continue;const e=n.parentElement;
+      if(!e||e.closest('.pb-icon-fallback,[hidden],script,style'))continue;const r=document.createRange();r.selectNodeContents(n);const b=r.getBoundingClientRect(),cs=getComputedStyle(e),own=e.getBoundingClientRect();
+      if(b.width<1||b.height<1||own.width<=1||own.height<=1||/inset\(50%\)/.test(cs.clipPath)||cs.visibility==='hidden'||parseFloat(cs.opacity)===0)continue;found.push(v.trim().slice(0,30));}
+    const tips=[...root.querySelectorAll('[title],[aria-label]')].filter(e=>e.getClientRects().length).map(e=>(e.title||'')+' '+(e.getAttribute('aria-label')||'')).filter(x=>/\p{Extended_Pictographic}/u.test(x.replace(plain,'')));
+    return [...found,...tips.map(x=>'tip: '+x.trim().slice(0,30))];});
+  await page.waitForTimeout(250);
+  const cleanEmojis=await shownEmojis();
+  ok('"Aufräumen" shows no emojis: headings, explanation, unsubscribe ways and buttons are plain words or line icons'+(cleanEmojis.length?' — still: '+cleanEmojis.join(' | '):''),cleanEmojis.length===0&&await page.evaluate(()=>{const h=k=>document.querySelector('#pb-mail-all [data-mail-clean='+k+']'),icon=(k,i)=>h(k).querySelectorAll('svg').length===1&&h(k).querySelector('svg').dataset.iconKey===i;
+    return /^Abgelaufen \(\d+\)$/.test(h('expiredH').innerText.trim())&&/^Läuft noch \(\d+\)$/.test(h('runningH').innerText.trim())&&h('checkH').innerText.trim().startsWith('Zum Prüfen')&&icon('expiredH','pending')&&icon('runningH','check')&&icon('checkH','info')&&!/[⚡✉🌐]/u.test(document.getElementById('pb-mail-all').innerText);}));
+  for(const lang of ['en','ru','pl']){await page.evaluate(l=>{document.documentElement.lang=l;},lang);await page.waitForTimeout(250);const left=await shownEmojis();ok('"Aufräumen" without emojis in '+lang+(left.length?' — still: '+left.join(' | '):''),left.length===0);}
+  await page.evaluate(()=>{document.documentElement.lang='de';});await page.waitForTimeout(150);
+  for(const mode of ['list','senders']){await panel.locator('[data-mail-all='+mode+']').click();await page.waitForTimeout(250);const left=await shownEmojis();ok('"Alle Konten" view "'+mode+'" shows no emojis'+(left.length?' — still: '+left.join(' | '):''),left.length===0);}
+  await panel.locator('[data-mail-all=clean]').click();
   const section=async key=>{const all=await panel.locator('.mail-all-list > *').evaluateAll(n=>n.map(x=>({clean:x.dataset.mailClean||'',ids:[...x.querySelectorAll('[data-mail-all-id]')].map(b=>b.dataset.mailAllId)})));let on=false,ids=[];for(const x of all){if(x.clean)on=x.clean===key;else if(on)ids.push(...x.ids);}return ids;};
   const hashOf=id=>page.evaluate(id=>CATALOG.find(r=>r.mailMessageId===id)?.hash,id);
   ok('Expired offer is listed as expired, the running one as running',JSON.stringify(await section('expiredH'))===JSON.stringify([await hashOf('<aldi42@aldi.invalid>')])&&(await section('runningH')).includes(await hashOf('<aldi43@aldi.invalid>')));
@@ -340,6 +368,16 @@ try{
   await panel.locator('.mail-all-reader').waitFor();
   ok('Provider unreachable: the stored text opens with a sentence why',await panel.isVisible()&&(await panel.textContent()).includes('Beim Anbieter gerade nicht zu öffnen'));
   // Klaus 16.11.2026: „An Familienakte“ in der Leseansicht von „Alle Konten“ (Pro-Tresor gestellt).
+  // Generalprüfung 16.11.2026: der Knopf „Übersetzen“ der Leseansicht hat seinen Namen (vorher nur das Symbol, ohne Text).
+  const translateOpen=await page.evaluate(()=>{const b=document.querySelector('#pb-mail-all .mail-all-reader [data-mail-translate=open]');if(!b)return null;const r=b.getBoundingClientRect();return {text:b.textContent.trim(),width:Math.round(r.width),icon:Boolean(b.querySelector('svg')),shown:r.height>0};});
+  ok('The "Übersetzen" button in the stored reader of "Alle Konten" carries its name, like in the mailbox',translateOpen?.text==='Übersetzen'&&translateOpen.icon&&translateOpen.shown&&translateOpen.width>60,translateOpen);
+  await page.evaluate(()=>{document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('#pb-mail-all .mail-all-reader [data-mail-translate=open]')?.textContent.trim()==='Translate');
+  ok('Its name follows the language',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.waitForFunction(()=>document.querySelector('#pb-mail-all .mail-all-reader [data-mail-translate=open]')?.textContent.trim()==='Übersetzen');
+  const readerEmojis=await shownEmojis();
+  ok('The stored reader shows no emojis either'+(readerEmojis.length?' — still: '+readerEmojis.join(' | '):''),readerEmojis.length===0);
   ok('Without a Pro vault the stored reader shows no "An Familienakte" button',await panel.locator('.mail-all-reader [data-mail-familienakte]').isHidden());
   await page.evaluate(()=>{window.famCalls=[];window.PBProVerbund={familienakteTresor:async()=>({vorhanden:true,offen:true}),familienakteOeffnen:async()=>true,
     mailAnFamilienakte:async(args,meta)=>{if(meta.pruefen)await meta.pruefen();window.famCalls.push({args,name:meta.name,still:meta.still});return{ergebnis:'uebergeben',begleit:'ja'};}};});
@@ -350,14 +388,17 @@ try{
   ok('With a Pro vault the stored reader offers "An Familienakte" with the line icon and its name',await famIndex.getAttribute('aria-label')==='An Familienakte'&&await famIndex.locator('.compact-icon[data-icon-key=share]').count()===1&&await famIndex.locator('.compact-caption').textContent()==='An Familienakte');
   const famRecord=await page.evaluate(()=>{const name=document.querySelector('#pb-mail-all .mail-all-reader h3').textContent,r=CATALOG.find(x=>x.name===name&&x.mailRemotes?.length);return{name,...r.mailRemotes[0],hash:r.hash};});
   await page.evaluate(()=>{window.mailCalls=window.mailCalls.filter(c=>!['message','locate'].includes(c.method));});
+  const famNote=()=>panel.locator('.mail-all-reader [data-mail-fam-note]').textContent();
+  const famDialogs=dialogs.length;
   await famIndex.click();
-  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
-  ok('Provider unreachable: the sentence says that only the stored text is here and nothing was sent',/nur der gespeicherte Text/.test(dialogs.at(-1))&&/Nichts wurde übergeben/.test(dialogs.at(-1))&&await page.evaluate(()=>window.famCalls.length===0)&&await panel.locator('.mail-all-reader').isVisible(),dialogs.at(-1));
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy')&&!document.querySelector('#pb-mail-all [data-mail-fam-note]')?.hidden);
+  ok('Provider unreachable: the sentence says that only the stored text is here and nothing was sent',/nur der gespeicherte Text/.test(await famNote())&&/Nichts wurde übergeben/.test(await famNote())&&await page.evaluate(()=>window.famCalls.length===0)&&await panel.locator('.mail-all-reader').isVisible(),await famNote());
+  ok('The sentence comes once: in a status line right below the buttons, in view, and not again as a window to tap away',dialogs.length===famDialogs&&await page.evaluate(()=>{const n=document.querySelector('#pb-mail-all [data-mail-fam-note]'),r=n.getBoundingClientRect(),all=document.getElementById('pb-mail-all');return n.getAttribute('role')==='status'&&n.dataset.mailResult==='offen'&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&all.textContent.split(n.textContent).length===2&&n.previousElementSibling.matches('.mail-reader-actions,.pb-mail-translation');}),dialogs.slice(famDialogs));
   await page.evaluate(()=>{window.offline=false;window.mailCalls=window.mailCalls.filter(c=>!['message','locate'].includes(c.method));});
   await famIndex.click();
   await page.waitForFunction(()=>window.famCalls.length===1);await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   const famIndexCall=await page.evaluate(()=>window.famCalls[0]);
-  ok('The whole mail is fetched from its provider place and handed over quietly; the reader stays',famIndexCall.still===true&&famIndexCall.args.account===famRecord.account&&famIndexCall.args.folder===famRecord.folder&&famIndexCall.args.uid===famRecord.uid&&famIndexCall.args.validity==='7'&&famIndexCall.name===famRecord.name+'.eml'&&await page.evaluate(uid=>window.mailCalls.filter(c=>c.method==='message').map(c=>c.args.uid).join()===String(uid),famRecord.uid)&&dialogs.at(-1)==='An die Familienakte übergeben: 1 von 1.'&&await panel.locator('.mail-all-reader').isVisible(),{famIndexCall,famRecord,last:dialogs.at(-1)});
+  ok('The whole mail is fetched from its provider place and handed over quietly; the reader stays',famIndexCall.still===true&&famIndexCall.args.account===famRecord.account&&famIndexCall.args.folder===famRecord.folder&&famIndexCall.args.uid===famRecord.uid&&famIndexCall.args.validity==='7'&&famIndexCall.name===famRecord.name+'.eml'&&await page.evaluate(uid=>window.mailCalls.filter(c=>c.method==='message').map(c=>c.args.uid).join()===String(uid),famRecord.uid)&&await famNote()==='An die Familienakte übergeben: 1 von 1.'&&dialogs.length===famDialogs&&await page.evaluate(()=>document.querySelector('#pb-mail-all [data-mail-fam-note]').dataset.mailResult==='fertig')&&await panel.locator('.mail-all-reader').isVisible(),{famIndexCall,famRecord,last:await famNote()});
   await page.evaluate(hash=>{const r=CATALOG.find(x=>x.hash===hash);r.mailRemotes[0].validity='6';window.famCalls=[];window.mailCalls=window.mailCalls.filter(c=>c.method!=='locate');},famRecord.hash);
   await famIndex.click();
   await page.waitForFunction(()=>window.famCalls.length===1);await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
@@ -449,6 +490,23 @@ try{
   await mail.locator('.live-mail .mail-folders .mail-folder').nth(1).click();
   await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=40);await idle();
   ok('Changing the folder still starts at the top',(await listState()).top===0);
+  // Generalprüfung 16.11.2026: wer das Postfach selbst schließt, bekommt es in dieser Sitzung nicht von selbst wieder; „Lokale
+  // Mails“ bleibt erreichbar. Nach einem neuen Start steht es wieder da – bei getrenntem Internet ohne Abruf, mit dem Grund.
+  await mail.locator('.mail-account-tools>summary').first().click();await mail.locator('.mail-account-menu [data-live-text=local]').click();
+  ok('"Lokale Mails" is still in the menu and shows the local mailbox; the way back stays',await mail.locator('.live-mail').isHidden()&&await mail.locator('#pb-mail-folders,.mail-app:not(.live-mail):not(.mail-all) .mail-folders').first().isVisible()&&await mail.locator(':scope>.mail-head [data-live-text=remote]').isVisible());
+  await page.locator('[data-tab="search"]').click();await page.locator('[data-tab="mail"]').click();await page.waitForTimeout(400);
+  ok('Coming back to the Mail tab keeps the local mailbox the user chose',await mail.locator('.live-mail').isHidden());
+  await mail.locator(':scope>.mail-head [data-live-text=remote]').click();await mail.locator('.live-mail [data-live-uid]').first().waitFor();
+  await mail.locator('.mail-account-tools>summary').first().click();await mail.locator('.mail-account-menu [data-live-text=disconnect]').click();
+  await page.locator('[data-tab="search"]').click();await page.locator('[data-tab="mail"]').click();await page.waitForTimeout(400);
+  ok('After "Postfach schließen" the mailbox stays closed in this session; "Mailkonto verbinden" is there again',await mail.locator('.live-mail').isHidden()&&await mail.locator('[data-live-text=connect]').isVisible());
+  await page.locator('[data-tab="search"]').click();
+  await page.reload();await page.waitForFunction(()=>window.PBMailDevice&&window.PBMailIndex&&typeof db!=='undefined'&&db);
+  await page.evaluate(()=>{window.offline=true;window.mailCalls=[];});
+  await page.locator('[data-tab="mail"]').click();
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hidden&&!document.querySelector('.live-mail').hasAttribute('aria-busy')&&/getrennt/.test(document.querySelector('.live-mail > .mail-notice').textContent));
+  ok('After a new start with the app\'s internet switch off the mailbox is shown without fetching: the account is chosen, nothing is loaded, and the notice says why',await mail.locator('.mail-account-bar select').first().inputValue()==='11111111-1111-4111-8111-111111111111'&&await page.evaluate(()=>!window.mailCalls.some(c=>['messages','message','index','indexText','action','send'].includes(c.method)))&&await mail.locator('.live-mail [data-live-uid]').count()===0&&/Internet getrennt/.test(await mail.locator('.live-mail > .mail-notice').textContent()),await mail.locator('.live-mail > .mail-notice').textContent());
+  await page.evaluate(()=>{window.offline=false;});
   ok('No runtime errors',errors.length===0,errors);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} all-accounts checks passed (simulated native transport; no real provider login).`);

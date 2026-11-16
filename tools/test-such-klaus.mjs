@@ -38,5 +38,15 @@ ok('„miet vertrag“ wird zu „mietvertrag“', S.zusammen && S.zusammen('mie
 ok('„neu ab montag“ bleibt, wie es ist', S.zusammen && S.zusammen('neu ab montag', ctx) === '', S.zusammen && S.zusammen('neu ab montag', ctx));
 ok('„xy qz“ wird nicht verbogen und findet nichts', S.zusammen && S.zusammen('xy qz', ctx) === '' && ids('xy qz').length === 0);
 ok('Suche sagt, wie sie die Frage verstanden hat', S.suchen(K, 'rechnung an tropic', [], ctx).verstanden === 'rechnung anthropic', S.suchen(K, 'rechnung an tropic', [], ctx).verstanden);
+// Generalprüfung 16.11.2026: normale Sätze mit Füllwort dürfen nicht zu einem nie gemeinten Wort zusammengezogen werden.
+{
+  const K2 = [dok('r24', 'Rechnungen 2024.pdf', 'Sammlung der Rechnungen aus Berlin.'), dok('amt', 'Briefen an das Amt.pdf', 'Antwort auf den Bescheid.'), dok('mama', 'Brief Mama.pdf', 'Liebe Mama, viele Grüße.'),
+    dok('anth', 'Invoice.pdf', 'Invoice Anthropic, PBC.')];
+  const c2 = S.kontext(K2, () => null);
+  ok('„brief an mama“ wird nicht zu „briefen mama“', S.zusammen('brief an mama', c2) === '', S.zusammen('brief an mama', c2));
+  ok('„rechnung in berlin“ wird nicht zu „rechnungen berlin“', S.zusammen('rechnung in berlin', c2) === '', S.zusammen('rechnung in berlin', c2));
+  ok('„briefe an mama“ bleibt auch, wie es ist', S.zusammen('briefe an mama', c2) === '', S.zusammen('briefe an mama', c2));
+  ok('im selben Bestand geht „an tropic“ → „anthropic“ weiter', S.zusammen('an tropic', c2) === 'anthropic', S.zusammen('an tropic', c2));
+}
 console.log(rot ? `ROT: ${rot} von ${n}` : `${n} Proben zu Klaus' Suchbeispielen bestanden (erfundener Bestand, nicht am Gerät).`);
 process.exit(rot ? 1 : 0);
