@@ -25,6 +25,7 @@
       space: 'Zu wenig freier Speicher auf dem Gerät.', failed: 'Laden hat nicht geklappt: {why}. Nochmal „Modell laden“ tippen, es geht dort weiter.',
       confirmRemove: 'Modell vom Gerät entfernen? Die Suche nutzt dann wieder Stichworte. Es kann jederzeit neu geladen werden.',
       goLoad: 'Das Modell für die Bedeutungssuche ist noch nicht geladen. In den Einstellungen lässt es sich laden.',
+      loadLine: 'Modell wird geladen, etwa {mb} MB', startLine: 'Modell wird gestartet …',
       bgTitle: 'Einordnen läuft',
       bgText: 'Bedeutung wird berechnet – du kannst weiterarbeiten',
       need: 'Für diesen Schritt (SBKIM, Siegel-Identität oder Bedeutungssuche) braucht die App einmal das Modell für die Bedeutungssuche, etwa {mb} MB. Jetzt laden?',
@@ -40,6 +41,7 @@
       space: 'Not enough free storage on the device.', failed: 'Loading failed: {why}. Tap “Load model” again, it continues there.',
       confirmRemove: 'Remove the model from the device? Search goes back to keywords. It can be loaded again any time.',
       goLoad: 'The meaning-search model is not loaded yet. Load it in Settings.',
+      loadLine: 'Loading the model, about {mb} MB', startLine: 'Starting the model …',
       bgTitle: 'Indexing',
       bgText: 'Computing meaning – you can keep working',
       need: 'This step (SBKIM, seal identity or meaning search) needs the meaning-search model once, about {mb} MB. Load it now?',
@@ -55,6 +57,7 @@
       space: 'Недостаточно свободной памяти.', failed: 'Загрузка не удалась: {why}. Нажмите «Загрузить модель» ещё раз.',
       confirmRemove: 'Удалить модель с устройства? Поиск снова будет по ключевым словам.',
       goLoad: 'Модель для поиска по смыслу ещё не загружена. Загрузите её в настройках.',
+      loadLine: 'Модель загружается, около {mb} МБ', startLine: 'Модель запускается …',
       bgTitle: 'Идёт индексирование',
       bgText: 'Вычисление смысла – можно продолжать работу',
       need: 'Для этого шага (SBKIM, личность печати или поиск по смыслу) приложению один раз нужна модель поиска по смыслу, около {mb} МБ. Загрузить сейчас?',
@@ -70,6 +73,7 @@
       space: 'Za mało wolnego miejsca.', failed: 'Pobieranie nie powiodło się: {why}. Stuknij „Pobierz model” ponownie.',
       confirmRemove: 'Usunąć model z urządzenia? Wyszukiwanie wróci do słów kluczowych.',
       goLoad: 'Model do wyszukiwania znaczeniowego nie jest jeszcze pobrany. Pobierz go w ustawieniach.',
+      loadLine: 'Model jest pobierany, około {mb} MB', startLine: 'Model się uruchamia …',
       bgTitle: 'Trwa indeksowanie',
       bgText: 'Obliczanie znaczenia – możesz dalej pracować',
       need: 'Ten krok (SBKIM, tożsamość pieczęci lub wyszukiwanie znaczeniowe) wymaga jednorazowo modelu wyszukiwania znaczeniowego, około {mb} MB. Pobrać teraz?',
@@ -132,7 +136,8 @@
 
   async function refresh() { try { state = await plugin.getState(); } catch {} render(); }
 
-  plugin.addListener?.('progress', p => { live = p; render(); forwardProgress(p); });
+  let loadJob = null;   // Klaus 2026-11-16 (V2, V8): ein Satz mit Größe, schmaler Balken mit Prozent, in der gemeinsamen Ladezeile
+  plugin.addListener?.('progress', p => { live = p; render(); forwardProgress(p); loadJob?.update({}); });
 
   // The meaning button is an inline on/off switch. Model installation remains
   // an explicit action in Settings; changing search mode never leaves Search.
@@ -152,11 +157,12 @@
       catch { /* ohne Messung wie bisher */ }
     }
     live = { done: state.present, total: state.total, source: '' }; render();
+    loadJob = window.PBActivity?.start({ label: () => t('loadLine', { mb: mb(state.total) }), percent: () => (live && state.total ? live.done / state.total * 100 : null) }) || null;
     try {
-      state = await plugin.install(); live = null; render();
+      state = await plugin.install(); live = null; loadJob?.finish(); loadJob = null; render();
       if (state.installed) startModel();
     } catch (error) {
-      live = null;
+      live = null; loadJob?.finish(); loadJob = null;
       const code = error?.code || '';
       message = code === 'CANCELLED' ? '' : code === 'APP_OFFLINE' ? t('offline') : code === 'NO_SPACE' ? t('space') : t('failed', { why: error?.message || code || '?' });
       await refresh();
@@ -177,8 +183,10 @@
   async function startModel() {
     if (!starter || !state.installed || state.crashes > 0) return render();
     phase = 'starting'; render();
+    const job = window.PBActivity?.start({ label: () => t('startLine') });
     try { await plugin.markLoading(); } catch {}
     try { await starter(); } catch {}
+    job?.finish();
     const ready = !!window.SbkimEmbedding?.isReady?.();
     phase = ready ? 'active' : 'startFailed';
     try { state = await plugin.markLoaded(); } catch {}
@@ -189,14 +197,20 @@
   // downloaded from here (that stays the explicit switch in Settings); a crashed start is not repeated by itself.
   let wantedOnce = false, wired = false;
   const meaningOn = () => { try { return typeof MODE === 'string' ? MODE === 'mean' : true; } catch { return true; } };
-  function wanted() {
-    if (wantedOnce || !starter || !state.installed || state.crashes > 0) return false;
-    wantedOnce = true; void startModel(); return true;
+  let askedOnce = false;
+  function wanted(tapped = false) {
+    if (!starter || state.crashes > 0) return false;
+    if (state.installed) { if (wantedOnce) return false; wantedOnce = true; void startModel(); return true; }
+    // Not on the device yet: only a tap on „Bedeutung“ offers the download, once per app run, with the size in the question.
+    if (!tapped || askedOnce || state.running || live) return false;
+    askedOnce = true;
+    if (!confirm(t('need', { mb: mb(state.total) }))) return false;
+    wantedOnce = true; void load(); return true;
   }
   function wire() {
     if (wired) return; wired = true;
     document.addEventListener('click', event => {
-      if (event.target.closest?.('#mode [data-m="mean"]')) setTimeout(() => { if (meaningOn()) wanted(); }, 0);
+      if (event.isTrusted && event.target.closest?.('#mode [data-m="mean"]')) setTimeout(() => { if (meaningOn()) wanted(true); }, 0);
     }, true);
     const field = document.getElementById('q');
     field?.addEventListener('input', () => { if (field.value.trim() && meaningOn()) wanted(); });
