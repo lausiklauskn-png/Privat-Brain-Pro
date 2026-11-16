@@ -388,6 +388,43 @@ try{
   ok('Buttons are flat, 26–32 px ('+small.join(', ')+' px)',small.length===4&&small.every(h=>h>=26&&h<=32));
   await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
   ok('"Zurück zum Postfach" returns to the normal mailbox',await panel.isHidden()&&await mail.locator('.live-mail').isVisible());
-  ok('No runtime errors',errors.length===0);
+  // Punkt 19 (Klaus 16.11.2026): im einzelnen Postfach bleibt die Liste beim Öffnen einer Mail an ihrer Stelle.
+  await page.setViewportSize({width:1280,height:900});
+  const idle=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  await idle();
+  await mail.locator('.live-mail select[aria-label=Mailkonto]').selectOption('11111111-1111-4111-8111-111111111111');
+  await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=40);
+  await idle();
+  const listState=()=>page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list'),c=l.querySelector('[data-live-uid][aria-current=true]'),lr=l.getBoundingClientRect(),cr=c?.getBoundingClientRect();
+    return {top:Math.round(l.scrollTop),max:l.scrollHeight-l.clientHeight,page:Math.round(scrollY+document.scrollingElement.scrollTop),current:c?.dataset.liveUid||'',inView:Boolean(cr&&cr.top>=lr.top-1&&cr.bottom<=lr.bottom+1)};});
+  const far=await page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list');l.scrollTop=l.scrollHeight;const rows=[...l.querySelectorAll('[data-live-uid]')];return {uid:rows.at(-3).dataset.liveUid,top:Math.round(l.scrollTop),page:Math.round(scrollY+document.scrollingElement.scrollTop)};});
+  await mail.locator(`.live-mail .mail-list [data-live-uid="${far.uid}"]`).click();
+  await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader h3'));await idle();
+  let at=await listState();
+  ok('Opening a mail far down keeps the list where it was ('+far.top+' → '+at.top+' px) and marks the opened row',far.top>300&&Math.abs(at.top-far.top)<2&&at.current===far.uid&&at.inView,{far,at});
+  ok('The page itself does not jump',at.page===far.page,{far,at});
+  const marked=await page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list'),c=l.querySelector('[aria-current=true]'),o=l.querySelector('[data-live-uid][aria-current=false]');return [getComputedStyle(c).backgroundColor,getComputedStyle(o).backgroundColor];});
+  ok('The opened row is visibly marked ('+marked.join(' / ')+')',marked[0]!==marked[1]&&!/rgba\(0, 0, 0, 0\)|transparent/.test(marked[0]));
+  // A row that is only half visible is brought fully into view when it is opened.
+  const half=await page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list'),rows=[...l.querySelectorAll('[data-live-uid]')],row=rows[20],lr=l.getBoundingClientRect();l.scrollTop+=row.getBoundingClientRect().top-lr.top+Math.round(row.getBoundingClientRect().height/2);const r=row.getBoundingClientRect();return {uid:row.dataset.liveUid,top:Math.round(l.scrollTop),x:r.left+r.width/2,y:(Math.max(r.top,lr.top)+r.bottom)/2,cut:Math.round(lr.top-r.top)};});
+  await page.mouse.click(half.x,half.y); // a real tap at the visible half; a locator click would scroll the row itself
+  await page.waitForFunction(uid=>document.querySelector('.live-mail .mail-list [aria-current=true]')?.dataset.liveUid===uid,half.uid);await idle();
+  at=await listState();
+  ok('A half-hidden row is moved fully into view, by a few pixels only ('+half.top+' → '+at.top+' px)',at.current===half.uid&&at.inView&&half.cut>5&&Math.abs(at.top-(half.top-half.cut))<3,{half,at});
+  // Phone: the list is hidden while the mail is read; coming back it stands where it was.
+  await page.setViewportSize({width:390,height:700});
+  await mail.locator('.live-mail .mail-reader [data-live-text=back]').click();
+  const phone=await page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list');l.scrollTop=l.scrollHeight;const rows=[...l.querySelectorAll('[data-live-uid]')];return {uid:rows.at(-2).dataset.liveUid,top:Math.round(l.scrollTop)};});
+  await mail.locator(`.live-mail .mail-list [data-live-uid="${phone.uid}"]`).click();
+  await page.waitForFunction(()=>document.querySelector('.live-mail').dataset.view==='reader'&&document.querySelector('.live-mail .mail-reader h3'));await idle();
+  await mail.locator('.live-mail .mail-reader [data-live-text=back]').click();
+  at=await listState();
+  ok('Phone: back from the mail, the list stands where it was ('+phone.top+' → '+at.top+' px) with the opened row in view',phone.top>300&&Math.abs(at.top-phone.top)<2&&at.current===phone.uid&&at.inView,{phone,at});
+  await page.setViewportSize({width:1280,height:900});
+  await mail.locator('.live-mail .mail-folders .mail-folder').nth(2).click();await idle();
+  await mail.locator('.live-mail .mail-folders .mail-folder').nth(1).click();
+  await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=40);await idle();
+  ok('Changing the folder still starts at the top',(await listState()).top===0);
+  ok('No runtime errors',errors.length===0,errors);
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
 console.log(`${count} all-accounts checks passed (simulated native transport; no real provider login).`);

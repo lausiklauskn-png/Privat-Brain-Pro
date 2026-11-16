@@ -733,7 +733,10 @@
       if(!entries.find(entry=>entry.id===viewKey)?.remote&&!['outbox','draft','sent','exported'].includes(viewKey))notice.textContent+=' · '+T('folderUnavailable');
       drawFolders();
     }
+    const place=list.scrollTop;
     drawList();
+    // Ein Ordnerwechsel beginnt oben; „Weitere laden“ bleibt, wo es war.
+    list.scrollTop=more?place:0;listPlace=list.scrollTop;
     if(native)accountTools.querySelector('[data-live-text=catalog]').disabled=!entries.find(e=>e.id===viewKey)?.remote||!items.length;
   }
   async function batchAction(type,target) {
@@ -749,7 +752,25 @@
     finally{await loadList();await refreshCounts();}
     if(failed)throw failed;
   }
+  // Klaus 16.11.2026: die Liste bleibt beim Neuzeichnen an ihrer Stelle; nur ein Ordnerwechsel (loadList) beginnt oben.
+  let listPlace = 0;
+  /** The opened row stays fully inside the list. Only the list itself is moved, never the page. */
+  function showCurrentRow() {
+    const row = list.querySelector('[data-live-uid][aria-current="true"]')?.closest(".mail-item");
+    if (!row || !list.clientHeight) return;
+    const frame = list.getBoundingClientRect(), box = row.getBoundingClientRect();
+    if (box.top < frame.top) list.scrollTop -= frame.top - box.top;
+    else if (box.bottom > frame.bottom) list.scrollTop += Math.min(box.bottom - frame.bottom, box.top - frame.top);
+    listPlace = list.scrollTop;
+  }
+  /** Back from a mail on a narrow screen: the list was hidden meanwhile and stands where it was again. */
+  function backToList() {
+    app.dataset.view = "list";
+    list.scrollTop = listPlace;
+    showCurrentRow();
+  }
   function drawNativeList() {
+    const place = list.scrollTop;
     list.replaceChildren();
     const search=el('input');search.type='search';search.placeholder=S('filter');search.setAttribute('aria-label',S('filter'));search.value=filterText;
     const actions=el('div','mail-list-actions'), rows=el('div'), count=el('p','mail-count');
@@ -790,6 +811,7 @@
     search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
     actions.append(all,trash,back,move);list.append(search,actions,count,rows);drawRows();selection();
     if(next)list.append(btn('more',()=>loadList(true)));
+    list.scrollTop=place;
   }
   async function showSavedRecord(record) {
     if(!leave())return;dirty=false;draft=null;app.dataset.view='reader';
@@ -799,6 +821,7 @@
   }
   function drawList() {
     if (native) return drawNativeList();
+    const place = list.scrollTop;
     list.replaceChildren();
     const filter = el("input");
     filter.type = "search";
@@ -831,6 +854,7 @@
     }
     list.append(rows);
     if (next) list.append(btn("more", () => loadList(true)));
+    list.scrollTop = place;
   }
   async function fetchMail(item) {
     return api(prefix() + "/messages/" + item.uid + query());
@@ -961,11 +985,13 @@
       action: "read",
     });
     item.flags = [...new Set([...item.flags, "\\Seen"])];
+    listPlace = list.scrollTop;
     drawList();
+    showCurrentRow();
     app.dataset.view = "reader";
     reader.replaceChildren(
       btn("back", () => {
-        if (leave()) app.dataset.view = "list";
+        if (leave()) backToList();
       }),
       el("h3", "", mail.subject),
       el("p", "mail-muted", mail.from + " → " + mail.to),
