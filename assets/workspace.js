@@ -195,7 +195,11 @@
   const chipBar=document.createElement('div');chipBar.className='explorer-chips';chipBar.id='explorerChips';chipBar.hidden=true;
   el('explorerFilter').closest('.explorer-toolbar').after(chipBar);
   contentLabel.hidden=true;contentLabel.style.display='none'; // Klaus 15.11.2026: der Inhalt wird von selbst mit durchsucht
-  function addChip(chip){if(!chips.some(c=>c.feld===chip.feld&&c.wert===chip.wert))chips.push(chip);folderPath='';revealSelectedPath=true;renderExplorer();}
+  // Generalprüfung 16.11.2026: eine Datei hat nur eine Kategorie und nur eine eigene Kategorie. Ein zweiter Tipp in derselben Liste
+  // wechselt deshalb (statt eine leere Liste zu zeigen); Kästchen verschiedener Sorten (Kategorie + Absender + Monat …) bleiben kombinierbar.
+  const chipSorte=c=>c.quelle||c.feld==='gruppe'||c.feld==='kategorie'?'kategorie':c.feld==='eigene'?'eigene':'';
+  function setChip(chip){const sorte=chipSorte(chip);if(chips.some(c=>c.feld===chip.feld&&c.wert===chip.wert))return;if(sorte)chips=chips.filter(c=>chipSorte(c)!==sorte);chips.push(chip);}
+  function addChip(chip){setChip(chip);folderPath='';revealSelectedPath=true;renderExplorer();}
   function chipNode(c,erkannt){const b=document.createElement('button');b.type='button';b.className='explorer-chip'+(erkannt?' explorer-chip-erkannt':'');b.dataset.feld=c.feld;b.dataset.wert=String(c.wert);
     b.textContent=c.label+' ×';b.title=erkannt?text('recognized')+' · '+text('chipWord'):text('chipRemove');b.setAttribute('aria-label',b.title+': '+c.label);
     b.onclick=()=>{if(erkannt)chipIgnore.add(c.wort);else chips=chips.filter(x=>x!==c);renderExplorer();el('explorerFilter').focus();};return b;}
@@ -347,14 +351,20 @@
   function allFiles(n){const out={files:[...n.files],vault:[...n.vault]};for(const k of n.kids){const s=allFiles(k);out.files.push(...s.files);out.vault.push(...s.vault);}return out;}
   // Use the same unique records as the explorer tree, rather than counting
   // duplicate source locations as additional files in the overview.
+  // Eine alte Kategorie, die auch eine Art des Sortier-Kerns ist (Rechnung, Vertrag, Angebot), umfasst beides: die alte Kategorie ODER die Art.
+  const ART_AUS_KATEGORIE={Rechnung:'Rechnung',Vertrag:'Vertrag',Angebot:'Angebot/Werbung'};
+  function gruppePasst(r,category){const art=ART_AUS_KATEGORIE[category];return String(r.category||'')===category||(!!art&&window.PBSuchFrage?.artVon?.(r)===art);}
   function categoryViews(all){
     const groups=new Map(),seen=new Set();
     for(const entry of all){
       if(seen.has(entry.r.hash))continue;seen.add(entry.r.hash);
       const category=String(entry.r.category||'');
-      if(!groups.has(category))groups.set(category,[]);groups.get(category).push(entry);
+      if(!groups.has(category))groups.set(category,[]);
     }
-    return [...groups].map(([category,list])=>({key:'category:'+encodeURIComponent(category),label:category||text('uncategorized'),category:true,count:list.length,files:list,match:r=>String(r.category||'')===category})).sort((a,b)=>a.label.localeCompare(b.label));
+    // Generalprüfung 16.11.2026: Zahl und Liste nach derselben Regel (gruppePasst) – die Kachel „Rechnung“ zählt, was der Tipp darauf zeigt.
+    const unique=all.filter(entry=>seen.delete(entry.r.hash));
+    return [...groups.keys()].map(category=>{const match=r=>gruppePasst(r,category),list=unique.filter(entry=>match(entry.r));
+      return {key:'category:'+encodeURIComponent(category),label:category||text('uncategorized'),category:true,count:list.length,files:list,match};}).sort((a,b)=>a.label.localeCompare(b.label));
   }
   function overviewSummary(){
     const nodes=buildModel(entries()),root=nodes.get(''),all=allFiles(root);
@@ -506,13 +516,12 @@
     const here=document.createElement('span');here.className='explorer-crumb-here';here.textContent=label;
     box.replaceChildren(back,sep,here);
   }
-  // Eine alte Kategorie, die auch eine Art des Kerns ist, wird zum Art-Kästchen; die übrigen bleiben Kategorie-Kästchen.
-  const ART_AUS_KATEGORIE={Rechnung:'Rechnung',Vertrag:'Vertrag',Angebot:'Angebot/Werbung'};
-  function categoryChip(label,key){const raw=decodeURIComponent(String(key).replace(/^category:/,''));const art=ART_AUS_KATEGORIE[raw];
+  // Ein Kategorie-Kästchen (feld „gruppe“) filtert hier nach gruppePasst – derselben Regel, nach der Kachel und linke Liste zählen.
+  function categoryChip(label,key){const raw=decodeURIComponent(String(key).replace(/^category:/,''));
     const name=String(label).startsWith('category:')?raw:label;
-    return art?{feld:'art',wert:art,label:raw,quelle:key}:{feld:'kategorie',wert:raw,label:name,quelle:key};}
+    return {feld:'gruppe',wert:raw,label:name,quelle:key};}
   function renderExplorer() {
-    if(folderPath.startsWith('category:')){const c=categoryChip(folderPath,folderPath);if(!chips.some(x=>x.feld===c.feld&&x.wert===c.wert))chips.push(c);folderPath='';}
+    if(folderPath.startsWith('category:')){setChip(categoryChip(folderPath,folderPath));folderPath='';}
     const all=entries(), tree=el('explorerTree'), files=el('explorerFiles');
     tree.replaceChildren(); files.replaceChildren();
     const nodes=buildModel(all);lastModel=nodes;
@@ -554,11 +563,17 @@
     // gesucht wird in Name, Feldern des Sortier-Kerns und von selbst im Inhalt. Ohne PBSuchFrage bleibt die alte Wortsuche.
     let list, vaultList=[], found=null;
     const searching=words.length||chips.length;
-    const pool=view?(()=>{const seen=new Set();return all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r));})():(!folderPath||searching)?(()=>{const a=allFiles(here);vaultList=a.vault;return a.files;})():null;
+    const gruppen=chips.filter(c=>c.feld==='gruppe'),sfChips=chips.filter(c=>c.feld!=='gruppe');
+    const inGruppen=(e,ohne)=>gruppen.every(c=>c===ohne||gruppePasst(e.r,String(c.wert)));
+    const pool0=view?(()=>{const seen=new Set();return all.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&view.match(e.r));})():(!folderPath||searching)?(()=>{const a=allFiles(here);vaultList=a.vault;return a.files;})():null;
+    const pool=pool0&&gruppen.length?pool0.filter(e=>inGruppen(e)):pool0;
     if(pool&&searching&&SF){
       const first=new Map();for(const e of pool)if(!first.has(e.r.hash))first.set(e.r.hash,e);
       const byHash=new Map(CATALOG.map(r=>[r.hash,r])),ctx=SF.kontext(CATALOG,r=>r.fromMail?byHash.get(r.fromMail):null);
-      found=SF.suchen([...first.values()].map(e=>e.r),el('explorerFilter').value,chips,ctx,chipIgnore);
+      found=SF.suchen([...first.values()].map(e=>e.r),el('explorerFilter').value,sfChips,ctx,chipIgnore);
+      // „Ohne Rechnung: n Treffer“ auch für ein Kategorie-Kästchen, wenn sonst nichts passt.
+      if(!found.treffer.length)for(const g of gruppen){const seen=new Set(),rest=pool0.filter(e=>!seen.has(e.r.hash)&&seen.add(e.r.hash)&&inGruppen(e,g)).map(e=>e.r);
+        const n=SF.suchen(rest,el('explorerFilter').value,sfChips,ctx,chipIgnore);if(n.treffer.length&&!n.teilweise)found.ohne.unshift({k:g,n:n.treffer.length});}
       found.ctx=ctx;list=found.treffer.map(t=>Object.assign(first.get(t.r.hash),{hit:t.p}));
       const needle=foldText(el('explorerFilter').value);vaultList=chips.length?[]:vaultList.filter(v=>!needle||foldText(v.name+' '+(v.subject||'')+' '+(v.from||'')).includes(needle));
     }else if(pool){list=pool.filter(e=>explorerMatch(e,words));

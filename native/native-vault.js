@@ -119,7 +119,8 @@
   const lineText = make('span'), lineButton = make('button', null, 'ghost'); lineButton.type = 'button';
   line.append(lineText, lineButton);
   document.getElementById('libraryStatus')?.after(line);
-  lineButton.onclick = () => window.PBWorkspace?.navigate('settings');
+  // Generalprüfung 16.11.2026: der Sprung von „Hinzufügen“ öffnet gleich das Thema „Tresor & Ablage“ (ohne Themen-Ansicht: die Seite wie bisher).
+  lineButton.onclick = () => { window.PBWorkspace?.navigate('settings'); window.PBEinstellungen?.oeffne?.('tresor'); };
 
   function place() {
     if (!state.configured) return '';
@@ -145,6 +146,12 @@
     list.replaceChildren(...words.limitList[lang()].map(s => make('li', s)));
     for (const [key, b] of Object.entries(buttons)) b.textContent = t(key === 'choose' && state.configured ? 'change' : key);
     buttons.unlock.hidden = !state.configured || state.unlocked;
+    // Generalprüfung 16.11.2026: gesperrt → „Entsperren“ ist der Hauptknopf und steht vorn; sonst wie bisher „Speicherort wählen“.
+    const gesperrt = Boolean(state.configured && !state.unlocked);
+    const klasse = (b, c) => { if (b.className !== c) b.className = c; };
+    klasse(buttons.choose, gesperrt ? 'ghost' : 'primary'); klasse(buttons.unlock, gesperrt ? 'primary' : 'ghost');
+    if (gesperrt) { if (row.firstElementChild !== buttons.unlock) row.prepend(buttons.unlock); }
+    else if (buttons.openExisting.nextElementSibling !== buttons.unlock) buttons.openExisting.after(buttons.unlock);
     buttons.lock.hidden = buttons.migrate.hidden = buttons.backupNow.hidden = !state.configured || !state.unlocked;
     for (const b of Object.values(buttons)) b.disabled = busy;
     let text = state.configured ? place() + ' · ' + t(state.unlocked ? 'unlocked' : 'locked') : t('none');

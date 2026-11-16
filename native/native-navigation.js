@@ -40,7 +40,7 @@
   }
   function buttons(){
     say(previous,t(0));close.textContent=t(0);say(next,t(1));external.textContent=x(1);share.textContent=x(0);
-    previous.disabled=pending||current===0;next.disabled=pending||current>=maximum;
+    previous.disabled=pending||(current===0&&!topicOpen());next.disabled=pending||current>=maximum;
     nav.setAttribute('aria-label',t(0)+' / '+t(1));
   }
   async function render(){
@@ -78,10 +78,14 @@
     history.pushState({pbPage:route.page,pbNative:{index:current,route}},'',urlFor(route));
     void render();
   }
+  // Generalprüfung 16.11.2026: ein geöffnetes Thema der Einstellungen ist ein eigener Schritt – Zurück führt zuerst zu „Alle Themen“.
+  const topicOpen=()=>Boolean(window.PBEinstellungen?.thema&&document.getElementById('panel-settings')?.classList.contains('on'));
+  addEventListener('pb-einstellungen-thema',()=>buttons());
   function dismiss(){
     const dialog=[...document.querySelectorAll('dialog[open]')].pop();
     if(dialog){const event=new Event('cancel',{cancelable:true});if(dialog.dispatchEvent(event))dialog.close();return true;}
     if(document.querySelector('#modalBg.on')){window.closeModal();return true;}
+    if(!route.viewer&&topicOpen()){window.PBEinstellungen.oeffne(null);return true;}
     return false;
   }
   function back(){

@@ -694,3 +694,25 @@ html[data-pb-theme] #filterbar .pb-filter-ende>select { max-width:170px!importan
 .topic-actions { flex-basis:100%; display:flex; flex-wrap:wrap; gap:6px; }
 .topic-more { flex-basis:100%; margin:0; }
 html[data-pb-theme] .pb-eigene-knopf, .pb-eigene-knopf { width:auto!important; max-width:100%; flex:0 0 auto; justify-self:start; align-self:flex-start; min-height:26px; padding:2px 9px!important; font-size:.8rem; }
+
+/* Generalprüfung 16.11.2026 (Kopfleiste) – eigener Block, nur angehängt.
+   1) Hauptleiste: Pfeil auf weicher Kante, solange links oder rechts noch Seiten liegen (native-toolbar.js setzt Lage und Sichtbarkeit). */
+.pb-leiste-pfeil { position:absolute; z-index:30; display:inline-flex; align-items:center; width:24px; min-width:0!important; min-height:0!important; margin:0; padding:0!important; border:0!important; border-radius:0!important; box-shadow:none!important; color:var(--ink); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.pb-leiste-pfeil[hidden] { display:none!important; }
+/* Der Pfeil wächst beim Antippen nicht (die allgemeine Regel „button:active“ würde ihn unter dem Finger wegschieben). */
+button.pb-leiste-pfeil:not(:disabled):active { transform:none; z-index:30; }
+.pb-leiste-pfeil.pb-leiste-rechts { justify-content:flex-end; background:linear-gradient(to right, transparent, var(--bg) 55%)!important; }
+.pb-leiste-pfeil.pb-leiste-links { justify-content:flex-start; background:linear-gradient(to left, transparent, var(--bg) 55%)!important; }
+.pb-leiste-pfeil>svg { width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+.pb-leiste-pfeil:hover>svg, .pb-leiste-pfeil:active>svg { stroke:var(--acc); }
+/* 2) Update-Fähnchen: im schmalen Fenster liegen Siegel und Internet-Lampe neben der Versionsnummer. Dort steht das Fähnchen
+      frei in der zweiten Zeile unter dem Namen (kein Sprung der Seite: es hängt am Namen, die Kopfleiste behält ihre Höhe). */
+@media (max-width:640px) {
+  header .brand h1 { position:relative; overflow:visible; }
+  header .brand h1 .pb-update-fahne { position:absolute; left:0; top:100%; z-index:2; min-height:20px; margin:0; padding:0 8px; font-size:.66rem; line-height:1.7; }
+}
+/* 8) Thema „Aussehen & App“: Verweis auf die Farbpalette. */
+.pb-thema-farben { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:8px 0 0; }
+.pb-thema-farben>button { min-height:28px; padding:2px 10px; font-size:.82rem; }
+.pb-thema-titel:focus { outline:none; }
+.pb-thema-titel:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
