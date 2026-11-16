@@ -114,6 +114,13 @@
     unsubAutoOff: ['Ausschalten', 'Turn off', 'Выключить', 'Wyłącz'],
     unsubStill: ['kommt weiter, obwohl abgemeldet am', 'still arriving although unsubscribed on', 'продолжает приходить после отписки', 'nadal przychodzi mimo wypisania'],
     unsubAgain: ['Nochmals abmelden', 'Unsubscribe again', 'Отписаться снова', 'Wypisz ponownie'],
+    // Klaus 16.11.2026: Mail aus der Leseansicht an die Familienakte (nur mit Pro-Tresor).
+    familienakte: ['An Familienakte', 'To Familienakte', 'В Familienakte', 'Do Familienakte'],
+    famStored: ['Beim Anbieter ist diese Mail gerade nicht zu laden. Hier liegt nur der gespeicherte Text ohne Anhänge; damit kann die Mail nicht vollständig übergeben werden. Nichts wurde übergeben.',
+      'This email cannot be loaded from the provider right now. Only the stored text without attachments is here, so the email cannot be passed on completely. Nothing was passed on.',
+      'Это письмо сейчас не удаётся загрузить у провайдера. Здесь есть только сохранённый текст без вложений, поэтому письмо нельзя передать полностью. Ничего не передано.',
+      'Tej wiadomości nie można teraz pobrać od dostawcy. Jest tu tylko zapisany tekst bez załączników, więc wiadomości nie da się przekazać w całości. Nic nie przekazano.'],
+    famBusy: ['Im Postfach läuft gerade etwas anderes. Bitte gleich noch einmal versuchen. Nichts wurde übergeben.', 'The mailbox is busy with something else. Please try again in a moment. Nothing was passed on.', 'Почта сейчас занята другим действием. Повторите чуть позже. Ничего не передано.', 'Poczta jest teraz zajęta czymś innym. Spróbuj za chwilę. Nic nie przekazano.'],
     unnamed: ['(ohne Absender)', '(no sender)', '(без отправителя)', '(bez nadawcy)'],
     noSubject: ['(kein Betreff)', '(no subject)', '(без темы)', '(bez tematu)']
   };
@@ -670,6 +677,19 @@
     if (readerWay && !r.mailUnsubbed && !suspect(r)) { const b = button(t('unsub') + ' · ' + wayLabel(readerWay), () => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address))); b.dataset.mailUnsubGo = readerWay.kind; tools.append(b); }
     else if (r.mailUnsubbed) tools.append(el('span', 'mail-muted', t('unsubbed') + ' ' + fmtDate(r.mailUnsubbed.at)));
     if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
+    // „An Familienakte“: die ganze Mail wird dafür vom Anbieter geholt. Geht das nicht, liegt hier nur der gespeicherte Text –
+    // dann wird nichts gesendet und das gesagt. Sichtbar nur mit Pro-Tresor.
+    if (window.PBLiveMail?.familienakte) {
+      const fam = button(t('familienakte'), async () => {
+        const l = r.mailRemotes?.[0];
+        const sum = l ? await PBLiveMail.familienakte([{ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, messageId: r.mailMessageId || '', date: r.date }]) : { gruende: { laden: 1 } };
+        const text = !sum ? t('famBusy') : sum.gruende?.laden ? t('famStored') : sum.text;
+        if (status) status.textContent = text;
+        alert(text);
+      });
+      fam.dataset.nativeSelection = 'familienakte'; fam.dataset.mailFamilienakte = ''; fam.dataset.mailCaption = 'true'; fam.hidden = true; tools.append(fam);
+      PBLiveMail.familienakteTresor().then(z => { fam.hidden = z?.vorhanden !== true; }, () => {});
+    }
     box.append(tools);
     box.append(storedText(r.mailBody || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});

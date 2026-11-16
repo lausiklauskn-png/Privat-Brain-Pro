@@ -10,7 +10,7 @@ const root=resolve(process.env.PB_PRO_TEST_ROOT||'www'),types={'.html':'text/htm
 const server=createServer(async(req,res)=>{if(req.url==='/seed'){res.setHeader('content-type','text/html');res.end('<!doctype html><html><body>Migration fixture</body></html>');return;}const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+sep)){res.writeHead(403).end();return;}try{const body=await readFile(path);res.writeHead(200,{'content-type':types[extname(path)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const digest=x=>createHash('sha256').update(x).digest('hex'),incoming=new Map(),saved=new Map(),pending=new Map(),sent=new Map(),targetMarks=new Set(),ack=[],invalid=[];
-let vaultId='vault-a',open=true,chosen=true,unlocks=0,alerts=[],failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[];
+let vaultId='vault-a',open=true,chosen=true,unlocks=0,alerts=[],failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[],failBegleit=false,sendCalls=0;
 const add=(id,name,text,overrides={})=>{const bytes=Buffer.from(text);incoming.set(id,{entryId:id,bytes,vertrag:{vertrag:'familienakte-uebergabe/1',id,quelle:'familienakte',ziel:'private-brain',dokumentId:'doc-'+id,name,mime:'text/plain',groesse:bytes.length,sha256:digest(bytes),...overrides}});};
 add('first','Brief.txt','Erfundener Brief zur privaten Ablage');
 let browser,page,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('PASS '+name);count++;};
@@ -50,7 +50,7 @@ try{
     const m=args.vertrag;
     const receipt=await page.evaluate(async id=>(await idbGetAll('proUebergaben')).find(r=>r.kind==='ausgang'&&r.vertrag.id===id),m.id);
     if(!receipt)invalid.push('send-'+m.id);
-    if(failSend)throw Error('removed disk');const bytes=saved.get(m.sha256)?.bytes;
+    sendCalls++;if(failSend||failBegleit&&m.name==='familienakte-uebergabe.json')throw Error('removed disk');const bytes=saved.get(m.sha256)?.bytes;
     assert.ok(bytes&&digest(bytes)===m.sha256&&bytes.length===m.groesse);
     sent.set(m.id,structuredClone(m));return{id:'entry-'+m.id,name:m.name,art:m.mime,groesse:m.groesse,sha256:m.sha256,schreiber:m.quelle};
    }
@@ -123,12 +123,24 @@ try{
   async original(args){mailDeviceCalls.push({method:'original',args});return{sourceBase64:window.bigMail||b64,groesse:0};},
   async openOriginal(args){mailDeviceCalls.push({method:'openOriginal',args});return{ok:true};}};},eml.toString('base64'));
  const ref={account:'konto-1',folder:'INBOX',validity:'77',uid:5},calls=()=>page.evaluate(()=>mailDeviceCalls),lastSent=()=>[...sent.values()].at(-1);
- const before=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Rechnung März.eml'}),ref);
- ok('Open Pro vault: the raw .eml with its PDF attachment goes to Familienakte through the canonical handover',sent.size===before+1&&lastSent().ziel==='familienakte'&&lastSent().mime==='message/rfc822'&&lastSent().name==='Rechnung März.eml'&&lastSent().sha256===digest(eml)&&saved.get(digest(eml))?.bytes.equals(eml)&&saved.get(digest(eml)).bytes.includes(pdf.toString('base64')));
+ // Vorsortierung (Klaus 16.11.2026): nach jeder Mail folgt ihre Begleitdatei als eigene Übergabe; Zuordnung über „bezug“.
+ const mails=()=>[...sent.values()].filter(m=>m.mime==='message/rfc822'),lastMail=()=>mails().at(-1),companions=()=>[...sent.values()].filter(m=>m.name==='familienakte-uebergabe.json');
+ const companionOf=m=>{const c=companions().filter(c=>c.bezug===m.id);return c.length===1?{vertrag:c[0],daten:JSON.parse(saved.get(c[0].sha256).bytes.toString())}:null;};
+ const before=mails().length;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Rechnung März.eml'}),ref);
+ ok('Open Pro vault: the raw .eml with its PDF attachment goes to Familienakte through the canonical handover',mails().length===before+1&&lastMail().ziel==='familienakte'&&lastMail().mime==='message/rfc822'&&lastMail().name==='Rechnung März.eml'&&lastMail().sha256===digest(eml)&&saved.get(digest(eml))?.bytes.equals(eml)&&saved.get(digest(eml)).bytes.includes(pdf.toString('base64')));
  ok('The .eml is fetched by account, folder, UIDVALIDITY and UID and nothing is shared outside',(await calls()).some(c=>c.method==='original'&&c.args.uid===5&&c.args.validity==='77')&&!(await calls()).some(c=>c.method==='openOriginal')&&/Familienakte weitergegeben/.test(alerts.at(-1)));
+ const first=companionOf(lastMail());
+ ok('After the mail its pre-sorting follows as a second handover in the same inbox: exact name, JSON, one entry bound to the .eml by name and SHA-256',Boolean(first)&&first.vertrag.ziel==='familienakte'&&first.vertrag.mime==='application/json'&&first.daten.vertrag==='familienakte-uebergabe/1'&&first.daten.dateien.length===1&&first.daten.dateien[0].name==='Rechnung März.eml'&&first.daten.dateien[0].sha256===digest(eml)&&[...sent.keys()].indexOf(first.vertrag.id)>[...sent.keys()].indexOf(lastMail().id));
+ ok('The companion carries the classification of the sort core for this mail, and the message says that it went along',first.daten.dateien[0].vorgang.startsWith('E-Mail')&&Boolean(first.daten.dateien[0].lebensbereich||first.daten.dateien[0].dokumentart||first.daten.dateien[0].hinweis)&&/Vorsortierung/.test(alerts.at(-1)));
+ ok('The companion names the handover of its mail in "bezug"',first.vertrag.bezug===lastMail().id&&first.vertrag.bezug!==first.vertrag.id);
+ // Absprache mit der Familienakte-Seite (16.11.2026): Name = Manifest-Name der Mail, sha256 = 64 kleine Hex-Zeichen über genau
+ // die .eml-Bytes, mindestens ein gefülltes Feld in den Grenzen, eigene Übergabekennung (nicht die der Mail).
+ const brauchbar=c=>{const e=c.daten.dateien[0],m=mails().find(m=>m.id===c.vertrag.bezug),felder=['lebensbereich','dokumentart','vorgang','hinweis'].filter(k=>e[k]!==undefined);
+  return e.name===m.name&&/^[a-f0-9]{64}$/.test(e.sha256)&&e.sha256===m.sha256&&e.sha256===digest(saved.get(m.sha256).bytes)&&felder.some(k=>e[k].length>0)&&felder.every(k=>typeof e[k]==='string'&&e[k].length<=(k==='hinweis'?1000:100)&&!/[\u0000-\u001f\u007f]/.test(e[k]))&&c.vertrag.id!==m.id&&/^[A-Za-z0-9_.-]{1,160}$/.test(c.vertrag.id)&&!mails().some(x=>x.id===c.vertrag.id);};
+ ok('The companion keeps the agreement with Familienakte: manifest name, SHA-256 of exactly the .eml bytes, a filled field within the limits, its own handover identifier',brauchbar(first));
  await page.evaluate(()=>{mailDeviceCalls.length=0;});const other=Buffer.from(eml.toString().replace('Anbei die Rechnung.','Anbei die korrigierte Rechnung.'));
  await page.evaluate(({ref,b64})=>PBProVerbund.mailAnFamilienakte(ref,{name:'Korrektur',sourceBase64:b64}),{ref,b64:other.toString('base64')});
- ok('An already loaded complete source is used without a second download',lastSent().sha256===digest(other)&&lastSent().name==='Korrektur.eml'&&!(await calls()).length);
+ ok('An already loaded complete source is used without a second download',lastMail().sha256===digest(other)&&lastMail().name==='Korrektur.eml'&&!(await calls()).length);
  chosen=false;await page.evaluate(()=>{mailDeviceCalls.length=0;});let count0=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Rechnung März.eml'}),ref);
  ok('Without a connected Pro vault one short line says so and the system chooser gets the .eml',sent.size===count0&&/normal geteilt/.test(alerts.at(-1))&&(await calls()).some(c=>c.method==='openOriginal'&&c.args.uid===5&&c.args.name==='Rechnung März.eml'));
  chosen=true;open=false;await page.evaluate(()=>{mailDeviceCalls.length=0;});
@@ -136,10 +148,37 @@ try{
  let waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Gesperrt.eml'}),ref);let asked=await ask('teilen');await waiting;
  ok('Locked Pro vault asks first; "share normally" sends nothing through the vault',asked&&sent.size===count0&&!open&&(await calls()).some(c=>c.method==='openOriginal'&&c.args.name==='Gesperrt.eml'));
  open=false;waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Gesperrt.eml'}),ref);asked=await ask('entsperren');await waiting;
- ok('Locked Pro vault: "unlock and pass on" opens it without a password field and hands the .eml over',asked&&open&&unlocks>0&&lastSent().name==='Gesperrt.eml'&&lastSent().sha256===digest(eml));
+ ok('Locked Pro vault: "unlock and pass on" opens it without a password field and hands the .eml over',asked&&open&&unlocks>0&&lastMail().name==='Gesperrt.eml'&&lastMail().sha256===digest(eml));
  await page.evaluate(()=>{window.bigMail=btoa('x'.repeat(20*1024*1024+1));});count0=sent.size;await page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Riesig.eml'}),ref);
  ok('A mail over 20 MiB is refused with a clear message and nothing is sent',sent.size===count0&&/20 MiB/.test(alerts.at(-1)));
  await page.evaluate(()=>{delete window.bigMail;});
+ const variant=word=>Buffer.from(eml.toString().replace('Anbei die Rechnung.','Anbei die '+word+' Rechnung.')),hand=(r,name,bytes,extra={})=>page.evaluate(({r,name,b64,extra})=>PBProVerbund.mailAnFamilienakte(r,{name,sourceBase64:b64,...extra}),{r,name,b64:bytes.toString('base64'),extra});
+ failBegleit=true;count0=mails().length;let res=await hand(ref,'Dritte',variant('dritte'));failBegleit=false;
+ ok('If only the companion fails the mail still counts as handed over and the message says "Mail übergeben, Vorsortierung nicht"',mails().length===count0+1&&lastMail().sha256===digest(variant('dritte'))&&!companionOf(lastMail())&&res.ergebnis==='uebergeben'&&res.begleit==='nein'&&/Mail übergeben, Vorsortierung nicht/.test(alerts.at(-1)));
+ await page.evaluate(()=>{window.realKern=window.PBSortierkern;window.PBSortierkern={felder:()=>({v:'probe',art:'',bereich:'',absender:'',frist:'',person:'',betrag:'',datum:''})};});
+ count0=sent.size;res=await hand(ref,'Vierte',variant('vierte'));await page.evaluate(()=>{window.PBSortierkern=realKern;});
+ ok('A mail without any classification gets no companion file',sent.size===count0+1&&lastSent().mime==='message/rfc822'&&res.ergebnis==='uebergeben'&&res.begleit==='keine'&&/Familienakte weitergegeben/.test(alerts.at(-1))&&!/Vorsortierung/.test(alerts.at(-1)));
+ const ref2={...ref,uid:6};
+ await page.evaluate(ref2=>{CATALOG.push({hash:'d'.repeat(64),name:'Abschlag',type:'message/rfc822',ext:'eml',mailBody:'Abschlag',mail:{from:'Stadtwerke <a@example.invalid>',to:'',subject:'Abschlag',date:''},mailRemote:{base:'android:private-brain-pro',...ref2},eigeneKategorie:'Abos',kern:{v:PBSortierkern.fassung,art:'Rechnung',artSicher:true,bereich:'Haus & Wohnung',absender:'Stadtwerke Beispielstadt',frist:'2026-12-01'},tags:[],dupes:[]});},ref2);
+ await hand(ref2,'Abschlag',variant('fünfte'));const own=companionOf(lastMail());
+ ok('A catalogued mail hands over its stored classification and its own category',Boolean(own)&&lastMail().dokumentId==='d'.repeat(64)&&own.daten.dateien[0].lebensbereich==='Haus & Wohnung'&&own.daten.dateien[0].dokumentart==='Rechnung'&&own.daten.dateien[0].vorgang==='E-Mail › Abos'&&/Frist: 2026-12-01/.test(own.daten.dateien[0].hinweis)&&own.daten.dateien[0].name==='Abschlag.eml');
+ // Mail-Liste: ohne Meldungen, nie doppelt, erst nach der Anhang-Prüfung, Tresor einmal fragen.
+ await page.evaluate(()=>{window.pruefAufrufe=0;});
+ const quiet=(bytes,geprueft)=>page.evaluate(({ref,b64,geprueft})=>PBProVerbund.mailAnFamilienakte(ref,{name:'Sechste',sourceBase64:b64,still:true,pruefen:async()=>{pruefAufrufe++;return geprueft;}}),{ref,b64:bytes.toString('base64'),geprueft});
+ let alerts0=alerts.length,sends0=sendCalls;count0=sent.size;res=await quiet(variant('sechste'),false);
+ ok('List mode: a mail whose attachments are not checked is not handed over',res.ergebnis==='fehler'&&res.grund==='ungeprueft'&&sendCalls===sends0&&sent.size===count0&&!(await out()).some(r=>r.vertrag.sha256===digest(variant('sechste'))));
+ res=await quiet(variant('sechste'),true);
+ ok('List mode hands the mail and its companion over without any dialog',res.ergebnis==='uebergeben'&&res.begleit==='ja'&&lastMail().sha256===digest(variant('sechste'))&&Boolean(companionOf(lastMail()))&&alerts.length===alerts0&&await page.evaluate(()=>pruefAufrufe)===2);
+ sends0=sendCalls;count0=sent.size;res=await quiet(variant('sechste'),true);
+ ok('List mode never sends twice: what the outbox knows as handed over is skipped, reported and not checked again',res.ergebnis==='schon'&&sendCalls===sends0&&sent.size===count0&&await page.evaluate(()=>pruefAufrufe)===2);
+ open=false;res=await Promise.race([quiet(variant('siebte'),true),new Promise(r=>setTimeout(()=>r({ergebnis:'wartet'}),5000))]);
+ ok('List mode with a locked vault sends nothing and asks nothing per mail',res.ergebnis==='fehler'&&res.grund==='gesperrt'&&sent.size===count0&&await page.locator('dialog[open]').count()===0&&alerts.length===alerts0);
+ const tresor=await page.evaluate(()=>PBProVerbund.familienakteTresor());
+ waiting=page.evaluate(()=>PBProVerbund.familienakteOeffnen());await page.locator('dialog[open][data-mail-familienakte-frage] [data-wahl=entsperren]').waitFor({timeout:5000});
+ const choices=await page.locator('dialog[open][data-mail-familienakte-frage] [data-wahl]').evaluateAll(n=>n.map(b=>b.dataset.wahl));asked=await ask('entsperren');
+ ok('For several mails the locked vault is asked once, with unlock or cancel only',tresor.vorhanden===true&&tresor.offen===false&&JSON.stringify(choices)==='["entsperren",""]'&&asked&&await waiting===true&&open);
+ chosen=false;const none=await page.evaluate(async()=>({t:await PBProVerbund.familienakteTresor(),o:await PBProVerbund.familienakteOeffnen()}));chosen=true;
+ ok('Without a Pro vault the list has nothing to offer and nothing is asked',none.t.vorhanden===false&&none.o===false&&await page.locator('dialog[open]').count()===0);
  // Datei-Fenster: ein katalogisierter Mail-Eintrag zeigt Text, weitergegeben wird an die Familienakte die echte .eml.
  await page.evaluate(ref=>{const r={hash:'c'.repeat(64),name:'Rechnung Mai',type:'message/rfc822',ext:'eml',mailBody:'Anbei die Rechnung.',mail:{from:'absender@example.invalid',to:'',subject:'Rechnung Mai',date:''},mailRemote:{base:'android:private-brain-pro',...ref},tags:[],dupes:[]};CATALOG.push(r);
   PBNavigation.open(new File(['Betreff: Rechnung Mai\n\nAnbei die Rechnung.'],'Rechnung Mai.txt',{type:'text/plain'}),r);},ref);
@@ -148,6 +187,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('dialog[open] p[role=status]')?.textContent.includes('Weitergegeben'));
  ok('File viewer: "To Pro app" sends a catalogued mail to Familienakte as the raw .eml, not as .txt',sent.size===count0+1&&lastSent().name==='Rechnung Mai.eml'&&lastSent().mime==='message/rfc822'&&lastSent().sha256===digest(eml)&&lastSent().dokumentId==='c'.repeat(64));
  await page.locator('dialog[open] button').filter({hasText:'Schließen'}).click();
+ ok('Every companion sent in this run keeps the agreement, and each belongs to exactly one mail',companions().length>=4&&companions().every(c=>mails().filter(m=>m.id===c.bezug).length===1&&brauchbar(companionOf(mails().find(m=>m.id===c.bezug))))&&new Set(companions().map(c=>c.id)).size===companions().length);
  ok('No source is falsely acknowledged or sent before its receipt commits',invalid.length===0);
  ok('No uncaught page errors in common-vault integration',errors.length===0);
  console.log(`${count} common-vault UI checks passed.`);

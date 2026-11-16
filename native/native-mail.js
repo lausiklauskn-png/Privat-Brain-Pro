@@ -115,7 +115,10 @@
     tresorMailAblegen: args => invoke('tresorMailAblegen', args),
     // „An Familienakte“: unveränderte Quelle der Mail (MIME mit Anhängen) für den gemeinsamen Pro-Tresor (höchstens 20 MiB).
     original: args => invoke('original', args),
-    shareFamilienakte: (args, meta) => window.PBProVerbund?.mailAnFamilienakte ? PBProVerbund.mailAnFamilienakte(args, meta) : invoke('openOriginal', {...args, name: meta?.name || ''}),
+    // meta.still (Mail-Liste): ohne Pro-Tresor geht nichts hinaus, auch nicht über die Teilen-Auswahl.
+    shareFamilienakte: (args, meta) => window.PBProVerbund?.mailAnFamilienakte ? PBProVerbund.mailAnFamilienakte(args, meta) : meta?.still ? Promise.resolve({ergebnis:'fehler',grund:'gesperrt'}) : invoke('openOriginal', {...args, name: meta?.name || ''}),
+    familienakteTresor: async () => window.PBProVerbund?.familienakteTresor ? PBProVerbund.familienakteTresor() : {vorhanden:false,offen:false},
+    familienakteOeffnen: async () => window.PBProVerbund?.familienakteOeffnen ? PBProVerbund.familienakteOeffnen() : false,
     forgetMessage: args => invoke('forgetMessage', args),
     // Sorting index for all accounts: headers since a date, then readable text of a few mails.
     index: async args => {
