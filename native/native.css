@@ -246,11 +246,13 @@ header.top .tools { display:flex;flex:none;flex-wrap:nowrap;align-items:center;g
 .native-import-reassurance { padding:10px 12px;margin:10px 0;font-size:.76rem;line-height:1.5;color:var(--mut);border:1px solid var(--line);border-radius:8px; }
 .native-import-reassurance b { font:inherit;font-weight:600;margin-right:4px; }
 .native-import-reassurance .ic { display:none; }
-#panel-intake .library-setup { padding:12px;margin-top:8px; }
-#panel-intake .library-setup h3 { font-size:1.1rem;margin:0 0 6px; }
-#panel-intake .library-setup p { font-size:.85rem;line-height:1.5;margin:6px 0; }
+/* Klaus 2026-11-16 (V3): one heading with one ⓘ, a large drop area, the library as one line. */
+.native-import-reassurance p { margin:0 0 6px; }
+.native-import-reassurance p:last-child { margin-bottom:0; }
+#panel-intake .add-box>.pb-help-heading>h2 { font-size:1.15rem;margin:0; }
+#panel-intake .add-box>.pb-help-content { margin:0 0 10px; }
 #panel-intake .btnrow button { min-height:40px;padding:6px 12px;font-size:.85rem; }
-#panel-intake .drop { padding:16px 12px; }
+#panel-intake .drop { padding:24px 12px; }
 #panel-intake>h2,#panel-intake .drop h2 { font-size:1.5rem;margin:8px 0; }
 #panel-intake .drop p,#panel-intake .hint { font-size:.85rem;line-height:1.5; }
 @media(max-width:900px) { #panel-dash .tiles { grid-template-columns:repeat(2,minmax(0,1fr)); } }
