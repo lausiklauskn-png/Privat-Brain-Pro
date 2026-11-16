@@ -34,6 +34,10 @@
     noAccounts: ['Noch kein Mailkonto eingetragen.', 'No mail account connected yet.', 'Почтовый аккаунт ещё не подключён.', 'Brak połączonego konta pocztowego.'],
     search: ['In allen Mails suchen', 'Search all emails', 'Поиск по всем письмам', 'Szukaj we wszystkich wiadomościach'],
     hits: ['Treffer', 'results', 'найдено', 'wyników'],
+    hitsFor: ['für „{q}“', 'for “{q}”', 'по запросу «{q}»', 'dla „{q}”'],
+    senderOne: ['Absender', 'sender', 'отправитель', 'nadawca'],
+    senderMany: ['Absender', 'senders', 'отправителей', 'nadawców'],
+    cleanSearch: ['Die Suche gilt in „Aufräumen“ nicht. Für Treffer „Liste“ oder „Absender“ wählen.', 'The search does not apply in “Clean up”. Choose “List” or “Senders” for results.', 'В «Уборке» поиск не действует. Для результатов выберите «Список» или «Отправители».', 'Wyszukiwanie nie działa w „Porządkach”. Aby zobaczyć wyniki, wybierz „Lista” lub „Nadawcy”.'],
     list: ['📋 Liste', '📋 List', '📋 Список', '📋 Lista'],
     senders: ['👤 Absender', '👤 Senders', '👤 Отправители', '👤 Nadawcy'],
     newest: ['Neueste', 'Newest', 'Новые', 'Najnowsze'],
@@ -575,10 +579,10 @@
     b.onclick = () => fn(); return b;
   }
   function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-  function matches(r) {
-    if (!query.trim()) return true;
+  function matches(r, text = query) {
+    if (!text.trim()) return true;
     const hay = fold(r.name + ' ' + (r.mail.from || '') + ' ' + (r.mailBody || ''));
-    return fold(query).split(/\s+/).filter(Boolean).every(word => hay.includes(word));
+    return fold(text).split(/\s+/).filter(Boolean).every(word => hay.includes(word));
   }
   const byOrder = (a, b) => view.order === 'newest' ? (b.date || 0) - (a.date || 0) : (a.date || 0) - (b.date || 0);
   function groups(mails) {
@@ -682,7 +686,8 @@
     }
     if (!last && !all.length) { panel.append(el('p', 'mail-muted', t('intro'))); return; }
     const search = el('input'); search.type = 'search'; search.placeholder = t('search'); search.setAttribute('aria-label', t('search')); search.value = query; search.dataset.mailAll = 'search';
-    search.oninput = () => { query = search.value; selectedSender = query ? null : selectedSender; openRecord = null; draw(); };
+    // Eine neue Suche beginnt über alle Absender; beim Weitertippen bleibt ein gewählter Absender, solange er Treffer hat (draw).
+    search.oninput = () => { const fresh = !query.trim() && search.value.trim(); query = search.value; if (fresh) selectedSender = null; openRecord = null; draw(); };
     const switches = el('div', 'mail-list-actions mail-all-switch');
     const modeList = button(t('list'), () => { view.mode = 'list'; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); });
     const modeSenders = button(t('senders'), () => { view.mode = 'senders'; openRecord = null; store(KEYS.view, view); draw(); });
@@ -698,17 +703,22 @@
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
     const current = openRecord && all.find(r => r.hash === openRecord);
     if (current) { panel.append(drawReader(current)); return; }
-    const mails = all.filter(matches).sort(byOrder);
+    const mails = all.filter(r => matches(r)).sort(byOrder);
     const list = el('div', 'mail-all-list');
-    if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits')));
-    if (view.mode === 'clean' && !query.trim()) drawClean(list);
-    else if (view.mode === 'senders' && !query.trim()) {
-      const g = selectedSender && groups(mails).find(x => x.key === selectedSender);
+    // Klaus 16.11.2026: „Liste / Absender“ gelten auch bei einer Suche. „Aufräumen“ ordnet nach Ablaufdatum, dort gilt die Suche nicht.
+    const bundles = view.mode === 'senders' ? groups(mails) : null;
+    if (query.trim() && view.mode === 'clean') { const p = el('p', 'mail-muted', t('cleanSearch')); p.dataset.mailCleanSearch = '1'; panel.append(p); }
+    else if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits') + ' ' + t('hitsFor').replace('{q}', query.trim())
+      + (bundles ? ' · ' + bundles.length + ' ' + t(bundles.length === 1 ? 'senderOne' : 'senderMany') : '')));
+    if (view.mode === 'clean') drawClean(list);
+    else if (bundles) {
+      const g = selectedSender && bundles.find(x => x.key === selectedSender);
+      if (!g) selectedSender = null;
       if (g) {
         list.append(button(t('back'), () => { selectedSender = null; draw(); }, 'mail-back'), el('h3', '', g.name), el('p', 'mail-muted', g.key + ' · ' + many(g.mails.length)));
         for (const r of g.mails.sort(byOrder)) list.append(mailRow(r));
       } else {
-        for (const x of groups(mails)) {
+        for (const x of bundles) {
           const row = el('div', 'mail-item'), b = el('button'); b.type = 'button'; b.dataset.mailSender = x.key;
           const subject=el('span', 'mail-subject', (x.list ? '📰 ' : '') + x.name);if(x.list)subject.dataset.pbGeneratedPrefix='mail';
           b.append(el('span', 'mail-avatar', x.name.slice(0, 1).toUpperCase()), subject,

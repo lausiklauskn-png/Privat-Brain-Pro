@@ -136,13 +136,34 @@ try{
   ok('Reader shows text, both accounts and the newsletter mark',(await panel.textContent()).includes('Gültig bis '+await page.evaluate(()=>dateIn(5)))&&(await panel.textContent()).includes('zweit@example.invalid')&&(await panel.textContent()).includes('📰'));
   // Search over all accounts
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  // Punkt 21 (Klaus 16.11.2026): „Liste / Absender“ gelten auch bei einer Suche.
+  await panel.locator('[data-mail-all=search]').fill('angebote');
+  ok('A new search starts over all senders, not inside the bundle that was open',await panel.locator('[data-mail-sender]').count()===1&&await panel.locator('[data-mail-all-id]').count()===0);
+  ok('Search in the sender view bundles the hits by sender and counts hits per sender',(await panel.locator('[data-mail-sender="news@aldi.invalid"]').textContent()).includes('2 Mails')&&await panel.locator('[data-mail-sender="news@aldi.invalid"]').evaluate(b=>b.parentElement.querySelector('.mail-count-badge').textContent)==='2');
+  ok('The hit line names hits, the search word and the number of senders',(await panel.locator('.mail-count').textContent())==='2 Treffer für „angebote“ · 1 Absender');
+  await panel.locator('[data-mail-sender="news@aldi.invalid"]').click();
+  ok('A tap on a sender during a search shows that sender\'s hits',JSON.stringify(await subjects())===JSON.stringify(['Angebote neu','Angebote alt'])&&await panel.locator('[data-mail-all=search]').inputValue()==='angebote');
+  await panel.locator('[data-mail-all=search]').fill('angebote neu');
+  ok('Typing on keeps the chosen sender while it still has hits',JSON.stringify(await subjects())===JSON.stringify(['Angebote neu'])&&(await panel.locator('.mail-count').textContent())==='1 Treffer für „angebote neu“ · 1 Absender');
+  await panel.locator('[data-mail-all=search]').fill('rechnung');
+  ok('A sender without hits gives way to the bundles that have some',await panel.locator('[data-mail-sender]').count()===1&&await panel.locator('[data-mail-sender="rechnung@stadtwerke.invalid"]').count()===1);
+  await panel.locator('[data-mail-all=search]').fill('o');
+  const bundled=await panel.locator('[data-mail-sender]').count();
+  await panel.locator('[data-mail-all=list]').click();
+  ok('"Liste" shows the same hits flat, the hit line without senders',bundled>1&&await panel.locator('[data-mail-sender]').count()===0&&await panel.locator('[data-mail-all-id]').count()>bundled&&/^\d+ Treffer für „o“$/.test(await panel.locator('.mail-count').textContent()));
+  await panel.locator('[data-mail-all=clean]').click();
+  ok('"Aufräumen" says that the search does not apply there and shows its sections',(await panel.locator('[data-mail-clean-search]').textContent())==='Die Suche gilt in „Aufräumen“ nicht. Für Treffer „Liste“ oder „Absender“ wählen.'&&await panel.locator('[data-mail-clean]').count()>=3&&await panel.locator('.mail-count').count()===0);
+  await panel.locator('[data-mail-all=senders]').click();
   await panel.locator('[data-mail-all=search]').fill('gultig');
   await capture(page,'4-suche');
-  ok('Word search finds across accounts and ignores umlauts',await panel.locator('[data-mail-all-id]').count()===1&&(await panel.textContent()).includes('1 Treffer'));
+  ok('Word search finds across accounts and ignores umlauts',await panel.locator('[data-mail-sender]').count()===1&&(await panel.textContent()).includes('1 Treffer'));
+  await panel.locator('[data-mail-all=list]').click();
+  ok('The same search as a flat list shows the one mail',await panel.locator('[data-mail-all-id]').count()===1&&(await panel.textContent()).includes('1 Treffer'));
   await panel.locator('[data-mail-all=search]').fill('rechnungsbetrag oktober');
   ok('All search words must occur (body and subject)',await panel.locator('[data-mail-all-id]').count()===1);
   ok('Search field keeps focus while typing',await page.evaluate(()=>document.activeElement?.dataset?.mailAll==='search'));
   await panel.locator('[data-mail-all=search]').fill('');
+  await panel.locator('[data-mail-all=senders]').click();
   // Re-run overwrites; user marks survive; server changes are taken over.
   await page.evaluate(async()=>{const r=CATALOG.find(x=>x.mailMessageId==='<aldi42@aldi.invalid>');r.mailStar=true;r.tags=['behalten'];await idbPut('catalog',r);
     const s=window.server['11111111-1111-4111-8111-111111111111'].INBOX.find(y=>y.uid===2000);s.flagged=true;s.seen=true;
@@ -155,6 +176,7 @@ try{
   // A check applies to the text and reconstructed headers that were actually checked.
   // An equal-length subject edit must invalidate the current check and rebuild searchable text.
   const checkedHash=await page.evaluate(()=>CATALOG.find(r=>r.mailMessageId==='<m1000@example.invalid>').hash);
+  await panel.locator('[data-mail-all=list]').click(); // die Probe sucht die eine Mail-Zeile, also flach
   await panel.locator('[data-mail-all=search]').fill('Notiz 0');
   await lesen(panel.locator(`[data-mail-all-id="${checkedHash}"]`));
   const textStatus=panel.locator('.pb-mail-index-status'),checkReport=page.locator('dialog.pb-check-report');
@@ -182,6 +204,7 @@ try{
   await checkReport.getByRole('button',{name:'Schließen',exact:true}).click();
   await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
   await panel.locator('[data-mail-all=search]').fill('');
+  await panel.locator('[data-mail-all=senders]').click();
   // Uncertain twins wait in "Doppelte"
   await navigateTo(page,'dupes');
   const dupes=page.locator('#pb-mail-dupes');
