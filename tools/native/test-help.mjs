@@ -72,25 +72,27 @@ try{
   browser=await chromium.launch({executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']});
   let{context,page,errors}=await fixture();
   await navigateTo(page,'intake');
-  for(const key of ['import-library','import-drop']){
+  // Klaus 2026-11-16 (Gerätetest 1.0.52, V3): „Hinzufügen“ has one heading with one ⓘ; the separate library box
+  // and its own ⓘ (import-library) are gone, its explanation stands behind the same ⓘ.
+  for(const key of ['import-drop']){
     ok(`${key}: routine import explanation starts collapsed`,await toggle(page,key).getAttribute('aria-expanded')==='false'&&await region(page,key).evaluate(node=>node.hidden));
     ok(`${key}: the accessible information button controls the actual preserved text`,await toggle(page,key).evaluate(button=>{const target=document.getElementById(button.getAttribute('aria-controls'));return Boolean(button.type==='button'&&button.getAttribute('aria-label')?.trim()&&button.querySelector('svg[aria-hidden=true]')&&target?.textContent.trim());}));
   }
-  ok('The Add tab names the view without a repeated visible title or third information row',await page.locator('#panel-intake').evaluate(panel=>{
-    const heading=panel.querySelector(':scope>h2[data-ws=add]');
-    return Boolean(heading?.hidden&&heading.getBoundingClientRect().height===0&&panel.getAttribute('aria-labelledby')===heading.id&&
-      !panel.querySelector(':scope>.pb-help-heading')&&panel.querySelectorAll('[data-pb-help-toggle]').length===2);
+  ok('The Add tab has one visible heading that names the panel, and one single information button',await page.locator('#panel-intake').evaluate(panel=>{
+    const heading=panel.querySelector('h2[data-ws=add]'),shown=[...panel.querySelectorAll('h2,h3')].filter(node=>node.getClientRects().length);
+    return Boolean(heading&&!heading.hidden&&shown.length===1&&shown[0]===heading&&panel.getAttribute('aria-labelledby')===heading.id&&
+      !panel.querySelector('.library-setup')&&panel.querySelectorAll('[data-pb-help-toggle]').length===1);
   }));
   ok('General reassurance shares the closed import help rather than another explanation box',await page.locator('.native-import-reassurance').evaluate(node=>node.closest('[data-pb-help-content]')?.dataset.pbHelpContent==='import-drop'&&node.closest('[data-pb-help-content]').hidden));
-  ok('The redundant drop title is hidden and its existing information button follows the import actions',await page.locator('#drop').evaluate(drop=>{
-    const heading=drop.querySelector(':scope>h2'),actions=drop.querySelector(':scope>.btnrow'),help=drop.querySelector('[data-pb-help-toggle=import-drop]');
-    return Boolean(heading?.hidden&&heading.getBoundingClientRect().height===0&&!drop.querySelector(':scope>.pb-help-heading')&&
-      actions?.lastElementChild===help&&['pickDir','pickFiles','pickMail'].every(id=>document.getElementById(id).parentElement===actions));
+  ok('The information button sits beside the heading; the import actions stand together in the drop area',await page.locator('#drop').evaluate(drop=>{
+    const row=drop.querySelector(':scope>.pb-help-heading'),heading=row?.querySelector(':scope>h2'),actions=drop.querySelector('#dropZone>.btnrow'),help=drop.querySelector('[data-pb-help-toggle=import-drop]');
+    return Boolean(heading&&heading.getBoundingClientRect().height>0&&row.lastElementChild===help&&
+      ['pickDir','pickFiles','pickMail'].every(id=>document.getElementById(id).parentElement===actions)&&!actions.querySelector('[data-pb-help-toggle]'));
   }));
   ok('Folder, file and mail import actions remain directly visible',await page.locator('#pickDir').isVisible()&&await page.locator('#pickFiles').isVisible()&&await page.locator('#pickMail').isVisible()&&await page.locator('#chooseLibrary').isVisible());
   ok('Storage and encryption status stay visible outside ordinary help',await page.locator('#libraryStatus').isVisible()&&await page.locator('#vaultLine').isVisible()&&await page.locator('#vaultLine').evaluate(node=>!node.closest('[data-pb-help-content]')&&Boolean(node.querySelector('button'))));
-  await page.evaluate(()=>{window.helpOriginalNodes={files:document.getElementById('pickFiles'),library:document.getElementById('chooseLibrary'),help:document.querySelector('[data-ws=libraryHelp]'),hint:document.getElementById('fsHint'),title:document.querySelector('#panel-intake>h2[data-ws=add]'),principles:document.querySelector('.native-import-reassurance')};PBHelp.refresh();PBHelp.refresh();});
-  ok('Refreshing help keeps original buttons, translated text nodes and IDs',await page.evaluate(()=>helpOriginalNodes.files===document.getElementById('pickFiles')&&helpOriginalNodes.library===document.getElementById('chooseLibrary')&&helpOriginalNodes.help===document.querySelector('[data-ws=libraryHelp]')&&helpOriginalNodes.hint===document.getElementById('fsHint')&&helpOriginalNodes.title===document.querySelector('#panel-intake>h2[data-ws=add]')&&helpOriginalNodes.principles===document.querySelector('.native-import-reassurance')));
+  await page.evaluate(()=>{window.helpOriginalNodes={files:document.getElementById('pickFiles'),library:document.getElementById('chooseLibrary'),help:document.querySelector('[data-ws=libraryHelp]'),hint:document.getElementById('fsHint'),title:document.querySelector('#panel-intake h2[data-ws=add]'),principles:document.querySelector('.native-import-reassurance')};PBHelp.refresh();PBHelp.refresh();});
+  ok('Refreshing help keeps original buttons, translated text nodes and IDs',await page.evaluate(()=>helpOriginalNodes.files===document.getElementById('pickFiles')&&helpOriginalNodes.library===document.getElementById('chooseLibrary')&&helpOriginalNodes.help===document.querySelector('[data-ws=libraryHelp]')&&helpOriginalNodes.hint===document.getElementById('fsHint')&&helpOriginalNodes.title===document.querySelector('#panel-intake h2[data-ws=add]')&&helpOriginalNodes.principles===document.querySelector('.native-import-reassurance')));
   const fileChooser=page.waitForEvent('filechooser');await page.locator('#pickFiles').click();const chooser=await fileChooser;
   ok('The original file button still invokes its real file chooser listener',chooser.isMultiple());await chooser.setFiles([]);
   await page.locator('#chooseLibrary').click();await page.waitForFunction(()=>fixtureFolderCalls.includes('library')&&!document.getElementById('chooseLibrary').disabled);
@@ -106,7 +108,7 @@ try{
   ok('Active import progress and its cancellation action never enter collapsed help',await page.locator('#prog').isVisible()&&await page.locator('#cancelSign').isVisible()&&await page.locator('#prog').evaluate(node=>!node.closest('[data-pb-help-content]')));
   await page.evaluate(()=>{document.getElementById('prog').style.display='none';fixtureFolderFails=true;});
   await page.locator('#chooseLibrary').click();await page.waitForFunction(()=>!document.getElementById('chooseLibrary').disabled&&document.getElementById('libraryStatus').textContent.includes('Freigabe prüfen'));
-  ok('A real folder failure remains visible beside the actions while help is closed',await page.locator('#libraryStatus').isVisible()&&await page.locator('#libraryStatus').evaluate(node=>!node.closest('[data-pb-help-content]'))&&await region(page,'import-library').evaluate(node=>node.hidden));
+  ok('A real folder failure remains visible beside the actions while help is closed',await page.locator('#libraryStatus').isVisible()&&await page.locator('#libraryStatus').evaluate(node=>!node.closest('[data-pb-help-content]'))&&await region(page,'import-drop').evaluate(node=>node.hidden));
   await navigateTo(page,'settings');
   for(const key of SETTINGS_HELP)ok(`${key}: optional settings explanation starts collapsed`,await toggle(page,key).getAttribute('aria-expanded')==='false'&&await region(page,key).evaluate(node=>node.hidden));
   ok('The large theme card is hidden while its original palette source remains complete',await page.locator('#pb-theme-settings').evaluate(panel=>panel.hidden&&panel.querySelectorAll('[data-pb-theme-choice]').length===4&&!panel.querySelector('[data-pb-help-toggle]'))&&await page.locator('#pb-palette-button').isVisible()&&await page.locator('#pb-input-language-setting').isVisible());
@@ -172,14 +174,14 @@ try{
       await page.setViewportSize({width,height:900});await layoutReady(page);
       ok(`${code} ${width}px: import starts with compact closed help and its functional controls fit`,await page.locator('#panel-intake').evaluate(panel=>{
         const controls=[...panel.querySelectorAll('#pickDir,#pickFiles,#pickMail,#chooseLibrary,[data-pb-help-toggle]')];
-        const drop=document.getElementById('drop'),actions=drop.querySelector(':scope>.btnrow'),help=drop.querySelector('[data-pb-help-toggle=import-drop]');
-        return panel.scrollWidth<=panel.clientWidth+1&&panel.querySelector(':scope>h2[data-ws=add]').hidden&&drop.querySelector(':scope>h2').hidden&&
-          !drop.querySelector(':scope>.pb-help-heading')&&actions.lastElementChild===help&&
+        const drop=document.getElementById('drop'),actions=drop.querySelector('#dropZone>.btnrow'),help=drop.querySelector('[data-pb-help-toggle=import-drop]');
+        return panel.scrollWidth<=panel.clientWidth+1&&drop.querySelector(':scope>.pb-help-heading>h2[data-ws=add]').getBoundingClientRect().height>0&&
+          drop.querySelector(':scope>.pb-help-heading').lastElementChild===help&&actions.contains(document.getElementById('pickFiles'))&&
           [...panel.querySelectorAll('[data-pb-help-content]')].every(node=>node.hidden)&&
-          controls.length===6&&controls.every(node=>{const rect=node.getBoundingClientRect();return rect.width>0&&rect.left>=0&&rect.right<=innerWidth;})&&
+          controls.length===5&&controls.every(node=>{const rect=node.getBoundingClientRect();return rect.width>0&&rect.left>=0&&rect.right<=innerWidth;})&&
           !document.getElementById('libraryStatus').closest('[data-pb-help-content]')&&!document.getElementById('vaultLine').closest('[data-pb-help-content]');
       }));
-      for(const key of ['import-library','import-drop']){
+      for(const key of ['import-drop']){
         await toggle(page,key).click();await region(page,key).waitFor({state:'visible'});await layoutReady(page);
         ok(`${code} ${width}px ${key}: the original explanation opens within the viewport`,await region(page,key).evaluate(node=>{
           const rect=node.getBoundingClientRect();return !node.hidden&&rect.width>0&&rect.height>0&&rect.left>=0&&rect.right<=innerWidth&&node.scrollWidth<=node.clientWidth+1;

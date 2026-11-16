@@ -92,6 +92,7 @@ ok('Modal schließt wieder', !(await page.$eval('#modalBg', el=>el.classList.con
 
 // --- Reorg-Vorschau öffnet ohne Fehler ---
 await page.click('.tab[data-tab="order"]');
+await page.click('#reorgTile');   // Klaus 2026-11-16 (V7): „Neu ordnen" klappt hinter der Kachel „+ Neuer Ordner" auf
 await page.click('#reorgPreview'); await page.waitForTimeout(120);
 ok('Neu-Ordnen-Vorschau öffnet', await page.$eval('#modalBg', el=>el.classList.contains('on')));
 await page.click('#modalBox [data-close]');

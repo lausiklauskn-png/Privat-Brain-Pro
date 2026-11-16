@@ -176,6 +176,42 @@
   button{transition:transform .12s, box-shadow .12s, filter .12s, outline-color .12s}
   .drop h2{margin:.1em 0 .3em;font-size:1.25rem}
   .drop p{color:var(--mut);margin:.2em 0 1em;font-size:.9rem}
+  /* Hinzufügen (Klaus 2026-11-16, Gerätetest 1.0.52 V3): eine Überschrift, eine große Ablagefläche,
+     die Ablage als eine Zeile, darunter „Gerade hinzugefügt". #drop ist der ganze Kopfbereich (Überschrift,
+     Erklärungen, Fläche, Fortschritt) und nimmt Dateien überall an; gestrichelt ist nur die Fläche #dropZone. */
+  .add-box>h2,.add-box>.pb-help-heading>h2{font-family:var(--head);font-size:1.25rem;margin:.2em 0 .5em}
+  .add-box>p{color:var(--mut);font-size:.9rem;margin:.3em 0 .6em}
+  .add-box>.hint{margin:.3em 0 .6em}
+  .add-box>.drop{margin-top:8px}
+  .drop .drop-title,.drop .drop-release{display:block;font-size:1.12rem;font-weight:700;color:var(--ink);line-height:1.3}
+  .drop .drop-sub{display:block;color:var(--mut);font-size:.84rem;margin:.25em 0 1em}
+  .drop .drop-release{display:none;margin-bottom:1em}
+  .add-box.hot>.drop{border-color:var(--acc2);background:var(--card2);box-shadow:0 0 0 3px var(--acc) inset}
+  .add-box.hot>.drop .drop-title,.add-box.hot>.drop .drop-sub{display:none}
+  .add-box.hot>.drop .drop-release{display:block}
+  .add-store{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:10px 2px 0;color:var(--mut);font-size:.84rem}
+  .add-store>p{margin:0;min-width:0}
+  .add-store>#libraryStatus{flex:1 1 240px}
+  .add-store>.btnrow{flex:0 1 auto;max-width:100%;gap:6px;justify-content:flex-end}
+  .add-store [hidden]{display:none!important}
+  .add-store button{font-size:.8rem;padding:4px 10px}
+  .add-store>#vaultLine{order:3;flex:1 1 100%;margin:0;font-size:inherit}
+  .add-store>#vaultLine>span{flex:1 1 220px;min-width:0}
+  .recent-added{margin:16px 2px 0}
+  .recent-added[hidden],.recent-added [hidden]{display:none}
+  .recent-added h3{font-size:.95rem;margin:0 0 6px}
+  .recent-added ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  .recent-added li{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;padding:5px 2px;border-bottom:1px solid var(--line);font-size:.86rem;min-width:0}
+  .ra-ext{flex:none;min-width:34px;box-sizing:border-box;text-align:center;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:1px 4px;text-transform:uppercase}
+  .ra-name{flex:1 1 150px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;color:var(--ink)}
+  #recentList button.ra-name{background:none;border:0;border-radius:0;padding:0;margin:0;min-height:0;font:inherit;font-size:inherit;box-shadow:none;cursor:pointer;text-decoration:underline;text-decoration-color:var(--mut2);text-underline-offset:3px}
+  #recentList button.ra-name:hover{text-decoration-color:var(--acc);background:none;transform:none}
+  .ra-tag{flex:0 1 auto;min-width:0;font-size:.74rem;line-height:1.35;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--ink);overflow-wrap:anywhere}
+  li[data-state=done] .ra-tag{border-color:var(--good)}
+  li[data-state=reading] .ra-tag{border-color:var(--warn)}
+  li[data-state=dup] .ra-tag,li[data-state=fail] .ra-tag{border-color:var(--bad)}
+  .ra-kern{flex:0 1 auto;min-width:0;color:var(--mut);font-size:.76rem;overflow-wrap:anywhere}
+  .recent-added .hint{margin-top:6px}
   .btnrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
   button,.btn{font-family:var(--sans);font-size:.9rem;cursor:pointer;border-radius:12px;
     border:1px solid var(--line);background:var(--card);color:var(--ink);
@@ -298,6 +334,24 @@
   .grp .ic{font-size:1.7rem}
   .grp .n{font-weight:700;margin-top:6px;color:var(--ink)}
   .grp .c{color:var(--mut);font-size:.8rem}
+  /* Kategorien (Klaus 2026-11-16, Gerätetest 1.0.52 V7): „Neuer Ordner" ist die letzte Kachel; ein Tipp klappt
+     darunter die schmale Leiste #reorgNote auf (Schema, Vorschau, Kopieren, Erklärung). */
+  button.grp{font:inherit;color:inherit;text-align:left;width:100%}
+  #groups{grid-auto-rows:1fr}
+  #groups > button.grp.grp-new{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;min-height:0;padding:10px 12px;text-align:left;border:2px dashed var(--acc)}
+  #groups > button.grp.grp-new[aria-expanded="true"]{background:var(--card2)}
+  .grp-new .n,.grp-new .c{display:block;line-height:1.3}
+  .grp-new .n{margin-top:0}
+  .reorg-bar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin:10px 0 0;padding:8px 12px}
+  .reorg-bar[hidden]{display:none}
+  .reorg-bar>h3,.reorg-bar>.pb-help-heading>h3{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .reorg-bar>label.field{flex:1 1 200px;max-width:340px;min-width:0;margin:0}
+  .reorg-bar>label.field select{width:100%;max-width:100%}
+  .reorg-bar>.btnrow{flex:0 1 auto;justify-content:flex-start;margin:0}
+  #reorgNote>.pb-help-heading{order:2;flex:0 0 auto;margin:0}
+  .reorg-bar>p,.reorg-bar>.hint,.reorg-bar>.pb-zielordner{order:3;flex:1 1 100%;min-width:0;margin:0}
+  .reorg-bar>p{color:var(--mut);font-size:.84rem;line-height:1.5}
+  .reorg-bar>.hint:empty{display:none}
 
   /* ---------- Stats / Einstellungen ---------- */
   .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:.86rem;margin:6px 0}
@@ -377,33 +431,31 @@
     <button class="tab" data-tab="dupes">🧹 <span data-i18n="tabDupes">Doppelte</span> <b id="dupCount"></b></button>
     <button class="tab" data-tab="settings">⚙️ <span data-i18n="tabSettings">Einstellungen</span></button>
   </div>
-  <section class="panel" id="panel-intake">
-    <h2 data-ws="add">Dateien hinzufügen</h2>
-    <div class="note library-setup">
-      <h3 data-ws="library">Deine lokale Ablage</h3>
-      <p data-ws="libraryHelp">Wähle einen separaten Ordner auf deinem Gerät. Neue Dateien werden dort als Kopie gespeichert; die Originale bleiben erhalten. Der Explorer öffnet die Kopien aus diesem Ordner.</p>
-      <div class="btnrow"><button id="chooseLibrary" class="primary" data-ws="choose">Ablageordner wählen</button><button id="pauseLibrary" class="ghost" data-ws="pause">Kopieren ausschalten</button></div>
-      <p id="libraryStatus" role="status"></p>
-    </div>
-  <div class="pillars">
-    <div class="pillar"><b><span class="ic">🛡️</span><span data-i18n="pillar1t">Liest nur</span></b><span data-i18n="pillar1">Arbeitet an einer Kopie im Browser. Deine Originale bleiben unangetastet.</span></div>
-    <div class="pillar"><b><span class="ic">✋</span><span data-i18n="pillar2t">Schlägt vor</span></b><span data-i18n="pillar2">Sortiert nur als Vorschlag. Es wird nichts gelöscht oder verschoben.</span></div>
-    <div class="pillar"><b><span class="ic">🗂️</span><span data-i18n="pillar3t">Bewegt nichts</span></b><span data-i18n="pillar3">Die Ordnung ist eine Ansicht über den unbewegten Originalen.</span></div>
-  </div>
-
-  <!-- EINWURF -->
-  <div id="drop" class="drop">
-    <h2 data-i18n="dropH">Dateien hineinwerfen</h2>
+  <section class="panel" id="panel-intake" aria-labelledby="pb-intake-heading">
+  <!-- EINWURF: Überschrift, Erklärungen (in der Pro-App hinter einem ⓘ), Ablagefläche, Fortschritt -->
+  <div id="drop" class="add-box">
+    <h2 id="pb-intake-heading" data-ws="add">Dateien hinzufügen</h2>
     <p data-i18n="dropP">Ordner oder Dateien wählen — die Box liest jede <b>einmal</b> und merkt sich ihre Bedeutung.</p>
-    <div class="btnrow">
-      <button id="pickDir" class="primary" data-i18n="pickDir" title="Zeiger auf den Ordner — es wird nichts kopiert">📁 Ordner verbinden</button>
-      <button id="pickFiles" class="ghost" data-i18n="pickFiles">📄 Dateien wählen</button>
-      <button id="pickMail" class="ghost" data-i18n="pickMail" title="Gmail-Export (.mbox) oder einzelne .eml — jede Mail wird ein Eintrag">📧 Mails (.mbox/.eml)</button>
-    </div>
+    <p data-ws="libraryHelp">Wähle einen separaten Ordner auf deinem Gerät. Neue Dateien werden dort als Kopie gespeichert; die Originale bleiben erhalten. Der Explorer öffnet die Kopien aus diesem Ordner.</p>
     <div class="hint" id="fsHint"></div>
     <div class="hint" data-i18n="dropDnd">💡 Tipp: Dateien oder ganze Ordner einfach hierher ziehen.</div>
-    <input id="fileInput" type="file" multiple style="display:none">
-    <input id="mailInput" type="file" accept=".mbox,.eml,message/rfc822" multiple style="display:none">
+    <div class="pillars">
+      <div class="pillar"><b><span class="ic">🛡️</span><span data-i18n="pillar1t">Liest nur</span></b><span data-i18n="pillar1">Arbeitet an einer Kopie im Browser. Deine Originale bleiben unangetastet.</span></div>
+      <div class="pillar"><b><span class="ic">✋</span><span data-i18n="pillar2t">Schlägt vor</span></b><span data-i18n="pillar2">Sortiert nur als Vorschlag. Es wird nichts gelöscht oder verschoben.</span></div>
+      <div class="pillar"><b><span class="ic">🗂️</span><span data-i18n="pillar3t">Bewegt nichts</span></b><span data-i18n="pillar3">Die Ordnung ist eine Ansicht über den unbewegten Originalen.</span></div>
+    </div>
+    <div id="dropZone" class="drop">
+      <strong class="drop-title" data-i18n="dropH">Dateien oder Ordner hierher ziehen</strong>
+      <span class="drop-sub" data-i18n="dropSub">PDF, Bild, Text, Mail oder ganze Ordner</span>
+      <strong class="drop-release" data-i18n="dropRelease">Loslassen zum Hinzufügen</strong>
+      <div class="btnrow">
+        <button id="pickFiles" class="primary" data-i18n="pickFiles">📄 Dateien wählen</button>
+        <button id="pickDir" class="ghost" data-i18n="pickDir" title="Zeiger auf den Ordner — es wird nichts kopiert">📁 Ordner verbinden</button>
+        <button id="pickMail" class="ghost" data-i18n="pickMail" title="Gmail-Export (.mbox) oder einzelne .eml — jede Mail wird ein Eintrag">📧 Mails (.mbox / .eml)</button>
+      </div>
+      <input id="fileInput" type="file" multiple style="display:none">
+      <input id="mailInput" type="file" accept=".mbox,.eml,message/rfc822" multiple style="display:none">
+    </div>
 
     <div class="prog" id="prog">
       <div class="bar"><i id="barFill"></i></div>
@@ -415,6 +467,19 @@
         <button id="cancelSign" class="ghost">Abbrechen</button>
       </div>
     </div>
+  </div>
+
+  <!-- ABLAGE: eine Zeile statt eines eigenen Kastens -->
+  <div class="add-store" id="libraryRow">
+    <p id="libraryStatus" role="status"></p>
+    <div class="btnrow"><button id="chooseLibrary" class="ghost" data-ws="choose">Ablageordner wählen</button><button id="pauseLibrary" class="ghost" data-ws="pause">Kopieren ausschalten</button></div>
+  </div>
+
+  <!-- GERADE HINZUGEFÜGT: nur diese Sitzung, wird nicht gespeichert -->
+  <div class="recent-added" id="recentAdded" hidden>
+    <h3 id="recentAddedH"><span id="recentTitle">Gerade hinzugefügt</span> · <span id="recentCount">0</span></h3>
+    <ul id="recentList" aria-labelledby="recentAddedH"></ul>
+    <p class="hint" id="recentMore" hidden></p>
   </div>
 
   </section>
@@ -501,25 +566,24 @@
   <!-- ORDNUNG -->
   <section class="panel" id="panel-order">
     <p class="hint" style="margin-top:0">Ein <b>Vorschlag</b>, wie deine Dateien nach Bedeutung zusammengehören. Es wird nichts verschoben — Klick öffnet die Gruppe.</p>
-    <div class="groups" id="groups"></div>
+    <div class="groups" id="groups"><button type="button" class="grp grp-new" id="reorgTile" aria-expanded="false" aria-controls="reorgNote"><span class="n"><span aria-hidden="true">+ </span><span data-i18n="reorgTileT">Neuer Ordner</span></span><span class="c" data-i18n="reorgTileS">Kopie, aufgeräumt</span></button></div>
     <div class="empty" id="orderEmpty"><div class="big">🗂️</div><p>Noch keine Dateien signiert.</p></div>
 
-    <div class="note" id="reorgNote" style="margin-top:20px">
-      <h3>🔀 Neu ordnen — Kopie in einen neuen Ordner</h3>
-      <p>Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>.
-      <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben.
-      Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)</p>
-      <label class="field" style="max-width:360px"><span>Schema</span>
+    <!-- Schmale Leiste, aufgeklappt von der Kachel „+ Neuer Ordner". Die Überschrift bleibt für Vorleser und als Name des ⓘ. -->
+    <div class="note reorg-bar" id="reorgNote" hidden>
+      <h3 data-i18n="reorgH">Neu ordnen — Kopie in einen neuen Ordner</h3>
+      <p data-i18n="reorgP">Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>. <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben. Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)</p>
+      <label class="field"><span data-i18n="reorgSchemeL">Schema</span>
         <select id="reorgScheme">
-          <option value="cat">Nach Kategorie (Rechnungen / Verträge / Fotos …)</option>
-          <option value="catyear">Nach Kategorie &amp; Jahr</option>
-          <option value="year">Nach Jahr</option>
-          <option value="type">Nach Dateityp</option>
+          <option value="cat" data-i18n="reorgCat">Nach Kategorie (Rechnungen / Verträge / Fotos …)</option>
+          <option value="catyear" data-i18n="reorgCatYear">Nach Kategorie &amp; Jahr</option>
+          <option value="year" data-i18n="reorgYear">Nach Jahr</option>
+          <option value="type" data-i18n="reorgType">Nach Dateityp</option>
         </select>
       </label>
-      <div class="btnrow" style="justify-content:flex-start">
-        <button id="reorgPreview" class="ghost">Vorschau ansehen</button>
-        <button id="reorgStart" class="primary">In neuen Ordner kopieren…</button>
+      <div class="btnrow">
+        <button id="reorgPreview" class="ghost" data-i18n="reorgPreviewB">Vorschau ansehen</button>
+        <button id="reorgStart" class="primary" data-i18n="reorgStartB">In neuen Ordner kopieren …</button>
       </div>
       <div id="reorgHint" class="hint"></div>
     </div>
@@ -1448,6 +1512,52 @@ async function signFile(entryFile, path, dirId){
 }
 function termFreq(toks){ const m={}; for(const t of toks){ const s=stem(t); m[s]=(m[s]||0)+1; } return m; }
 
+/* --- „Gerade hinzugefügt" (Klaus 2026-11-16, V3): was in dieser Sitzung eingelesen wurde, neueste oben.
+   Nur Zustände, die der Einlese-Lauf selbst meldet: läuft (mit dem Schritt aus PBImportStep), eingelesen,
+   gleicher Inhalt schon bekannt, Fehler mit dem Grund. Wird nicht gespeichert. --- */
+const RECENT=[], RECENT_MAX=30;
+const RECENT_T={
+  de:{title:"Gerade hinzugefügt",reading:"wird gelesen …",done:"eingelesen",dup:"doppelt, schon vorhanden",fail:"nicht gelesen",more:"… und {n} weitere",mails:"{n} Mails",open:"Öffnen"},
+  en:{title:"Just added",reading:"being read …",done:"read",dup:"duplicate, already there",fail:"not read",more:"… and {n} more",mails:"{n} mails",open:"Open"},
+  ru:{title:"Только что добавлено",reading:"читается …",done:"прочитан",dup:"дубликат, уже есть",fail:"не прочитан",more:"… и ещё {n}",mails:"писем: {n}",open:"Открыть"},
+  pl:{title:"Właśnie dodane",reading:"trwa odczyt …",done:"odczytano",dup:"duplikat, już jest",fail:"nie odczytano",more:"… i jeszcze {n}",mails:"e-maile: {n}",open:"Otwórz"}
+};
+function recentWords(){ return RECENT_T[String(document.documentElement.lang||"de").slice(0,2)]||RECENT_T.de; }
+function recentStart(item){
+  const path=String(item.path||item.file.name);
+  const e={name:item.file.name||path.split("/").pop(), path, state:"reading", step:"", hash:null, reason:"", mails:0};
+  RECENT.unshift(e); renderRecent(); return e;
+}
+function recentStep(e, word){ if(e && e.state==="reading" && e.step!==word){ e.step=word; renderRecent(); } }
+function recentEnd(e, state, extra){ if(!e) return; e.state=state; e.step=""; Object.assign(e, extra||{}); renderRecent(); }
+function renderRecent(){
+  const box=$("#recentAdded"); if(!box) return;
+  const w=recentWords(), list=$("#recentList"), more=$("#recentMore");
+  box.hidden=!RECENT.length;
+  $("#recentTitle").textContent=w.title; $("#recentCount").textContent=String(RECENT.length);
+  const el=(tag,cls,text)=>{ const n=document.createElement(tag); n.className=cls; n.textContent=text; return n; };
+  list.replaceChildren(...RECENT.slice(0,RECENT_MAX).map(e=>{
+    const li=document.createElement("li"); li.dataset.state=e.state;
+    const rec=e.hash ? CATALOG.find(r=>r.hash===e.hash) : null;
+    const ext=(extOf(e.name)||"").slice(0,5);
+    let name;
+    if(rec){ name=el("button","ra-name",e.name); name.type="button"; name.addEventListener("click",()=>window.openFile(e.hash)); name.setAttribute("aria-label",w.open+": "+e.name); }
+    else name=el("span","ra-name",e.name);
+    name.title=e.path;
+    const tag=e.state==="reading" ? (e.step ? e.step+" …" : w.reading)
+      : e.state==="done" ? w.done+(e.mails ? " · "+w.mails.replace("{n}",e.mails) : "")
+      : e.state==="dup" ? w.dup : w.fail+(e.reason ? ": "+e.reason : "");
+    li.append(el("span","ra-ext",ext||"–"), name, el("span","ra-tag",tag));
+    const kern=rec && rec.kern ? [rec.kern.art, rec.kern.bereich].filter(Boolean).join(" · ") : "";
+    if(kern) li.append(el("span","ra-kern",kern));
+    return li;
+  }));
+  const rest=RECENT.length-RECENT_MAX;
+  more.hidden=rest<=0; more.textContent=rest>0 ? w.more.replace("{n}",rest) : "";
+}
+window.addEventListener("pblang", renderRecent);
+window.addEventListener("pb-kern-geordnet", renderRecent);
+
 /* --- Fortschritt / Batch --- */
 async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   const accepted=[], durable=options.durable===true;
@@ -1469,11 +1579,13 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   window.PBImportStep=(fraction, phase)=>{
     const x=Math.max(0,Math.min(1,Number(fraction)||0));
     fill.style.width=((done+x)/total*100).toFixed(1)+"%";
-    if(phase!==undefined){ const w=(STEP[document.documentElement.lang]||STEP.de)[phase]; if(w) cur.textContent=stepName+" · "+w+" …"; }
+    if(phase!==undefined){ const w=(STEP[document.documentElement.lang]||STEP.de)[phase]; if(w){ cur.textContent=stepName+" · "+w+" …"; recentStep(recent, w); } }
   };
+  let recent=null;
   for(const it of items){
     if(cancelReq) break;
     cur.textContent = stepName = it.path||it.file.name;
+    recent = recentStart(it);
     diag("Import: "+(it.path||it.file.name)+" ("+((it.file.size||0)/1048576).toFixed(2)+" MB)");
     try{
       if(durable && !window.PBOriginals?.verifyStored) throw new Error("Dauerhafte Originalablage fehlt");
@@ -1485,11 +1597,13 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
         const n=durable?result.added:result;
         if(durable) hashes.push(...result.hashes);
         added += n; filed.push({kind:"mail",known:!n});
+        recentEnd(recent, n?"done":"dup", {mails:n, hash:hashes.length===1?hashes[0]:null});
       } else {
         const r = await signFile(local.file, local.path, local.dirId); r.skipped?skipped++:added++;
         const rec = r.rec || CATALOG.find(x=>x.hash===r.hash);
         hashes.push(r.hash);
         if(rec && window.PBWorkspace && PBWorkspace.kindOf) filed.push({kind:PBWorkspace.kindOf(rec, rec.path), known:!!r.skipped, hash:rec.hash});
+        recentEnd(recent, r.skipped?"dup":"done", {hash:r.hash});
       }
       if(durable){
         if(!hashes.length) throw new Error("Kein gespeicherter Eintrag");
@@ -1498,7 +1612,8 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
         accepted.push({index:done,sha256:local.file.pbOriginalHash,hashes});
       }
     }
-    catch(e){ failed++; diag("✗ Import fehlgeschlagen: "+(it.path||it.file.name)+" — "+(e&&e.message||e)); /* eine Datei darf nicht alles stoppen */ }
+    catch(e){ failed++; diag("✗ Import fehlgeschlagen: "+(it.path||it.file.name)+" — "+(e&&e.message||e)); /* eine Datei darf nicht alles stoppen */
+      recentEnd(recent, "fail", {reason:String(e&&e.message||e||"").slice(0,160), hash:null}); }
     done++;
     fill.style.width = (done/total*100).toFixed(1)+"%";
     cnt.textContent = `${done} / ${total}`;
@@ -1899,15 +2014,23 @@ function showBlob(file, r){
 /* ============================================================================
    6) ORDNUNG (virtuelle Gruppen)
    ========================================================================== */
+// „+ Neuer Ordner" (Klaus 2026-11-16, V7): dieselbe Kachel bleibt bei jedem Neuaufbau als letzte stehen.
+const REORG_TILE=$("#reorgTile");
+REORG_TILE.addEventListener("click", ()=>{
+  const note=$("#reorgNote"); note.hidden=!note.hidden;
+  REORG_TILE.setAttribute("aria-expanded", String(!note.hidden));
+  if(!note.hidden) note.scrollIntoView({block:"nearest"});
+});
 function renderGroups(){
   const box=$("#groups"), empty=$("#orderEmpty");
-  if(!CATALOG.length){ empty.style.display="block"; box.innerHTML=""; return; }
+  if(!CATALOG.length){ empty.style.display="block"; box.innerHTML=""; box.append(REORG_TILE); return; }
   empty.style.display="none";
   const m=new Map();
   for(const r of CATALOG){ m.set(r.category,(m.get(r.category)||0)+1); }
   const arr=[...m.entries()].sort((a,b)=>b[1]-a[1]);
   box.innerHTML = arr.map(([k,c])=>`<div class="grp" data-cat="${escapeHtml(k)}">
       <div class="ic">${catIcon(k)}</div><div class="n">${escapeHtml(k)}</div><div class="c">${c} Datei${c!==1?"en":""}</div></div>`).join("");
+  box.append(REORG_TILE);
 }
 function showGroup(cat){
   if(window.PBWorkspace) PBWorkspace.navigate("search");
@@ -2698,7 +2821,7 @@ $("#cancelSign").addEventListener("click", ()=>{ cancelReq=true; });
 document.addEventListener("click", e=>{
   const ob=e.target.closest(".openBtn"); if(ob){ openFile(ob.dataset.hash); return; }
   const sb=e.target.closest(".sumBtn"); if(sb){ const r=CATALOG.find(x=>x.hash===sb.dataset.hash); if(r) toast(r.summary||"—", 4500); return; }
-  const gp=e.target.closest(".grp"); if(gp){ showGroup(gp.dataset.cat); return; }
+  const gp=e.target.closest(".grp"); if(gp){ if(gp.dataset.cat!=null) showGroup(gp.dataset.cat); return; }   // die Kachel „+ Neuer Ordner" ist keine Gruppe
   const dr=e.target.closest(".dirRemove"); if(dr){ removeDir(dr.dataset.id); return; }
   const ki=e.target.closest(".kiBtn"); if(ki){ openKiModal(ki.dataset.hash); return; }
   const ta=e.target.closest("[data-tagadd]"); if(ta){ addTag(ta.dataset.hash); return; }
@@ -2803,7 +2926,7 @@ boot();
       pillar1t:"Liest nur", pillar1:"Arbeitet an einer Kopie im Browser. Deine Originale bleiben unangetastet.",
       pillar2t:"Schlägt vor", pillar2:"Sortiert nur als Vorschlag. Es wird nichts gelöscht oder verschoben.",
       pillar3t:"Bewegt nichts", pillar3:"Die Ordnung ist eine Ansicht über den unbewegten Originalen.",
-      dropH:"Dateien hineinwerfen", dropP:"Ordner oder Dateien wählen — die Box liest jede <b>einmal</b> und merkt sich ihre Bedeutung.",
+      dropH:"Dateien oder Ordner hierher ziehen", dropSub:"PDF, Bild, Text, Mail oder ganze Ordner", dropRelease:"Loslassen zum Hinzufügen", dropP:"Ordner oder Dateien wählen — die Box liest jede <b>einmal</b> und merkt sich ihre Bedeutung.",
       pickDir:"📁 Ordner verbinden", pickFiles:"📄 Dateien wählen",
       tabDash:"Übersicht", tabSearch:"Finden", tabOrder:"Katalog", tabDupes:"Doppelte", tabNet:"Netz", tabSettings:"Einstellungen",
       installH:"⬇ Als App installieren", installP:"Legt Private Brain als eigene App aufs Gerät. Bietet der Browser es gerade nicht an, sagt ein Tipp, warum — und wie es von Hand geht.",
@@ -2820,7 +2943,7 @@ boot();
       footer2:"Kein Abo · keine Cloud-Pflicht · Originale unantastbar.", footerImpressum:"Impressum & Datenschutz",
       tresorH:"🔒 Tresor — Verschlüsselung", tresorP:"Schütze deine privaten Inhalte mit einem Passwort (AES-256-GCM). Die App öffnet immer normal — der Tresor wird nur auf deinen Wunsch entsperrt. Dein Passwort bleibt <b>nur in diesem Browser</b> und wird nie ins Netz oder ins Repo geschrieben.",
       tresorSetup:"Tresor einrichten", tresorUnlock:"🔓 Entsperren", tresorLock:"🔒 Sperren", tresorRecover:"Passwort vergessen?",
-      dropDnd:"💡 Tipp: Dateien, Bilder, E-Mails oder ganze Ordner hierher ziehen — oder direkt auf einen Knopf ziehen, er geht dann auf.", vaultH:"🗄 Tresor-Inhalt", pickMail:"📧 Mails (.mbox/.eml)"
+      dropDnd:"💡 Tipp: Dateien, Bilder, E-Mails oder ganze Ordner hierher ziehen — oder direkt auf einen Knopf ziehen, er geht dann auf.", vaultH:"🗄 Tresor-Inhalt", pickMail:"📧 Mails (.mbox / .eml)", reorgH:"Neu ordnen — Kopie in einen neuen Ordner", reorgP:"Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>. <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben. Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)", reorgSchemeL:"Schema", reorgCat:"Nach Kategorie (Rechnungen / Verträge / Fotos …)", reorgCatYear:"Nach Kategorie &amp; Jahr", reorgYear:"Nach Jahr", reorgType:"Nach Dateityp", reorgPreviewB:"Vorschau ansehen", reorgStartB:"In neuen Ordner kopieren …", reorgTileT:"Neuer Ordner", reorgTileS:"Kopie, aufgeräumt"
     },
     en:{
       brandSub:"Your private second brain — find everything by <b>meaning</b>. Offline.",
@@ -2830,7 +2953,7 @@ boot();
       pillar1t:"Reads only", pillar1:"Works on a copy in the browser. Your originals stay untouched.",
       pillar2t:"Suggests", pillar2:"Sorts as a suggestion only. Nothing is deleted or moved.",
       pillar3t:"Moves nothing", pillar3:"The order is a view over the untouched originals.",
-      dropH:"Drop in your files", dropP:"Pick a folder or files — the box reads each one <b>once</b> and remembers its meaning.",
+      dropH:"Drag files or folders here", dropSub:"PDF, image, text, mail or whole folders", dropRelease:"Release to add", dropP:"Pick a folder or files — the box reads each one <b>once</b> and remembers its meaning.",
       pickDir:"📁 Connect folder", pickFiles:"📄 Choose files",
       tabDash:"Overview", tabSearch:"Find", tabOrder:"Catalog", tabDupes:"Duplicates", tabNet:"Network", tabSettings:"Settings",
       installH:"⬇ Install as app", installP:"Puts Private Brain on this device as its own app. If the browser is not offering it right now, a tap tells you why — and how to do it by hand.",
@@ -2847,7 +2970,7 @@ boot();
       footer2:"No subscription · no cloud required · originals untouched.", footerImpressum:"Imprint & Privacy",
       tresorH:"🔒 Vault — Encryption", tresorP:"Protect your private content with a password (AES-256-GCM). The app always opens normally — the vault only unlocks when you want. Your password stays <b>only in this browser</b> and is never written to the network or the repo.",
       tresorSetup:"Set up vault", tresorUnlock:"🔓 Unlock", tresorLock:"🔒 Lock", tresorRecover:"Forgot password?",
-      dropDnd:"💡 Tip: drag files, images, e-mails or whole folders here — or straight onto a button, it opens up.", vaultH:"🗄 Vault contents", pickMail:"📧 Mail (.mbox/.eml)"
+      dropDnd:"💡 Tip: drag files, images, e-mails or whole folders here — or straight onto a button, it opens up.", vaultH:"🗄 Vault contents", pickMail:"📧 Mail (.mbox / .eml)", reorgH:"Reorder — copy into a new folder", reorgP:"Puts the files, tidied by a scheme, into a <b>fresh, empty target folder</b>. <b>Your originals stay where they are, unchanged</b> — only <b>copies</b> are written. Undo = simply delete the new folder. (Needs a connected source folder.)", reorgSchemeL:"Scheme", reorgCat:"By category (invoices / contracts / photos …)", reorgCatYear:"By category &amp; year", reorgYear:"By year", reorgType:"By file type", reorgPreviewB:"Show preview", reorgStartB:"Copy into a new folder …", reorgTileT:"New folder", reorgTileS:"Copy, tidied up"
     },
     ru:{
       brandSub:"Твой личный второй мозг — находи всё по <b>смыслу</b>. Офлайн.",
@@ -2857,7 +2980,7 @@ boot();
       pillar1t:"Только читает", pillar1:"Работает с копией в браузере. Ваши оригиналы остаются нетронутыми.",
       pillar2t:"Предлагает", pillar2:"Сортирует только как предложение. Ничего не удаляется и не перемещается.",
       pillar3t:"Ничего не двигает", pillar3:"Порядок — это вид поверх нетронутых оригиналов.",
-      dropH:"Забросьте файлы", dropP:"Выберите папку или файлы — коробка читает каждый <b>один раз</b> и запоминает его смысл.",
+      dropH:"Перетащите сюда файлы или папки", dropSub:"PDF, изображение, текст, письмо или целые папки", dropRelease:"Отпустите, чтобы добавить", dropP:"Выберите папку или файлы — коробка читает каждый <b>один раз</b> и запоминает его смысл.",
       pickDir:"📁 Подключить папку", pickFiles:"📄 Выбрать файлы",
       tabDash:"Обзор", tabSearch:"Найти", tabOrder:"Каталог", tabDupes:"Дубликаты", tabNet:"Сеть", tabSettings:"Настройки",
       kpiFilesK:"Записей в каталоге", kpiFilesU:"подписано · находится по смыслу",
@@ -2873,7 +2996,7 @@ boot();
       footer2:"Без подписки · без облака · оригиналы нетронуты.", footerImpressum:"Выходные данные и конфиденциальность",
       tresorH:"🔒 Сейф — шифрование", tresorP:"Защитите свои личные данные паролем (AES-256-GCM). Приложение всегда открывается обычно — сейф разблокируется только по вашему желанию. Пароль остаётся <b>только в этом браузере</b> и никогда не отправляется в сеть или в репозиторий.",
       tresorSetup:"Настроить сейф", tresorUnlock:"🔓 Разблокировать", tresorLock:"🔒 Заблокировать", tresorRecover:"Забыли пароль?",
-      dropDnd:"💡 Совет: перетащите сюда файлы, изображения, письма или целые папки — или прямо на кнопку, она откроется.", vaultH:"🗄 Содержимое сейфа", pickMail:"📧 Почта (.mbox/.eml)"
+      dropDnd:"💡 Совет: перетащите сюда файлы, изображения, письма или целые папки — или прямо на кнопку, она откроется.", vaultH:"🗄 Содержимое сейфа", pickMail:"📧 Почта (.mbox / .eml)", reorgH:"Упорядочить заново — копия в новую папку", reorgP:"Раскладывает файлы по схеме в <b>новую пустую целевую папку</b>. <b>Оригиналы остаются на месте без изменений</b> — записываются только <b>копии</b>. Отмена = просто удалить новую папку. (Нужна подключённая исходная папка.)", reorgSchemeL:"Схема", reorgCat:"По категории (счета / договоры / фото …)", reorgCatYear:"По категории и году", reorgYear:"По году", reorgType:"По типу файла", reorgPreviewB:"Показать предпросмотр", reorgStartB:"Скопировать в новую папку …", reorgTileT:"Новая папка", reorgTileS:"Копия, по порядку"
     },
     pl:{
       brandSub:"Twój prywatny drugi mózg — znajduj wszystko według <b>znaczenia</b>. Offline.",
@@ -2883,7 +3006,7 @@ boot();
       pillar1t:"Tylko czyta", pillar1:"Pracuje na kopii w przeglądarce. Twoje oryginały pozostają nietknięte.",
       pillar2t:"Proponuje", pillar2:"Sortuje tylko jako propozycję. Nic nie jest usuwane ani przenoszone.",
       pillar3t:"Niczego nie przenosi", pillar3:"Porządek to widok na nietkniętych oryginałach.",
-      dropH:"Wrzuć pliki", dropP:"Wybierz folder lub pliki — pudełko czyta każdy <b>raz</b> i zapamiętuje jego znaczenie.",
+      dropH:"Przeciągnij tutaj pliki lub foldery", dropSub:"PDF, obraz, tekst, e-mail lub całe foldery", dropRelease:"Upuść, aby dodać", dropP:"Wybierz folder lub pliki — pudełko czyta każdy <b>raz</b> i zapamiętuje jego znaczenie.",
       pickDir:"📁 Połącz folder", pickFiles:"📄 Wybierz pliki",
       tabDash:"Przegląd", tabSearch:"Znajdź", tabOrder:"Katalog", tabDupes:"Duplikaty", tabNet:"Sieć", tabSettings:"Ustawienia",
       kpiFilesK:"Wpisy w katalogu", kpiFilesU:"podpisane · wyszukiwalne wg znaczenia",
@@ -2899,7 +3022,7 @@ boot();
       footer2:"Bez abonamentu · bez chmury · oryginały nietknięte.", footerImpressum:"Nota prawna i prywatność",
       tresorH:"🔒 Sejf — szyfrowanie", tresorP:"Chroń swoje prywatne treści hasłem (AES-256-GCM). Aplikacja zawsze otwiera się normalnie — sejf odblokowuje się tylko na Twoje życzenie. Hasło pozostaje <b>tylko w tej przeglądarce</b> i nigdy nie trafia do sieci ani do repozytorium.",
       tresorSetup:"Skonfiguruj sejf", tresorUnlock:"🔓 Odblokuj", tresorLock:"🔒 Zablokuj", tresorRecover:"Nie pamiętasz hasła?",
-      dropDnd:"💡 Wskazówka: przeciągnij tutaj pliki, zdjęcia, e-maile lub całe foldery — albo wprost na przycisk, otworzy się.", vaultH:"🗄 Zawartość sejfu", pickMail:"📧 Poczta (.mbox/.eml)"
+      dropDnd:"💡 Wskazówka: przeciągnij tutaj pliki, zdjęcia, e-maile lub całe foldery — albo wprost na przycisk, otworzy się.", vaultH:"🗄 Zawartość sejfu", pickMail:"📧 Poczta (.mbox / .eml)", reorgH:"Uporządkuj na nowo — kopia do nowego folderu", reorgP:"Układa pliki według schematu w <b>nowym, pustym folderze docelowym</b>. <b>Oryginały pozostają na miejscu bez zmian</b> — zapisywane są tylko <b>kopie</b>. Cofnięcie = po prostu usuń nowy folder. (Wymaga połączonego folderu źródłowego.)", reorgSchemeL:"Schemat", reorgCat:"Według kategorii (faktury / umowy / zdjęcia …)", reorgCatYear:"Według kategorii i roku", reorgYear:"Według roku", reorgType:"Według typu pliku", reorgPreviewB:"Pokaż podgląd", reorgStartB:"Skopiuj do nowego folderu …", reorgTileT:"Nowy folder", reorgTileS:"Kopia, uporządkowana"
     }
   };
 
