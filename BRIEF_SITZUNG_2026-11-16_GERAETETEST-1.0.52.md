@@ -49,6 +49,10 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
 21. **„Liste“/„Absender“ wirken bei einer Suche nicht** (92 Treffer, Umschalten ändert nichts).
 
 ### F. Überall
+24. **„Bitte warten …“ springt immer wieder an (z. B. in „Kategorien“), ohne dass man etwas getan hat** – sieht aus wie ein
+    Suchfeld. Ursache: die Warte-Zeile aus 1.0.52 reagierte auch auf Geräte-Aufrufe, die die App im Hintergrund selbst macht.
+    **Behoben am 16.11. (PR nach #146, nicht veröffentlicht):** Punkte nur noch, wenn der Nutzer höchstens 2 s vorher selbst etwas
+    getan hat, und mit Namen („Mail wird geladen …“, „Ablage wird gelesen …“). Probe `test-activity` 39. Kommt mit 1.0.53.
 22. **ⓘ-Kästen anfangs geschlossen** (Kategorien, Hinzufügen, Einstellungen …). Ändert die Regel aus Sitzung 3 („anfangs offen
     und gemerkt“) – Klaus' neuer Wunsch.
 23. Übersicht und „Dateien“-Grundaufbau: vorerst so lassen.

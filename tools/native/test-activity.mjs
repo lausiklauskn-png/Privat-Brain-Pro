@@ -148,11 +148,14 @@ try{
   ok('A job with known progress shows the percent and a thin bar',pct.visible&&pct.text==='45 %'&&pct.bar==='45%');
   const calls=await page.evaluate(async()=>{const row=document.getElementById('pb-activity'),seen=()=>!!row&&!row.hidden,send=(id,phase,name)=>dispatchEvent(new CustomEvent('pb-native-call',{detail:{id,phase,name}}));
     const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={};
-    send('q1','start','ProFiles.open');await wait(100);send('q1','end');await wait(600);out.quick=seen();
-    send('s1','start','ProFiles.open');await wait(700);out.slow=seen();send('s1','end');await wait(50);out.after=seen();
-    send('u1','start','ProUpdates.check');await wait(700);out.silent=seen();send('u1','end');return out;});
-  ok('A device call over half a second shows the circling dots, and they go away at the end',calls.slow&&!calls.after);
-  ok('Quick calls and silent background checks show nothing',!calls.quick&&!calls.silent);
+    const tap=()=>dispatchEvent(new PointerEvent('pointerdown'));
+    await wait(2100);send('b1','start','ProVault.liste');await wait(700);out.background=seen();send('b1','end');await wait(50);
+    tap();send('q1','start','ProFiles.open');await wait(100);send('q1','end');await wait(600);out.quick=seen();
+    tap();send('s1','start','ProMail.message');await wait(700);out.slow=seen();out.label=row?.querySelector('.pb-activity-text')?.textContent||'';send('s1','end');await wait(50);out.after=seen();
+    tap();send('u1','start','ProUpdates.check');await wait(700);out.silent=seen();send('u1','end');return out;});
+  ok('A device call over half a second after a tap shows the circling dots, and they go away at the end',calls.slow&&!calls.after);
+  ok('The waiting line names what loads („Mail wird geladen …“)',calls.label==='Mail wird geladen …');
+  ok('Background calls without a tap, quick calls and silent checks show nothing (Klaus 16.11.)',!calls.background&&!calls.quick&&!calls.silent);
   ok('No unhandled app errors occur across overlap, failures and progress changes',errors.length===0||console.log(errors));
   console.log(`${count} activity feedback checks passed (real DOM/CSS; synthetic asynchronous work, not a physical-device speed claim).`);
 }finally{await browser?.close();}

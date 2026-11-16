@@ -111,10 +111,27 @@
   // Jeder Aufruf ans Gerät (Android/Windows), der länger als eine halbe Sekunde dauert, zeigt die kreisenden Punkte.
   // Stille Hintergrund-Abfragen bleiben still; Aufgaben mit eigenem Fortschrittsbalken zeigen ihn weiter selbst.
   const SILENT = /^(ProUpdates\.check|ProNetwork\.getState|ProDevice\.getInfo|ProVault\.(state|tresorZustand|diagnose)|ProMeaning\.getState|ProSemantic\.getState|ProCaption\.getState|ProShare\.(pending|take)|ProSpeech\.inputs|.*\.addListener|.*\.removeAllListeners)$/;
+  // Klaus 16.11.2026: „Bitte warten …“ sprang ohne Grund an (Hintergrund-Aufrufe der App). Jetzt nur, wenn der Nutzer gerade
+  // selbst etwas getan hat (Tipp, Taste – höchstens 2 s vorher), und mit dem Namen dessen, was lädt.
+  let lastGesture = 0;
+  for (const type of ['pointerdown', 'keydown', 'submit', 'change']) addEventListener(type, () => { lastGesture = Date.now(); }, true);
+  const WHAT = {
+    ProMail: ['Mail wird geladen …', 'Loading email …', 'Загрузка письма …', 'Wczytywanie wiadomości …'],
+    ProVault: ['Ablage wird gelesen …', 'Reading storage …', 'Чтение хранилища …', 'Odczyt magazynu …'],
+    ProFiles: ['Datei wird geöffnet …', 'Opening file …', 'Открытие файла …', 'Otwieranie pliku …'],
+    ProFolders: ['Ordner wird gelesen …', 'Reading folder …', 'Чтение папки …', 'Odczyt folderu …'],
+    ProSemantic: ['Bedeutungsmodell arbeitet …', 'Meaning model working …', 'Модель смысла работает …', 'Model znaczeń pracuje …'],
+    ProMeaning: ['Bedeutungsmodell arbeitet …', 'Meaning model working …', 'Модель смысла работает …', 'Model znaczeń pracuje …'],
+    ProCaption: ['Bildbeschreibung arbeitet …', 'Image description working …', 'Описание изображения …', 'Opis obrazu …'],
+    ProProtect: ['Prüfung läuft …', 'Checking …', 'Проверка …', 'Sprawdzanie …'],
+    ProShare: ['Teilen wird vorbereitet …', 'Preparing share …', 'Подготовка …', 'Przygotowanie …']
+  };
+  const langIndex = () => Math.max(0, ['de', 'en', 'ru', 'pl'].indexOf(String(document.documentElement.lang || 'de').slice(0, 2)));
   const calls = new Map();
   function callStart(id, name) {
-    if (SILENT.test(name)) return;
-    calls.set(id, setTimeout(() => { calls.set(id, start({})); }, 500));
+    if (SILENT.test(name) || Date.now() - lastGesture > 2000) return;
+    const what = WHAT[String(name).split('.')[0]];
+    calls.set(id, setTimeout(() => { calls.set(id, start(what ? {label: () => what[langIndex()]} : {})); }, 500));
   }
   function callEnd(id) {
     const c = calls.get(id); if (c === undefined) return; calls.delete(id);
