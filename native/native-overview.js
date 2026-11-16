@@ -40,6 +40,12 @@
   document.getElementById('groups').after(topicSection);
   // Klaus 2026-11-16 (V7): the tile „+ Neuer Ordner“ (index.html) stays the last one in the row of category tiles.
   const newFolderTile=document.getElementById('reorgTile');
+  // Generalprüfung 16.11.2026: Esc klappt die Leiste unter „+ Neuer Ordner“ zu und setzt den Fokus zurück auf die Kachel (wie in den Menüs der Dateien).
+  const newFolderBar=document.getElementById('reorgNote');
+  for(const node of [newFolderTile,newFolderBar])node?.addEventListener('keydown',event=>{
+    if(event.key!=='Escape'||event.defaultPrevented||!newFolderTile||!newFolderBar||newFolderBar.hidden)return;
+    event.preventDefault();event.stopPropagation();newFolderTile.click();newFolderTile.focus();
+  });
   let expanded=false,folderSignature='',categorySignature='',pending=false;
   more.addEventListener('click',()=>{expanded=true;folderSignature='';render();});
   function row(entry,category=false){

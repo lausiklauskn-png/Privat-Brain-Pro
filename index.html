@@ -640,7 +640,7 @@
       <p><span class="flag ok">immer offline</span> Fingerabdruck (SHA-256), Text aus Text-/PDF-/Office-Dateien, Bedeutungs-Vektor, Vorfilter &amp; Ranking, Katalog — alles in diesem Browser.</p>
       <p><span id="ocrFlag" class="flag opt">prüfe…</span> Bild-Texterkennung (OCR) über die Browser-Texterkennung, wenn dein Gerät sie mitbringt.</p>
       <p><span id="embFlag" class="flag opt">prüfe…</span> <b>Echtes Bedeutungs-Modell</b> (neuronales Modell, mehrsprachig) — versteht Synonyme &amp; Umschreibung, nicht nur Stichworte. <span id="embInfo" style="color:var(--mut2)"></span></p>
-      <p><span class="flag opt">optional · BYOK</span> Stärkere Cloud-KI (EU) für OCR/Bedeutung — nur wenn du unten bewusst einen Schlüssel hinterlegst. <b>Standard: aus.</b></p>
+      <p><span class="flag opt">optional · BYOK</span> Stärkere Cloud-KI (EU) für OCR/Bedeutung — nur wenn du in den Einstellungen im Thema „KI-Schlüssel (EU)“ bewusst einen Schlüssel hinterlegst. <b>Standard: aus.</b></p>
     </div>
 
     <div class="note">
@@ -668,7 +668,7 @@
       <label class="field" style="max-width:520px"><span data-i18n="capServer">Modell-Server-Adresse (optional, z. B. dein Hetzner)</span>
         <input id="capServer" type="text" placeholder="https://dein-server.de/pb-models/" autocomplete="off"></label>
       <p class="hint" data-i18n="capServerP">Leer lassen = Modell liegt neben der App (models/). Für ein fremdes Gerät das Modell auf deinen Server legen und hier die Adresse eintragen — der Server muss dann CORS erlauben (Header <code>Access-Control-Allow-Origin</code>). Siehe <code>tools/fetch-image-model.sh</code>.</p>
-      <div class="switch"><input type="checkbox" id="capEU"><label for="capEU" style="color:var(--mut);font-size:.84rem">Bessere Beschreibung per <b>Mistral (EU)</b> — beschreibt auf <b>Deutsch</b> und deutlich genauer. Nutzt deinen Mistral-Schlüssel (oben); es wird <b>nur die verkleinerte Arbeitskopie</b> (max 1024 px) an Mistral (EU) gesendet, nie das Original. Das lokale Modell bleibt als Offline-Rückfall.</label></div>
+      <div class="switch"><input type="checkbox" id="capEU"><label for="capEU" style="color:var(--mut);font-size:.84rem">Bessere Beschreibung per <b>Mistral (EU)</b> — beschreibt auf <b>Deutsch</b> und deutlich genauer. Nutzt deinen Mistral-Schlüssel (Einstellungen, Thema „KI-Schlüssel (EU)“); es wird <b>nur die verkleinerte Arbeitskopie</b> (max 1024 px) an Mistral (EU) gesendet, nie das Original. Das lokale Modell bleibt als Offline-Rückfall.</label></div>
       <div class="hint" id="capStatus"></div>
       <div class="hint" id="capCrashHint" style="display:none">⚠️ Der Modell-Start ist <b>abgestürzt oder wiederholt gescheitert</b> („Can't create a session" = zu wenig Speicher — das lokale Modell ist für dieses Gerät zu schwer). Der Auto-Start ist pausiert, damit die App stabil bleibt. <b>Tipp:</b> Schalte oben „Bessere Beschreibung per Mistral (EU)" ein — die braucht das lokale Modell nicht. <button id="capRetry" class="ghost" style="margin-left:6px">▶ Trotzdem erneut versuchen</button></div>
     </div>
