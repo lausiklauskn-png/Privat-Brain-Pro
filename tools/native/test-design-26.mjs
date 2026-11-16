@@ -149,8 +149,12 @@ try{
   ok('Point 7: after a restart closed stays closed and open stays open',await help('catalog').getAttribute('aria-expanded')==='false'&&await help('tresor').getAttribute('aria-expanded')==='true');
   await help('catalog').click();
   ok('Point 7: a second tap opens it again',await help('catalog').getAttribute('aria-expanded')==='true');
-  await tabTo('order');await page.waitForSelector('[data-pb-help-toggle="reorg"]');
-  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, open at first',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
+  // Klaus 2026-11-16 (Gerätetest 1.0.52, V7): „Neu ordnen“ is a slim bar behind the tile „+ Neuer Ordner“. Whether its ⓘ
+  // starts open or closed is not this line's business: it sets the state itself.
+  await tabTo('order');await page.waitForSelector('[data-pb-help-toggle="reorg"]',{state:'attached'});
+  await page.locator('#reorgTile').click();
+  if(await help('reorg').getAttribute('aria-expanded')!=='true')await help('reorg').click();
+  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, in the bar the tile „Neuer Ordner“ opens',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
   ok('Point 7/9: no runtime errors',errors.length===0);
   await page.close();
   // ---------- Klaus 2026-10-26: keine Emojis, Strichgrafiken („kein Bilderbuch“) ----------
@@ -236,6 +240,7 @@ try{
   const cats=await page.evaluate(()=>{const g=[...document.querySelectorAll('#groups > .grp')];const why=document.querySelector('.pb-cats-why');return {n:g.length,pb:g.every(x=>x.classList.contains('pb-3d')&&/inset/.test(getComputedStyle(x).boxShadow)),why:why?.textContent||'',inHelp:!!why?.closest('[data-pb-help-static="categories-intro"]'),toggle:!!document.querySelector('#panel-order [data-pb-help-toggle="categories-intro"]')};});
   ok('Point 6a: the category tiles are the same 3D buttons',cats.n>=2&&cats.pb);
   ok('Point 6a: one sentence behind ⓘ tells Übersicht, Explorer and Kategorien apart',/Übersicht/.test(cats.why)&&/Explorer/.test(cats.why)&&/Kategorien/.test(cats.why)&&cats.inHelp&&cats.toggle);
+  await page.locator('#reorgTile').click();   // V7: the bar with „Vorschau ansehen“ opens from the tile „+ Neuer Ordner“
   await page.locator('#reorgPreview').click();
   await page.waitForFunction(()=>document.querySelector('[data-pb-zielordner="preview"] .pb-zo-tree'),null,{timeout:8000}).catch(()=>{});
   const prev=await page.evaluate(()=>{const b=document.querySelector('.pb-zielordner'),row=document.querySelector('#reorgNote .btnrow'),tree=b?.querySelector('.pb-zo-tree');
@@ -259,7 +264,7 @@ try{
     await p3.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
     await p3.addInitScript(()=>{delete window.showDirectoryPicker;});
     await p3.goto(origin);await p3.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBWorkspace&&window.PBZielordner);
-    await p3.evaluate(()=>window.PBWorkspace.navigate('order'));await p3.locator('#reorgStart').click();
+    await p3.evaluate(()=>window.PBWorkspace.navigate('order'));await p3.locator('#reorgTile').click();await p3.locator('#reorgStart').click();
     await p3.waitForFunction(()=>document.querySelector('[data-pb-zielordner="note"]'),null,{timeout:8000}).catch(()=>{});
     ok('Point 6a: without folder access the note says what is missing instead of staying silent',await p3.evaluate(()=>/Ordnerzugriff/.test(document.querySelector('[data-pb-zielordner="note"]')?.textContent||'')));
     await p3.close();

@@ -38,6 +38,8 @@
   section.append(title,summary,info,heading,list,more);dashboard.querySelector('.tiles').after(section);
   const topicSection=make('section','pb-overview-topics'),topicTitle=make('h3'),topicList=make('div','groups');topicSection.append(topicTitle,topicList);
   document.getElementById('groups').after(topicSection);
+  // Klaus 2026-11-16 (V7): the tile „+ Neuer Ordner“ (index.html) stays the last one in the row of category tiles.
+  const newFolderTile=document.getElementById('reorgTile');
   let expanded=false,folderSignature='',categorySignature='',pending=false;
   more.addEventListener('click',()=>{expanded=true;folderSignature='';render();});
   function row(entry,category=false){
@@ -72,9 +74,10 @@
       const signature=language+'|'+JSON.stringify([data.categories,data.topics]),groups=document.getElementById('groups');
       // The legacy refresh still renders these groups. Restore the native
       // folder links even when an unchanged catalog was simply refreshed.
-      const owned=groups.children.length===data.categories.length&&[...groups.children].every(child=>child.matches('button[data-overview-category]'));
+      const tiles=[...groups.children].filter(child=>child!==newFolderTile);
+      const owned=tiles.length===data.categories.length&&tiles.every(child=>child.matches('button[data-overview-category]'))&&(!newFolderTile||groups.lastElementChild===newFolderTile);
       if(signature!==categorySignature||!owned){
-        categorySignature=signature;groups.replaceChildren(...data.categories.map(entry=>row(entry,true)));
+        categorySignature=signature;groups.replaceChildren(...data.categories.map(entry=>row(entry,true)),...(newFolderTile?[newFolderTile]:[]));
         document.getElementById('orderEmpty').style.display=data.categories.length?'none':'block';
         setText(topicTitle,w.more);topicSection.hidden=!data.topics.length;topicList.replaceChildren(...data.topics.map(entry=>row(entry,true)));
       }

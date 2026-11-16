@@ -334,6 +334,24 @@
   .grp .ic{font-size:1.7rem}
   .grp .n{font-weight:700;margin-top:6px;color:var(--ink)}
   .grp .c{color:var(--mut);font-size:.8rem}
+  /* Kategorien (Klaus 2026-11-16, Gerätetest 1.0.52 V7): „Neuer Ordner" ist die letzte Kachel; ein Tipp klappt
+     darunter die schmale Leiste #reorgNote auf (Schema, Vorschau, Kopieren, Erklärung). */
+  button.grp{font:inherit;color:inherit;text-align:left;width:100%}
+  #groups{grid-auto-rows:1fr}
+  #groups > button.grp.grp-new{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;min-height:0;padding:10px 12px;text-align:left;border:2px dashed var(--acc)}
+  #groups > button.grp.grp-new[aria-expanded="true"]{background:var(--card2)}
+  .grp-new .n,.grp-new .c{display:block;line-height:1.3}
+  .grp-new .n{margin-top:0}
+  .reorg-bar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin:10px 0 0;padding:8px 12px}
+  .reorg-bar[hidden]{display:none}
+  .reorg-bar>h3,.reorg-bar>.pb-help-heading>h3{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .reorg-bar>label.field{flex:1 1 200px;max-width:340px;min-width:0;margin:0}
+  .reorg-bar>label.field select{width:100%;max-width:100%}
+  .reorg-bar>.btnrow{flex:0 1 auto;justify-content:flex-start;margin:0}
+  #reorgNote>.pb-help-heading{order:2;flex:0 0 auto;margin:0}
+  .reorg-bar>p,.reorg-bar>.hint,.reorg-bar>.pb-zielordner{order:3;flex:1 1 100%;min-width:0;margin:0}
+  .reorg-bar>p{color:var(--mut);font-size:.84rem;line-height:1.5}
+  .reorg-bar>.hint:empty{display:none}
 
   /* ---------- Stats / Einstellungen ---------- */
   .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:.86rem;margin:6px 0}
@@ -548,25 +566,24 @@
   <!-- ORDNUNG -->
   <section class="panel" id="panel-order">
     <p class="hint" style="margin-top:0">Ein <b>Vorschlag</b>, wie deine Dateien nach Bedeutung zusammengehören. Es wird nichts verschoben — Klick öffnet die Gruppe.</p>
-    <div class="groups" id="groups"></div>
+    <div class="groups" id="groups"><button type="button" class="grp grp-new" id="reorgTile" aria-expanded="false" aria-controls="reorgNote"><span class="n"><span aria-hidden="true">+ </span><span data-i18n="reorgTileT">Neuer Ordner</span></span><span class="c" data-i18n="reorgTileS">Kopie, aufgeräumt</span></button></div>
     <div class="empty" id="orderEmpty"><div class="big">🗂️</div><p>Noch keine Dateien signiert.</p></div>
 
-    <div class="note" id="reorgNote" style="margin-top:20px">
-      <h3>🔀 Neu ordnen — Kopie in einen neuen Ordner</h3>
-      <p>Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>.
-      <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben.
-      Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)</p>
-      <label class="field" style="max-width:360px"><span>Schema</span>
+    <!-- Schmale Leiste, aufgeklappt von der Kachel „+ Neuer Ordner". Die Überschrift bleibt für Vorleser und als Name des ⓘ. -->
+    <div class="note reorg-bar" id="reorgNote" hidden>
+      <h3 data-i18n="reorgH">Neu ordnen — Kopie in einen neuen Ordner</h3>
+      <p data-i18n="reorgP">Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>. <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben. Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)</p>
+      <label class="field"><span data-i18n="reorgSchemeL">Schema</span>
         <select id="reorgScheme">
-          <option value="cat">Nach Kategorie (Rechnungen / Verträge / Fotos …)</option>
-          <option value="catyear">Nach Kategorie &amp; Jahr</option>
-          <option value="year">Nach Jahr</option>
-          <option value="type">Nach Dateityp</option>
+          <option value="cat" data-i18n="reorgCat">Nach Kategorie (Rechnungen / Verträge / Fotos …)</option>
+          <option value="catyear" data-i18n="reorgCatYear">Nach Kategorie &amp; Jahr</option>
+          <option value="year" data-i18n="reorgYear">Nach Jahr</option>
+          <option value="type" data-i18n="reorgType">Nach Dateityp</option>
         </select>
       </label>
-      <div class="btnrow" style="justify-content:flex-start">
-        <button id="reorgPreview" class="ghost">Vorschau ansehen</button>
-        <button id="reorgStart" class="primary">In neuen Ordner kopieren…</button>
+      <div class="btnrow">
+        <button id="reorgPreview" class="ghost" data-i18n="reorgPreviewB">Vorschau ansehen</button>
+        <button id="reorgStart" class="primary" data-i18n="reorgStartB">In neuen Ordner kopieren …</button>
       </div>
       <div id="reorgHint" class="hint"></div>
     </div>
@@ -1982,15 +1999,23 @@ function showBlob(file, r){
 /* ============================================================================
    6) ORDNUNG (virtuelle Gruppen)
    ========================================================================== */
+// „+ Neuer Ordner" (Klaus 2026-11-16, V7): dieselbe Kachel bleibt bei jedem Neuaufbau als letzte stehen.
+const REORG_TILE=$("#reorgTile");
+REORG_TILE.addEventListener("click", ()=>{
+  const note=$("#reorgNote"); note.hidden=!note.hidden;
+  REORG_TILE.setAttribute("aria-expanded", String(!note.hidden));
+  if(!note.hidden) note.scrollIntoView({block:"nearest"});
+});
 function renderGroups(){
   const box=$("#groups"), empty=$("#orderEmpty");
-  if(!CATALOG.length){ empty.style.display="block"; box.innerHTML=""; return; }
+  if(!CATALOG.length){ empty.style.display="block"; box.innerHTML=""; box.append(REORG_TILE); return; }
   empty.style.display="none";
   const m=new Map();
   for(const r of CATALOG){ m.set(r.category,(m.get(r.category)||0)+1); }
   const arr=[...m.entries()].sort((a,b)=>b[1]-a[1]);
   box.innerHTML = arr.map(([k,c])=>`<div class="grp" data-cat="${escapeHtml(k)}">
       <div class="ic">${catIcon(k)}</div><div class="n">${escapeHtml(k)}</div><div class="c">${c} Datei${c!==1?"en":""}</div></div>`).join("");
+  box.append(REORG_TILE);
 }
 function showGroup(cat){
   if(window.PBWorkspace) PBWorkspace.navigate("search");
@@ -2781,7 +2806,7 @@ $("#cancelSign").addEventListener("click", ()=>{ cancelReq=true; });
 document.addEventListener("click", e=>{
   const ob=e.target.closest(".openBtn"); if(ob){ openFile(ob.dataset.hash); return; }
   const sb=e.target.closest(".sumBtn"); if(sb){ const r=CATALOG.find(x=>x.hash===sb.dataset.hash); if(r) toast(r.summary||"—", 4500); return; }
-  const gp=e.target.closest(".grp"); if(gp){ showGroup(gp.dataset.cat); return; }
+  const gp=e.target.closest(".grp"); if(gp){ if(gp.dataset.cat!=null) showGroup(gp.dataset.cat); return; }   // die Kachel „+ Neuer Ordner" ist keine Gruppe
   const dr=e.target.closest(".dirRemove"); if(dr){ removeDir(dr.dataset.id); return; }
   const ki=e.target.closest(".kiBtn"); if(ki){ openKiModal(ki.dataset.hash); return; }
   const ta=e.target.closest("[data-tagadd]"); if(ta){ addTag(ta.dataset.hash); return; }
@@ -2903,7 +2928,7 @@ boot();
       footer2:"Kein Abo · keine Cloud-Pflicht · Originale unantastbar.", footerImpressum:"Impressum & Datenschutz",
       tresorH:"🔒 Tresor — Verschlüsselung", tresorP:"Schütze deine privaten Inhalte mit einem Passwort (AES-256-GCM). Die App öffnet immer normal — der Tresor wird nur auf deinen Wunsch entsperrt. Dein Passwort bleibt <b>nur in diesem Browser</b> und wird nie ins Netz oder ins Repo geschrieben.",
       tresorSetup:"Tresor einrichten", tresorUnlock:"🔓 Entsperren", tresorLock:"🔒 Sperren", tresorRecover:"Passwort vergessen?",
-      dropDnd:"💡 Tipp: Dateien, Bilder, E-Mails oder ganze Ordner hierher ziehen — oder direkt auf einen Knopf ziehen, er geht dann auf.", vaultH:"🗄 Tresor-Inhalt", pickMail:"📧 Mails (.mbox / .eml)"
+      dropDnd:"💡 Tipp: Dateien, Bilder, E-Mails oder ganze Ordner hierher ziehen — oder direkt auf einen Knopf ziehen, er geht dann auf.", vaultH:"🗄 Tresor-Inhalt", pickMail:"📧 Mails (.mbox / .eml)", reorgH:"Neu ordnen — Kopie in einen neuen Ordner", reorgP:"Legt die Dateien nach einem Schema aufgeräumt in einen <b>frischen, leeren Zielordner</b>. <b>Deine Originale bleiben unverändert liegen</b> — es werden nur <b>Kopien</b> geschrieben. Rückgängig = den neuen Ordner einfach löschen. (Braucht einen verbundenen Quell-Ordner.)", reorgSchemeL:"Schema", reorgCat:"Nach Kategorie (Rechnungen / Verträge / Fotos …)", reorgCatYear:"Nach Kategorie &amp; Jahr", reorgYear:"Nach Jahr", reorgType:"Nach Dateityp", reorgPreviewB:"Vorschau ansehen", reorgStartB:"In neuen Ordner kopieren …", reorgTileT:"Neuer Ordner", reorgTileS:"Kopie, aufgeräumt"
     },
     en:{
       brandSub:"Your private second brain — find everything by <b>meaning</b>. Offline.",
@@ -2930,7 +2955,7 @@ boot();
       footer2:"No subscription · no cloud required · originals untouched.", footerImpressum:"Imprint & Privacy",
       tresorH:"🔒 Vault — Encryption", tresorP:"Protect your private content with a password (AES-256-GCM). The app always opens normally — the vault only unlocks when you want. Your password stays <b>only in this browser</b> and is never written to the network or the repo.",
       tresorSetup:"Set up vault", tresorUnlock:"🔓 Unlock", tresorLock:"🔒 Lock", tresorRecover:"Forgot password?",
-      dropDnd:"💡 Tip: drag files, images, e-mails or whole folders here — or straight onto a button, it opens up.", vaultH:"🗄 Vault contents", pickMail:"📧 Mail (.mbox / .eml)"
+      dropDnd:"💡 Tip: drag files, images, e-mails or whole folders here — or straight onto a button, it opens up.", vaultH:"🗄 Vault contents", pickMail:"📧 Mail (.mbox / .eml)", reorgH:"Reorder — copy into a new folder", reorgP:"Puts the files, tidied by a scheme, into a <b>fresh, empty target folder</b>. <b>Your originals stay where they are, unchanged</b> — only <b>copies</b> are written. Undo = simply delete the new folder. (Needs a connected source folder.)", reorgSchemeL:"Scheme", reorgCat:"By category (invoices / contracts / photos …)", reorgCatYear:"By category &amp; year", reorgYear:"By year", reorgType:"By file type", reorgPreviewB:"Show preview", reorgStartB:"Copy into a new folder …", reorgTileT:"New folder", reorgTileS:"Copy, tidied up"
     },
     ru:{
       brandSub:"Твой личный второй мозг — находи всё по <b>смыслу</b>. Офлайн.",
@@ -2956,7 +2981,7 @@ boot();
       footer2:"Без подписки · без облака · оригиналы нетронуты.", footerImpressum:"Выходные данные и конфиденциальность",
       tresorH:"🔒 Сейф — шифрование", tresorP:"Защитите свои личные данные паролем (AES-256-GCM). Приложение всегда открывается обычно — сейф разблокируется только по вашему желанию. Пароль остаётся <b>только в этом браузере</b> и никогда не отправляется в сеть или в репозиторий.",
       tresorSetup:"Настроить сейф", tresorUnlock:"🔓 Разблокировать", tresorLock:"🔒 Заблокировать", tresorRecover:"Забыли пароль?",
-      dropDnd:"💡 Совет: перетащите сюда файлы, изображения, письма или целые папки — или прямо на кнопку, она откроется.", vaultH:"🗄 Содержимое сейфа", pickMail:"📧 Почта (.mbox / .eml)"
+      dropDnd:"💡 Совет: перетащите сюда файлы, изображения, письма или целые папки — или прямо на кнопку, она откроется.", vaultH:"🗄 Содержимое сейфа", pickMail:"📧 Почта (.mbox / .eml)", reorgH:"Упорядочить заново — копия в новую папку", reorgP:"Раскладывает файлы по схеме в <b>новую пустую целевую папку</b>. <b>Оригиналы остаются на месте без изменений</b> — записываются только <b>копии</b>. Отмена = просто удалить новую папку. (Нужна подключённая исходная папка.)", reorgSchemeL:"Схема", reorgCat:"По категории (счета / договоры / фото …)", reorgCatYear:"По категории и году", reorgYear:"По году", reorgType:"По типу файла", reorgPreviewB:"Показать предпросмотр", reorgStartB:"Скопировать в новую папку …", reorgTileT:"Новая папка", reorgTileS:"Копия, по порядку"
     },
     pl:{
       brandSub:"Twój prywatny drugi mózg — znajduj wszystko według <b>znaczenia</b>. Offline.",
@@ -2982,7 +3007,7 @@ boot();
       footer2:"Bez abonamentu · bez chmury · oryginały nietknięte.", footerImpressum:"Nota prawna i prywatność",
       tresorH:"🔒 Sejf — szyfrowanie", tresorP:"Chroń swoje prywatne treści hasłem (AES-256-GCM). Aplikacja zawsze otwiera się normalnie — sejf odblokowuje się tylko na Twoje życzenie. Hasło pozostaje <b>tylko w tej przeglądarce</b> i nigdy nie trafia do sieci ani do repozytorium.",
       tresorSetup:"Skonfiguruj sejf", tresorUnlock:"🔓 Odblokuj", tresorLock:"🔒 Zablokuj", tresorRecover:"Nie pamiętasz hasła?",
-      dropDnd:"💡 Wskazówka: przeciągnij tutaj pliki, zdjęcia, e-maile lub całe foldery — albo wprost na przycisk, otworzy się.", vaultH:"🗄 Zawartość sejfu", pickMail:"📧 Poczta (.mbox / .eml)"
+      dropDnd:"💡 Wskazówka: przeciągnij tutaj pliki, zdjęcia, e-maile lub całe foldery — albo wprost na przycisk, otworzy się.", vaultH:"🗄 Zawartość sejfu", pickMail:"📧 Poczta (.mbox / .eml)", reorgH:"Uporządkuj na nowo — kopia do nowego folderu", reorgP:"Układa pliki według schematu w <b>nowym, pustym folderze docelowym</b>. <b>Oryginały pozostają na miejscu bez zmian</b> — zapisywane są tylko <b>kopie</b>. Cofnięcie = po prostu usuń nowy folder. (Wymaga połączonego folderu źródłowego.)", reorgSchemeL:"Schemat", reorgCat:"Według kategorii (faktury / umowy / zdjęcia …)", reorgCatYear:"Według kategorii i roku", reorgYear:"Według roku", reorgType:"Według typu pliku", reorgPreviewB:"Pokaż podgląd", reorgStartB:"Skopiuj do nowego folderu …", reorgTileT:"Nowy folder", reorgTileS:"Kopia, uporządkowana"
     }
   };
 
