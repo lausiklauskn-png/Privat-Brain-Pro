@@ -71,7 +71,7 @@ try {
   ok('Phone, tablet portrait and DeX keep the short meaning label on one line at larger fonts; the magnifier is the search button in the field (Klaus 2026-11-16), not part of the switch: '+JSON.stringify(largeSearch),largeSearch.every(sample=>sample.fit));
   await page.evaluate(()=>document.documentElement.style.fontSize='');
   await page.setViewportSize({width:1280,height:900});
-  ok('The desktop search uses the compact mouse target while touch keeps its larger target',await page.evaluate(()=>{const mouse=matchMedia('(any-pointer:fine)').matches,minimum=mouse?32:44,height=document.getElementById('q').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=(mouse?40:52)&&height>=minimum&&height<=minimum+2;}));
+  ok('The search field is flat on every device: 34 px, with a hidden larger tap area on its buttons (Klaus 2026-11-16: „zu hoch, zu fett“)',await page.evaluate(()=>{const height=document.querySelector('#panel-search .pb-such-feld').getBoundingClientRect().height;return document.querySelector('.searchbox').getBoundingClientRect().height<=44&&height>=32&&height<=34&&getComputedStyle(document.getElementById('pbSuchLos'),'::after').top==='-7px';}));
   for(const width of [280,320,390,650,768,1000,1280,1920]) {
     await page.setViewportSize({width,height:900});
     for(const tab of ['search','intake','explorer','mail','dash','order','dupes','settings']) {

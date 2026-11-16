@@ -633,31 +633,43 @@ header .brand h1 .pb-update-fahne { display:inline-block; vertical-align:middle;
 .native-options-panel .native-menu-schrift{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
 .native-options-panel .native-menu-schrift .pro-schrift-feld{position:static;box-shadow:none;width:100%;max-width:none}
 
-/* Suchleiste der Startseite (Klaus 2026-11-16, V1): × und Lupe im Feld, „Überall“ mit Zahnrad, Filter mit Namen. */
-#panel-search .pb-such-feld { flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:2px; padding:0 3px 0 0; border:1px solid var(--line); border-radius:8px; background:var(--field,var(--card)); }
+/* Suchleiste der Startseite (Klaus 2026-11-16, V1 und Nachbesserung am selben Tag): × und Lupe im Feld; darunter eine Reihe
+   Bildbeschreibung · Bedeutung · Überall; Filter flach, gleich hoch, mit Namen im Feld. Alles flach (32 px, Suchfeld 34 px), auch am Tablet. */
+#panel-search .pb-such-feld { flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:2px; height:34px; padding:0 2px 0 0; border:1px solid var(--line); border-radius:8px; background:var(--field,var(--card)); }
 #panel-search .pb-such-feld:focus-within { border-color:var(--acc); }
-#panel-search .pb-such-feld>#q { flex:1 1 auto; min-width:0; border:0!important; background:transparent!important; box-shadow:none!important; outline:0; }
+html[data-pb-theme] #panel-search .pb-such-feld>#q, #panel-search .pb-such-feld>#q { flex:1 1 auto; min-width:0; min-height:0!important; height:30px!important; border:0!important; background:transparent!important; box-shadow:none!important; outline:0; }
 #panel-search .pb-such-feld>#q::-webkit-search-cancel-button { display:none; }
-.pb-such-knopf { flex:none; display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--mut); cursor:pointer; }
+html[data-pb-theme] #panel-search .searchbox { align-items:center; }
+html[data-pb-theme] #panel-search .searchbox>button, html[data-pb-theme] #panel-search .searchbox>details>summary { min-height:32px!important; height:32px!important; padding-block:0!important; }
+.pb-such-knopf { position:relative; flex:none; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; min-height:0!important; padding:0!important; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--mut); cursor:pointer; }
+.pb-such-knopf::after, .pb-such-ueberall::after { content:""; position:absolute; inset:-7px -2px; }   /* unsichtbare Tippfläche */
 .pb-such-knopf:hover,.pb-such-knopf:focus-visible { border-color:var(--acc); color:var(--acc); }
 html[data-pb-theme] #panel-search .pb-such-knopf.pb-such-los, #panel-search .pb-such-knopf.pb-such-los { background:var(--acc)!important; border-color:var(--acc)!important; color:var(--pb-on-accent,#fff)!important; }
 #panel-search .pb-such-knopf.pb-such-los:hover,#panel-search .pb-such-knopf.pb-such-los:focus-visible { filter:brightness(1.08); }
 .pb-such-knopf.pb-such-los[aria-busy=true] { opacity:.6; }
-.pb-such-knopf.pb-such-rad { border-color:var(--line); background:var(--card); }
 .pb-such-knopf[disabled] { opacity:.45; cursor:default; }
-.pb-such-bild { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-.pb-such-ueberall { display:inline-flex; align-items:center; min-height:30px; padding:0 10px; font-size:13px!important; line-height:1.2; border:1px solid var(--line); border-radius:7px; background:var(--card); color:var(--ink); font:inherit; font-weight:600; cursor:pointer; }
+.pb-such-bild { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.pb-such-reihe { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 0; }
+.pb-such-paar { display:inline-flex; align-items:stretch; }
+html[data-pb-theme] .pb-such-ueberall, .pb-such-ueberall { position:relative; display:inline-flex; align-items:center; height:32px; min-height:0!important; padding:0 10px!important; border:1px solid var(--line); border-radius:7px 0 0 7px; background:var(--card); color:var(--ink); font:inherit; font-size:13px!important; font-weight:600; line-height:1.2; cursor:pointer; }
 .pb-such-ueberall[aria-pressed=true] { color:var(--acc); border-color:var(--acc); background:var(--pb-selected,var(--card2,var(--card))); }
+html[data-pb-theme] .pb-such-knopf.pb-such-rad, .pb-such-knopf.pb-such-rad { width:24px; height:32px; margin-left:-1px; border-color:var(--line); border-radius:0 7px 7px 0; background:var(--card); }
+.pb-such-ueberall[aria-pressed=true]+.pb-such-rad { border-color:var(--acc); color:var(--acc); }
+/* Die Schalter der Reihe gleich hoch: Bildbeschreibung, ⓘ, Bedeutung */
+html[data-pb-theme] #panel-search #pb-bild-row, #panel-search #pb-bild-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 0; }
+html[data-pb-theme] #panel-search #pb-bild-row>.pb-help-content { flex:1 1 100%; }
+html[data-pb-theme] #panel-search #pb-bild-row .pb-bild-filter, html[data-pb-theme] #panel-search :is(#pb-bild-row,.pb-such-reihe) #mode button { height:32px!important; min-height:0!important; padding-block:0!important; margin:0!important; font-size:13px!important; font-weight:600; }
+html[data-pb-theme] #panel-search #pb-bild-row .pb-bild-help-toggle { width:30px!important; height:32px!important; min-width:0!important; min-height:0!important; margin:0!important; padding:0!important; }
+html[data-pb-theme] #panel-search :is(#pb-bild-row,.pb-such-reihe) #mode { margin:0; grid-column:auto; justify-self:auto; }
 .pb-such-quellen[hidden] { display:none!important; }
 /* Die Lupe am Schalter „Bedeutung“ sah aus wie „Suchen“ (Klaus: man drückt Bedeutung und schaltet nur um). Suchen ist jetzt die Lupe im Feld. */
 html[data-pb-theme] #panel-search #mode .pb-search-mode-icon { display:none!important; }
-.pb-such-quellen { display:flex; flex-wrap:wrap; gap:4px 16px; margin:6px 0 0; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+.pb-such-quellen { display:flex; flex-wrap:wrap; gap:4px 16px; margin:6px 0 0; padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:13px; }
 .pb-such-andere { margin-top:12px; }
 .pb-such-andere .pro-ue-name { font-weight:600; }
-.pb-such-reihe { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:6px 0 0; }
-#filterbar { align-items:flex-end; }
-#filterbar .pb-filter { display:inline-flex; flex-direction:column; gap:1px; min-width:0; }
-#filterbar .pb-filter>small { font-size:11px; line-height:1.2; font-weight:600; letter-spacing:.03em; color:var(--mut); padding-left:2px; }
-#filterbar .pb-filter>select { max-width:100%; }
+html[data-pb-theme] #filterbar, #filterbar { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+#filterbar .pb-filter { display:inline-flex; align-items:center; gap:2px; min-width:0; height:32px; padding:0 2px 0 8px; border:1px solid var(--line); border-radius:7px; background:var(--card); }
+#filterbar .pb-filter>small { font-size:12px; line-height:1; font-weight:600; color:var(--mut); white-space:nowrap; }
+html[data-pb-theme] #filterbar .pb-filter>select, #filterbar .pb-filter>select { flex:0 1 auto; width:auto!important; min-width:0; max-width:150px!important; height:30px!important; min-height:0!important; padding:0 2px!important; border:0!important; background-color:transparent!important; box-shadow:none!important; font-size:13px!important; font-weight:400; }
+html[data-pb-theme] #filterbar>button, #filterbar>button { height:32px!important; min-height:0!important; padding-block:0!important; font-size:13px!important; }
 #filterbar .pb-filter-ende { margin-left:auto; }
-@media (pointer:coarse) { .pb-such-knopf { width:40px; height:40px; } .pb-such-ueberall { min-height:40px; } }

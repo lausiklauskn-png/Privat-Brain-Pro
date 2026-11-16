@@ -56,7 +56,7 @@ try{
   ok('First use takes the chosen interface language once, instead of the English browser locale',await page.evaluate(()=>PBInputLanguage.current()==='pl'&&PBInputLanguage.locale()==='pl-PL'&&navigator.language==='en-US'));
   ok('The initial independent preference is saved',await page.evaluate(()=>localStorage.getItem('pb_input_language_v1')==='pl'));
   const quick=page.locator('#pb-search-language');
-  ok('Only the current code appears inside the search row before the meaning switch',await quick.innerText()==='PL'&&await page.evaluate(()=>{const menu=document.getElementById('pb-input-language-quick');return menu.parentElement.classList.contains('searchbox')&&menu.nextElementSibling?.id==='mode'&&!menu.querySelector('label,select');}));
+  ok('Only the current code appears inside the search row; the meaning switch sits one row lower (Klaus 2026-11-16)',await quick.innerText()==='PL'&&await page.evaluate(()=>{const menu=document.getElementById('pb-input-language-quick');return menu.parentElement.classList.contains('searchbox')&&!menu.parentElement.querySelector('#mode')&&!menu.querySelector('label,select');}));
   ok('The compact code still names the actual selected language accessibly',(await quick.getAttribute('aria-label')).includes('Polski')&&(await quick.getAttribute('title')).includes('Polski'));
   await chooseQuick(page,'tr');
   ok('The quick selector changes actual recognition and input language',await page.evaluate(()=>PBInputLanguage.locale()==='tr-TR'&&document.getElementById('q').lang==='tr'&&document.getElementById('q').spellcheck));
@@ -135,7 +135,7 @@ try{
   ok('An invalid saved preference falls back to the chosen interface language once',await page.evaluate(()=>PBInputLanguage.current()==='ru'&&PBInputLanguage.locale()==='ru-RU'&&localStorage.getItem('pb_input_language_v1')==='ru'));
   await context.close();
   ({context,page,errors}=await fixture('de','en',{viewport:{width:1280,height:800},hasTouch:true}));
-  ok('A wide touch-only device retains a 44 px language code target',await page.locator('#pb-search-language').evaluate(button=>!matchMedia('(any-pointer:fine)').matches&&button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44));
+  ok('A wide touch-only device shows the language code flat like the rest of the search row (32 px high, at least 32 px wide; Klaus 2026-11-16)',await page.locator('#pb-search-language').evaluate(button=>!matchMedia('(any-pointer:fine)').matches&&Math.round(button.getBoundingClientRect().height)===32&&button.getBoundingClientRect().width>=32));
   await chooseQuick(page,'ru');
   ok('Touch menu selection uses the same saved locale and field language',await page.evaluate(()=>PBInputLanguage.current()==='ru'&&PBInputLanguage.locale()==='ru-RU'&&document.getElementById('q').lang==='ru'&&localStorage.getItem('pb_input_language_v1')==='ru')&&errors.length===0);
   await context.close();

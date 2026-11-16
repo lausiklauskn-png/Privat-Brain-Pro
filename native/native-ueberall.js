@@ -44,6 +44,7 @@
   const NS = 'http://www.w3.org/2000/svg';
   const ICON = {
     lupe: 'M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0', kreuz: 'M6 6l12 12 M18 6L6 18',
+    pfeil: 'M6 9l6 6 6-6',
     rad: 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 0 0-1.7 1l-2.3-.9-2 3.4 2 1.5a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9a7.6 7.6 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.6 7.6 0 0 0 1.7-1l2.3.9 2-3.4z'
   };
   function bild(name) {
@@ -178,7 +179,7 @@
     feld.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); void suchen(); } });
     // 2) „Überall“ und Zahnrad in der Reihe der Suchleiste
     const ueberall = el('button', 'pb-such-ueberall'); ueberall.type = 'button'; ueberall.id = 'pbUeberallKnopf';
-    const rad = knopf('pbUeberallRad', 'rad', 'pb-such-knopf pb-such-rad'); rad.setAttribute('aria-expanded', 'false'); rad.setAttribute('aria-controls', 'pbUeberallQuellen');
+    const rad = knopf('pbUeberallRad', 'pfeil', 'pb-such-knopf pb-such-rad');   // kein zweites Zahnrad (Klaus 16.11.): ein kleiner Pfeil am Knopf rad.setAttribute('aria-expanded', 'false'); rad.setAttribute('aria-controls', 'pbUeberallQuellen');
     const qBox = el('div', 'pb-such-quellen'); qBox.id = 'pbUeberallQuellen'; qBox.hidden = true; qBox.setAttribute('role', 'group');
     const q0 = quellen();
     const haken = (k, an, fest) => { const l = el('label', 'pro-ue-quelle'), cb = el('input'); l.dataset.pbQuelle = k; cb.type = 'checkbox'; cb.checked = an; cb.disabled = !!fest; cb.dataset.proUeQuelle = k;
@@ -192,9 +193,15 @@
     // Eigene Reihe unter dem Suchfeld: Bildbeschreibung · ⓘ · Überall · Zahnrad. So bleibt das Suchfeld auch am Handy bei großer
     // Schrift zweizeilig, und alles, was die Suche erweitert, steht nebeneinander.
     const reihe = el('div', 'pb-such-reihe'); reihe.id = 'pbSuchReihe';
-    reihe.append(ueberall, rad); box.after(reihe); reihe.after(qBox);
-    const bildHolen = () => { const b = box.querySelector('#pb-bild-filter'), i = box.querySelector('.pb-bild-help-toggle'); if (b) ueberall.before(b); if (i) ueberall.before(i); };
-    bildHolen(); new MutationObserver(bildHolen).observe(box, { childList: true });
+    const paar = el('span', 'pb-such-paar'); paar.append(ueberall, rad);
+    reihe.append(paar); box.after(reihe); reihe.after(qBox);
+    // Klaus 16.11.2026: „Bedeutung“ ist nur an/aus und gehört eine Etage tiefer, neben „Bildbeschreibung“ und „Überall“.
+    const modus = document.getElementById('mode'); if (modus) reihe.prepend(modus);
+    // „Bildbeschreibung“ hat schon eine eigene flache Reihe (#pb-bild-row, pb-bildbeschreibung.js). Gibt es sie, ziehen „Bedeutung“
+    // und „Überall“ dort ein (vor die aufklappbare Erklärung); sonst bleibt die eigene Reihe.
+    const zurBildReihe = () => { const r = document.getElementById('pb-bild-row'); if (!r || r.contains(paar)) return;
+      const vor = r.querySelector('.pb-help-content'); if (modus) r.insertBefore(modus, vor); r.insertBefore(paar, vor); r.after(qBox); reihe.remove(); };
+    zurBildReihe(); new MutationObserver(zurBildReihe).observe(panel, { childList: true });
     // 3) Bereich für die Treffer der anderen Programme direkt unter der Trefferliste
     const bereich = el('section', 'pro-ue pb-such-andere'); bereich.id = 'pbUeberall'; bereich.dataset.proUe = ''; bereich.hidden = true;
     const status = el('p', 'pro-ue-status'); status.setAttribute('role', 'status'); status.dataset.proUeStatus = '';

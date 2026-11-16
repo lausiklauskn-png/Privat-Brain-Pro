@@ -61,12 +61,12 @@ try {
     const k = document.getElementById('pbUeberall'), r = document.getElementById('results');
     return !!k && k.hidden && !k.querySelector('h3') && !!(r.compareDocumentPosition(k) & Node.DOCUMENT_POSITION_FOLLOWING);
   }));
-  ok('Suchfeld mit × (nur bei Text) und Lupe; „Überall“ und Zahnrad in einer Reihe direkt unter dem Suchfeld', await page.evaluate(() => {
-    const f = document.querySelector('#panel-search .pb-such-feld'), box = document.getElementById('pbSuchReihe');
+  ok('Suchfeld mit × (nur bei Text) und Lupe; „Bildbeschreibung“, „Bedeutung“ und „Überall“ (mit Pfeil für die Quellen, kein zweites Zahnrad) in einer Reihe direkt unter dem Suchfeld', await page.evaluate(() => {
+    const f = document.querySelector('#panel-search .pb-such-feld'), box = document.getElementById('pb-bild-row') || document.getElementById('pbSuchReihe');
     return !!f && f.contains(document.getElementById('q')) && document.getElementById('pbSuchLeeren').hidden && !!document.getElementById('pbSuchLos').getAttribute('aria-label')
-      && box.contains(document.getElementById('pbUeberallKnopf')) && box.contains(document.getElementById('pbUeberallRad')) && document.getElementById('pbUeberallKnopf').getAttribute('aria-pressed') === 'true';
+      && box.contains(document.getElementById('mode')) && !document.querySelector('#panel-search .searchbox #mode') && box.contains(document.getElementById('pbUeberallKnopf')) && box.contains(document.getElementById('pbUeberallRad')) && document.getElementById('pbUeberallKnopf').getAttribute('aria-pressed') === 'true';
   }));
-  ok('Quellen stehen hinter dem Zahnrad (zu): Private Brain fest, Tresorordner an, Netz aus', await page.evaluate(() => {
+  ok('Quellen stehen hinter dem Pfeil am Knopf „Überall“ (zu): Private Brain fest, Tresorordner an, Netz aus', await page.evaluate(() => {
     const q = document.getElementById('pbUeberallQuellen');
     return q.hidden && !q.getClientRects().length && getComputedStyle(document.getElementById('pbSuchLos')).backgroundColor !== getComputedStyle(document.getElementById('pbSuchLeeren')).backgroundColor && [...q.querySelectorAll('[data-pro-ue-quelle]')].map(c => c.dataset.proUeQuelle + '=' + c.checked + (c.disabled ? '!' : '')).join() === 'app=true!,tresor=true,netz=false';
   }));
@@ -75,6 +75,11 @@ try {
     const art = [...document.querySelectorAll('#fType option')].map(o => o.textContent).join();
     return namen === 'art:Art,kategorie:Kategorie,zeitraum:Zeitraum,tag:Tag,sortieren:Sortieren' && document.querySelector('#filterbar').lastElementChild.dataset.pbFilter === 'sortieren'
       && art === 'Alle,Dokumente,Notizen,Fotos und Bilder,Tabellen';
+  }));
+  ok('Flach und gleichmäßig: Reihe unter dem Suchfeld und alle Filter 32 px hoch, Suchfeld 34 px, Filter stehen auf einer Linie', await page.evaluate(() => {
+    const h = n => Math.round(n.getBoundingClientRect().height), reihe = [document.getElementById('pb-bild-filter'), document.querySelector('#mode [data-m="mean"]'), document.getElementById('pbUeberallKnopf'), document.getElementById('pbUeberallRad')].filter(Boolean);
+    const filter = [...document.querySelectorAll('#filterbar .pb-filter, #filterbar > button')].filter(n => n.getClientRects().length);
+    return reihe.every(n => h(n) === 32) && filter.every(n => h(n) === 32) && h(document.querySelector('#panel-search .pb-such-feld')) === 34 && new Set(reihe.map(n => Math.round(n.getBoundingClientRect().top))).size === 1;
   }));
   await page.evaluate(() => { document.getElementById('q').value = 'Mietvertrag'; });   // wie nach dem Diktat: Text steht da, noch nichts gesucht
   await page.click('#pbSuchLos');
