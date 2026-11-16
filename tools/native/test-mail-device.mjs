@@ -127,6 +127,52 @@ try{
   ok('Read action is bound to account, UID and UIDVALIDITY',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='action'&&c.args.uid===7&&c.args.validity==='123'&&c.args.folder==='INBOX'&&c.args.account==='11111111-1111-4111-8111-111111111111')));
   await mail.getByRole('button',{name:'↓ test.txt',exact:true}).click();
   ok('Attachment uses scoped native open operation',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openAttachment'&&c.args.index===0&&c.args.uid===7&&c.args.validity==='123')));
+  // Punkt 4 (Klaus 16.11.2026): die Mail steht sofort da, die Anhänge werden danach einzeln geprüft.
+  const settled=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  const checked=()=>page.waitForFunction(()=>!document.querySelector('.live-mail .mail-reader').hasAttribute('data-mail-checking'));
+  await checked();
+  const reportPlain=await mail.locator('.live-mail .mail-reader .mail-report').textContent();
+  const riskPlain=await mail.locator('.live-mail .mail-reader .mail-report').getAttribute('data-risky');
+  // The attachment check (text recognition or the rule checker) is held back by the test, like a slow scan on the tablet.
+  ok('The test can hold the attachment check',await page.evaluate(()=>{window.checkStarts=[];window.checkGates=[];window.holdChecks=true;
+    const held=(name,go)=>{checkStarts.push(name);return holdChecks?new Promise(r=>checkGates.push(r)).then(go):go();};
+    if(window.PBOCR){const real=window.PBOCR;window.PBOCR={...real,analyze:(name,bytes,o)=>held(name,()=>real.analyze(name,bytes,o))};return true;}
+    if(window.PrueferAnhang){const real=window.PrueferAnhang.pruefe;try{window.PrueferAnhang.pruefe=(name,bytes)=>held(name,()=>real(name,bytes));}catch{return false;}return window.PrueferAnhang.pruefe!==real;}
+    return false;}));
+  const opensBefore=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='openAttachment').length);
+  await mail.locator('[data-live-uid="7"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===1);await settled();
+  const during=await page.evaluate(()=>{const app=document.querySelector('.live-mail'),r=app.querySelector('.mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');b.click();
+    const off=key=>{const x=r.querySelector('[data-live-text='+key+']');return Boolean(x&&x.disabled);};
+    return {text:r.querySelector('.mail-text')?.textContent,subject:r.querySelector('h3')?.textContent,busy:app.hasAttribute('aria-busy'),inert:app.inert,checking:r.dataset.mailChecking,
+      wait:[...r.querySelectorAll('[data-mail-attachment-wait]')].map(x=>x.textContent),attachmentOff:b.disabled,forward:off('forward'),download:off('download'),bookledger:off('bookledger'),familienakte:off('familienakte'),reply:off('reply'),
+      report:r.querySelector('.mail-report').textContent,opens:window.mailCalls.filter(c=>c.method==='openAttachment').length};});
+  ok('Head and text of the mail stand there and can be used while the attachment is still being checked',during.text==='Direct native inbox text'&&during.subject==='Native message'&&!during.busy&&!during.inert&&during.checking==='true'&&!during.reply,during);
+  ok('Each attachment says that it is being checked',JSON.stringify(during.wait)===JSON.stringify(['test.txt · wird geprüft …']),during);
+  ok('Until its result is there the attachment cannot be opened, and the mail cannot be forwarded or shared with it',during.attachmentOff&&during.forward&&during.download&&during.bookledger&&during.familienakte&&during.opens===opensBefore&&!during.report.includes('test.txt'),during);
+  await page.evaluate(()=>{document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader [data-mail-attachment-wait]')?.textContent==='test.txt · being checked …');
+  ok('The waiting line follows the language',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.evaluate(()=>{window.checkGates.shift()();});await checked();
+  const after=await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');
+    return {wait:r.querySelectorAll('[data-mail-attachment-wait]').length,off:[b,...['forward','download','bookledger','familienakte'].map(k=>r.querySelector('[data-live-text='+k+']'))].map(x=>x.disabled||Boolean(x.closest('[inert]'))),report:r.querySelector('.mail-report').textContent,risky:r.querySelector('.mail-report').dataset.risky};});
+  ok('With the result the waiting line goes, attachment and sharing are free, and report and risk mark are the same as without waiting',after.wait===0&&after.off.every(x=>!x)&&after.report===reportPlain&&after.report.includes('test.txt')&&after.risky===riskPlain&&['true','false'].includes(after.risky),{after,reportPlain,riskPlain});
+  // A late result must not land in another mail.
+  await mail.locator('[data-live-uid="7"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===1);await settled();
+  await mail.locator('.live-mail [data-mail-folder=trash]').click();await settled();
+  await mail.locator('[data-live-uid="9"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===2);await settled();
+  await page.evaluate(()=>{window.checkGates.shift()();});
+  await page.waitForTimeout(300);
+  const late=await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');return {checking:r.dataset.mailChecking,wait:r.querySelectorAll('[data-mail-attachment-wait]').length,off:b.disabled,report:r.querySelector('.mail-report').textContent};});
+  ok('The late result of the mail before is not written into the mail that is open now',late.checking==='true'&&late.wait===1&&late.off&&!late.report.includes('test.txt'),late);
+  await page.evaluate(()=>{window.holdChecks=false;window.checkGates.shift()();});await checked();
+  ok('The open mail then gets its own result, once',await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader');return r.querySelector('.mail-report').textContent.split('test.txt').length===2&&!r.querySelector('[data-mail-attachment-wait]');})&&(await mail.locator('.live-mail .mail-reader .mail-report').textContent())===reportPlain);
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await settled();
+  await mail.locator('[data-live-uid="7"]').click();
+  await mail.locator('.mail-reader .mail-text').waitFor({state:'visible'});await checked();
   await mail.locator('.mail-message-tools>summary').click();
   await button('download').first().click();
   ok('Original EML uses native share/export, not unsupported blob download',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7)));
