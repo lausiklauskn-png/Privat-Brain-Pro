@@ -5,6 +5,11 @@ BookLedgerPro 0.1.6 (`src/domain/ueberall.js`, `src/ui/views/sbkimsuche.js`).
 
 ## Was man sieht
 
+> **Seit 1.0.53 (Private Brain Pro):** kein eigener Kasten mehr. Eine Suche, eine Trefferliste; „Überall“ ist ein Knopf in der Reihe
+> unter dem Suchfeld (Quellen am Pfeil), die Treffer der anderen Programme stehen als Gruppen unter der Trefferliste
+> (`native/native-ueberall.js`). Seit der Generalprüfung vom 16.11.2026 verschwinden diese Gruppen, sobald im Suchfeld weitergetippt
+> wird (sie gehören zur Frage, die mit Lupe oder Enter gestellt wurde). Die Beschreibung unten gilt für den gemeinsamen Baustein.
+
 Ein Kasten **„Überall suchen“** mit dem Satz *„Dokumente finden in allen deinen verbundenen Programmen.“* (Klaus' Wortlaut, m0), die längere
 Erklärung hinter ⓘ (zu), ein farbiger Knopf **„Suchen“** und drei Haken:
 

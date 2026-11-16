@@ -298,6 +298,8 @@ html[data-pb-theme] #results .pb-result-compact>.cardbtns>.pb-check-badge { marg
 #panel-search .searchmeta { flex-wrap:nowrap; justify-content:flex-start; align-items:center; gap:0; margin:4px 0 6px; font-size:.8rem; color:var(--mut); }
 #panel-search .searchmeta #searchInfo:empty, #panel-search .searchmeta .pb-meta-count:empty { display:none; }
 #panel-search .searchmeta .pb-meta-count { white-space:nowrap; }
+/* Auch nach der Trefferzeile steht der Trennpunkt (vorher „Bedeutungssuche0 E-Mails“, Generalprüfung 16.11.2026). */
+#panel-search .searchmeta #searchInfo:not(:empty) ~ .pb-meta-count:not(:empty)::before,
 #panel-search .searchmeta .pb-meta-count:not(:empty) ~ .pb-meta-count:not(:empty)::before { content:"·"; margin:0 7px; opacity:.7; }
 #panel-search .searchmeta .pb-check-all-button { flex:0 0 auto; margin-left:auto; font-size:.8rem; }
 @media (max-width:520px) { #panel-search .searchmeta { flex-wrap:wrap; row-gap:4px; font-size:.75rem; } }

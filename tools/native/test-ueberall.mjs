@@ -133,5 +133,69 @@ try {
   ok('… sucht dann nur im Katalog', await B.page.evaluate(() => document.getElementById('pbUeberall').hidden && document.querySelectorAll('#results li').length >= 1));
   ok('360 px: nichts läuft quer hinaus, keine Seitenfehler', await B.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1 && document.querySelector('#panel-search .searchbox').scrollWidth <= document.querySelector('#panel-search .searchbox').clientWidth + 1) && B.errors.length === 0);
   await B.context.close();
+
+  // ---------- Generalprüfung 16.11.2026 (Suche): Pfeil für Vorleser, alte Fremd-Treffer, ×, späte Modell-Antwort, Sprachen ----------
+  const C = await seite();
+  {
+    const page = C.page;
+    ok('GP 1: Pfeil „Quellen“ sagt schon beim Start, dass er aufklappt und was (aria-expanded, aria-controls)', await page.evaluate(() => {
+      const r = document.getElementById('pbUeberallRad'); return r.getAttribute('aria-expanded') === 'false' && r.getAttribute('aria-controls') === 'pbUeberallQuellen' && !!document.getElementById('pbUeberallQuellen'); }));
+    ok('GP 10: Suchfeld hat einen Namen, die Trefferzeile wird angesagt (role=status)', await page.evaluate(() => document.getElementById('q').getAttribute('aria-label') === 'Suche' && document.getElementById('searchInfo').getAttribute('role') === 'status'));
+    await page.fill('#q', 'Mietvertrag'); await page.click('#pbSuchLos');
+    await page.waitForFunction(() => document.querySelector('#pbUeberall [data-pro-ue-gruppe]'));
+    ok('GP 10: zwischen Trefferzeile und „0 E-Mails“ steht der Trennpunkt', await page.evaluate(() => {
+      const erster = [...document.querySelectorAll('#panel-search .searchmeta .pb-meta-count')].find(n => n.textContent && n.getClientRects().length);
+      return !!document.getElementById('searchInfo').textContent && !!erster && /·/.test(getComputedStyle(erster, '::before').content); }));
+    await page.fill('#q', 'urlaub'); await page.waitForTimeout(150);
+    ok('GP 2: weitergetippt – die Treffer „Aus anderen Programmen“ der alten Frage sind weg, die eigene Liste zeigt die neue', await page.evaluate(() =>
+      document.getElementById('pbUeberall').hidden && !document.querySelector('#pbUeberall [data-pro-ue-gruppe]') && /Urlaub/.test(document.getElementById('results').textContent)));
+    await page.click('#pbSuchLos'); await page.waitForTimeout(300);
+    await page.fill('#q', 'Mietvertrag'); await page.click('#pbSuchLos'); await page.waitForFunction(() => document.querySelector('#pbUeberall [data-pro-ue-gruppe]'));
+    ok('GP 2: Lupe fragt die anderen Programme wie bisher', (await gruppen(page)).join() === 'tresor:workflow-pdf-pro:1,tresor:eingang-bookledgerpro:1');
+    // gemerkte Suche: die Frage wird eingesetzt, nicht getippt
+    await page.click('#fSave'); await page.click('#pbSuchLeeren');
+    ok('GP 4: nach × ist das Feld leer und das × weg', await page.evaluate(() => document.getElementById('q').value === '' && document.getElementById('pbSuchLeeren').hidden));
+    await page.click('#savedRow .saved b'); await page.waitForTimeout(200);
+    ok('GP 4: gemerkte Suche setzt die Frage ein – das × ist da und leert', await page.evaluate(() => document.getElementById('q').value === 'Mietvertrag' && !document.getElementById('pbSuchLeeren').hidden && document.getElementById('pbSuchLeeren').getClientRects().length > 0)
+      && await (async () => { await page.click('#pbSuchLeeren'); return page.evaluate(() => document.getElementById('q').value === '' && document.getElementById('pbSuchLeeren').hidden); })());
+    // späte Antwort des Modells (gestellt, 1,2 s): nach × dürfen die alten Treffer nicht zurückkommen
+    await page.evaluate(() => { window.__fragen = 0; window.__CB_EMBED_STUB__ = { async embedQuery() { window.__fragen++; await new Promise(r => setTimeout(r, 1200)); return new Float32Array(384).fill(0.05); },
+      async embedPassage() { return new Float32Array(384).fill(0.05); }, async embedPassageBatch(l) { return l.map(() => new Float32Array(384).fill(0.05)); } }; MODE = 'mean'; setToggle(); });
+    await page.fill('#q', 'mietvertrag'); await page.waitForFunction(() => document.querySelectorAll('#results li').length >= 1, null, { timeout: 5000 });
+    ok('GP 3: solange das Modell noch rechnet, heißt die Zeile ehrlich „Wortsuche“', await page.evaluate(() => /Wortsuche/.test(document.getElementById('searchInfo').textContent) && !/Bedeutungssuche/.test(document.getElementById('searchInfo').textContent) && window.__fragen >= 1));
+    await page.click('#pbSuchLeeren');
+    ok('GP 8: × leert die Liste', await page.evaluate(() => document.querySelectorAll('#results li').length === 0));
+    await page.waitForTimeout(1800);
+    ok('GP 8: die späte Antwort des Modells holt die alten Treffer nicht zurück', await page.evaluate(() => document.getElementById('q').value === '' && document.querySelectorAll('#results li').length === 0 && !/Treffer/.test(document.getElementById('searchInfo').textContent)));
+    await page.fill('#q', 'mietvertrag'); await page.waitForTimeout(150); await page.fill('#q', 'urlaub');
+    await page.waitForTimeout(2200);
+    ok('GP 8: schnell weitergetippt – die Antwort zur alten Frage überschreibt die neue Liste nicht', await page.evaluate(() => /Urlaub/.test(document.getElementById('results').textContent) && !/Mietvertrag Wohnung/.test(document.getElementById('results').textContent)));
+    ok('GP 3: hat das Modell geantwortet, heißt sie „Bedeutungssuche“', await page.evaluate(() => /Bedeutungssuche/.test(document.getElementById('searchInfo').textContent)));
+    // Sprachen: Trefferzeile und Trefferkarte
+    const zeile = async (sprache, frage) => { await page.evaluate(l => { document.documentElement.lang = l; window.dispatchEvent(new CustomEvent('pblang', { detail: l })); }, sprache);
+      await page.fill('#q', ''); await page.fill('#q', frage); await page.waitForTimeout(1900);
+      return page.evaluate(() => ({ info: document.getElementById('searchInfo').textContent, karte: document.getElementById('results').textContent.replace(/\s+/g, ' '), oeffnen: document.querySelector('#results .openBtn')?.textContent.trim() || '',
+        tresor: document.querySelector('#results .tresorBtn')?.title || '', weg: document.querySelector('#results .delBtn')?.title || '', merken: document.getElementById('fSave').textContent.trim() + '|' + document.getElementById('fSave').title,
+        katalog: document.getElementById('corpusInfo').textContent, feld: document.getElementById('q').getAttribute('aria-label') })); };
+    const deutsch = /Treffer|Gefunden|Öffnen|merken|Dateien|Tresor legen|löschen|Bedeutungssuche|Wortsuche/;
+    const en = await zeile('en', 'mietvertrag');
+    ok('GP 9 Englisch: Trefferzeile, „Found because“, Open, save, Tooltips, Katalogzahl – nichts bleibt deutsch', /^1 result · /.test(en.info) && /Meaning search/.test(en.info) && /Found because in the name/.test(en.karte) && /Open$/.test(en.oeffnen)
+      && en.tresor === 'Put into the encrypted vault' && /Delete this file/.test(en.weg) && /save\|Save this search as a button/.test(en.merken) && en.katalog === 'Catalog: 2 files' && en.feld === 'Search'
+      && !deutsch.test([en.info, en.oeffnen, en.tresor, en.weg, en.merken, en.katalog].join(' ')) || (console.log(en), false));
+    const ru = await zeile('ru', 'mietvertrag');
+    ok('GP 9 Russisch: „1 результат“, „Найдено, потому что“, „Открыть“, Katalog „2 файла“ (richtige Zahlform)', /^1 результат · /.test(ru.info) && /Поиск по смыслу/.test(ru.info) && /Найдено, потому что/.test(ru.karte) && /Открыть$/.test(ru.oeffnen) && ru.katalog === 'Каталог: 2 файла'
+      && !deutsch.test([ru.info, ru.oeffnen, ru.tresor, ru.weg, ru.merken, ru.katalog].join(' ')) || (console.log(ru), false));
+    const pl = await zeile('pl', 'mietvertrag');
+    ok('GP 9 Polnisch: „1 wynik“, „Znaleziono, ponieważ“, „Otwórz“, Katalog „2 pliki“', /^1 wynik · /.test(pl.info) && /Znaleziono, ponieważ/.test(pl.karte) && /Otwórz$/.test(pl.oeffnen) && pl.katalog === 'Katalog: 2 pliki'
+      && !deutsch.test([pl.info, pl.oeffnen, pl.tresor, pl.weg, pl.merken, pl.katalog].join(' ')) || (console.log(pl), false));
+    ok('GP 9: Zahlformen – 0/1/2/5 Treffer in RU und PL, „1 Datei“ auf Deutsch', await page.evaluate(() => { const f = (l, k, n) => { document.documentElement.lang = l; return sw(k, { n }); };
+      const r = [f('ru', 'hits', 0), f('ru', 'hits', 1), f('ru', 'hits', 2), f('ru', 'hits', 5), f('ru', 'hits', 21), f('pl', 'hits', 1), f('pl', 'hits', 3), f('pl', 'hits', 5), f('pl', 'hits', 22), f('de', 'catalog', 1), f('de', 'catalog', 3), f('en', 'hits', 1)].join('|');
+      return r === '0 результатов|1 результат|2 результата|5 результатов|21 результат|1 wynik|3 wyniki|5 wyników|22 wyniki|Katalog: 1 Datei|Katalog: 3 Dateien|1 result' || (console.log(r), false); }));
+    const kein = await zeile('en', 'xyzunbekannt');
+    ok('GP 9 Englisch: ohne Fund „No results.“', /No results\./.test(kein.karte) && !/Kein Treffer/.test(kein.karte) || (console.log(kein), false));
+    await page.evaluate(() => { document.documentElement.lang = 'de'; window.dispatchEvent(new CustomEvent('pblang', { detail: 'de' })); });
+    ok('GP: zurück auf Deutsch steht wieder „merken“ und „Suche“; keine Seitenfehler', await page.evaluate(() => /merken$/.test(document.getElementById('fSave').textContent.trim()) && document.getElementById('q').getAttribute('aria-label') === 'Suche') && (C.errors.length === 0 || (console.log(C.errors), false)));
+  }
+  await C.context.close();
 } finally { await browser.close(); }
 console.log(count + ' Proben „Überall suchen“ und Schriftgröße in Private Brain Pro bestanden (Brücke und Mycel gestellt; nicht am Gerät).');
