@@ -228,6 +228,56 @@
       "Передача здесь недоступна – письмо сохранено как .eml. Перетащите его во входящие Familienakte; вложения будут извлечены там.",
       "Udostępnianie nie jest tu możliwe – wiadomość zapisano jako .eml. Przeciągnij ją do skrzynki odbiorczej Familienakte; tam zostaną wyodrębnione załączniki.",
     ],
+    // Klaus 16.11.2026: markierte Mails aus der Liste an die Familienakte (nur in der App mit Pro-Tresor).
+    familienakteList: ["An Familienakte", "To Familienakte", "В Familienakte", "Do Familienakte"],
+    famMax: [
+      "Höchstens 20 Mails auf einmal an die Familienakte – markiert sind {n}. Bitte weniger markieren.",
+      "At most 20 emails at once to Familienakte – {n} are selected. Please select fewer.",
+      "Не более 20 писем за раз в Familienakte – выбрано {n}. Выберите меньше.",
+      "Najwyżej 20 wiadomości naraz do Familienakte – zaznaczono {n}. Zaznacz mniej.",
+    ],
+    famProgress: [
+      "Mail {i} von {n} an die Familienakte …",
+      "Email {i} of {n} to Familienakte …",
+      "Письмо {i} из {n} в Familienakte …",
+      "Wiadomość {i} z {n} do Familienakte …",
+    ],
+    famClosed: [
+      "Nichts übergeben: Der Pro-Tresor ist nicht offen.",
+      "Nothing passed on: the Pro vault is not open.",
+      "Ничего не передано: сейф Pro не открыт.",
+      "Nic nie przekazano: sejf Pro nie jest otwarty.",
+    ],
+    famDone: [
+      "An die Familienakte übergeben: {a} von {n}.",
+      "Passed on to Familienakte: {a} of {n}.",
+      "Передано в Familienakte: {a} из {n}.",
+      "Przekazano do Familienakte: {a} z {n}.",
+    ],
+    famKnown: [
+      "Schon früher übergeben, nicht noch einmal geschickt: {s}.",
+      "Already passed on earlier, not sent again: {s}.",
+      "Уже переданы раньше, повторно не отправлены: {s}.",
+      "Przekazane już wcześniej, nie wysłano ponownie: {s}.",
+    ],
+    famNoSort: [
+      "Mail übergeben, Vorsortierung nicht: {v}.",
+      "Email passed on, pre-sorting not: {v}.",
+      "Письмо передано, предварительная сортировка — нет: {v}.",
+      "Wiadomość przekazana, wstępne sortowanie nie: {v}.",
+    ],
+    famFindings: [
+      "Bei {r} davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.",
+      "For {r} of them the attachment check report has an entry – open the email and look.",
+      "У {r} из них есть запись в отчёте о проверке вложений – откройте письмо и посмотрите.",
+      "Dla {r} z nich raport kontroli załączników zawiera wpis – otwórz wiadomość i sprawdź.",
+    ],
+    famFailed: ["Nicht übergeben: {f}", "Not passed on: {f}", "Не передано: {f}", "Nie przekazano: {f}"],
+    famWhyLoad: ["beim Anbieter nicht ladbar", "could not be loaded from the provider", "не удалось загрузить у провайдера", "nie udało się pobrać od dostawcy"],
+    famWhyLarge: ["größer als 20 MiB", "larger than 20 MiB", "больше 20 МиБ", "ponad 20 MiB"],
+    famWhyCheck: ["Anhänge nicht geprüft", "attachments not checked", "вложения не проверены", "załączniki niesprawdzone"],
+    famWhyVault: ["Pro-Tresor nicht offen", "Pro vault not open", "сейф Pro не открыт", "sejf Pro nie jest otwarty"],
+    famWhyOther: ["Übergabe fehlgeschlagen", "handover failed", "передача не удалась", "przekazanie nie powiodło się"],
     filter: [
       "Ordner filtern",
       "Filter folder",
@@ -744,6 +794,7 @@
       drawFolders();
     }
     const place=list.scrollTop;
+    if(native)famProbe(true);
     drawList();
     // Ein Ordnerwechsel beginnt oben; „Weitere laden“ bleibt, wo es war.
     list.scrollTop=more?place:0;listPlace=list.scrollTop;
@@ -785,6 +836,8 @@
     const search=el('input');search.type='search';search.placeholder=S('filter');search.setAttribute('aria-label',S('filter'));search.value=filterText;
     const actions=el('div','mail-list-actions'), rows=el('div'), count=el('p','mail-count');
     const all=el('button','mail-button',S('all')), trash=el('button','mail-button',S('delete')), move=el('select');
+    // „An Familienakte“: nur mit Pro-Tresor sichtbar; das Liniensymbol setzt native-toolbar.js, der Name steht in title/aria-label.
+    const fam=el('button','mail-button',T('familienakteList'));fam.type='button';fam.dataset.nativeSelection='familienakte';fam.hidden=!famVault;fam.onclick=()=>run(batchFamilienakte);famProbe();
     all.type=trash.type='button';all.disabled=!items.some(item=>!item.local);all.dataset.nativeSelection='all';trash.dataset.nativeSelection='trash';
     move.setAttribute('aria-label',S('move'));move.append(new Option(S('move'),''),...folders.filter(f=>f.path!==folder).map(f=>new Option(folderTitle(f.path),f.path)));
     const filtered=()=>items.filter(item=>(item.subject+' '+item.from).toLocaleLowerCase().includes(filterText.toLocaleLowerCase()));
@@ -796,7 +849,7 @@
     const backTarget=isTrash||isSpam?inbox:spamFolder?.path;
     back.hidden=!backTarget||backTarget===folder;
     back.onclick=()=>run(()=>batchAction('move',backTarget));
-    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?false:!trashFolder);back.disabled=!selected.size;move.disabled=!selected.size;}
+    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?false:!trashFolder);back.disabled=!selected.size;fam.disabled=!selected.size;move.disabled=!selected.size;}
     all.onclick=()=>{const candidates=filtered().filter(item=>!item.local),on=candidates.some(item=>!selected.has(item.uid));for(const item of candidates)on?selected.add(item.uid):selected.delete(item.uid);drawNativeList();};
     trash.onclick=()=>run(()=>batchAction(isTrash?'delete':'move',isTrash?null:trashFolder.path));
     move.onchange=()=>{const target=move.value;move.value='';if(target)run(()=>batchAction('move',target));};
@@ -819,7 +872,7 @@
       if(!rows.childElementCount)rows.append(el('p','mail-muted',S('empty')));
     }
     search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
-    actions.append(all,trash,back,move);list.append(search,actions,count,rows);drawRows();selection();
+    actions.append(all,trash,back,fam,move);list.append(search,actions,count,rows);drawRows();selection();
     if(next)list.append(btn('more',()=>loadList(true)));
     list.scrollTop=place;
   }
@@ -865,6 +918,94 @@
     list.append(rows);
     if (next) list.append(btn("more", () => loadList(true)));
     list.scrollTop = place;
+  }
+  // Klaus 16.11.2026: Mails aus der Liste an die Familienakte, ohne sie zu öffnen. Jede wird wie beim Öffnen vom Anbieter geholt,
+  // ihre Anhänge werden geprüft (dieselbe Regel wie beim Knopf in der geöffneten Mail), dann geht die .eml samt Vorsortierung
+  // über den Pro-Tresor. Der Tresor wird einmal gefragt, nicht je Mail; was schon übergeben ist, wird nicht noch einmal geschickt.
+  const FAM_MAX = 20;
+  let famVault = false, famProbed = 0;
+  function famProbe(force) {
+    if (!native?.familienakteTresor || (!force && Date.now() - famProbed < 2000)) return;
+    famProbed = Date.now();
+    native.familienakteTresor().then((z) => {
+      famVault = z?.vorhanden === true;
+      const b = list.querySelector('[data-native-selection="familienakte"]');
+      if (b) b.hidden = !famVault;
+    }, () => {});
+  }
+  const fill = (key, values) => T(key).replace(/\{(\w)\}/g, (_, k) => String(values[k]));
+  const emlNameOf = (subject) =>
+    ((subject || "mail").replace(/[\\/:*?"<>|\x00-\x1f]/g, "_").trim().slice(0, 80) || "mail") + ".eml";
+  const messageAt = (at) =>
+    api("/" + encodeURIComponent(at.account) + "/messages/" + at.uid + "?folder=" + encodeURIComponent(at.folder) + "&validity=" + encodeURIComponent(at.validity));
+  /** The whole mail of one provider place; a renumbered folder is found again by the Message-ID. */
+  async function fetchAt(ref) {
+    let at = { account: ref.account, folder: ref.folder, validity: ref.validity, uid: ref.uid };
+    try { return { at, data: await messageAt(at) }; }
+    catch (error) {
+      const found = ref.messageId && native.locate ? await native.locate({ account: ref.account, folder: ref.folder, messageId: ref.messageId }) : null;
+      if (!found?.uid) throw error;
+      at = { ...at, validity: found.validity, uid: found.uid };
+      return { at, data: await messageAt(at) };
+    }
+  }
+  /** refs: [{account, folder, validity, uid, messageId?, date?}] → numbers and one sentence (text). */
+  async function handToFamilienakte(refs) {
+    const n = refs.length, sum = { n, uebergeben: 0, schon: 0, ohneSortierung: 0, befund: 0, fehler: 0, gruende: {}, text: "" };
+    if (!n) return sum;
+    if (n > FAM_MAX) { sum.zuViele = true; sum.text = fill("famMax", { n }); return sum; }
+    if (!native?.familienakteOeffnen || !(await native.familienakteOeffnen())) { sum.geschlossen = true; sum.text = T("famClosed"); return sum; }
+    const failed = (grund) => { sum.fehler++; sum.gruende[grund] = (sum.gruende[grund] || 0) + 1; };
+    let i = 0, locked = false;
+    const job = window.PBActivity?.start({ label: () => fill("famProgress", { i: Math.min(i + 1, n), n }), percent: () => (i / n) * 100 });
+    try {
+      await job?.ready;
+      for (const ref of refs) {
+        job?.update({});
+        if (locked) { failed("gesperrt"); i++; continue; }
+        let got = null;
+        try { got = await fetchAt(ref); } catch { failed("laden"); i++; continue; }
+        const data = got.data;
+        let risky = false, result = null;
+        try {
+          result = await native.shareFamilienakte(got.at, {
+            name: emlNameOf(data.subject),
+            sourceBase64: data.sourceBase64 || "",
+            mail: { from: data.from || "", subject: data.subject || "", date: data.date || ref.date || "", text: data.text || "" },
+            still: true,
+            // Only for a mail that really goes out; an error in the check keeps the mail here.
+            pruefen: async () => { risky = await checkAttachments(data, el("div")); return true; },
+          });
+        } catch { result = null; }
+        if (result?.ergebnis === "uebergeben") {
+          sum.uebergeben++;
+          if (result.begleit === "nein") sum.ohneSortierung++;
+          if (risky) sum.befund++;
+        } else if (result?.ergebnis === "schon") sum.schon++;
+        else {
+          failed(result?.grund || "fehler");
+          if (result?.grund === "gesperrt") locked = true;
+        }
+        i++;
+      }
+    } finally { job?.finish(); }
+    const why = { laden: "famWhyLoad", zuGross: "famWhyLarge", ungeprueft: "famWhyCheck", gesperrt: "famWhyVault" };
+    sum.text = [
+      fill("famDone", { a: sum.uebergeben, n }),
+      sum.schon ? fill("famKnown", { s: sum.schon }) : "",
+      sum.ohneSortierung ? fill("famNoSort", { v: sum.ohneSortierung }) : "",
+      sum.befund ? fill("famFindings", { r: sum.befund }) : "",
+      sum.fehler ? fill("famFailed", { f: sum.fehler }) + " (" + Object.entries(sum.gruende).map(([g, c]) => c + " " + T(why[g] || "famWhyOther")).join(", ") + ")." : "",
+    ].filter(Boolean).join(" ");
+    return sum;
+  }
+  async function batchFamilienakte() {
+    const chosen = items.filter((item) => !item.local && selected.has(item.uid));
+    if (!chosen.length) return;
+    const sum = await handToFamilienakte(chosen.map((item) => ({ account, folder, validity, uid: item.uid, date: item.date })));
+    notice.textContent = sum.text;
+    if (!sum.zuViele && !sum.geschlossen) { selected.clear(); drawNativeList(); }
+    alert(sum.text);
   }
   async function fetchMail(item) {
     return api(prefix() + "/messages/" + item.uid + query());
@@ -1128,7 +1269,8 @@
     // shared Pro vault it goes into the inbox "Eingang-Familienakte" (contract familienakte-uebergabe/1, at most
     // 20 MiB, native-pro-verbund.js); without the vault the system chooser; in the browser Web Share or a download.
     async function shareFamilienakte() {
-      const meta = { name: emlName(), sourceBase64: mail.sourceBase64 || "" };
+      // Kopf und Text gehen mit, damit die Vorsortierung auch ohne Katalog-Eintrag gebaut werden kann.
+      const meta = { name: emlName(), sourceBase64: mail.sourceBase64 || "", mail: { from: mail.from || "", subject: mail.subject || "", date: mail.date || item.date || "", text: mail.text || "" } };
       if (native) return native.shareFamilienakte
         ? native.shareFamilienakte({account,folder,validity,uid:item.uid}, meta)
         : native.openOriginal({account,folder,validity,uid:item.uid,name:emlName()});
@@ -1416,6 +1558,15 @@
   }, 60000);
   window.PBLiveMail = {
     disconnect,
+    /** Hands mails of any connected account to Familienakte without opening them (used by "Alle Konten"). Null while the mailbox is busy. */
+    async familienakte(refs) {
+      if (!native) return null;
+      for (let i = 0; busy && i < 50; i++) await new Promise((r) => setTimeout(r, 200));
+      let sum = null;
+      await run(async () => { sum = await handToFamilienakte(refs); });
+      return sum;
+    },
+    familienakteTresor: async () => (native?.familienakteTresor ? native.familienakteTresor() : { vorhanden: false, offen: false }),
     /** Opens one mail of any connected account in the device mailbox (used by "Alle Konten"). */
     /** Resolves true when the mail is open, false otherwise (the reason stands in the mailbox notice). */
     async openRemote(ref) {

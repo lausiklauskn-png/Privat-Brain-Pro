@@ -25,7 +25,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:900}});
   const errors=[],remote=[];
   page.on('pageerror',e=>errors.push(e.message));
-  page.on('dialog',d=>d.accept());
+  const dialogs=[];page.on('dialog',d=>{dialogs.push(d.message());d.accept();});
   /* Modul 03's library address is answered by the app itself (MainActivity/BundledLibrary), never by the internet. */
   await page.context().route('**/*',r=>{if(r.request().url().startsWith(url))return r.continue();if(r.request().url().startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))return r.fulfill({status:404,body:''});remote.push(r.request().url());return r.abort();});
   await page.addInitScript(()=>{
@@ -65,7 +65,7 @@ try{
         async accounts(args){log('accounts',args);return{items:window.mailAccounts};},
         async folders(args){log('folders',args);offline();return{items:folders[args.account]};},
         async messages(args){log('messages',args);const list=window.server[args.account]?.[args.folder]||[];return{validity:'7',total:list.length,items:list.slice(0,50).map(x=>({uid:x.uid,subject:x.subject,from:x.from,date:new Date(x.date).toString(),flags:[],size:x.size})),next:null};},
-        async message(args){log('message',args);const x=window.server[args.account][args.folder].find(y=>y.uid===args.uid);return{subject:x.subject,from:x.from,to:'klaus@example.invalid',messageId:x.messageId,text:x.text,html:'',raw:'Subject: '+x.subject+'\r\n\r\n'+x.text,attachments:[]};},
+        async message(args){log('message',args);offline();if(args.validity&&args.validity!=='7')throw{code:'FOLDER_CHANGED'};const x=window.server[args.account][args.folder].find(y=>y.uid===args.uid);return{subject:x.subject,from:x.from,to:'klaus@example.invalid',messageId:x.messageId,text:x.text,html:'',raw:'Subject: '+x.subject+'\r\n\r\n'+x.text,attachments:[]};},
         async index(args){log('index',args);offline();
           const list=(window.server[args.account]?.[args.folder]||[]).filter(x=>x.date>=args.since&&(!args.before||x.uid<args.before)).sort((a,b)=>b.uid-a.uid);
           const page=list.slice(0,100);
@@ -339,6 +339,30 @@ try{
   await panel.locator('[data-mail-all-id]').first().click();
   await panel.locator('.mail-all-reader').waitFor();
   ok('Provider unreachable: the stored text opens with a sentence why',await panel.isVisible()&&(await panel.textContent()).includes('Beim Anbieter gerade nicht zu öffnen'));
+  // Klaus 16.11.2026: „An Familienakte“ in der Leseansicht von „Alle Konten“ (Pro-Tresor gestellt).
+  ok('Without a Pro vault the stored reader shows no "An Familienakte" button',await panel.locator('.mail-all-reader [data-mail-familienakte]').isHidden());
+  await page.evaluate(()=>{window.famCalls=[];window.PBProVerbund={familienakteTresor:async()=>({vorhanden:true,offen:true}),familienakteOeffnen:async()=>true,
+    mailAnFamilienakte:async(args,meta)=>{if(meta.pruefen)await meta.pruefen();window.famCalls.push({args,name:meta.name,still:meta.still});return{ergebnis:'uebergeben',begleit:'ja'};}};});
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
+  await panel.locator('[data-mail-all-id]').first().click();
+  const famIndex=panel.locator('.mail-all-reader [data-mail-familienakte]');
+  await page.waitForFunction(()=>{const b=document.querySelector('#pb-mail-all .mail-all-reader [data-mail-familienakte]');return b&&!b.hidden&&b.querySelector('.compact-icon');});
+  ok('With a Pro vault the stored reader offers "An Familienakte" with the line icon and its name',await famIndex.getAttribute('aria-label')==='An Familienakte'&&await famIndex.locator('.compact-icon[data-icon-key=share]').count()===1&&await famIndex.locator('.compact-caption').textContent()==='An Familienakte');
+  const famRecord=await page.evaluate(()=>{const name=document.querySelector('#pb-mail-all .mail-all-reader h3').textContent,r=CATALOG.find(x=>x.name===name&&x.mailRemotes?.length);return{name,...r.mailRemotes[0],hash:r.hash};});
+  await page.evaluate(()=>{window.mailCalls=window.mailCalls.filter(c=>!['message','locate'].includes(c.method));});
+  await famIndex.click();
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  ok('Provider unreachable: the sentence says that only the stored text is here and nothing was sent',/nur der gespeicherte Text/.test(dialogs.at(-1))&&/Nichts wurde übergeben/.test(dialogs.at(-1))&&await page.evaluate(()=>window.famCalls.length===0)&&await panel.locator('.mail-all-reader').isVisible(),dialogs.at(-1));
+  await page.evaluate(()=>{window.offline=false;window.mailCalls=window.mailCalls.filter(c=>!['message','locate'].includes(c.method));});
+  await famIndex.click();
+  await page.waitForFunction(()=>window.famCalls.length===1);await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  const famIndexCall=await page.evaluate(()=>window.famCalls[0]);
+  ok('The whole mail is fetched from its provider place and handed over quietly; the reader stays',famIndexCall.still===true&&famIndexCall.args.account===famRecord.account&&famIndexCall.args.folder===famRecord.folder&&famIndexCall.args.uid===famRecord.uid&&famIndexCall.args.validity==='7'&&famIndexCall.name===famRecord.name+'.eml'&&await page.evaluate(uid=>window.mailCalls.filter(c=>c.method==='message').map(c=>c.args.uid).join()===String(uid),famRecord.uid)&&dialogs.at(-1)==='An die Familienakte übergeben: 1 von 1.'&&await panel.locator('.mail-all-reader').isVisible(),{famIndexCall,famRecord,last:dialogs.at(-1)});
+  await page.evaluate(hash=>{const r=CATALOG.find(x=>x.hash===hash);r.mailRemotes[0].validity='6';window.famCalls=[];window.mailCalls=window.mailCalls.filter(c=>c.method!=='locate');},famRecord.hash);
+  await famIndex.click();
+  await page.waitForFunction(()=>window.famCalls.length===1);await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  ok('If the provider renumbered the folder the mail is found again by its Message-ID',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='locate')&&window.famCalls[0].args.validity==='7')&&(await page.evaluate(()=>window.famCalls[0].args.uid))===famRecord.uid);
+  await page.evaluate(hash=>{CATALOG.find(x=>x.hash===hash).mailRemotes[0].validity='7';delete window.PBProVerbund;window.offline=true;},famRecord.hash);
   await page.evaluate(()=>{window.offline=false;});
   await page.evaluate(()=>PBMailIndex.show(false));
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
