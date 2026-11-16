@@ -81,6 +81,10 @@ try {
     const filter = [...document.querySelectorAll('#filterbar .pb-filter, #filterbar > button')].filter(n => n.getClientRects().length);
     return reihe.every(n => h(n) === 32) && filter.every(n => h(n) === 32) && h(document.querySelector('#panel-search .pb-such-feld')) === 34 && new Set(reihe.map(n => Math.round(n.getBoundingClientRect().top))).size === 1;
   }));
+  ok('„Filter zurücksetzen“ ist ohne gesetzten Filter nicht zu sehen', await page.evaluate(() => document.getElementById('fReset').hidden && !document.getElementById('fReset').getClientRects().length));
+  await page.selectOption('#fType', 'doc');
+  ok('Mit Filter: klein in der Linie der Filter (32 × 32), nach dem Tipp wieder weg', await page.evaluate(() => { const b = document.getElementById('fReset'), r = b.getBoundingClientRect(), f = document.querySelector('#filterbar .pb-filter').getBoundingClientRect();
+    return !b.hidden && Math.round(r.width) === 32 && Math.round(r.height) === 32 && Math.abs(r.top - f.top) < 2; }) && await (async () => { await page.click('#fReset'); await page.waitForTimeout(50); return page.evaluate(() => document.getElementById('fReset').hidden && document.getElementById('fType').value === ''); })());
   await page.evaluate(() => { document.getElementById('q').value = 'Mietvertrag'; });   // wie nach dem Diktat: Text steht da, noch nichts gesucht
   await page.click('#pbSuchLos');
   await page.waitForFunction(() => /Treffer/.test(document.querySelector('#pbUeberall [data-pro-ue-status]').textContent));

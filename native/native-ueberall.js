@@ -135,6 +135,13 @@
     // Arten in derselben Reihenfolge wie bei „Dateien“ (Dokumente, Notizen, Fotos und Bilder), Tabellen danach
     const art = document.getElementById('fType');
     if (art) for (const v of ['doc', 'text', 'img', 'sheet']) { const o = art.querySelector(`option[value="${v}"]`); if (o) art.append(o); }
+    // „Filter zurücksetzen“ sah aus wie „App aktualisieren“ und stand allein in einer Zeile (Klaus 16.11.2026). Jetzt klein,
+    // in der Linie der Filter und nur sichtbar, wenn ein Filter gesetzt ist.
+    if (zurueck) {
+      const zeigen = () => { let an = false; try { an = typeof filterActive === 'function' && !!filterActive(); } catch { an = false; } zurueck.hidden = !an; };
+      zurueck.classList.add('pb-filter-zurueck'); bar.addEventListener('change', zeigen); zurueck.addEventListener('click', () => setTimeout(zeigen, 0)); zeigen();
+      document.addEventListener('click', ev => { if (ev.target.closest?.('#savedRow')) setTimeout(zeigen, 0); });
+    }
     filterWoerter();
   }
   function filterWoerter() {

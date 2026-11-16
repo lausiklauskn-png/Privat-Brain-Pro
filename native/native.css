@@ -673,3 +673,20 @@ html[data-pb-theme] #filterbar, #filterbar { display:flex; flex-wrap:wrap; align
 html[data-pb-theme] #filterbar .pb-filter>select, #filterbar .pb-filter>select { flex:0 1 auto; width:auto!important; min-width:0; max-width:150px!important; height:30px!important; min-height:0!important; padding:0 2px!important; border:0!important; background-color:transparent!important; box-shadow:none!important; font-size:13px!important; font-weight:400; }
 html[data-pb-theme] #filterbar>button, #filterbar>button { height:32px!important; min-height:0!important; padding-block:0!important; font-size:13px!important; }
 #filterbar .pb-filter-ende { margin-left:auto; }
+html[data-pb-theme] #filterbar>.pb-filter-zurueck, #filterbar>.pb-filter-zurueck { width:32px; padding-inline:0!important; justify-content:center; }
+html[data-pb-theme] #filterbar>[hidden] { display:none!important; }
+html[data-pb-theme] #filterbar>.pb-filter, html[data-pb-theme] #filterbar>button { flex:0 0 auto!important; width:auto; }
+html[data-pb-theme] #filterbar .pb-filter>select { width:auto!important; max-width:124px!important; }
+html[data-pb-theme] #filterbar .pb-filter-ende>select { max-width:170px!important; }
+
+/* Vorschlag „Kategorie anlegen?“ zeigt die gemeinten Dateien (Klaus 2026-11-16, Punkt 14); „+ Kategorie“ klein (Punkt 15). */
+.topic-suggest { border-color:var(--acc); background:var(--pb-selected,var(--card2,var(--card))); }
+.topic-files { flex-basis:100%; list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+.topic-file { display:flex; align-items:center; gap:8px; min-width:0; padding:3px 8px; border:1px solid var(--line); border-radius:7px; background:var(--card); font-size:.86rem; }
+.topic-file-name { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.topic-file-out .topic-file-name { font-weight:400; color:var(--mut); text-decoration:line-through; }
+.topic-file input { flex:none; width:16px; height:16px; margin:0; }
+.topic-file .topic-file-view, .topic-actions button { min-height:28px; padding:2px 10px; font-size:.82rem; }
+.topic-actions { flex-basis:100%; display:flex; flex-wrap:wrap; gap:6px; }
+.topic-more { flex-basis:100%; margin:0; }
+html[data-pb-theme] .pb-eigene-knopf, .pb-eigene-knopf { width:auto!important; max-width:100%; flex:0 0 auto; justify-self:start; align-self:flex-start; min-height:26px; padding:2px 9px!important; font-size:.8rem; }

@@ -57,7 +57,7 @@
   function knopf(text, tun) { const b = document.createElement('button'); b.type = 'button'; b.className = 'ghost'; b.textContent = text; b.onclick = tun; return b; }
   /** Werkzeug an einer Zeile: kleiner Knopf, darunter eine Auswahl (kein Fenster, keine Systemdialoge). */
   function zeile(row, r) {
-    const b = knopf(r.eigeneKategorie ? r.eigeneKategorie : t('knopf'), () => menue(row, r));
+    const b = knopf(r.eigeneKategorie ? r.eigeneKategorie : '+ ' + t('knopf'), () => menue(row, r));   // klein, „+ Kategorie“ (Klaus 16.11.2026, Punkt 15)
     b.classList.add('pb-eigene-knopf'); b.dataset.eigene = r.eigeneKategorie || ''; b.title = t('knopf') + (r.eigeneKategorieQuelle === 'regel' ? ' · ' + t('regel') : '');
     row.append(b);
   }
