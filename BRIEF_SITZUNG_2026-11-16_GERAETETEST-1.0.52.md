@@ -56,6 +56,9 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
 22. **ⓘ-Kästen anfangs geschlossen** (Kategorien, Hinzufügen, Einstellungen …). Ändert die Regel aus Sitzung 3 („anfangs offen
     und gemerkt“) – Klaus' neuer Wunsch.
 23. Übersicht und „Dateien“-Grundaufbau: vorerst so lassen.
+25. **Kategorien: Kasten „Neu ordnen – Kopie in einen neuen Ordner“ ist zu groß.** Klaus: als Knopf/Kachel wie die
+    Kategorie-Kacheln oben („Neuer Ordner“ als Dashboard-Kachel); ein Tipp darauf zeigt erst das Schema und dann die Knöpfe
+    „Vorschau ansehen“ / „In neuen Ordner kopieren …“. Kein eigener großer Kasten.
 
 ## Plan für die nächste Sitzung
 
@@ -73,6 +76,7 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
      zur Suche; „+ Kategorie“ klein.
    - V5 Mail: Links im gespeicherten Text als „Link öffnen ↗“; „Nichts aufzuräumen“; Liste/Absender auch bei Suche.
    - V6 ⓘ überall geschlossen.
+   - V7 Kategorien: „Neuer Ordner“ als Kachel neben den Kategorie-Kacheln, Schema und Knöpfe erst nach Tipp (25).
 3. **Bauen in Stücken**, je Stück Probe (vorher rot, nachher grün) und Gegenprobe:
    Laden (1, 2, 3, 4) → Startseite (5–9) → Mail (17–21) → Hinzufügen (10–13) → Dateien (14–16) → ⓘ (22).
 4. **Anhänge in „Alle Konten“ (17):** Weg wählen mit Klaus – entweder beim Einlesen mitholen (Größengrenze je Mail, z. B. 20 MB,
