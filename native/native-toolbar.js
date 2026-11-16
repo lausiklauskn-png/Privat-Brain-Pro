@@ -148,6 +148,8 @@
   for(const [prefix,key] of [['📊','table'],['📈','chart'],['📽️','presentation'],['📽','presentation'],['💻','code'],['📦','package'],['💬','chat'],['✋','hand'],['🗂️','folder'],['🗂','folder'],['💡','info']])prefixKeys.set(prefix,key);
   prefixKeys.set('★','star');
   for(const[prefix,key]of [['🔀','shuffle'],['🔬','lab'],['🧠','search'],['🔑','key'],['🖧','network'],['⬇','download'],['⬇️','download'],['⚙','settings'],['⚙️','settings'],['❓','info'],['🔐','lock'],['🔏','network']])prefixKeys.set(prefix,key);
+  // Generalprüfung 16.11.2026: „Aufräumen“ zeigte ⌛ ✅ ⭐ noch als bunte Zeichen – auch sie werden Liniensymbole.
+  for(const[prefix,key]of [['⌛','pending'],['✅','check'],['⭐','star']])prefixKeys.set(prefix,key);
   const prefixes=[...prefixKeys.keys()].sort((a,b)=>b.length-a.length);
   function decorateKnownPrefix(node,preferred){
     if(!node||node.querySelector(':scope>.compact-icon'))return;

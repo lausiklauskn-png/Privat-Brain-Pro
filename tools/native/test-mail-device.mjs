@@ -66,6 +66,9 @@ try{
   const baselineStyle=await mail.locator('.mail-app:not(.live-mail) [data-mail-text=compose]').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,font:s.fontFamily,border:s.borderRadius};});
   const baseline=await mail.locator('.mail-app:not(.live-mail) .mail-folders [data-mail-folder]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.mailFolder,label:[...n.childNodes].filter(part=>part.nodeType===Node.TEXT_NODE).map(part=>part.textContent).join('').trim(),icon:n.querySelector('.native-folder-icon')?.dataset.iconKey})));
   if(process.env.PB_CAPTURE_DESIGN==='1')await page.screenshot({path:'docs/design/mail-preview6/vorher-konto.png'});
+  // Generalprüfung 16.11.2026: ohne gespeichertes Konto bleibt beim Öffnen des Reiters alles wie bisher.
+  await page.waitForFunction(()=>window.mailCalls.some(c=>c.method==='accounts'));await page.waitForTimeout(300);
+  ok('Without a saved account the Mail tab only asks for the saved accounts: no account dialog, the local mailbox and "Mailkonto verbinden" stay',await mail.locator('.live-mail').isHidden()&&await button('connect').isVisible()&&await page.evaluate(()=>window.mailCalls.every(c=>c.method==='accounts')));
   await button('connect').click();
   await page.waitForFunction(()=>window.mailCalls.some(c=>c.method==='addAccount'));
   ok('Cancelled native account entry keeps local mailbox available',await mail.locator('.live-mail').isHidden());
@@ -188,6 +191,41 @@ try{
   ok('"An Familienakte teilen" stands next to BookLedgerPro with the native label and a line icon',await button('familienakte').first().textContent()==='An Familienakte teilen'&&await button('familienakte').first().locator('.compact-icon').count()===1);
   await button('familienakte').first().click();
   ok('Without the shared Pro vault "An Familienakte teilen" uses the system chooser with the original .eml',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7&&c.args.validity==='123'&&c.args.name==='Native message.eml')));
+  // Generalprüfung 16.11.2026: Stern und Gelesen/ungelesen lassen die Mail offen; nur die Zeile und die Knöpfe ändern sich.
+  await page.evaluate(()=>{const i=document.querySelector('.live-mail .mail-list input[type=search]');i.value='Native';i.dispatchEvent(new Event('input',{bubbles:true}));});
+  await mail.locator('.live-mail .mail-list input[type=checkbox]').first().check();
+  const flagBefore=await page.evaluate(()=>({messages:window.mailCalls.filter(c=>c.method==='messages').length,folders:window.mailCalls.filter(c=>c.method==='folders').length,actions:window.mailCalls.filter(c=>c.method==='action').length}));
+  const flagState=()=>page.evaluate(()=>{const app=document.querySelector('.live-mail'),r=app.querySelector('.mail-reader'),row=app.querySelector('[data-live-uid="7"]'),name=k=>r.querySelector('[data-live-text='+k+']')?.getAttribute('aria-label');
+    return {view:app.dataset.view,subject:r.querySelector('h3')?.textContent,text:r.querySelector('.mail-text')?.textContent,row:row?.querySelector('.mail-subject')?.textContent,unread:row?.closest('.mail-item').classList.contains('unread'),current:row?.getAttribute('aria-current'),
+      star:name('star'),read:name('read'),filter:app.querySelector('.mail-list input[type=search]').value,count:app.querySelector('.mail-count').textContent,
+      messages:window.mailCalls.filter(c=>c.method==='messages').length,folders:window.mailCalls.filter(c=>c.method==='folders').length,last:window.mailCalls.filter(c=>c.method==='action').at(-1)?.args,actions:window.mailCalls.filter(c=>c.method==='action').length};});
+  const flag0=await flagState();
+  ok('The two buttons of the opened mail say what the tap does',flag0.star==='Stern setzen'&&flag0.read==='Als ungelesen markieren',flag0);
+  await clickControl(page,'.live-mail .mail-reader [data-live-text=star]');await settled();
+  const flag1=await flagState();
+  ok('Setting the star keeps the mail open: same subject and text, same view, the list is not fetched again',flag1.view==='reader'&&flag1.subject==='Native message'&&flag1.text==='Direct native inbox text'&&flag1.messages===flagBefore.messages&&flag1.folders===flagBefore.folders,flag1);
+  ok('The star goes to the provider bound to account, folder, UIDVALIDITY and UID, once',flag1.actions===flagBefore.actions+1&&flag1.last.action==='star'&&flag1.last.uid===7&&flag1.last.validity==='123'&&flag1.last.folder==='INBOX',flag1);
+  ok('Only the row of this mail changes: it shows the star and stays the current one; filter word and ticks stay',flag1.row.startsWith('★ ')&&flag1.current==='true'&&flag1.filter==='Native'&&flag1.count==='1 ausgewählt'&&flag1.star==='Stern entfernen',flag1);
+  await clickControl(page,'.live-mail .mail-reader [data-live-text=read]');await settled();
+  const flag2=await flagState();
+  ok('"Als ungelesen markieren" keeps the mail open too; the row turns bold and the button offers the way back',flag2.view==='reader'&&flag2.subject==='Native message'&&flag2.last.action==='unread'&&flag2.unread===true&&flag2.read==='Als gelesen markieren'&&flag2.messages===flagBefore.messages,flag2);
+  await page.evaluate(()=>{document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader [data-live-text=star]')?.getAttribute('aria-label')==='Remove star'&&document.querySelector('.live-mail .mail-reader [data-live-text=read]')?.getAttribute('aria-label')==='Mark as read');
+  ok('Both buttons follow the language and keep their state',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader [data-live-text=star]')?.getAttribute('aria-label')==='Stern entfernen');
+  await clickControl(page,'.live-mail .mail-reader [data-live-text=star]');await settled();await clickControl(page,'.live-mail .mail-reader [data-live-text=read]');await settled();
+  const flag3=await flagState();
+  ok('Both can be taken back the same way',flag3.view==='reader'&&!flag3.row.startsWith('★')&&flag3.unread===false&&flag3.star==='Stern setzen'&&flag3.read==='Als ungelesen markieren',flag3);
+  await page.evaluate(()=>{const i=document.querySelector('.live-mail .mail-list input[type=search]');i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));});
+  // Papierkorb: ein Tipp, sichtbar neben Antworten/Weiterleiten; er verschiebt in den Papierkorb des Anbieters.
+  const trashNow=mail.locator('.live-mail .mail-reader .mail-reader-actions > [data-live-text=trash]');
+  ok('"In Papierkorb" stands directly next to reply and forward, as a line icon with its name, not inside the menu',await trashNow.isVisible()&&await trashNow.getAttribute('aria-label')==='In Papierkorb'&&await trashNow.locator('.compact-icon[data-icon-key=trash]').count()===1&&await mail.locator('.live-mail .mail-message-menu [data-live-text=trash]').count()===0&&await mail.locator('.live-mail .mail-reader-actions > button').evaluateAll(n=>n.map(b=>b.dataset.liveText).filter(k=>k!=='back').slice(0,3).join())==='reply,forward,trash');
+  ok('The other message actions are still all in the menu',await mail.locator('.live-mail .mail-message-menu').evaluate(m=>['read','star','spam','archive','download','bookledger','familienakte'].every(k=>m.querySelector('[data-live-text='+k+']'))&&Boolean(m.querySelector('select'))));
+  ok('The move list of the opened mail shows the same names as the list above, not the provider\'s raw names',await mail.locator('.live-mail .mail-message-menu select option').evaluateAll(o=>o.map(x=>x.textContent))  .then(n=>n.includes('Papierkorb')&&n.includes('Gesendet')&&!n.includes('Trash')&&!n.includes('Sent')));
+  await trashNow.click();await settled();
+  ok('One tap moves the opened mail into the provider\'s trash (not a permanent delete) and returns to the list',await page.evaluate(()=>{const c=window.mailCalls.filter(c=>c.method==='action').at(-1).args;return c.action==='move'&&c.target==='Trash'&&c.uid===7;})&&await mail.locator('.live-mail .mail-reader h3').count()===0);
+  await mail.locator('[data-live-uid="7"]').click();await mail.locator('.mail-reader .mail-text').waitFor({state:'visible'});await checked();
   await page.evaluate(()=>window.failMessage=true);
   await mail.locator('[data-live-uid="7"]').click();
   ok('Failed message opening removes previous subject and actions',await mail.locator('.live-mail [data-live-text=reply]').count()===0&&await mail.locator('.live-mail .mail-reader h3').count()===0);
@@ -248,6 +286,7 @@ try{
   await button('send').click();
   await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader')?.textContent.includes('Versand unklar'));
   ok('Unknown send result is visible and clears the automatic send action',await page.locator('#pb-live-text').count()===0);
+  ok('The unclear result keeps its own wording and has the way back to the list above it',await mail.locator('.live-mail .mail-reader > [data-live-text=back]').count()===1&&(await mail.locator('.live-mail .mail-reader').textContent()).includes('Kein automatischer Neuversand')&&await mail.locator('.live-mail > .mail-notice').textContent()==='Versand unklar – nicht erneut senden');
   await button('refresh').click();
   ok('Refreshing does not automatically resend',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='send').length===1));
   await mail.locator('.live-mail [data-mail-folder=outbox]').click();
@@ -264,6 +303,40 @@ try{
     await page.setViewportSize({width,height:900});
     ok(`${width}px: native mail history has no page overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   }
+  // Generalprüfung 16.11.2026: nach dem Senden am Handy keine Sackgasse.
+  await page.setViewportSize({width:390,height:800});
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="7"]').waitFor();
+  await page.evaluate(()=>{window.sendMode='sent';});
+  const sendsBefore=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='send').length);
+  await button('compose').first().click();
+  await page.fill('#pb-live-to','receiver@example.invalid');await page.fill('#pb-live-subject','Gruss');await page.fill('#pb-live-text','Hallo');
+  await button('send').click();
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy')&&!document.querySelector('#pb-live-text'));
+  const sentState=await page.evaluate(()=>{const app=document.querySelector('.live-mail'),n=app.querySelector(':scope>.mail-notice'),row=app.querySelector('[data-live-uid="7"]'),box=row.getBoundingClientRect(),nb=n.getBoundingClientRect();
+    return {view:app.dataset.view,notice:n.textContent,noticeSeen:nb.height>0&&nb.top>=0&&nb.bottom<=innerHeight,rowSeen:box.height>0&&box.top<innerHeight&&getComputedStyle(app.querySelector('.mail-list')).display!=='none',
+      reader:app.querySelector('.mail-reader').textContent,back:Boolean(app.querySelector('.mail-reader>[data-live-text=back]')),strong:Number(getComputedStyle(n).fontWeight)>=600&&parseFloat(getComputedStyle(n).fontSize)>=13,sends:window.mailCalls.filter(c=>c.method==='send').length};});
+  ok('After sending on the phone a clear sentence says "Gesendet." with the recipient – no "SMTP" wording',sentState.notice==='Gesendet. An: receiver@example.invalid.'&&sentState.noticeSeen&&sentState.strong&&!/SMTP/.test(sentState.notice+sentState.reader),sentState);
+  ok('After sending the message list stands there again (no dead end), and the confirmation has the way back above it',sentState.view==='list'&&sentState.rowSeen&&sentState.back,sentState);
+  ok('The message was handed to the provider exactly once',sentState.sends===sendsBefore+1,sentState);
+  await button('refresh').click();await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  await mail.locator('[data-live-uid="7"]').click();await mail.locator('.live-mail .mail-reader h3').waitFor({state:'visible'});
+  await mail.locator('.live-mail .mail-reader [data-live-text=back]').first().click();
+  ok('Going back, refreshing and opening a mail never send again',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='send').length)===sendsBefore+1);
+  await page.evaluate(()=>{window.sendMode='uncertain';});
+  // Menü „Weitere Aktionen“ am Handy: ganz im Bild, alle Einträge lesbar.
+  await page.setViewportSize({width:360,height:740});
+  await mail.locator('.mail-account-tools>summary').first().click();
+  const menuBox=await page.evaluate(()=>{const bar=document.querySelector('#mailWorkspace .live-mail>.mail-head .mail-account-bar'),m=bar.querySelector('.mail-account-menu'),s=bar.querySelector('.mail-account-tools>summary'),r=m.getBoundingClientRect(),sel=bar.querySelector('select').getBoundingClientRect();
+    return {left:Math.round(r.left),right:Math.round(r.right),width:innerWidth,items:[...m.querySelectorAll('button')].filter(b=>!b.hidden).map(b=>{const x=b.getBoundingClientRect();return {name:b.getAttribute('aria-label')||b.textContent,left:Math.round(x.left),right:Math.round(x.right),cut:b.scrollWidth>b.clientWidth+1};}),
+      name:s.getAttribute('aria-label'),caption:getComputedStyle(s.querySelector('.compact-caption')).display,select:Math.round(sel.width),scroll:document.documentElement.scrollWidth};});
+  ok('On a 360 px phone the menu "Weitere Aktionen" lies completely inside the screen',menuBox.left>=0&&menuBox.right<=menuBox.width&&menuBox.scroll<=menuBox.width,menuBox);
+  ok('All its entries are still there and readable from their first letter',menuBox.items.length>=6&&menuBox.items.every(i=>i.left>=0&&i.right<=menuBox.width&&!i.cut)&&['Konto hinzufügen','Entwürfe und Versandstatus','Postfach schließen','Kontoverbindung entfernen','Lokale Mails','Diese Seite katalogisieren'].every(n=>menuBox.items.some(i=>i.name===n)),menuBox);
+  ok('There the button shows only the three dots and keeps its name; the account choice gets the room',menuBox.name==='Weitere Aktionen'&&menuBox.caption==='none'&&menuBox.select>=120,menuBox);
+  await mail.locator('.mail-account-tools>summary').first().click();
+  await page.setViewportSize({width:1280,height:900});
+  await mail.locator('.mail-account-tools>summary').first().click();
+  ok('On a wide screen the menu stays where it was, at its button',await page.evaluate(()=>{const bar=document.querySelector('#mailWorkspace .live-mail>.mail-head .mail-account-bar'),m=bar.querySelector('.mail-account-menu').getBoundingClientRect(),s=bar.querySelector('.mail-account-tools').getBoundingClientRect();return Math.abs(m.right-s.right)<=1&&Math.round(m.width)===320;}));
+  await mail.locator('.mail-account-tools>summary').first().click();
   // Klaus 16.11.2026: markierte Mails aus der Liste an die Familienakte. Der Pro-Tresor ist hier gestellt; die echte Übergabe
   // mit Begleitdatei prüft test-pro-verbund.
   await page.evaluate(()=>{
@@ -282,6 +355,9 @@ try{
   });
   const fam=mail.locator('.live-mail [data-native-selection=familienakte]'),famSettled=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   const messagesFetched=()=>page.evaluate(()=>window.mailCalls.filter(c=>c.method==='message').map(c=>c.args.uid));
+  // Generalprüfung 16.11.2026: das Ergebnis steht einmal in der Hinweiszeile über der Liste, nicht zusätzlich als Fenster.
+  const famNote=()=>mail.locator('.live-mail > .mail-notice').textContent();
+  const ticked=()=>mail.locator('.live-mail .mail-list .mail-item:has(input[type=checkbox]:checked) [data-live-uid]').evaluateAll(n=>n.map(b=>Number(b.dataset.liveUid)));
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="21"]').waitFor();
   await page.waitForFunction(()=>{const b=document.querySelector('.live-mail [data-native-selection=familienakte]');return b&&!b.hidden&&b.querySelector('.compact-icon');});
   ok('With a Pro vault the selection bar offers "An Familienakte": a line icon, the name in title and aria-label, flat like its neighbours',await fam.getAttribute('aria-label')==='An Familienakte'&&await fam.getAttribute('title')==='An Familienakte'&&await fam.locator('.compact-icon[data-icon-key=share]').count()===1&&await fam.locator('.compact-caption').count()===0&&await page.evaluate(()=>{const h=s=>Math.round(document.querySelector('.live-mail [data-native-selection='+s+']').getBoundingClientRect().height);return h('familienakte')===h('trash')&&!/\p{Extended_Pictographic}/u.test(document.querySelector('.live-mail [data-native-selection=familienakte]').textContent);}));
@@ -303,21 +379,30 @@ try{
   ok('The attachments of a mail are checked before it is handed over, as in the opened mail',famCalls[0].geprueft===true&&famCalls[0].checksAfter>famCalls[0].checksBefore&&famCalls[2].geprueft===true&&famCalls[2].checksAfter>famCalls[2].checksBefore,famCalls);
   ok('A mail that was already handed over is skipped without a new check',famCalls[1].checksAfter===famCalls[1].checksBefore&&famCalls[1].geprueft===undefined);
   ok('The locked-vault question is asked once for all marked mails, not per mail',await page.evaluate(()=>window.famOpens)===1);
-  ok('At the end one sentence gives the numbers: handed over, already handed over, findings of the attachment check, not handed over with the reason',dialogs.length===dialogCount+1&&dialogs.at(-1)==='An die Familienakte übergeben: 1 von 3. Schon früher übergeben, nicht noch einmal geschickt: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen. Nicht übergeben: 1 (1 größer als 20 MiB).',dialogs.at(-1));
-  ok('Handing over from the list neither opens nor marks a mail as read, shares nothing outside, and clears the selection',await page.evaluate(()=>!window.mailCalls.some(c=>c.method==='action'||c.method==='openOriginal'))&&await mail.locator('.live-mail .mail-count').textContent()==='0 ausgewählt'&&await page.evaluate(()=>document.querySelector('#pb-activity').hidden));
+  ok('At the end one sentence gives the numbers: handed over, already handed over, findings of the attachment check, not handed over with the reason',await famNote()==='An die Familienakte übergeben: 1 von 3. Schon früher übergeben, nicht noch einmal geschickt: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen. Nicht übergeben: 1 (1 größer als 20 MiB).',await famNote());
+  ok('The sentence comes once: in the notice line above the list, clearly visible, and not again as a window to tap away',dialogs.length===dialogCount&&await page.evaluate(()=>{const n=document.querySelector('.live-mail > .mail-notice'),r=n.getBoundingClientRect(),s=getComputedStyle(n);return n.getAttribute('role')==='status'&&n.dataset.mailResult==='offen'&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&Number(s.fontWeight)>=600&&parseFloat(s.fontSize)>=13;}),dialogs.slice(dialogCount));
+  ok('The mail that was not handed over stays ticked – only this one; the ones that went or were known are unticked',JSON.stringify(await ticked())==='[23]'&&await mail.locator('.live-mail .mail-count').textContent()==='1 ausgewählt',await ticked());
+  const listCalls=()=>page.evaluate(()=>window.mailCalls.filter(c=>c.method==='messages').length);
+  let listBefore=await listCalls();await page.evaluate(()=>PBLiveMail.autoRefresh());await famSettled();
+  ok('While a mail is ticked the automatic refresh every minute leaves the list alone: tick and sentence stay',await listCalls()===listBefore&&JSON.stringify(await ticked())==='[23]'&&(await famNote()).startsWith('An die Familienakte übergeben: 1 von 3.'));
+  await page.evaluate(()=>{window.famPlan={};window.famCalls=[];});await fam.click();await famSettled();
+  ok('A second tap then hands over exactly the mail that was left; after that nothing is ticked',await page.evaluate(()=>window.famCalls.length===1&&window.famCalls[0].args.uid===23)&&await famNote()==='An die Familienakte übergeben: 1 von 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.'&&(await ticked()).length===0&&await page.evaluate(()=>document.querySelector('.live-mail > .mail-notice').dataset.mailResult==='fertig'),await famNote());
+  listBefore=await listCalls();await page.evaluate(()=>PBLiveMail.autoRefresh());await famSettled();
+  ok('Without ticks the automatic refresh fetches the list as before',await listCalls()===listBefore+1);
+  ok('Handing over from the list neither opens nor marks a mail as read, shares nothing outside',await page.evaluate(()=>!window.mailCalls.some(c=>c.method==='action'||c.method==='openOriginal'))&&await mail.locator('.live-mail .mail-count').textContent()==='0 ausgewählt'&&await page.evaluate(()=>document.querySelector('#pb-activity').hidden));
   await page.evaluate(()=>{window.famPlan={21:{ergebnis:'uebergeben',begleit:'nein'}};});
   await mail.locator('.live-mail .mail-item:has([data-live-uid="21"]) input[type=checkbox]').check();await fam.click();await famSettled();
-  ok('If only the pre-sorting failed the sentence says "Mail übergeben, Vorsortierung nicht"',dialogs.at(-1)==='An die Familienakte übergeben: 1 von 1. Mail übergeben, Vorsortierung nicht: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.',dialogs.at(-1));
+  ok('If only the pre-sorting failed the sentence says "Mail übergeben, Vorsortierung nicht"',await famNote()==='An die Familienakte übergeben: 1 von 1. Mail übergeben, Vorsortierung nicht: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.',await famNote());
   await page.evaluate(()=>{window.famPlan={};window.failMessage=true;window.famCalls=[];});
   await mail.locator('.live-mail .mail-item:has([data-live-uid="22"]) input[type=checkbox]').check();await fam.click();await famSettled();
-  ok('A mail that cannot be loaded from the provider is not handed over and is named',dialogs.at(-1)==='An die Familienakte übergeben: 0 von 1. Nicht übergeben: 1 (1 beim Anbieter nicht ladbar).'&&await page.evaluate(()=>window.famCalls.length===0),dialogs.at(-1));
+  ok('A mail that cannot be loaded from the provider is not handed over, is named and stays ticked',await famNote()==='An die Familienakte übergeben: 0 von 1. Nicht übergeben: 1 (1 beim Anbieter nicht ladbar).'&&await page.evaluate(()=>window.famCalls.length===0)&&JSON.stringify(await ticked())==='[22]',await famNote());
   await page.evaluate(()=>{window.failMessage=false;window.famOpen=false;window.mailCalls=window.mailCalls.filter(c=>c.method!=='message');});
   await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
-  ok('Vault stays locked: nothing is fetched or handed over, the selection stays',dialogs.at(-1)==='Nichts übergeben: Der Pro-Tresor ist nicht offen.'&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famCalls.length===0)&&await mail.locator('.live-mail .mail-count').textContent()==='3 ausgewählt',dialogs.at(-1));
+  ok('Vault stays locked: nothing is fetched or handed over, the selection stays',await famNote()==='Nichts übergeben: Der Pro-Tresor ist nicht offen.'&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famCalls.length===0)&&await mail.locator('.live-mail .mail-count').textContent()==='3 ausgewählt',await famNote());
   await page.evaluate(()=>{window.famOpen=true;window.famOpens=0;window.inboxItems=Array.from({length:21},(_,i)=>({uid:100+i,subject:'Viele '+i,from:'friend@example.invalid',flags:[],size:1000}));});
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="120"]').waitFor();
   await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
-  ok('More than 20 marked mails: nothing starts, the limit is named',/^Höchstens 20 Mails auf einmal an die Familienakte – markiert sind 21\./.test(dialogs.at(-1))&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famOpens===0&&window.famCalls.length===0),dialogs.at(-1));
+  ok('More than 20 marked mails: nothing starts, the limit is named',/^Höchstens 20 Mails auf einmal an die Familienakte – markiert sind 21\./.test(await famNote())&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famOpens===0&&window.famCalls.length===0),await famNote());
   await page.evaluate(()=>{window.famVault=false;window.inboxItems=null;});
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="7"]').waitFor();
   await page.waitForFunction(()=>document.querySelector('.live-mail [data-native-selection=familienakte]')?.hidden===true);

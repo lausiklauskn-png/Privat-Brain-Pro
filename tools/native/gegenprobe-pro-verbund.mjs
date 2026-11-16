@@ -12,6 +12,10 @@ const cases=[
  ['mail-not-into-vault','native-pro-verbund.js',"const result=await send(new File([bytes],name,{type:'message/rfc822'}),rec?.hash||null,'familienakte',still?{einmal:true,vorher:meta.pruefen}:{});","const result=await teilen();",'Open Pro vault: the raw .eml with its PDF attachment goes to Familienakte through the canonical handover'],
  ['viewer-sends-text','native-pro-verbund.js',"if(target==='familienakte'){const eml=await mailEml(entry.recordHash);if(eml)file=eml;}","",'File viewer: "To Pro app" sends a catalogued mail to Familienakte as the raw .eml, not as .txt'],
  ['locked-vault-shares-silently','native-pro-verbund.js',"if(z?.gewaehlt&&z.uebergaben&&z.erreichbar!==false){","if(false){",'Locked Pro vault asks first'],
+ // Generalprüfung 16.11.2026
+ ['unreachable-vault-shares-silently','native-pro-verbund.js',"}else if(z?.gewaehlt&&z.uebergaben&&z.erreichbar===false){","}else if(false){",'Vault chosen but its folder cannot be reached'],
+ ['companion-row-in-outbox','native-pro-verbund.js',"if(eigen.has(r))continue;","",'The outbox list no longer shows the technical companion file'],
+ ['again-forgets-companion','native-pro-verbund.js',"async()=>{for(const x of fehlt)await deliver(x);}","()=>deliver(r)",'"Erneut weitergeben" at the mail still works and passes on both'],
  ['companion-not-sent','native-pro-verbund.js',"let begleit='keine';try{begleit=await begleitung(result,rec,meta,bytes);}catch{begleit='nein';}","let begleit='keine';",'After the mail its pre-sorting follows as a second handover'],
  ['companion-without-relation','native-pro-verbund.js',"{type:'application/json'}),null,'familienakte',{bezug:m.id});","{type:'application/json'}),null,'familienakte',{});",'After the mail its pre-sorting follows as a second handover'],
  ['companion-failure-hidden','native-pro-verbund.js',"catch{begleit='nein';}","catch{begleit='ja';}",'If only the companion fails the mail still counts as handed over'],

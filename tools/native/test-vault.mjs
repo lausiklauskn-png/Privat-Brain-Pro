@@ -108,7 +108,7 @@ try{
   // ---------- mail with a stored, then cleared attachment ----------
   folder.attachments.push({id:'att-1',name:'schreiben.txt',type:'text/plain',size:textBytes.length,subject:'Schreiben vom Anwalt',from:'kanzlei@example.invalid',date:String(Date.UTC(2026,9,20)),stored:Date.now(),bytes:textBytes});
   await page.click('[data-tab=mail]');
-  await page.locator('#mailWorkspace [data-live-text=connect]').click();
+  /* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});
   await page.locator('#mailWorkspace [data-live-uid="9"]').click();
   await page.locator('.native-vault-attachment').first().waitFor();
   ok('A 40 MB mail opens with its attachment as a reference in the folder',await page.locator('.native-vault-attachment').first().textContent().then(t=>t.includes('schreiben.txt')&&t.includes('im Anhang-Ordner')));

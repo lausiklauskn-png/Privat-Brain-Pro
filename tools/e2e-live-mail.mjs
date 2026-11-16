@@ -323,7 +323,7 @@ try {
   await page.waitForFunction(() =>
     document
       .querySelector("#pb-live-reader")
-      .textContent.includes("Mailserver hat"),
+      .textContent.includes("Gesendet."),
   );
   const submission = requests.find((r) => r.path.endsWith("/send"));
   ok(
@@ -336,7 +336,19 @@ try {
     requests.filter(r=>r.path.endsWith('/send')).length===1);
   ok(
     "Versanderfolg wird erst nach Serverantwort angezeigt",
-    (await page.locator("#pb-live-reader").innerText()).includes("angenommen"),
+    (await page.locator("#pb-live-reader").innerText()).includes("Gesendet."),
+  );
+  // Generalprüfung 16.11.2026: nach dem Senden keine Sackgasse – klarer Satz, Liste wieder da, Weg zurück vorhanden.
+  ok(
+    "Nach dem Senden: klarer Satz mit Empfänger in der Hinweiszeile, Nachrichtenliste steht wieder da, „← Nachrichtenliste“ über der Meldung",
+    await page.evaluate(() => {
+      const app = document.querySelector(".live-mail");
+      return app.dataset.view === "list" &&
+        app.querySelector(":scope > .mail-notice").textContent.startsWith("Gesendet. An: ") &&
+        !/SMTP/.test(app.querySelector(":scope > .mail-notice").textContent) &&
+        Boolean(app.querySelector('#pb-live-reader > [data-live-text="back"]')) &&
+        app.querySelectorAll(".mail-list [data-live-uid]").length > 0;
+    }),
   );
   await page
     .getByRole("button", { name: "Aktualisieren", exact: true })

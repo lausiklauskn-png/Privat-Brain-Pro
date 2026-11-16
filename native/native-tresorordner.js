@@ -37,6 +37,10 @@
     toVault: ['In den Tresorordner legen', 'Put into the shared vault folder', 'Положить в общую папку', 'Włóż do wspólnego folderu'],
     share: ['Teilen …', 'Share …', 'Поделиться …', 'Udostępnij …'],
     cancel: ['Abbrechen', 'Cancel', 'Отмена', 'Anuluj'],
+    // Generalprüfung 16.11.2026: dieselbe Mail lag nach jedem Tipp noch einmal im Fach. Die App merkt sich, was sie abgelegt hat.
+    askAgain: ['Diese Mail liegt schon im Tresorordner (Fach „Eingang-BookLedgerPro“), abgelegt am {d}. Sie wird nicht noch einmal abgelegt.', 'This email is already in the shared vault folder (compartment “Eingang-BookLedgerPro”), stored on {d}. It is not stored again.', 'Это письмо уже лежит в общей папке (раздел «Eingang-BookLedgerPro»), сохранено {d}. Повторно оно не сохраняется.', 'Ta wiadomość jest już we wspólnym folderze (przegródka „Eingang-BookLedgerPro”), zapisana {d}. Nie zostanie zapisana ponownie.'],
+    again: ['Trotzdem noch einmal ablegen', 'Store it again anyway', 'Всё равно сохранить ещё раз', 'Mimo to zapisz ponownie'],
+    close: ['Schließen', 'Close', 'Закрыть', 'Zamknij'],
     stored: ['Im Tresorordner abgelegt: Eingang-BookLedgerPro/Mails', 'Stored in the shared vault folder: Eingang-BookLedgerPro/Mails', 'Сохранено в общей папке: Eingang-BookLedgerPro/Mails', 'Zapisano we wspólnym folderze: Eingang-BookLedgerPro/Mails'],
     TRESOR_ORDNER_OHNE_TRESOR: ['In diesem Ordner liegt kein „Private Brain“. Bitte den Ordner darüber wählen, in dem „Private Brain“ liegt. Nichts wurde verändert.', 'This folder does not contain “Private Brain”. Choose the folder above it. Nothing was changed.', 'В этой папке нет «Private Brain». Выберите папку уровнем выше. Ничего не изменено.', 'W tym folderze nie ma „Private Brain”. Wybierz folder wyżej. Nic nie zmieniono.'],
     TRESOR_ORDNER_IST_FACH: ['Das ist ein App-Ordner im Tresor (zum Beispiel „Private Brain“). Bitte die Ebene darüber wählen – den Ordner, in dem „tresorordner.json“ liegt (oder liegen soll). Nichts wurde verändert.', 'This is an app folder inside the vault (for example “Private Brain”). Choose the level above – the folder that contains (or will contain) “tresorordner.json”. Nothing was changed.', 'Это папка приложения в сейфе (например «Private Brain»). Выберите папку, в которой лежит «tresorordner.json». Ничего не изменено.', 'To folder aplikacji w sejfie (np. „Private Brain”). Wybierz folder, w którym leży „tresorordner.json”. Nic nie zmieniono.'],
@@ -166,16 +170,28 @@
   if (!beobachten()) document.addEventListener('DOMContentLoaded', beobachten, { once: true });
 
   // ---------- „An BookLedgerPro teilen“ mit verbundenem Tresorordner ----------
-  function frage(gesperrt) {
+  // Merkliste der abgelegten Mails (nur Ordner-Kennung, Konto, Ordner und Nummer der Mail samt Zeitpunkt; höchstens 500).
+  const MERK = 'pb_tresor_bookledger_mails';
+  const merkLesen = () => { try { const v = JSON.parse(localStorage.getItem(MERK) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch { return {}; } };
+  const merkKey = (z, args) => [z?.kennung || z?.ordner || '', args.account, args.folder, args.validity, args.uid].join('|');
+  function merken(key) {
+    const alle = merkLesen(); alle[key] = Date.now();
+    const neu = Object.entries(alle).sort((a, b) => b[1] - a[1]).slice(0, 500);
+    try { localStorage.setItem(MERK, JSON.stringify(Object.fromEntries(neu))); } catch { /* ohne Merkliste wie bisher */ }
+  }
+  function frage(gesperrt, schon = 0) {
     return new Promise(resolve => {
       const dialog = make('dialog', null, 'live-dialog native-tresorordner-frage'); dialog.id = 'tresorordnerFrage';
       dialog.dataset.gesperrt = gesperrt ? '1' : '';
-      dialog.append(make('h2', t('askTitle')), make('p', t(gesperrt ? 'askLocked' : 'askText')));
+      dialog.dataset.schon = schon ? '1' : '';
+      const wann = schon ? new Date(schon).toLocaleString(document.documentElement.lang || 'de', { dateStyle: 'short', timeStyle: 'short' }) : '';
+      dialog.append(make('h2', t('askTitle')), make('p', schon ? t('askAgain').replace('{d}', wann) : t(gesperrt ? 'askLocked' : 'askText')));
       let wahl = null;
       const add = (key, value, primary) => { const b = make('button', t(key), primary ? 'primary' : 'ghost'); b.type = 'button'; b.dataset.wahl = value; b.onclick = () => { wahl = value; dialog.close(); }; dialog.append(b); };
-      if (gesperrt) { add('unlockVault', 'entsperren', true); add('shareNormal', 'teilen', false); }
+      if (schon) { add('close', '', true); add('again', gesperrt ? 'entsperren' : 'tresor', false); add('share', 'teilen', false); }
+      else if (gesperrt) { add('unlockVault', 'entsperren', true); add('shareNormal', 'teilen', false); }
       else { add('toVault', 'tresor', true); add('share', 'teilen', false); }
-      add('cancel', null, false);
+      if (!schon) add('cancel', null, false);
       document.body.append(dialog);
       dialog.addEventListener('close', () => { dialog.remove(); resolve(wahl); }, { once: true });
       dialog.showModal();
@@ -189,7 +205,8 @@
     // Tablet-Probe 2026-10-28: bei gesperrtem Ordner nahm das Teilen still den Android-Weg. Jetzt wird gefragt (Leitfaden § 5).
     const gesperrt = !verbunden && z?.gewaehlt && z.vorhanden && z.pruefung === 'PASST' && !z.offen;
     if (!verbunden && !gesperrt) return device.openOriginal({ ...args, name: String(meta.name || '') });
-    const wahl = await frage(gesperrt);
+    const key = merkKey(z, args);
+    const wahl = await frage(gesperrt, Number(merkLesen()[key]) || 0);
     if (wahl === 'teilen') return device.openOriginal({ ...args, name: String(meta.name || '') });
     if (wahl !== 'tresor' && wahl !== 'entsperren') return { abgebrochen: true };
     try {
@@ -199,6 +216,7 @@
         void zeigen();
       }
       const r = await device.tresorMailAblegen({ ...args, name: String(meta.name || 'mail.eml').slice(0, 255), datum: Math.max(0, Number(meta.datum) || 0), auszug: kurz(meta.auszug) });
+      merken(key);
       alert(t('stored'));
       return r;
     } catch (error) { alert(message(error)); return { fehler: true }; }
