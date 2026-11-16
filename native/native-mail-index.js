@@ -56,6 +56,8 @@
     textMissing: ['Der Text ist zu groß oder nur als Bild vorhanden. Beim Anbieter öffnen.', 'The text is too large or only an image. Open with provider.', 'Текст слишком большой или только картинка. Откройте у провайдера.', 'Tekst jest za duży lub tylko jako obraz. Otwórz u dostawcy.'],
     remoteFailed: ['Beim Anbieter gerade nicht zu öffnen. Hier steht der gespeicherte Text; „Beim Anbieter öffnen“ versucht es noch einmal.', 'Cannot open with the provider right now. This is the stored text; “Open with provider” tries again.', 'Сейчас не открывается у провайдера. Здесь сохранённый текст; «Открыть у провайдера» попробует снова.', 'Teraz nie da się otworzyć u dostawcy. To zapisany tekst; „Otwórz u dostawcy” spróbuje ponownie.'],
     textScope: ['Gespeicherter Mailtext. Der Abruf liest höchstens 8.000 Zeichen je Mail; Original und Anhänge werden hier nicht geladen.', 'Stored email text. Fetching reads up to 8,000 characters per email; the original and attachments are not downloaded here.', 'Сохранённый текст письма. Загружается не более 8 000 символов на письмо; оригинал и вложения здесь не загружаются.', 'Zapisany tekst e-maila. Pobieranie odczytuje do 8 000 znaków na wiadomość; oryginał i załączniki nie są tu pobierane.'],
+    linkOpen: ['Link öffnen ↗', 'Open link ↗', 'Открыть ссылку ↗', 'Otwórz link ↗'],
+    linkError: ['Der Link ließ sich nicht öffnen.', 'The link could not be opened.', 'Не удалось открыть ссылку.', 'Nie udało się otworzyć linku.'],
     dupesTitle: ['✉️ Mails, die doppelt sein könnten', '✉️ Emails that may be duplicates', '✉️ Письма, которые могут повторяться', '✉️ Wiadomości, które mogą się powtarzać'],
     dupesHelp: ['Gleicher Absender und Betreff, aber anderer Text und keine Mail-Kennung. Nichts wurde überschrieben. Bitte entscheiden:', 'Same sender and subject, but different text and no message ID. Nothing was overwritten. Please decide:', 'Тот же отправитель и тема, но другой текст и нет идентификатора. Ничего не перезаписано. Решите:', 'Ten sam nadawca i temat, ale inny tekst i brak identyfikatora. Nic nie nadpisano. Zdecyduj:'],
     same: ['Gleich – zusammenlegen', 'Same – merge', 'Одинаковые – объединить', 'Takie same – połącz'],
@@ -617,6 +619,32 @@
     b.onclick = () => openMail(r);
     row.append(el('span'), b); return row;
   }
+  /** Stored mail text. A web address is not written out but becomes a small button "Link öffnen ↗" (Klaus 16.11.2026);
+      the address stands in its title. Opening goes only through the mail link way of the app (ProLinks, real tap, checked
+      http/https address). Without that way the text stays as it is. Foreign text only ever becomes text nodes. */
+  function storedText(text) {
+    const pre = el('pre', 'mail-text'), links = window.Capacitor?.Plugins?.ProLinks, safe = window.PBMailView?.webUrl;
+    if (typeof links?.open !== 'function' || typeof safe !== 'function') { pre.textContent = text; return pre; }
+    let at = 0;
+    for (const match of text.matchAll(/https?:\/\/[^\s<>"'\u0000-\u001f]+/gi)) {
+      let raw = match[0].replace(/[.,;!?]+$/g, '');
+      for (const [open, close] of [['(', ')'], ['[', ']']])
+        while (raw.endsWith(close) && raw.split(close).length > raw.split(open).length) raw = raw.slice(0, -1);
+      const url = safe(raw); if (!url) continue;
+      let start = match.index, end = start + raw.length;
+      // "[https://…]" and "<https://…>": the brackets only fenced the address and go with it.
+      if (start > at && ({ '[': ']', '<': '>' })[text[start - 1]] === text[end]) { start--; end++; }
+      pre.append(text.slice(at, start));
+      const b = button(t('linkOpen'), () => {}, 'mail-link-open'); b.title = url; b.dataset.mailLink = '1';
+      b.onclick = async event => {
+        if (!event.isTrusted) return;
+        try { await links.open({ url }); } catch { if (status) status.textContent = t('linkError'); }
+      };
+      pre.append(b); at = end;
+    }
+    pre.append(text.slice(at));
+    return pre;
+  }
   function drawReader(r) {
     const box = el('div', 'mail-all-reader');
     box.append(button(t('backList'), () => { openRecord = null; draw(); }, 'mail-back'), el('h3', '', r.name || t('noSubject')),
@@ -643,7 +671,7 @@
     else if (r.mailUnsubbed) tools.append(el('span', 'mail-muted', t('unsubbed') + ' ' + fmtDate(r.mailUnsubbed.at)));
     if (r.mailMessageId && r.mailRemotes?.length) tools.append(button(t('trashOne'), async () => { if (confirm(t('confirmTrash'))) { await trashRecords([r], 'manual'); openRecord = null; draw(); } }));
     box.append(tools);
-    box.append(el('pre', 'mail-text', r.mailBody || t('textMissing')));
+    box.append(storedText(r.mailBody || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
     if (remoteFailed === r.hash) box.insertBefore(el('p', 'mail-notice', t('remoteFailed')), box.children[2] || null);
     if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), () => openMail(r, true), 'mail-primary'));

@@ -45,6 +45,7 @@ try{
       m(2000,'ALDI SÜD <news@aldi.invalid>','Angebote alt',8,{list:true,messageId:'<aldi42@aldi.invalid>',text:'Angebote vom '+d(-10)+' bis '+d(-3)}),
       m(1994,'Rabattshop <deals@rabatt.invalid>','Mit Stern',4,{list:true,flagged:true,text:'nur bis '+d(-3)}),
       m(1999,'Stadtwerke <rechnung@stadtwerke.invalid>','Ihre Rechnung Oktober',3,{text:'Rechnungsbetrag 54,20 EUR'}),
+      m(1993,'Portal <portal@example.invalid>','Bitte bestaetigen',2.5,{text:'Mit einem Klick im Browser öffnen [https://portal.example.invalid/bestaetigen/'+'a'.repeat(120)+'?token=abc&x=1]\nDanach weiter. Nackt: https://lang.example.invalid/pfad/'+'b'.repeat(90)+'.\nSpitz: <https://spitz.example.invalid/x>\nKein Link: javascript:alert(1) und http://localhost/x und https://user:pw@boese.example.invalid/'}),
       m(1998,'Shop <info@shop.invalid>','Bestellung',5,{messageId:'',text:'Version eins'}),
       m(1997,'Shop <info@shop.invalid>','Bestellung',5.2,{messageId:'',text:'Version zwei, anders'}),
       m(1996,'Verein <verein@example.invalid>','Nur HTML',6,{text:'',html:'<p>Treffen <b>Samstag</b></p><script>window.pwned=1</script><img src="https://tracker.invalid/p.png">'}),
@@ -59,6 +60,7 @@ try{
     const offline=()=>{if(window.offline)throw{code:'APP_OFFLINE'};};
     window.Capacitor={Plugins:{
       ProDevice:{async getInfo(){return{platform:'android',versionName:'0.1.0-preview.20-debug',nativeMail:true};}},
+      ProLinks:{async open(args){log('linkOpen',args);if(window.linkFails)throw{code:'NO_BROWSER'};return{};}},
       ProMail:{
         async accounts(args){log('accounts',args);return{items:window.mailAccounts};},
         async folders(args){log('folders',args);offline();return{items:folders[args.account]};},
@@ -292,6 +294,29 @@ try{
   await panel.locator('[data-mail-all=search]').fill('xyzzy qwert');
   ok('Nothing known to join: no hits, nothing invented',(await panel.locator('.mail-count').textContent())==='0 Treffer für „xyzzy qwert“ · 0 Absender'&&(await panel.textContent()).includes('Keine Mails gefunden.'));
   await panel.locator('[data-mail-all=search]').fill('');
+  // Punkt 18 (Klaus 16.11.2026): lange Adressen im gespeicherten Text werden ein Knopf „Link öffnen ↗“.
+  await page.evaluate(id=>PBMailIndex.read(id),await hashOf('<m1993@example.invalid>'));
+  const stored=panel.locator('.mail-all-reader .mail-text');
+  const linkButtons=await stored.locator('button[data-mail-link]').evaluateAll(n=>n.map(b=>({text:b.textContent,title:b.title,h:Math.round(b.getBoundingClientRect().height)})));
+  const storedText=await stored.textContent();
+  ok('Web addresses in the stored text become "Link öffnen ↗" buttons; the address stands only in the title',linkButtons.length===3&&linkButtons.every(l=>l.text==='Link öffnen ↗')&&linkButtons[0].title==='https://portal.example.invalid/bestaetigen/'+'a'.repeat(120)+'?token=abc&x=1'&&linkButtons[1].title==='https://lang.example.invalid/pfad/'+'b'.repeat(90)&&linkButtons[2].title==='https://spitz.example.invalid/x'&&!/portal\.example|lang\.example|spitz\.example/.test(storedText),{linkButtons,storedText});
+  ok('The brackets around an address go with it, the sentence around it stays',storedText.includes('Mit einem Klick im Browser öffnen Link öffnen ↗\nDanach weiter. Nackt: Link öffnen ↗.\nSpitz: Link öffnen ↗\n'),storedText);
+  ok('Anything that is not a plain web address stays text and gets no button',storedText.includes('javascript:alert(1)')&&storedText.includes('http://localhost/x')&&storedText.includes('https://user:pw@boese.example.invalid/'));
+  ok('The link button is small and flat ('+linkButtons.map(l=>l.h).join(', ')+' px)',linkButtons.every(l=>l.h>=18&&l.h<=28));
+  await page.evaluate(()=>document.querySelector('#pb-mail-all button[data-mail-link]').click());
+  ok('A click made by a script opens nothing',await page.evaluate(()=>!window.mailCalls.some(c=>c.method==='linkOpen')));
+  await stored.locator('button[data-mail-link]').first().click();
+  ok('A real tap hands exactly this address to the safe browser way (ProLinks)',await page.evaluate(()=>{const c=window.mailCalls.filter(c=>c.method==='linkOpen');return c.length===1&&c[0].args.url===document.querySelector('#pb-mail-all button[data-mail-link]').title;}));
+  await page.evaluate(()=>{window.linkFails=true;});
+  await stored.locator('button[data-mail-link]').nth(1).click();
+  await page.waitForFunction(()=>document.querySelector('#pb-mail-all [role=status]')?.textContent.includes('Der Link ließ sich nicht öffnen.'));
+  ok('A link that cannot be opened is named',true);
+  await page.evaluate(()=>{window.linkFails=false;document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('#pb-mail-all button[data-mail-link]')?.textContent==='Open link ↗');
+  ok('The link button follows the language',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.waitForFunction(()=>document.querySelector('#pb-mail-all button[data-mail-link]')?.textContent==='Link öffnen ↗');
+  await panel.getByRole('button',{name:'← Zurück',exact:true}).click();
   // Offline: nothing breaks, the reason is shown
   await page.locator('[data-tab="mail"]').click();
   await page.evaluate(()=>{window.offline=true;});

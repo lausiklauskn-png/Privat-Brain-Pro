@@ -70,6 +70,8 @@
   const views = new WeakMap();
   new MutationObserver(() => document.querySelectorAll('.mail-original').forEach(root => views.get(root)?.())).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   window.PBMailView = {
+    /** The one address check for mail links: http/https only, no user info, no local or numeric hosts. '' when not allowed. */
+    webUrl,
     render(mail) {
       const root = document.createElement('div'); root.className = 'mail-original';
       const text = document.createElement('pre'); text.className = 'mail-text'; text.textContent = mail.text || '';
