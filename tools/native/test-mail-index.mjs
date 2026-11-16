@@ -281,6 +281,17 @@ try{
   await page.evaluate(()=>{for(const [r,list,mark] of window.savedMarks){r.mailList=list;if(mark)r.mailSenderMark=mark;}});
   await panel.locator('[data-mail-all=clean]').click();
   ok('With newsletters the sentence is gone and the sections are back',await panel.locator('[data-mail-clean-empty]').count()===0&&await panel.locator('[data-mail-clean]').count()>=3);
+  // Getrennt diktierte Wörter (Klaus 16.11.2026): findet die Wortsuche nichts, wird mit der zusammengezogenen Frage gesucht.
+  await panel.locator('[data-mail-all=list]').click();
+  await panel.locator('[data-mail-all=search]').fill('stat werke');
+  ok('Words dictated apart are searched again as the known word, and the hit line says so',await panel.locator('[data-mail-all-id]').count()===1&&await panel.locator(`[data-mail-all-id="${bill}"]`).count()===1&&(await panel.locator('.mail-count').textContent())==='1 Treffer für „stat werke“ · auch gesucht als „stadtwerke“');
+  await panel.locator('[data-mail-all=senders]').click();
+  ok('The joined search is bundled by sender as well',await panel.locator('[data-mail-sender="rechnung@stadtwerke.invalid"]').count()===1&&(await panel.locator('.mail-count').textContent())==='1 Treffer für „stat werke“ · 1 Absender · auch gesucht als „stadtwerke“');
+  await panel.locator('[data-mail-all=search]').fill('angebote neu');
+  ok('A search with hits of its own is never rewritten',!(await panel.locator('.mail-count').textContent()).includes('auch gesucht'));
+  await panel.locator('[data-mail-all=search]').fill('xyzzy qwert');
+  ok('Nothing known to join: no hits, nothing invented',(await panel.locator('.mail-count').textContent())==='0 Treffer für „xyzzy qwert“ · 0 Absender'&&(await panel.textContent()).includes('Keine Mails gefunden.'));
+  await panel.locator('[data-mail-all=search]').fill('');
   // Offline: nothing breaks, the reason is shown
   await page.locator('[data-tab="mail"]').click();
   await page.evaluate(()=>{window.offline=true;});

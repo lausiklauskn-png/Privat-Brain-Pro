@@ -35,6 +35,7 @@
     search: ['In allen Mails suchen', 'Search all emails', 'Поиск по всем письмам', 'Szukaj we wszystkich wiadomościach'],
     hits: ['Treffer', 'results', 'найдено', 'wyników'],
     hitsFor: ['für „{q}“', 'for “{q}”', 'по запросу «{q}»', 'dla „{q}”'],
+    alsoAs: ['auch gesucht als „{q}“', 'also searched as “{q}”', 'также искали как «{q}»', 'szukano też jako „{q}”'],
     senderOne: ['Absender', 'sender', 'отправитель', 'nadawca'],
     senderMany: ['Absender', 'senders', 'отправителей', 'nadawców'],
     cleanSearch: ['Die Suche gilt in „Aufräumen“ nicht. Für Treffer „Liste“ oder „Absender“ wählen.', 'The search does not apply in “Clean up”. Choose “List” or “Senders” for results.', 'В «Уборке» поиск не действует. Для результатов выберите «Список» или «Отправители».', 'Wyszukiwanie nie działa w „Porządkach”. Aby zobaczyć wyniki, wybierz „Lista” lub „Nadawcy”.'],
@@ -584,6 +585,16 @@
     const hay = fold(r.name + ' ' + (r.mail.from || '') + ' ' + (r.mailBody || ''));
     return fold(text).split(/\s+/).filter(Boolean).every(word => hay.includes(word));
   }
+  // PBSuchFrage.zusammen erfindet nie ein Wort: es liefert nur eine Form, die in den gezeigten Mails vorkommt, sonst ''.
+  let joinMemo = null;
+  function joinedQuery(mails) {
+    const S = window.PBSuchFrage; if (typeof S?.zusammen !== 'function' || typeof S.kontext !== 'function') return '';
+    try {
+      // Der Wortschatz wird nur neu gebaut, wenn sich die gezeigten Mails geändert haben, nicht bei jedem Tastendruck.
+      if (!joinMemo || joinMemo.catalog !== CATALOG || joinMemo.size !== mails.length || joinMemo.account !== view.account) joinMemo = { catalog: CATALOG, size: mails.length, account: view.account, ctx: S.kontext(mails) };
+      return S.zusammen(query, joinMemo.ctx) || '';
+    } catch { return ''; }
+  }
   const byOrder = (a, b) => view.order === 'newest' ? (b.date || 0) - (a.date || 0) : (a.date || 0) - (b.date || 0);
   function groups(mails) {
     const map = new Map();
@@ -703,13 +714,19 @@
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
     const current = openRecord && all.find(r => r.hash === openRecord);
     if (current) { panel.append(drawReader(current)); return; }
-    const mails = all.filter(r => matches(r)).sort(byOrder);
+    let mails = all.filter(r => matches(r)).sort(byOrder), also = '';
+    // Diktat trennt Wörter („an tropic“): findet die Wortsuche nichts, einmal mit der bekannten zusammengezogenen Form suchen.
+    if (query.trim() && !mails.length && view.mode !== 'clean') {
+      const joined = joinedQuery(all), again = joined ? all.filter(r => matches(r, joined)).sort(byOrder) : [];
+      if (again.length) { mails = again; also = joined; }
+    }
     const list = el('div', 'mail-all-list');
     // Klaus 16.11.2026: „Liste / Absender“ gelten auch bei einer Suche. „Aufräumen“ ordnet nach Ablaufdatum, dort gilt die Suche nicht.
     const bundles = view.mode === 'senders' ? groups(mails) : null;
     if (query.trim() && view.mode === 'clean') { const p = el('p', 'mail-muted', t('cleanSearch')); p.dataset.mailCleanSearch = '1'; panel.append(p); }
     else if (query.trim()) panel.append(el('p', 'mail-count', mails.length + ' ' + t('hits') + ' ' + t('hitsFor').replace('{q}', query.trim())
-      + (bundles ? ' · ' + bundles.length + ' ' + t(bundles.length === 1 ? 'senderOne' : 'senderMany') : '')));
+      + (bundles ? ' · ' + bundles.length + ' ' + t(bundles.length === 1 ? 'senderOne' : 'senderMany') : '')
+      + (also ? ' · ' + t('alsoAs').replace('{q}', also) : '')));
     if (view.mode === 'clean') drawClean(list);
     else if (bundles) {
       const g = selectedSender && bundles.find(x => x.key === selectedSender);
