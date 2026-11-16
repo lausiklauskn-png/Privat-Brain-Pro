@@ -93,8 +93,8 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
 
 ```
 Repo: lausiklauskn-png/Privat-Brain-Pro, Zweig von origin/main.
-Zuerst lesen: CLAUDE.md, BRIEF_SITZUNG_2026-11-16_GERAETETEST-1.0.52.md (Problemliste 1–23, Plan).
-Stand: 1.0.52 veröffentlicht (Android, Windows), Klaus' Gerätetest liegt als Liste vor; nichts davon gebaut.
-Schritt 1: Ursachen klären (Plan Punkt 1), ohne sichtbare Änderung. Schritt 2: eine HTML-Vorschau V1–V6, Ja je Punkt.
+Zuerst lesen: CLAUDE.md, BRIEF_SITZUNG_2026-11-16_GERAETETEST-1.0.52.md (Problemliste 1–25, Plan).
+Stand: 1.0.52 veröffentlicht (Android, Windows), Klaus' Gerätetest liegt als Liste vor; nur Punkt 24 (Warte-Zeile nur nach Tipp, PR #147) gebaut, nicht veröffentlicht.
+Schritt 1: Ursachen klären (Plan Punkt 1), ohne sichtbare Änderung. Schritt 2: eine HTML-Vorschau V1–V7, Ja je Punkt.
 Dann bauen in Stücken mit Proben. Veröffentlichen nur mit Klaus' Wort (nächste Fassung 1.0.53).
 ```
