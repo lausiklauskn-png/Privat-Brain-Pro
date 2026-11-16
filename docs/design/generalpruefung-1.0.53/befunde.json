@@ -1,0 +1,802 @@
+[
+ {
+  "rolle": "neuling",
+  "titel": "Am Handy sind vier Seiten (Mail, Übersicht, Kategorien, Doppelte) nicht zu sehen und nirgends sonst zu finden",
+  "seite": "Kopf / Reiterleiste (alle Seiten)",
+  "beleg": "Gemessen im Prüfbrowser, leerer Bestand, Breite 390 px: Reiterleiste .main-pages ist 228 px breit, ihr Inhalt 572 px (overflow-x:auto, keine Abblendung, Rollbalken 'thin' und am Tippgerät unsichtbar). Sichtbar: Suche, Hinzufügen, Dateien. 'mail', 'dash', 'order', 'dupes' = 'nicht zu sehen'. Bei 360 px ist schon 'Dateien' angeschnitten. Das ☰-Menü enthält diese vier Seiten nicht (dort nur SBKIM-Netz, Sprachen, Thema, Neu laden, Internet, A··A, Werkzeuge). Rechts neben der Leiste stehen fest Zahnrad, Film und Palette und nehmen den Platz. Messskript: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/neuling/mess.mjs, Bild leer-search-390.png im selben Ordner.",
+  "vorschlag": "Dem Neuling zeigen, dass es weitergeht: am rechten Rand der Leiste eine weiche Abblendung oder ein kleiner Pfeil '›', solange noch Reiter rechts liegen. Zusätzlich die vier Seiten auch im ☰-Menü als Zeilen anbieten (wie es die Probe-Hilfe test-navigation-helper.mjs ohnehin als Rückweg vorsieht). Alle Reiter und Knöpfe bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen bei 390 px (mit und ohne Handy-Modus): Reiterleiste 228 px breit, Inhalt 572 px, flex-wrap nowrap, keine Abblendung (mask none). Sichtbar sind nur Suche, Hinzufügen und Dateien (Dateien endet bei x=237, Leiste bei 236); Mail beginnt bei x=240, Übersicht 301, Kategorien 394, Doppelte 494 – alle außerhalb. Alle sieben Reiter liegen nur in .main-pages, kein zweiter Weg. Einschränkung: die Leiste lässt sich mit dem Finger seitlich schieben, die Seiten sind also erreichbar, aber nichts zeigt das an. Das widerspricht dem früheren Stand (.16: alle Ansichten bleiben sichtbar, am Handy auf zwei flache Zeilen). Zum Vorschlag: Abblendung oder Pfeil kostet keine Funktion. Die vier Seiten zusätzlich ins ☰-Menü zu legen wäre eine Verdoppelung von Knöpfen – besser nur das Zeichen am Rand oder wieder zwei flache Zeilen.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Startseite Suche sagt dem Neuling nicht, was er tun soll – leer wie auch mit Dateien",
+  "seite": "Suche (Startseite)",
+  "beleg": "Gemessen: (1) Leerer Bestand: unter 16 Bedienelementen (Bildbeschreibung, Bedeutung, Überall, 4 Filter, merken, Sortieren, 'Alle geprüft', Mehrschritt) steht nur 'Noch keine Dateien.' – kein Knopf zum Hinzufügen; Eingabe 'Rechnung' + Enter ändert nichts. (2) Nach dem Hinzufügen von 3 Dateien und Wechsel zur Suche: #results hat 0 Einträge, #searchInfo ist leer (display:none), #searchEmpty display:none – die Seite ist unter den Filtern ganz weiß, nur die Zählerzeile '3 Dateien'. Dasselbe nach Tipp auf × im Suchfeld. Ursache: tools/native/adapt-search.mjs:35 ersetzt den Hinweissatz durch info.textContent=\"\" (www/index.html:1885). Das ist seit .35 Absicht (Suchintro entfernt), lässt aber den Neuling ohne jeden Anhaltspunkt: er hat gerade Dateien hinzugefügt und sieht hier keine einzige. Skripte weg.mjs und info.mjs, Bilder weg-1280-1-leer-gesucht.png und weg-1280-3-suche-ohne-eingabe.png.",
+  "vorschlag": "Leerer Bestand: unter 'Noch keine Dateien.' ein Knopf 'Dateien hinzufügen' (führt zum Reiter Hinzufügen). Mit Dateien und leerem Suchfeld: statt der weißen Fläche die zuletzt hinzugefügten Dateien als Trefferliste zeigen (dieselben Karten, neueste oben) – kein neuer Text, keine neue Funktion, nur etwas zum Antippen. Filter und Suche bleiben, wie sie sind.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt: leerer Bestand zeigt #searchEmpty 'Noch keine Dateien.' ohne Knopf oder Link (0 Knöpfe darin). Nach dem Hinzufügen von 3 Dateien und Wechsel zur Suche: 0 Karten, #searchInfo leer, #searchEmpty display:none – unter den Filtern nur die Zählerzeile '0 E-Mails · 3 Dateien · …'. Teil 1 (Knopf 'Dateien hinzufügen' im leeren Zustand) ist klein und kostet nichts. Teil 2 (zuletzt hinzugefügte Dateien statt leerer Fläche) kostet keine Funktion, ändert aber eine bewusste Entscheidung seit .35 (Suchintro entfernt) und ist eher eine neue Anzeige als eine Vereinfachung – das sollte Klaus entscheiden.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Nach dem Hinzufügen steht dasselbe dreimal da; am Handy rutscht die eigentliche Liste aus dem Bild",
+  "seite": "Hinzufügen",
+  "beleg": "Gemessen nach dem Hinzufügen von 3 Dateien: (a) Kasten #pbImportDone '✓ Fertig. So ist es eingeordnet' mit Zeilen je Art, zweimal dem Knopf '→ Im Explorer zeigen', '→ Prüfbericht' und noch einmal jeder Datei mit eigenem Knopf 'Prüfbericht' (und einer Mülltonne), (b) Liste 'Gerade hinzugefügt · 3' mit denselben drei Dateien, (c) Meldung unten 'Fertig · 3 neu signiert, 0 schon bekannt (übersprungen)'. Lage bei 390×800: Fertig-Kasten beginnt bei y=403 und ist 316 px hoch, 'Gerade hinzugefügt' beginnt erst bei y=927, also unter dem Bildrand (bei 1280×900: y=614). Dazu bleibt die Fortschrittszeile 'Katze.png · wird signiert … 3/3' mit Knopf 'Abbrechen' nach dem Ende noch zwischen 0,5 und 3 s sichtbar (signing ist schon false). Skript weg2.mjs, Bilder weg-1280-2-hinzugefuegt.png, weg2-390-1-nach-8s.png.",
+  "vorschlag": "Eine Liste statt zwei: 'Gerade hinzugefügt' direkt unter die Ablagefläche, der Prüfzustand je Datei als kleine Marke in derselben Zeile (Tipp darauf öffnet den Prüfbericht). Der Fertig-Kasten schrumpft auf eine Zeile ('3 hinzugefügt · 2 ohne Fund · 1 teilweise geprüft', mit 'Im Explorer zeigen' und 'Prüfbericht'). Die Fortschrittszeile mit 'Abbrechen' sofort ausblenden, wenn fertig. Alle Knöpfe bleiben erreichbar.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nur teilweise bestätigt. Gemessen mit 3 Textdateien: Fertig-Kasten (140 px hoch) und darunter Liste 'Gerade hinzugefügt' mit denselben drei Dateien; bei 390x800 beginnt die Liste erst bei y=775, also praktisch unter dem Bildrand – stimmt. Der Knopf 'Abbrechen' (#cancelSign) ist 0,1 s und 0,6 s nach dem Ende noch sichtbar, nach 1,5 s weg – stimmt, aber kürzer als gemeldet (nicht bis 3 s). 'Dreimal' ist übertrieben: der Fertig-Kasten ist eine Zusammenfassung nach Art und nennt einzelne Dateien nur, wenn die Prüfung etwas anzumerken hat (unauffällige sind eingeklappt); die dritte Meldung ist ein kurz eingeblendeter Hinweis, den ich nach dem Ende nicht mehr stehend fand. Der Vorschlag erhält alle Knöpfe, ist aber ein Umbau eines gerade erst gebauten und von Proben festgelegten Kastens – Nutzen eher klein; das sofortige Ausblenden von 'Abbrechen' ist die sichere Kleinigkeit.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Tipp auf den Dateinamen öffnet die Datei nur auf der Seite Hinzufügen – in Suche und Dateien passiert nichts",
+  "seite": "Suche, Dateien (Explorer), Hinzufügen",
+  "beleg": "Gemessen: In 'Gerade hinzugefügt' ist der Name ein unterstrichener Knopf (.ra-name), Tipp öffnet die Ansicht (.native-file-viewer sichtbar). Im Suchtreffer ist der Name ein <div class=\"fname\"> mit cursor:auto: Tipp auf den Namen → Ansicht offen? false; Tipp auf den Textauszug (.snip) → false; nur der Knopf 'Öffnen' öffnet (true). Im Explorer ist der Name ein <strong> mit cursor:auto: Tipp → false; nur 'Öffnen' am rechten Rand (bei Bildern zusätzlich die Vorschau). Der Rückweg selbst ist in Ordnung: '← Zurück' führt zur Suche zurück, Suchwort 'Urlaub' und beide Treffer stehen noch da. Skripte weg3.mjs, weg4.mjs.",
+  "vorschlag": "Überall gleich: der Dateiname (am besten die ganze Kopfzeile des Treffers bzw. der Zeile) öffnet die Datei, so wie schon bei 'Gerade hinzugefügt'. Der Knopf 'Öffnen' bleibt daneben stehen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt: in 'Gerade hinzugefügt' öffnet ein Tipp auf den Namen (.ra-name) die Ansicht (true). Im Suchtreffer öffnet ein Tipp auf .fname nichts (false), auch ein Doppeltipp nicht. Im Explorer ist der Name ein <strong> mit cursor:auto, Tipp und Doppeltipp öffnen nichts (false); nur der Knopf 'Öffnen' wirkt. Die drei Seiten verhalten sich also wirklich verschieden. Der Vorschlag (Name öffnet überall, Knopf bleibt) kostet keine Funktion; im Explorer muss nur darauf geachtet werden, dass Ordnerzeilen (die schon auf Tipp auf-/zuklappen) und eine etwaige Auswahl nicht gestört werden.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Schwarzes Hinweisschild bleibt nach dem Tipp auf einen Reiter stehen und verdeckt die Überschrift",
+  "seite": "Kopf / Reiterleiste (alle Seiten)",
+  "beleg": "Gemessen bei 390 px mit Finger-Tipp (page.tap) auf 'Hinzufügen': 2,5 s und auch noch über 8 s später steht #native-control-tooltip 'Hinzufügen' bei y 112–144; die Seitenüberschrift 'Dateien hinzufügen' liegt bei y 138–160 und wird angeschnitten (Bild weg2-390-1-nach-8s.png). Bei 1280 px mit ruhender Maus: Schild x 60–151, y 93–125 über der Überschrift (y 108–130), zu lesen ist 'Da▮▮▮ufügen'. Auf der Suchseite verdeckt das Schild 'Finden' den Anfang des Suchfelds. Das Schild wiederholt nur das Wort, das im Reiter schon steht. Ursache: native/native-toolbar.js:186 – 'focusin' zeigt das Schild für jedes .compact-tool; 'pointerdown' (Zeile 188) blendet es aus, der Fokus direkt danach zeigt es wieder, und es bleibt bis zum nächsten Tipp woanders.",
+  "vorschlag": "Das Schild bei Fokus nur zeigen, wenn der Fokus von der Tastatur kommt (:focus-visible), und nach einem Tipp/Klick auf den Knopf nicht wieder einblenden. Bei Reitern, deren Wort sichtbar daneben steht, gar kein Schild. Hover am Rechner und Tastaturbedienung bleiben wie bisher.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen bei 390 px mit Finger-Tipp auf 'Hinzufügen': 3 s später ist #native-control-tooltip noch sichtbar (hidden=false, Text 'Hinzufügen') bei x 60–151, y 112–144; die Überschrift 'Dateien hinzufügen' liegt bei y 138–160 – 6 px Überdeckung, im Bild deutlich zu sehen. Ursache im Code eindeutig: native/native-toolbar.js Zeile 186 zeigt das Schild bei jedem focusin auf .compact-tool, Zeile 188 blendet bei pointerdown aus, der Fokus direkt danach zeigt es wieder. Vorschlag (nur bei Tastatur-Fokus zeigen) erhält Hover und Tastaturbedienung, keine Funktion geht verloren.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Dieselbe Sache heißt verschieden: „Dateien“ / „Explorer“, „Finden“ / „Suche“, „signiert“ / „eingelesen“ / „hinzugefügt“",
+  "seite": "Reiterleiste, Dateien (Explorer), Hinzufügen, Übersicht, Kategorien, Einstellungen",
+  "beleg": "Gemessen: Der Reiter heißt 'Dateien' (native/native-toolbar.js:16, captions.de), die Seite dahinter trägt die Überschrift 'Explorer', und der Knopf nach dem Hinzufügen heißt '→ Im Explorer zeigen' (assets/workspace.js:33) – einen Reiter 'Explorer' gibt es für den Neuling nicht. Der Lupen-Reiter heißt im Schild 'Finden', sonst 'Suche'. Für 'ist in der App angekommen' gibt es drei Wörter: Seite Hinzufügen sagt 'eingelesen' und 'Gerade hinzugefügt'; die Meldung sagt 'Fertig · 3 neu signiert' (index.html:1637), der Fortschritt 'wird signiert' (index.html:1577), Kategorien leer 'Noch keine Dateien signiert.' (index.html:570), Übersicht 'signiert · nach Bedeutung auffindbar' (index.html:2936), Einstellungen 'Signierte Dateien' (index.html:631). Die leeren Seiten sagen es viermal anders: 'Noch keine Dateien.' / 'Keine Dateien in dieser Ansicht. Füge Dateien hinzu …' / 'Noch keine Dateien im Explorer.' / 'Noch keine Dateien signiert.'",
+  "vorschlag": "Je Sache ein Wort: Reiter, Überschrift und Knopf gleich benennen ('Dateien' – also 'Bei Dateien zeigen'), Lupe überall 'Suche', und für den Neuling durchgehend 'hinzugefügt' statt 'signiert' (das Fachwort kann hinter dem ⓘ stehen bleiben). Leere Seiten mit demselben Satz und demselben Knopf 'Dateien hinzufügen'. Nur Wörter, keine Funktion ändert sich.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code belegt: native/native-toolbar.js:16 nennt die Reiter 'Finden' und 'Dateien'; index.html:488 hat die Überschrift 'Explorer'; assets/workspace.js:33 den Knopf 'Im Explorer zeigen'. 'signiert' steht in index.html:496/2936 (Übersicht), 570 ('Noch keine Dateien signiert.'), 631 ('Signierte Dateien'), 1577 ('wird signiert'), 1636–1637 ('neu signiert'); die Liste auf Hinzufügen sagt 'eingelesen' (gemessen). Am stärksten merkt man 'Im Explorer zeigen', weil es keinen Reiter 'Explorer' gibt. Reine Wortänderung, keine Funktion betroffen. Vorbehalt: 'signiert' ist ein Kernbegriff der App (jede Datei wird wirklich signiert) – nicht streichen, nur im Alltagstext einheitlich 'hinzugefügt' sagen; Texte in vier Sprachen und in den Proben müssen mitgezogen werden.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Am Handy liegt der runde Siegel-Knopf auf der Versionsnummer – ein Tipp trifft das Falsche",
+  "seite": "Kopf (alle Seiten)",
+  "beleg": "Gemessen bei 390 px, erster Start: Versionsknopf #pbVersion 'v1.0.53' liegt bei x 161–213, y 17–37; der Siegel-Knopf (sbkim-widget-slot-siegel) bei x 206–238, y 15–47 – 7 px Überlappung, dazu das kleine ✕ des Siegels darüber. document.elementFromPoint(210, 27) liefert 'sbkim-widget', nicht die Versionsnummer. Bei 360 px und 1280 px keine Überlappung (Siegel 176–208 bzw. 1096–1128). Bild leer-search-390.png. Die Versionsnummer lädt seit 1.0.50 direkt das Update; wer ihren rechten Rand tippt, öffnet stattdessen das Siegel-Fenster. Daneben ist die Internet-Lampe nur 18 px breit (28 px hoch).",
+  "vorschlag": "Den Startplatz des Siegels aus der freien Lücke berechnen (rechts neben dem Versionsknopf mit etwas Abstand, links von der Lampe) statt mit festem Abstand vom Rand; wer das Siegel schon selbst verschoben hat, behält seinen Platz. Der Lampe eine unsichtbare Tippfläche von etwa 32 px geben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen bei 390 px, erster Start: #pbVersion liegt bei x 161–213, y 17–37; document.elementFromPoint 3 px vor dem rechten Rand der Versionsnummer liefert 'sbkim-widget', nicht die Versionsnummer. Im Bild liegt das Siegel sichtbar auf dem rechten Rand des Versionsknopfs. Betrifft nur schmale Breiten um 390 px und nur etwa 7 px; der größte Teil der Versionsnummer bleibt tippbar, und wer das Siegel verschoben hat, ist nicht betroffen. Vorschlag (Startplatz aus der freien Lücke berechnen) kostet keine Funktion. Die Angabe zur 18 px breiten Lampe habe ich nicht selbst nachgemessen.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "neuling",
+  "titel": "Zählerzeile der Suche klebt zusammen: „Bedeutungssuche0 E-Mails“",
+  "seite": "Suche",
+  "beleg": "Gemessen nach einer Suche mit Treffer (1280 px, Bild weg3-1280-B-treffer.png): '2 Treffer · 0.10 ms · Bedeutungssuche0 E-Mails · 3 Dateien · 3 lokal verknüpft · Katalog: 3 Dateien'. Zwischen #searchInfo und dem ersten Zähler fehlt der Trennpunkt. Ursache: native/design-layout.css:301 setzt den Punkt nur zwischen zwei .pb-meta-count ('.pb-meta-count:not(:empty) ~ .pb-meta-count:not(:empty)::before'); #searchInfo ist kein .pb-meta-count. Außerdem steht die Dateizahl doppelt in der Zeile ('3 Dateien' und 'Katalog: 3 Dateien').",
+  "vorschlag": "Die CSS-Regel um '#searchInfo:not(:empty) ~ .pb-meta-count:not(:empty)::before' ergänzen, damit auch nach 'Bedeutungssuche' ein Punkt steht. 'Katalog: 3 Dateien' nur zeigen, wenn die Zahl von '3 Dateien' abweicht.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt: nach einer Suche steht '#searchInfo' = '3 Treffer · 0.20 ms · Bedeutungssuche' direkt vor '#searchMailCount' = '0 E-Mails'; dessen ::before ist 'none', die folgenden Zähler haben '·'. Ursache wie gemeldet: native/design-layout.css Zeile 301 setzt den Punkt nur zwischen zwei .pb-meta-count, und die Zeile hat gap:0. Auch '3 Dateien' und 'Katalog: 3 Dateien' stehen beide in der Zeile. Die CSS-Ergänzung ist eine Zeile und kostet nichts. 'Katalog: …' nur bei Abweichung zu zeigen ist unkritisch, aber vorher prüfen, ob eine Probe den Text erwartet.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Nach jedem App-Start steht im Reiter Mail „kein Mailkonto verbunden“, obwohl ein Konto gespeichert ist – ein Extra-Tipp auf einen unbeschrifteten Knopf",
+  "seite": "Mail (Postfach, Start)",
+  "beleg": "Messung (390 und 1280 px, gestelltes ProMail mit 1 gespeichertem Konto): 6 s nach Tipp auf den Reiter Mail ist .live-mail weiter versteckt, ProMail.accounts wurde 0-mal gefragt, die Zeile lautet „Lokal · kein Mailkonto verbunden. Ordneraktionen ändern nur diesen Katalog …“. Das Postfach erscheint erst nach Tipp auf einen 36 px breiten Briefumschlag ohne Wort (aria „Mailkonto verbinden“). Code: assets/live-mail.js:321 (Knopf connect → setup), :497-511 (setup läuft nur nach diesem Tipp; ein Start von selbst fehlt). Skript: scratchpad/pruefung/mail-alltag/b1.mjs, Bild s-390-1-start.png.",
+  "vorschlag": "Ist schon ein Konto gespeichert, das Postfach beim Öffnen des Reiters Mail von selbst zeigen (nur die gespeicherten Konten laden, wie es „Alle Konten“ ohnehin schon von selbst tut). Der Satz „kein Mailkonto verbunden“ und der Knopf „Mailkonto verbinden“ bleiben nur, wenn wirklich noch kein Konto eingetragen ist. „Lokale Mails“ bleibt im Menü „Weitere Aktionen“ erreichbar – keine Funktion fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig belegt: setup() (assets/live-mail.js:497-511) wird nur vom Knopf connect (Zeile 321) aufgerufen; sonst fragt nur openRemote (Zeile 1579) und native-mail-index.js:319 die gespeicherten Konten ab. Einen Start von selbst beim Öffnen des Reiters gibt es nicht. Trifft jeden Nutzer bei jedem Start. Der Vorschlag kostet keine Funktion. Zu beachten beim Bau: native.accounts() ist nur ein lokaler Lesezugriff, das Laden der Ordner danach geht aber ins Netz – der Internetschalter der App muss weiter gelten (bei getrenntem Internet nur das Postfach zeigen, nichts abrufen), und „Lokale Mails“ muss im Menü bleiben.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Nach dem Senden steht man am Handy in einer Sackgasse: nur „SMTP hat die Nachricht angenommen“, kein Zurück",
+  "seite": "Mail (Schreiben / Senden)",
+  "beleg": "Messung 390 px: Antworten → Senden (1 Rückfrage „Diese Nachricht jetzt wirklich versenden?“). Danach data-view='reader', im Lesebereich nur der Satz „SMTP hat die Nachricht angenommen“, in der Zeile darüber „SMTP · sent“. Sichtbare Bedienelemente im ganzen Postfach: Mailkonto, Aktualisieren, Weitere Aktionen, Verfassen, Mails importieren, Anordnung – kein Zurück-Knopf, keine Ordnerleiste, keine Liste. Zurück zur Liste kommt man nur über „Aktualisieren“. Code: assets/live-mail.js:1488-1513 (reader.replaceChildren nur mit dem Satz; Zeile 1513 notice = \"SMTP · \" + status), Wortlaut native/native-mail.js:26. Skript b3.mjs, Bild f-390-sent.png.",
+  "vorschlag": "Nach erfolgreichem Senden von selbst zur Nachrichtenliste zurückgehen und dort kurz in einfachen Worten melden: „Gesendet an …“. Mindestens aber den vorhandenen Zurück-Knopf („Nachrichtenliste“) über die Meldung setzen. „SMTP · sent“ durch „Gesendet“ ersetzen. Die Meldung bei unklarem Versand bleibt unverändert.",
+  "bestaetigt": true,
+  "gegenpruefung": "Belegt durch Code und Bild: assets/live-mail.js:1488-1497 ersetzt den Lesebereich nur durch einen Absatz mit T('sent'), ohne Zurück-Knopf; Zeile 1513 schreibt „SMTP · “ + status; der Wortlaut „SMTP hat die Nachricht angenommen“ steht in native/native-mail.js:26. Im Bild f-390-sent.png (390 px) sind nur Kontowahl, Aktualisieren, Weitere Aktionen, Verfassen, Importieren, Anordnung zu sehen – keine Liste, kein Zurück. Die Ansicht bleibt 'reader', die Liste ist am Handy dann verdeckt. Der Vorschlag kostet nichts; wichtig: die Meldung bei unklarem Versand und der Nicht-erneut-senden-Schutz bleiben unberührt, und das Zurück zur Liste darf kein neues Senden auslösen.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Stern setzen oder „Gelesen/ungelesen“ schließt die geöffnete Mail und lädt die ganze Liste neu",
+  "seite": "Mail (geöffnete Mail)",
+  "beleg": "Messung 390 px: Mail „Rechnung 1“ offen → Nachrichtenaktionen → „Stern umschalten“. Danach data-view='list', der Lesebereich ist leer (kein h3, keine Knöpfe), die Mail muss neu angetippt werden. Derselbe Weg gilt für „Gelesen / ungelesen“, Papierkorb, Spam, Archiv. Code: assets/live-mail.js:1039-1048 (action() ruft immer loadList()), :779 und :788-790 (loadList leert current, mail, Auswahl, Suchwort, setzt view='list' und holt Seite 1 neu – mit „Weitere laden“ nachgeladene Mails sind auch wieder weg). Außerdem sagen die Knöpfe nicht, was gilt: „Stern umschalten“, „Gelesen / ungelesen“. Skript b2.mjs.",
+  "vorschlag": "Bei Stern und Gelesen/ungelesen die Mail offen lassen und nur die eine Zeile in der Liste und den Knopf ändern (Stern gefüllt / leer, „Als ungelesen markieren“ / „Als gelesen markieren“). Nur beim Verschieben und Löschen zur Liste zurück – und dort die Stelle und das Suchwort behalten.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: die Knöpfe read und star (assets/live-mail.js:1190-1195) rufen action(), und action() (1039-1048) ruft immer loadList(). loadList (779, 788-790) leert current, mail, items, Auswahl und Suchwort, setzt die Ansicht auf 'list' und holt Seite 1 neu – nachgeladene Mails sind weg. Die Beschriftungen „Gelesen / ungelesen“ und „Stern umschalten“ stehen fest in Zeile 105 und 111 und sagen nicht, was gerade gilt. Kein Funktionsverlust durch den Vorschlag. Nutzen mittel statt gross: es stört nur, wer Sterne/Gelesen-Marken in der offenen Mail setzt; der Umbau berührt die Server-Zustände (Flags lokal nachführen), also sorgfältig prüfen.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Aus „Alle Konten“ eine Mail öffnen wirft einen aus der Übersicht – zurück sind es 2 Tipps, und die Stelle in der Liste ist weg",
+  "seite": "Mail › Alle Konten",
+  "beleg": "Messung 390 px (gestellte 131 Mails): in „Alle Konten“ › Liste nach „Notiz“ gesucht, zur 31. Mail gerollt (scrollTop 1838), Mail angetippt → „Alle Konten“ wird versteckt, es öffnet sich das Postfach des einen Kontos. Der Zurück-Knopf der Mail („Nachrichtenliste“) führt in den Posteingang dieses Kontos, nicht zurück in „Alle Konten“. Zurück: Tipp 1 „Nachrichtenliste“, Tipp 2 „Alle Konten“ in der Ordnerleiste; danach steht die Liste wieder ganz oben (scrollTop 0), nur das Suchwort bleibt. Auch der Zurück-Pfeil oben in der App bringt „Alle Konten“ nicht wieder (Panel bleibt versteckt). Code: native/native-mail-index.js:707 (PBLiveMail.openRemote), assets/live-mail.js:1163-1165 (Zurück → backToList). Skripte k3.mjs, k4.mjs.",
+  "vorschlag": "Wurde die Mail aus „Alle Konten“ geöffnet, führt ihr Zurück-Knopf (und Androids Zurück) wieder nach „Alle Konten“ – an dieselbe Stelle der Liste, mit derselben Ansicht (Liste/Absender/Aufräumen). Der Knopf heißt dann „Zurück zu Alle Konten“. Das Öffnen beim Anbieter bleibt wie es ist.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code belegt: native/native-mail-index.js:705-707 versteckt „Alle Konten“ (show(false)) und ruft PBLiveMail.openRemote; openRemote (assets/live-mail.js:1572 ff.) wechselt Konto und Ordner und öffnet die Mail im Postfach dieses Kontos. Der Zurück-Knopf der Mail (1163-1165) ruft nur backToList(), also die Liste dieses einen Ordners; einen Rückweg nach „Alle Konten“ merkt sich niemand. Die Zahlen zum Rollstand (1838 → 0) und das Verhalten von Androids Zurück habe ich nicht selbst nachgemessen, der Kern ist aber eindeutig. Der Vorschlag nimmt nichts weg; das Öffnen beim Anbieter (Klaus' Wunsch vom 15.11.) bleibt.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Geöffnete Mail löschen braucht 2 Tipps; im Menü stehen dieselben Ziele doppelt und einmal auf Englisch",
+  "seite": "Mail (geöffnete Mail, Nachrichtenaktionen)",
+  "beleg": "Messung 390 und 1280 px: direkt sichtbar sind Antworten, Weiterleiten, „In Katalog“, „Nachrichtenaktionen“, „Übersetzen“. „In Papierkorb“ liegt erst im Menü (2 Tipps, gemessen). Im Menü stehen „In Papierkorb“, „Als Spam“, „Archivieren“ und direkt darunter das Auswahlfeld „Verschieben“ mit denselben Zielen noch einmal: [Spam, Trash, Sent, Drafts, Archiv, Erledigt]. Das Auswahlfeld über der Liste heißt dagegen „Verschieben nach …“ und zeigt [Spam, Papierkorb, Gesendet, Entwürfe, Archiv, Erledigt]. Code: assets/live-mail.js:1210-1212 (new Option(f.name, …) = Rohname des Anbieters) gegen :842 (folderTitle = deutscher Name); :1298 (alles ab dem 3. Knopf wandert ins Menü). Skripte a1.mjs, b1.mjs, Bild s-390-4-menu.png.",
+  "vorschlag": "Den Papierkorb als Liniensymbol direkt neben Antworten/Weiterleiten setzen (1 Tipp, wie in der Liste). Im Auswahlfeld „Verschieben nach …“ dieselben deutschen Namen wie in der Liste zeigen und die Ziele weglassen, für die schon ein eigener Knopf darüber steht (Papierkorb, Spam, Archiv). Alle Ziele bleiben erreichbar.",
+  "bestaetigt": true,
+  "gegenpruefung": "Belegt durch Bild s-390-4-menu.png und Code: Papierkorb, Spam, Archiv liegen im Menü „Nachrichtenaktionen“ (assets/live-mail.js:1298 schiebt alles ab dem 3. Knopf ins Menü), darunter das Auswahlfeld „Verschieben“. Dieses füllt sich mit f.name, dem Rohnamen des Anbieters (1210-1212), während die Liste folderTitle(f.path) nimmt (Zeile 842) – daher einmal „Trash/Sent/Drafts“, einmal „Papierkorb/Gesendet/Entwürfe“. Der Vorschlag kostet keine Funktion, solange im Auswahlfeld nur Ziele entfallen, für die der Knopf darüber wirklich da ist (die Knöpfe erscheinen nur, wenn der Anbieter den Ordner meldet, 1197-1204). Einschränkung: ein Papierkorb-Symbol direkt neben Antworten macht versehentliches Löschen leichter – es geht aber in den Papierkorb des Anbieters, also rückholbar. Die gleichen deutschen Namen sind der sichere Teil.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Drei „teilen“-Knöpfe tun ohne Pro-Tresor genau dasselbe; „An Familienakte“ heißt und zeigt sich in Liste und Mail verschieden",
+  "seite": "Mail (geöffnete Mail und Auswahlleiste der Liste)",
+  "beleg": "Messung (ohne Pro-Tresor): „Original teilen / sichern“, „An BookLedgerPro teilen“ und „An Familienakte teilen“ lösen jeweils denselben einen Aufruf aus: ProMail.openOriginal {folder INBOX, validity 123, uid 21, name „Rechnung 1.eml“} – also dreimal dieselbe Android-Teilen-Auswahl. In der Liste ist der Knopf „An Familienakte“ ohne Tresor versteckt (isHidden = true), in der geöffneten Mail steht „An Familienakte teilen“ trotzdem immer da. Mit Tresor wird in der Mail gar nicht „geteilt“, sondern in den Tresor gelegt; die Liste nennt denselben Weg „An Familienakte“. Code: assets/live-mail.js:1257-1259, :1274-1276, :1288-1292 (drei Knöpfe), :840 (Liste: hidden ohne Tresor), native/native-mail.js:114 und :119. Skript g1.mjs.",
+  "vorschlag": "Ohne Pro-Tresor in der geöffneten Mail nur einen Knopf „Teilen / sichern“ zeigen (die Android-Auswahl listet BookLedgerPro und Familienakte ohnehin). Mit Pro-Tresor die beiden Ziel-Knöpfe zeigen und überall gleich nennen: „An Familienakte“ und „An BookLedgerPro“ (ohne „teilen“). So gilt in Liste und Mail dieselbe Regel und derselbe Name, kein Weg entfällt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Die Tatsache stimmt: ohne Tresor enden alle drei bei openOriginal – „Original teilen / sichern“ direkt (assets/live-mail.js:1288-1290), BookLedgerPro über native/native-mail.js:114, Familienakte über :119; die drei Knöpfe stehen im Bild s-390-4-menu.png untereinander. In der Liste ist „An Familienakte“ ohne Tresor versteckt (Zeile 840), in der Mail immer da. Aber: die beiden Ziel-Knöpfe hat Klaus ausdrücklich bestellt (26.10. „An BookLedgerPro teilen“, 09.11. „An Familienakte teilen“, ohne Tresor bewusst Teilen-Auswahl), und die Proben test-mail-device/test-pro-verbund legen sie fest. Sie liegen ohnehin im aufklappbaren Menü und kosten keinen Extra-Tipp. Das Zusammenlegen verliert technisch keine Funktion, nimmt aber den sichtbaren Hinweis „diese Mail kann zu BookLedgerPro“ weg – das sollte Klaus selbst entscheiden. Sinnvoll und gefahrlos ist nur die einheitliche Benennung in Liste und Mail.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "mail",
+  "titel": "Häkchen und Suchwort in der Mailliste gehen still verloren",
+  "seite": "Mail (Nachrichtenliste)",
+  "beleg": "Messung: (1) 2 Mails angehakt („2 ausgewählt“), eine dritte Mail zum Ansehen geöffnet → „0 ausgewählt“, 0 Häkchen. (2) 2 Mails angehakt, 1 Buchstabe ins Feld „Postfach durchsuchen“ getippt → „0 ausgewählt“. (3) Nach „Rechnung 2“ gefiltert (1 Zeile), diese gelöscht → das Suchfeld ist leer und es stehen wieder alle 5 Mails da; wer mehrere Treffer nacheinander löschen will, muss jedes Mal neu suchen. Code: assets/live-mail.js:869 (selected.clear() beim Öffnen), :874 (selected.clear() bei jeder Eingabe), :789 (filterText='' nach jeder Aktion). Skripte b1.mjs, g1.mjs.",
+  "vorschlag": "Häkchen beim Öffnen einer Mail und beim Tippen im Suchfeld stehen lassen (die Zahl „x ausgewählt“ zeigt sie ja an). Nach Löschen/Verschieben das Suchwort behalten und nur die erledigten Mails aus der Liste nehmen. Beim Ordner- oder Kontowechsel darf weiter alles geleert werden.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: selected.clear() beim Öffnen einer Mail (assets/live-mail.js:869), bei jeder Eingabe im Suchfeld (874) und filterText='' samt selected.clear() nach jedem Laden der Liste (789), also nach jeder Aktion. Teil 3 (Suchwort weg nach dem Löschen) ist der klare Gewinn und kostet nichts. Vorsicht bei Teil 2: bleiben Häkchen beim Tippen im Suchfeld stehen, können angehakte Mails aus dem Blick fallen und trotzdem mit gelöscht werden – das Leeren dort ist vermutlich ein Schutz. Wenn man es ändert, dann nur die Häkchen der weiter sichtbaren Zeilen behalten oder vor dem Löschen die Zahl samt „davon x nicht sichtbar“ nennen.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "mail",
+  "titel": "„Alle Konten“ am Handy: Überschrift bricht Buchstabe für Buchstabe um, Sortier-Knopf ragt aus dem Bild, Suche zeigt in der Absender-Ansicht erst nur das Bündel",
+  "seite": "Mail › Alle Konten (390 px)",
+  "beleg": "Messung 390 px: (1) Erster Bildschirm vor dem ersten Abruf: Überschrift „Alle Konten“ ist 24 px breit und 100 px hoch (5 Zeilen: „All/e/Ko/nte/n“), der Knopf „Alle Konten abrufen und einordnen“ 101×90 px in derselben Zeile (Bild k-390-1.png). (2) Der Knopf „Neueste oben“ reicht von 365 bis 410 px bei 390 px Bildbreite (Zeile ist 413 px breit, sichtbar 372) – halb abgeschnitten. (3) Standard-Ansicht „Absender“: Suche „Notiz 11“ zeigt 0 Mails und 1 Bündel „Kollege · 11 Mails“; die Treffer kommen erst nach einem weiteren Tipp. In der Ansicht „Liste“ stehen die Treffer sofort da. (4) Text: „ALDI SÜD: 1 abgelaufene Angebote“ (native/native-mail-index.js:80, Einzahl fehlt); im Erklärtext stehen noch die Bildzeichen ⚡ ✉ 🌐 (Zeile 97), obwohl sonst Liniensymbole gelten. Skripte k5.mjs, k3.mjs, Bild k-390-clean.png.",
+  "vorschlag": "Auf dem ersten Bildschirm den Abruf-Knopf in eine eigene Zeile unter die Überschrift setzen. Die Zeile Liste/Absender/Aufräumen/Sortieren am Handy umbrechen lassen oder die Wörter kürzen, damit der Sortier-Knopf ganz sichtbar ist. Beim Suchen von selbst die Trefferliste (Ansicht „Liste“) zeigen und nach dem Leeren zur vorigen Ansicht zurück. „1 abgelaufenes Angebot“ in der Einzahl; die drei Bildzeichen durch die vorhandenen Liniensymbole ersetzen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gesehen in den Bildern: k-390-1.png zeigt die Überschrift als „All/e/Ko/nte/n“ neben dem hohen blauen Knopf; k-390-clean.png zeigt den vierten Knopf der Zeile Liste/Absender/Aufräumen am rechten Rand abgeschnitten und den Satz „ALDI SÜD: 1 abgelaufene Angebote“. Im Code: Mehrzahl fest in native/native-mail-index.js:80, die Bildzeichen ⚡ ✉ 🌐 in Zeile 97 (und 🗑, ↩, 📭 in 76-78, 83) – gegen Klaus' Regel „keine Emojis, nirgends“. Den Punkt „Suche zeigt in der Absender-Ansicht erst nur das Bündel“ habe ich nicht selbst nachgestellt; er gilt hier als nicht geprüft. Alles reine Darstellung, keine Funktion betroffen; Nutzen klein, weil der erste Bildschirm nur einmal vor dem ersten Abruf erscheint. Die Emoji- und Einzahl-Korrektur ist dennoch billig und regelkonform.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "„Kategorien“ gibt es an vier Stellen, jede zeigt etwas anderes",
+  "seite": "Dateien (linke Spalte), Kategorien, Übersicht, Suche",
+  "beleg": "Messung im Prüfbrowser mit 10 erfundenen Dateien (Skripte m2.mjs/m3.mjs im Ordner pruefung/ordnungsmensch). Nach einer eigenen Kategorie „Versicherung“ und einem angenommenen Vorschlag „Rechnungen“ stehen links auf der Seite Dateien drei Listen untereinander: „KATEGORIEN“ (E-Mail 1, Foto 1, Rechnung 4, Tabelle 1, Text/Notiz 1, Vertrag 2), „EIGENE KATEGORIEN“ (Versicherung 1), „KATEGORIEN (VORSCHLAG)“ (Rechnungen 4). „Rechnung (4)“ und „Rechnungen (4)“ stehen also zweimal da. Die Seite „Kategorien“ zeigt danach weiter nur die 6 automatischen Kacheln – „Versicherung“ und „Rechnungen“ fehlen. Die Kachel „Kategorien“ in der Übersicht zählt 6, nach dem Vorschlag 7, die eigene Kategorie zählt nie mit. Der Filter „Kategorie“ auf der Suchseite kennt nur die 6 automatischen. Der Vorschlag „4 Dateien sehen aus wie Rechnungen. Kategorie anlegen?“ erscheint, obwohl links schon „Rechnung (4)“ steht. Code: assets/workspace.js:528-534 (drei Listen), index.html:2027-2036 (Kacheln nur aus r.category), native/native-overview.js:58 (Zahl = Kategorien + Vorschläge), assets/eigene-kategorien.js:76-86. Dazu: jede Kachel auf „Kategorien“ springt nur zur Seite Dateien mit Kästchen (title „Ordner öffnen: Rechnung“) – dasselbe wie ein Klick in der linken Liste.",
+  "vorschlag": "Eine einzige Liste „Kategorien“ überall: zuerst die eigenen, darunter die automatisch erkannten, angenommene Vorschläge reihen sich dort ein (kein drittes Kapitel). Seite „Kategorien“, Zahl in der Übersicht und Filter in der Suche lesen dieselbe Liste. Einen Vorschlag nur zeigen, wenn es die Kategorie unter gleichem Namen (Einzahl/Mehrzahl) noch nicht gibt. Alle drei Arten bleiben erhalten, sie stehen nur an einem Ort.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgestellt (Kopie der Messung in pruefung/skeptiker-ordnung, 10 erfundene Dateien): links drei Kapitel „Kategorien“, „Eigene Kategorien“, „Kategorien (Vorschlag)“ mit „Rechnung (4)“ und „Rechnungen (4)“ nebeneinander; Seite Kategorien zeigt weiter nur die 6 automatischen Kacheln; Zahl in der Übersicht 6, nach Vorschlag 7, eigene zählt nie mit (native/native-overview.js:58 = categories+topics); Suchfilter kennt nur die 6. Code stimmt: assets/workspace.js:528-534, index.html:2027-2036. Der Vorschlag „Rechnungen“ erscheint tatsächlich, obwohl „Rechnung (4)“ schon da ist (und meint andere 4 Dateien, weil er die Mail mitnimmt). Nutzen mittel statt gross: es stört erst, wenn jemand eigene Kategorien oder Vorschläge benutzt, und der Umbau ist der grösste der Liste (mehrere Proben legen die getrennten Kapitel fest). Kleinster lohnender Teil: Vorschlag unterdrücken, wenn es die Kategorie dem Namen nach schon gibt, und eigene Kategorien auf Seite Kategorien/Übersicht/Suchfilter mitzeigen. Keine Funktion geht verloren.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "Kachel sagt „Rechnung 4“, die Liste dahinter zeigt 5",
+  "seite": "Kategorien → Dateien",
+  "beleg": "Messung (m2.mjs, Bild nach-kachel.png): Seite Kategorien, Kachel „Rechnung 4 · 84 KiB“ angetippt → Seite Dateien mit Kästchen „Rechnung ×“, links ist „Rechnung (4)“ markiert, in der Liste stehen 5 Zeilen (zusätzlich die Mail „Ihre Rechnung im Anhang“). Grund: gezählt wird nach dem alten Feld r.category (Mail hat „E-Mail“, index.html:3627 und 2032), gefiltert wird aber nach der Art des Sortier-Kerns, weil „Rechnung“, „Vertrag“, „Angebot“ zum Art-Kästchen umgebogen werden (assets/workspace.js:510-513, Zählung in categoryViews ab Zeile 350). Dieselbe Mail steht außerdem unter „E-Mail (1)“.",
+  "vorschlag": "Zahl und Liste mit derselben Regel bilden: für Rechnung/Vertrag/Angebot die Zahl ebenfalls über die Art des Sortier-Kerns zählen (dieselbe Funktion wie das Kästchen). Dann steht „Rechnung 5“ und es kommen 5.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: Kachel „Rechnung 4 · 84 KiB“ angetippt, danach Kästchen „Rechnung ×“ und 5 Zeilen. Ursache im Code eindeutig: gezählt wird nach r.category (index.html:2032, workspace.js categoryViews ab Zeile 350), das Kästchen wird aber über ART_AUS_KATEGORIE zu feld 'art' umgebogen (assets/workspace.js:510-513) und filtert nach der Art des Sortier-Kerns; die Mail „Ihre Rechnung im Anhang“ hat category=E-Mail, kern.art=Rechnung. Echter Zählfehler, trifft jeden mit Rechnungs-Mails. Hinweis zum Vorschlag: beim Angleichen darauf achten, dass Dateien mit alter Kategorie „Rechnung“, aber anderer Kern-Art nicht aus beiden Listen fallen (am sichersten: Zahl und Liste beide mit „alte Kategorie ODER Kern-Art“ bilden). Kostet keine Funktion.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "Zweite Kategorie angetippt: Liste wird leer statt zu wechseln",
+  "seite": "Dateien (linke Spalte)",
+  "beleg": "Messung (m2.mjs/m3.mjs, Bilder zwei-chips.png, zwei-eigene.png): links „E-Mail (1)“ antippen → 1 Zeile. Danach „Vertrag (2)“ antippen → Kästchen „E-Mail ×“ und „Vertrag ×“ stehen beide da, 0 Zeilen, Text „Ohne E-Mail: 2 Treffer / Ohne Vertrag: 1 Treffer / Keine Dateien in dieser Ansicht“. Gleich bei eigenen Kategorien: „Strom“ (2 Zeilen), dann „Versicherung“ → 0 Zeilen. Eine Datei hat nur eine Kategorie, zwei Kategorie-Kästchen können also nie gleichzeitig passen. Der Nutzer braucht einen zusätzlichen Tipp auf das × oder auf „Ohne …“. Code: assets/workspace.js:198 (addChip hängt immer an), Zeile 529 und assets/eigene-kategorien.js:83.",
+  "vorschlag": "Ein Kästchen derselben Sorte (Kategorie, eigene Kategorie, Art) ersetzt das vorherige, wenn es aus der linken Liste kommt. Kästchen verschiedener Sorten (z. B. Rechnung + Absender + Monat) lassen sich weiter kombinieren. Ein Tipp links = Wechsel, wie bei Ordnern.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: links „E-Mail (1)“ → 1 Zeile, dann „Vertrag (2)“ → Kästchen „E-Mail ×“ und „Vertrag ×“, 0 Zeilen, Text „Ohne E-Mail: 2 Treffer / Ohne Vertrag: 1 Treffer / Keine Dateien in dieser Ansicht“. Ebenso bei eigenen: „Strom“ 2 Zeilen, dann „Versicherung“ → 0. Code: addChip hängt immer an (assets/workspace.js:198), Aufrufe in Zeile 529 und eigene-kategorien.js:83. Kleine Einschränkung zur Begründung: „E-Mail“ (Feld kategorie) und „Rechnung“ (Feld art) sind verschiedene Felder und können zusammen passen; zwei Kästchen desselben Feldes (kategorie, eigene, art) können es nie, weil jede Datei nur einen Wert hat. Deshalb kostet das Ersetzen innerhalb desselben Feldes keine Funktion; Kombinieren über verschiedene Felder bleibt. Trifft jeden, der links durch die Kategorien blättert, und sieht wie eine leere App aus.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "Eigene Kategorie lässt sich nicht umbenennen oder löschen",
+  "seite": "Dateien („+ Kategorie“)",
+  "beleg": "Messung (m2.mjs): an „Police Hausrat.pdf“ über „+ Kategorie“ den Tippfehler „Versicherng“ angelegt, dann richtig „Versicherung“ zugeordnet. Links steht danach dauerhaft „Versicherng (0)“ neben „Versicherung (1)“, und „Versicherng“ steht in jedem Auswahlmenü jeder Datei als Knopf. Das Menü bietet nur: vorhandene Kategorien, „Neue Kategorie …“, „Anlegen“, „Keine eigene Kategorie“, „Abbrechen“. Code: assets/eigene-kategorien.js:44 fügt nur hinzu (stand.kategorien.push), nirgends wird ein Name entfernt oder geändert; Zeile 80 zeigt auch Kategorien mit 0 Dateien.",
+  "vorschlag": "In der linken Liste bei „Eigene Kategorien“ je Name ein kleines Stift-Symbol: „Umbenennen“ (ändert alle zugeordneten Dateien und Regeln mit) und „Entfernen“ (Dateien bleiben, nur die Zuordnung fällt weg, mit Rückfrage). Leere Kategorien dürfen bleiben, sind dann aber entfernbar.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: Tippfehler „Versicherng“ angelegt, danach „Versicherung“ zugeordnet → links bleibt „Versicherng (0)“ stehen und steht als Knopf im Menü jeder Datei. Code: assets/eigene-kategorien.js:44 kennt nur stand.kategorien.push, es gibt nirgends ein Entfernen oder Umbenennen des Namens; baum() (Zeile 76-80) zeigt auch Namen mit 0 Dateien. Echte Lücke, aber nur für Nutzer eigener Kategorien und erst nach einem Vertipper. Vorschlag fügt nur hinzu, nimmt nichts weg (beim Umbenennen die Regeln je Absender mit umstellen).",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "Doppelte: die Übersicht meldet 3, die Seite zeigt sie erst nach Aufklappen von „Katalogverweise“",
+  "seite": "Übersicht → Doppelte",
+  "beleg": "Messung (m2.mjs, Bild dupes2.png): Übersicht-Kachel „Doppelte Inhalte 3“. Auf der Seite Doppelte ist sichtbar nur „Doppelte Dateien“ und der Satz „Die Ordnerbereinigung ist in dieser Ausgabe nicht verfügbar.“; die 3 gezählten Einträge liegen in der zugeklappten Zeile „Katalogverweise“ (ein Wort, das sonst nirgends erklärt wird). So sieht es unter Windows aus: dort gibt es die Brücke ProDuplicates nicht (nur android/…/ProDuplicatesPlugin.java; native/native-dupes.js:6 „supported“). Unter Android steht an derselben Stelle der Knopf „Ordner prüfen“ – das ist eine andere Sache (Dateien im Geräteordner) als die 3 aus der Übersicht. Zugeklappt wird in native/native-dupes.js:17 (details ohne open).",
+  "vorschlag": "Die Liste aus dem Katalog offen zeigen, sobald sie Einträge hat, mit klarer Überschrift und Zahl: „Im Katalog doppelt (3)“. Unter Windows den Kasten „Ordnerbereinigung nicht verfügbar“ klein darunter oder hinter das ⓘ. „Ordner prüfen“ unter Android bleibt, als zweiter Abschnitt „Doppelte Dateien im Geräteordner suchen“.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen (ohne Brücke ProDuplicates, also wie Windows): Kachel „Doppelte Inhalte 3“, Seite Doppelte zeigt sichtbar nur „Doppelte Dateien | Die Ordnerbereinigung ist in dieser Ausgabe nicht verfügbar. | Katalogverweise“; die Einträge stecken im zugeklappten <details>. Code: native/native-dupes.js:17 legt das details ohne open an, nirgends wird es geöffnet (nur in Proben von Hand). Das Zugeklappt-Sein gilt auch unter Android. Achtung: die Probe tools/native/test-dupes-cleanup.mjs legt die Reihenfolge (Ordnerprüfung zuerst, Katalog getrennt) absichtlich fest; der Vorschlag ändert nur „offen, wenn Einträge da sind“ und die Überschrift, keine Funktion entfällt, die Probe muss aber mitgezogen werden.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "„Art“ heißt auf zwei Seiten etwas Verschiedenes; dazu „Typ“ und zwei Namen für dieselbe Seite",
+  "seite": "Suche, Dateien",
+  "beleg": "Messung (m2.mjs): Suchseite, Filter „Art“ = Alle, Dokumente, Notizen, Fotos und Bilder, Tabellen; Filter „Kategorie“ = Rechnung, Vertrag, Foto … Seite Dateien, Sortier-Menü: „D Datum, N Name, G Größe, T Typ, A Absender, B Bereich, R Art“ – hier ist „Art“ = Rechnung/Vertrag (also das, was die Suche „Kategorie“ nennt), „Typ“ = Dateiendung, und Dokumente/Fotos/Notizen heißen „Ansicht wählen“. Vier Wörter (Art, Typ, Kategorie, Ansicht) für drei Dinge, eines davon doppelt belegt. Außerdem: der Reiter heißt „Dateien“, die Überschrift darunter „Explorer“ (Bild explorer.png; index.html:488), Hinweise sagen „Im Explorer zeigen“ (assets/workspace.js:39). Code Sortierung: assets/workspace.js:191 und 46.",
+  "vorschlag": "Feste Wörter überall gleich: „Dateiart“ für Dokument/Foto/Notiz/Tabelle/E-Mail (Suche-Filter und Ansichtswahl), „Kategorie“ für Rechnung/Vertrag/eigene (auch im Sortier-Menü statt „Art“), „Endung“ statt „Typ“. Überschrift und Hinweise „Dateien“ statt „Explorer“. Keine Funktion ändert sich, nur die Beschriftung.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: Suchfilter „Art“ = Alle/Dokumente/Notizen/Fotos und Bilder/Tabellen, Suchfilter „Kategorie“ = Rechnung/Vertrag/…; Sortiermenü auf Dateien: „T Typ“ und „R Art“, wobei Art dort Rechnung/Vertrag meint (workspace.js:191, byArt). Reiter heisst „Dateien“, Überschrift darunter „Explorer“ (index.html:488, im Bild explorer.png gesehen). Die Beobachtung stimmt, aber es ist reine Beschriftung, nichts arbeitet falsch; ausserdem verwenden Anleitungen, Hilfetexte und Proben das Wort „Explorer“ in vier Sprachen, eine Umbenennung zieht also viele Stellen nach sich. Lohnend ist vor allem, die doppelte Bedeutung von „Art“ aufzulösen. Keine Funktion betroffen.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "„+ Neuer Ordner“ (Kopie nach Kategorie) kennt die eigenen Kategorien nicht",
+  "seite": "Kategorien",
+  "beleg": "Messung (m3.mjs, Bild order-neu.png): zwei Dateien der eigenen Kategorie „Strom“ und eine „Versicherung“ zugeordnet, dann Kategorien → „+ Neuer Ordner“ → Schema „Nach Kategorie“ → „Vorschau ansehen“: „10 Kopien in 6 Ordnern“ = Rechnung 4, Vertrag 2, Foto 1, Text-Notiz 1, Tabelle 1, E-Mail 1. Kein Ordner „Strom“ oder „Versicherung“. Code: index.html:2676-2683 (schemePath nimmt nur r.category). Wer seine Dateien selbst eingeteilt hat, bekommt beim Kopieren eine andere Ordnung als auf der Seite Dateien. Nebenbei: die Kachel heißt „Neuer Ordner“ und steht zwischen den Kategorie-Kacheln, legt aber keine Kategorie an, sondern öffnet das Kopieren.",
+  "vorschlag": "Beim Schema „Nach Kategorie“ zuerst die eigene Kategorie nehmen, sonst die automatische (gleiche Vorrang-Regel wie auf der Seite Dateien). Kachel deutlicher benennen: „Aufgeräumte Kopie anlegen“ und sichtbar von den Kategorie-Kacheln absetzen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: mit eigenen Kategorien „Strom“ und „Versicherung“ zeigt die Vorschau „10 Kopien in 6 Ordnern“ (Rechnung 4, Vertrag 2, Foto, Text-Notiz, Tabelle, E-Mail je 1), kein Ordner für die eigenen. Code: index.html:2676-2683, schemePath nimmt nur r.category. Kachel „+ Neuer Ordner · Kopie, aufgeräumt“ steht wirklich zwischen den Kategorie-Kacheln und öffnet das Kopieren. Nutzen mittel: betrifft nur, wer beides benutzt (eigene Kategorien und die aufgeräumte Kopie), dann aber ist das Ergebnis auf dem Datenträger anders als auf dem Bildschirm. Vorschlag kostet nichts; wer die alte Einteilung will, hat sie weiter für alle Dateien ohne eigene Kategorie. Beim Umbenennen der Kachel die Proben beachten.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "ordnung",
+  "titel": "Geöffnete Auswahl „+ Kategorie“ verschwindet, wenn die Liste im Hintergrund neu gezeichnet wird",
+  "seite": "Dateien",
+  "beleg": "Messung (m5.mjs/m6.mjs): „+ Kategorie“ an einer Zeile angetippt, Menü erscheint bei 2049 ms und ist bei 2173 ms wieder weg (124 ms später), ohne Tipp des Nutzers; zweiter Tipp nötig. Auslöser war das Neuzeichnen nach dem Einordnen des Sortier-Kerns (assets/workspace.js:621, Ereignis pb-kern-geordnet aus assets/sortierkern-anschluss.js:56). Dieselbe Neuzeichnung lösen auch der Mail-Abgleich (native/native-mail-index.js:290, 341 – läuft von selbst beim Öffnen und alle 30 Minuten), das Finden von Originalen (native/native-originals.js:115-179) und der Tresor (native/native-vault.js:336-365) aus. renderExplorer leert die Liste komplett (workspace.js:517), Menü und die Frage „Alles von … künftig zu …?“ hängen in dieser Liste (eigene-kategorien.js:54, 72). In 10 s Ruhe gab es keine Neuzeichnung; es trifft also Momente, in denen die App gerade arbeitet (nach Hinzufügen, beim Mail-Abruf).",
+  "vorschlag": "Vor dem Neuzeichnen merken, an welcher Datei ein Menü oder eine Frage offen ist, und es danach an derselben Zeile wieder öffnen (samt getipptem Text). Oder: solange ein Menü offen ist, das Neuzeichnen kurz aufschieben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Mechanik im Code eindeutig und Neuzeichnung selbst gemessen: renderExplorer leert #explorerFiles vollständig (assets/workspace.js:517), Menü und Frage hängen als Geschwister der Zeile in genau dieser Liste (eigene-kategorien.js:54, 72); das Ereignis pb-kern-geordnet (sortierkern-anschluss.js:56) löst in workspace.js:621 eine Neuzeichnung aus – in meiner Messung bei 2261 ms nach dem Laden, danach in 10 s Ruhe keine weitere. Der gemessene Fall entsteht also vor allem direkt nach dem Füllen des Katalogs (im Prüfbrowser künstlich früh); im Alltag trifft es nur kurze Momente nach Hinzufügen oder während des Mail-Abgleichs. Die Folge ist ein zweiter Tipp, kein Datenverlust (ein halb getippter Name geht allerdings verloren). Deshalb klein. Vorschlag kostet keine Funktion.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Mail am Handy: Menü „Weitere Aktionen“ ist links abgeschnitten, die Einträge sind nicht lesbar",
+  "seite": "Mail (mit verbundenem Konto), 360×740",
+  "beleg": "Gemessen mit gestelltem Konto (Brücke aus tools/native/test-mail-index.mjs), 360 px breit, Touch: nach Tipp auf „··· Weitere Aktionen“ liegt das Menü bei links −81 px bis rechts 239 px (320 px breit). 81 px stehen außerhalb des Bildschirms. Zu lesen ist nur noch „inzufügen“, „fe und Versandstatus“, „h schließen“, „erbindung entfernen“, „Mails“, „eite katalogisieren“ (Bild: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/handy-tablet/menu-handy-weitere.png). Ursache: native/native.css:90 `.mail-account-menu { position:absolute; right:0; width:min(320px,calc(100vw - 40px)) }` – das Menü hängt mit seiner rechten Kante am Knopf, der Knopf endet aber schon bei 239 px. Bei 600 px passt es (168–470). Nebenbei in derselben Zeile: die Kontoauswahl ist nur 45 px breit und zeigt „kl“, während der Knopf „Weitere Aktionen“ mit Text 145 px belegt.",
+  "vorschlag": "Auf schmalen Bildschirmen das Menü am Bildschirmrand ausrichten statt am Knopf (z. B. links 8 px, rechts 8 px, oder am Kopf des Postfachs verankern). Alle sechs Einträge bleiben. Zusätzlich am Handy „Weitere Aktionen“ nur als „···“ zeigen (Name bleibt als Beschriftung für Vorlesen/Tooltip) – dann bekommt die Kontoauswahl rund 110 px mehr und zeigt die Adresse lesbar.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen (360 px, gestelltes Konto, eigenes Skript skeptiker-schmal/b.mjs): Das Menü liegt bei links −81 bis rechts 239 px, die Einträge beginnen bei −72 px. Alle sechs Einträge sind vorne abgeschnitten. Bei 600 px passt es (159–479). Ursache stimmt: native/native.css:90, das Menü hängt mit `right:0` am Knopf, der schon bei 239 px endet. Auch die Kontoauswahl ist wirklich nur 45 px breit (13–58). Der Vorschlag (Menü am Bildschirmrand ausrichten, Knopf am Handy nur „···“ mit Beschriftung) kostet keine Funktion. Echter Fehler, den jeder Handy-Nutzer mit Mailkonto sieht.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "„Alle Konten“ am Handy vor dem ersten Abruf: Überschrift steht Buchstabe für Buchstabe untereinander, der blaue Knopf ist abgeschnitten",
+  "seite": "Mail → Alle Konten, 360×740",
+  "beleg": "Gemessen 360 px, Zustand „Noch nicht abgerufen“: Überschrift „Alle Konten“ ist 17 px breit und 140 px hoch (Zeilen „Al / le / K / on / te / n“); der Knopf „Alle Konten abrufen und einordnen“ ist 78 × 92 px, sein Text braucht 110 px, hat aber nur 76 px (rechts abgeschnitten: „Al / Kon / abru / un / einord“). Der Kopf wird dadurch 140 px hoch statt 44 px (bei 600 px: alles in einer Zeile, 44 px). Bild: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/handy-tablet/mail-handy-2.png. Ursache: native/native.css:450 `.mail-all-head { flex-wrap:nowrap }` und :452 `h2 { min-width:0 }`; der lange Knopf kommt aus native/native-mail-index.js:732 (`button(t('fetch'), …, 'mail-primary')`) neben „Zurück“ (86 px) und „Weitere Aktionen“ (145 px).",
+  "vorschlag": "Im schmalen Fenster den Kopf umbrechen lassen: oben „← Zurück“, Titel und „···“, darunter der blaue Abruf-Knopf in voller Breite mit ganzem Text. Oder „Weitere Aktionen“ dort nur als „···“ zeigen. Nichts fällt weg; nach dem ersten Abruf ist es ohnehin der kleine Kreispfeil.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen (360 px): Überschrift „Alle Konten“ ist 17 px breit und 140 px hoch (101–118, 132–272), der blaue Abruf-Knopf 78 × 92 px, der Kopf 145 px hoch. Bei 600 px steht alles in einer Zeile (44 px). Ursache stimmt: native/native.css:450 (`flex-wrap:nowrap`) und der lange Knopf aus native/native-mail-index.js:732. Einschränkung: Dieser Zustand erscheint nur, solange noch nie abgerufen wurde (Zeile 731/732: danach steht dort der kleine Kreispfeil). Es ist also der erste Eindruck dieser Seite, aber kein Dauerzustand – deshalb mittel statt gross. Umbrechen des Kopfs kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Hauptleiste: am Handy sind nur 2 von 7 Seiten zu sehen, im halben Tablet-Fenster fehlt „Doppelte“ – ohne Hinweis, dass man wischen muss",
+  "seite": "Alle Seiten (Kopfleiste), 360×740 und 600×800",
+  "beleg": "360 px: die Leiste der Seiten ist 198 px breit, ihr Inhalt 572 px (nav.tabs.main-pages sw572/cw198). Ganz sichtbar: Suche, Hinzufügen; „Dateien“ angeschnitten („Dat“); Mail, Übersicht, Kategorien, Doppelte nicht zu sehen. Rechts daneben belegen Zahnrad, Film-Knopf und Farbpalette fest 140 px (je 44 px). Auf der Mail-Seite ist umgekehrt „Zur Suche“ aus dem Bild gewischt (links −154 px). 600 px: Leiste 438 px für 572 px Inhalt, „Kategorien“ steht als „Kate“ da, „Doppelte“ fehlt ganz. Erst bei 800 px sind alle sieben zu sehen. Kein Schatten, kein Pfeil zeigt, dass es weitergeht. Stelle: native/design-layout.css:185–190 (overflow-x:auto, .tab flex:none, Schnellknöpfe 44 px fest). Die Proben prüfen nur, dass nichts quer aus der Seite läuft – das stimmt, aber ein Nutzer, der nicht wischt, findet Mail und Übersicht nicht.",
+  "vorschlag": "Im schmalen Fenster die nicht gewählten Seiten nur als Symbol zeigen (Name bleibt an der gewählten Seite und als Beschriftung) und Film sowie Farbpalette ins ☰-Menü legen (dort steht Hell/Dunkel schon). Rechnung für 360 px: 198 + 96 = 294 px Platz; gewählte Seite ≈ 90 px + 6 Symbole à 32 px + Abstände ≈ 300 px – das passt mit etwas engerem Abstand, bei 600 px passen alle Namen. Wenn das nicht gewünscht ist: wenigstens einen weichen Rand/Pfeil am rechten Ende als Wisch-Hinweis. Alle acht Seiten bleiben erreichbar.",
+  "bestaetigt": true,
+  "gegenpruefung": "Zahlen selbst nachgemessen: bei 360 px ist die Leiste 198 px breit, ihr Inhalt 572 px; ganz sichtbar sind nur Suche (8–52) und Hinzufügen (55–156), „Dateien“ ist angeschnitten (159–237 bei Ende 206), Mail, Übersicht, Kategorien, Doppelte liegen außerhalb. Bei 600 px: 438 von 572 px, „Doppelte“ (494–580) fehlt, „Kategorien“ ist angeschnitten. Bei 800 px passen alle. Zahnrad, Film und Palette belegen fest je 44 px. In native/design-layout.css steht kein Schatten/Verlauf als Wisch-Hinweis (nur dünne Bildlaufleiste). Aber: Das Querschieben ist laut Kommentar bei Zeile 183 Absicht (statt Seiten zu verstecken oder Namen zu kürzen) – der Befund ist also kein Fehler, sondern eine Auffindbarkeits-Frage. Der kleine Vorschlag (weicher Rand/Pfeil als Hinweis) kostet nichts. Der große Vorschlag (Film und Palette ins ☰-Menü, nur Symbole) erhält alle Funktionen, macht aber Film und Farben einen Tipp weiter weg und ändert eine bewusste Festlegung – das sollte Klaus entscheiden; die Rechnung „passt mit 300 px“ ist knapp und nicht gemessen.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Suche am Handy: 413 px Bedienleisten, bevor der erste Treffer beginnt; „Überall“ steht allein in einer Zeile",
+  "seite": "Suche, 360×740",
+  "beleg": "360 px, Suche „Mietvertrag“: Kopf endet bei 56 px, erste Trefferkarte beginnt bei 469 px – 413 px bis zum Inhalt, vom 740 px hohen Bildschirm bleiben 271 px (37 %). Zeilen von oben: Seitenleiste 60–111, Suchfeld 127–167, Bildbeschreibung/ⓘ/Bedeutung 173–205, „Überall“ allein 211–243 (rechts daneben 254 px leer), Art+Kategorie 251–283, Zeitraum+Tag 289–321, merken+Sortieren 327–359, Zählerzeile 371–441 (70 px in 3 Zeilen; der Knopf „Prüfstand · 12 ohne Original“ steht allein in der dritten), „Verwandtes mitfinden“ 448–465. Bei 600 px beginnt der erste Treffer bei 377 px. Stellen: native/design-layout.css:298–303 (Zählerzeile), Reihe #pb-bild-row (Bildbeschreibung 149 px + ⓘ 30 + Bedeutung 85 + Überall 90 = 354 px + Abstände > 344 px).",
+  "vorschlag": "Ohne etwas zu verstecken: am Handy „Bildbeschreibung“ als Symbol-Knopf (Name als Beschriftung), dann passt „Überall“ in dieselbe Zeile (spart 38 px). Den Prüfstand-Knopf in der Zählerzeile wie im Explorer nur als Schild-Symbol zeigen (native/pb-arrange.css:140 macht das dort schon) und die Zähler in eine Zeile – spart rund 45 px. Zusammen etwa 85 px mehr für Treffer, kein Tipp mehr als heute.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen (360 px, Suche „Mietvertrag“): Kopf endet bei 56 px, erster Treffer beginnt bei 469 px. Die Zeilen stimmen: Suchfeld 127–167, Bild-Reihe 173–243 (70 px, „Überall“ allein in der zweiten Zeile bei 8–98), Filter 251–359, Zählerzeile 371–441 (70 px, Prüfstand-Knopf allein in der dritten Zeile), „Verwandtes mitfinden“ 447–469. Bei 600 px beginnt der Treffer bei 377 px. Der Vorschlag versteckt nichts (Bildbeschreibung und Prüfstand als Symbol mit Beschriftung); ein Symbol ohne Wort ist für Neulinge allerdings etwas schwerer zu erkennen. Gewinn rund 85 px – spürbar, aber kein Fehler.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Am Handy passt nur ein Treffer bzw. zwei Dateien auf den Bildschirm; einzelne kleine Knöpfe belegen je eine ganze Zeile",
+  "seite": "Suche (Trefferkarten) und Dateien (Dateizeilen), 360×740",
+  "beleg": "Suche 360 px: Karten 387 / 439 / 387 / 439 / 464 px hoch (bei 600 px: 257–307, bei 800 px: 236–286). In der Karte „Mietvertrag Wohnung …“ (466 px): Titel 3 Zeilen, Kategorie+Tag 22 px, dann „+ Tag“ allein in einer Zeile mit 48 × 44 px, dann der Pfad allein mit 44 px Höhe, „Gefunden, weil …“ 47 px, Textauszug 73 px, Knöpfe in zwei Zeilen zusammen 95 px (Öffnen + „Original fehlt · nicht prüfbar“ / KI, Schloss, Löschen). Stelle: native/result-cards.css:10 (`.tag.add { min-height:44px }`). Dateien 360 px: Zeilen 179 bis 341 px hoch (ungleich), z. B. 241 px: der Text hat neben dem 66 px breiten „Öffnen“ nur ~180 px und bricht in 4 Zeilen, darunter „+ Kategorie“ (92 × 26) allein in einer Zeile. Bilder: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/handy-tablet/z-karte.png und z-zeile.png.",
+  "vorschlag": "„+ Tag“ flach (28 px sichtbar, Tippfläche unsichtbar größer, wie die übrigen Knöpfe) in die Zeile von Kategorie und Tags; Pfad als eine flache Textzeile; „Original fehlt · nicht prüfbar“ am Handy nur als Zeichen ⊘ (Text beim Antippen wie bisher im Bericht), dann stehen Öffnen, ⊘, KI, Schloss, Löschen in einer Zeile. Im Explorer „+ Kategorie“ rechts unter „Öffnen“ statt in eigener Zeile und den Beschreibungstext unter die volle Breite. Geschätzt 100–130 px weniger je Karte, alle Knöpfe bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Kartenhöhen selbst nachgemessen: bei 360 px 387 / 439 / 387 / 439 / 464 / 464 px, bei 600 px 257–307, bei 800 px 236–286. „+ Tag“ ist wirklich 48 × 44 px (native/result-cards.css:10, min-height aus --pb-control-size). Damit passt bei 271 px Restfläche nicht einmal ein ganzer Treffer aufs Handy. Hinweis: Die 44 px sind die bewusst festgelegte Tippgröße für Touch-Geräte; der Vorschlag (sichtbar flach, Tippfläche unsichtbar größer) hält das ein. Die Explorer-Zeilenhöhen habe ich nicht einzeln nachgemessen, der Teil zur Suche ist belegt. „Original fehlt“ nur als Zeichen ⊘ zu zeigen, verliert keinen Knopf, macht den Zustand aber weniger deutlich – das wäre der einzige Punkt, den Klaus bewusst entscheiden sollte. Aussehen/Platz, kein Fehler.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Zählerzeile der Suche: im halben Tablet-Fenster ist der Prüfstand-Knopf rechts abgeschnitten und die Seite lässt sich quer schieben; „Bedeutungssuche0 E-Mails“ klebt zusammen",
+  "seite": "Suche, 600×800 (und Text bei allen Breiten)",
+  "beleg": "600 px: Knopf „Prüfstand · 12 ohne Original“ liegt bei 369–610 px, das Fenster endet bei 592 px → 18 px abgeschnitten („12 ohne Origina“); #panel-search scrollWidth 602 bei clientWidth 584 (quer schiebbar). Gleichzeitig ist „12 Treffer · 0.30 ms · Bedeutungssuche“ auf 109 px gequetscht und steht in 3 Zeilen (54 px hoch). Ursache: native/design-layout.css:298 `flex-wrap:nowrap`, umbrochen wird erst unter 520 px (:303). Zweitens bei 360, 600 und 800 px gleich: zwischen „Bedeutungssuche“ und „0 E-Mails“ fehlt das Trennzeichen (Bild zeigt „Bedeutungssuche0 E-Mails“), weil :301 den Punkt nur zwischen den Zählern setzt, nicht nach #searchInfo.",
+  "vorschlag": "Die Zeile immer umbrechen lassen (oder die Grenze von 520 auf etwa 700 px heben) und vor dem ersten Zähler ebenfalls „ · “ setzen. Reine Darstellung, keine Funktion betroffen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Beides selbst gemessen. 600 px: Prüfstand-Knopf liegt bei 369–610 px, das Feld endet bei 592 px (18 px abgeschnitten); #panel-search scrollWidth 602 bei clientWidth 584; der Treffertext ist auf 109 px gequetscht und 54 px hoch. Ursache stimmt: native/design-layout.css:298 `flex-wrap:nowrap`, Umbruch erst unter 520 px (Zeile 303). Trennzeichen: #searchMailCount hat kein „·“ davor (::before = none), die folgenden Zähler haben es; #searchInfo endet bei 231 px und „0 E-Mails“ beginnt bei 231 px – die Texte stoßen ohne Abstand aneinander, bei allen drei Breiten. Der Vorschlag ist reine Darstellung, keine Funktion betroffen. Echter kleiner Fehler, der bei jeder Suche zu sehen ist.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Dateien am Handy: im Kasten „Kategorie anlegen?“ sind die Knöpfe „Ansehen“ außerhalb des Bildschirms, lange Dateinamen sind abgeschnitten",
+  "seite": "Dateien (Explorer), 360×740",
+  "beleg": "360 px, Vorschlag „2 Dateien sehen aus wie Verträge“: die Liste der Dateien ist 492 px breit in einem 322 px breiten Kasten (ul.topic-files links 19, Breite 492); beide Knöpfe „Ansehen“ liegen bei 425–502 px, also ganz rechts außerhalb (Bildschirm endet bei 360). Der Name „Mietvertrag Wohnung Lindenweg 2026 unterschrieben“ ist nach „unters“ abgeschnitten. Die ganze Dateiliste lässt sich dadurch quer schieben (#explorerFiles scrollWidth 503 bei 344). Bei 600 px passt es (Ansehen 496–573). Stelle: native/native.css:688–693 (.topic-files / .topic-file ohne Umbruch oder Kürzung des Namens). Bild: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/handy-tablet/handy-explorer.png.",
+  "vorschlag": "Den Dateinamen in der Vorschlagsliste schrumpfen lassen (min-width:0, Kürzung mit „…“ oder Umbruch), damit „Ansehen“ immer im Bild bleibt. Haken, „Ansehen“, „Für diese 2 anlegen“ und „Nein danke“ bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen (360 px): die Liste .topic-files reicht von 19 bis 511 px (492 px breit) in einem 344 px breiten Kasten; beide „Ansehen“-Knöpfe liegen bei 425–502 px, also ganz außerhalb; #explorerFiles scrollWidth 503 bei 344 (quer schiebbar). Bei 600 px passt es (496–572). Korrektur zur Ursache: Der Dateiname hat schon `min-width:0` und Kürzung mit „…“ (native/native.css:690) – das greift nur nicht, weil die Liste selbst breiter als der Kasten wird (sie richtet sich nach dem längsten Namen). Die Reparatur muss also an der Liste/dem Kasten ansetzen (z. B. Liste auf Kastenbreite begrenzen), nicht am Namen. Die Funktion bleibt vollständig. Der Kasten ist heute neu (Punkt 14 vom 16.11.) und erscheint nur bei einem Vorschlag mit langem Dateinamen – dann ist „Ansehen“ aber ohne Querschieben nicht erreichbar.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "schmal",
+  "titel": "Übersicht auf dem 360-px-Handy: vier Kacheln untereinander, die Ordnerliste beginnt erst bei 494 px",
+  "seite": "Übersicht, 360×740",
+  "beleg": "360 px: die vier Kacheln stehen einzeln untereinander (je 344 × 82 px, zusammen 351 px, 129–480), „Dateien nach Ordnern“ beginnt bei 494 px – 438 px unter dem Kopf. Bei 600 px stehen sie zu zweit (je 288 px breit, zusammen 172 px), die Liste beginnt bei 315 px. Ursache: native/design-layout.css:131 `@media(max-width:360px) { … grid-template-columns:minmax(0,1fr) }` – die Grenze trifft genau die häufigste Handybreite 360 px; ab 361 px wären es zwei Spalten (native/native.css:258). In jeder Kachel stehen nur eine Zahl und zwei kurze Zeilen, 168 px Breite reichen dafür.",
+  "vorschlag": "Die Grenze auf unter 340 px senken (z. B. max-width:339px), dann stehen die Kacheln auch bei 360 px zu zweit und die Ordnerliste rückt rund 180 px nach oben. Inhalt und Antippen der Kacheln bleiben gleich.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen: bei 360 px stehen die vier Kacheln einzeln untereinander (je 344 × 82 px, 129–480), „Dateien nach Ordnern“ beginnt bei 494 px; bei 600 px stehen sie zu zweit, die Liste beginnt bei 315 px. Ursache stimmt: native/design-layout.css:131 `@media(max-width:360px)` trifft genau 360 px. In den Proben unter tools/native habe ich keine Festlegung auf diese Grenze gefunden. Grenze senken kostet keine Funktion. Einschränkung: Ob die Kacheltexte bei 168 px Breite sauber passen, ist nicht gemessen (Titel wie „Einträge im Katalog“ und die Unterzeile könnten umbrechen) – vor dem Ändern kurz prüfen. Reine Platzfrage, daher klein.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Einstellungen: nach dem Öffnen eines Themas springt die Tab-Taste am Inhalt vorbei",
+  "seite": "Einstellungen (Ansicht nach Themen, wie am Gerät)",
+  "beleg": "Gemessen im Prüfbrowser mit pb_einstellungen_themen=an, 1280 px: Thema „Sprache & Diktat“ mit Enter geöffnet, Fokus steht auf „‹ Alle Themen“ (y=103). Nächste Tab-Taste landet auf „Impressum & Datenschutz“ (y=389), dann Fußzeile und Siegel. Die Auswahl „Such- und Diktatsprache“ (y=217) und das ⓘ (y=169) erreicht man nur rückwärts mit Umschalt+Tab. Genauso bei „Tresor & Ablage“: „Speicherort wählen“, „Vorhandenen Ordner öffnen“, „Wo liegt was?“ nur rückwärts. Ursache: assets/einstellungen-themen.js:41-43 und :66 (Kopf steht im Dokument hinter den Kästen und bekommt den Fokus), assets/workspace.css:130 (order:-1 zeigt ihn nur optisch oben). Dazu: „‹ Alle Themen“ gedrückt → Fokus liegt auf BODY (einstellungen-themen.js:66 setzt ihn nur bei k≠null).",
+  "vorschlag": "Den Kopf „‹ Alle Themen + Titel“ auch im Dokument vor die Kästen stellen (oder nach dem Öffnen den Fokus auf die Überschrift des Themas mit tabindex=-1 setzen), sodass Tab danach in den Inhalt des Themas geht. Beim Zurück den Fokus auf die Themen-Kachel setzen, aus der man kam. Nichts fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen (Themen an, 1280 px): nach Enter auf „Sprache & Diktat“ bzw. „Tresor & Ablage“ steht der Fokus auf „‹ Alle Themen“, die nächste Tab-Taste landet auf „Impressum & Datenschutz“; Auswahl, ⓘ und die Tresor-Knöpfe erreicht man nur rückwärts. Der Kopf steht im Dokument an Stelle 18 hinter den Kästen und wird nur optisch nach oben gesetzt; nach „‹ Alle Themen“ liegt der Fokus auf BODY. Die Datei wurde am 16.11. nicht geändert; spürbar nur mit Tastatur (DeX, Windows) oder Vorleser, der Vorschlag kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Nach dem Öffnen verliert die Tastatur ihren Platz (Mail, Absender, Ordner, Pfeile, Kachel, Fenster schließen)",
+  "seite": "Mail, Dateien, Kategorien, Suche",
+  "beleg": "Gemessen (document.activeElement nach der Taste): Mail in der Liste mit Enter geöffnet → BODY; die nächste Tab-Taste steht auf „Postfach durchsuchen“, also am Anfang der Liste – bis „Antworten“ muss man durch alle Mails (je Mail 2 Halte: Haken und Zeile). Mail-Ordner „Archiv“ mit Enter → BODY. Absender-Bündel in „Alle Konten“ mit Enter → BODY, Tab danach „Zurück zum Postfach“. Dateien: Pfeil „Zuklappen“ mit Enter → BODY; Ordner „Dokumente (2)“ mit Enter → BODY (Baum wird neu gebaut, assets/workspace.js:424-438). Kategorien: Kachel „Fotos“ mit Enter → Seite Dateien, Fokus BODY. Fenster „Original erneut auswählen“ mit Esc zu → BODY statt zurück auf „Öffnen“; Feld „+ Kategorie“ mit Esc → BODY. Suche: „Filter zurücksetzen“ mit Enter → BODY (Knopf blendet sich selbst aus, native/native-ueberall.js Abschnitt filterOrdnen). Gut gelöst ist es schon bei „+ Tag“, beim Pfad-Knopf und beim × im Suchfeld (Fokus kommt zurück).",
+  "vorschlag": "Eine kleine gemeinsame Regel: nach dem Neuzeichnen den Fokus wieder auf dasselbe Element setzen (über data-path / data-Kennung wiederfinden); beim Öffnen einer Mail den Fokus auf den Betreff der geöffneten Mail (tabindex=-1); beim Schließen von Fenstern und Feldern zurück auf den Knopf, der sie geöffnet hat; nach „Filter zurücksetzen“ auf den ersten Filter. Keine Funktion ändert sich.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen: Mail mit Enter geöffnet, Mail-Ordner „Archiv“, Absender-Bündel, Pfeil und Ordner im Dateibaum, Kategorie-Kachel – jedes Mal liegt der Fokus danach auf BODY, die nächste Tab-Taste beginnt bei „Postfach durchsuchen“ bzw. „Zurück zum Postfach“. Die Fälle „Original erneut auswählen“ mit Esc, „+ Kategorie“ mit Esc und „Filter zurücksetzen“ habe ich nicht selbst nachgestellt. Das Verhalten ist überwiegend älter als der 16.11.; der Vorschlag ändert nur, wo der Fokus landet.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Pfeil „Quellen für Überall“: Zustand „auf/zu“ ist versehentlich in einen Kommentar gerutscht",
+  "seite": "Suche",
+  "beleg": "native/native-ueberall.js:189 – hinter dem Kommentar „// kein zweites Zahnrad …“ stehen in derselben Zeile rad.setAttribute('aria-expanded','false'); rad.setAttribute('aria-controls','pbUeberallQuellen'); sie werden deshalb nie ausgeführt. Gemessen direkt nach dem Start: #pbUeberallRad aria-expanded=null, aria-controls=null. Erst nach dem ersten Tipp steht aria-expanded=true. Ein Screenreader sagt beim ersten Erreichen nicht, dass sich hier etwas aufklappt und wo.",
+  "vorschlag": "Die beiden Anweisungen in eine eigene Zeile unter den Kommentar setzen. Sonst nichts ändern.",
+  "bestaetigt": true,
+  "gegenpruefung": "In native/native-ueberall.js Zeile 189 stehen die beiden Anweisungen hinter „//“ in derselben Zeile und laufen nie; gemessen nach dem Start: aria-expanded und aria-controls am Pfeil fehlen, nach dem ersten Tipp steht „true“. Die Zeile ist am 16.11. neu dazugekommen. Echter kleiner Fehler, nur für Vorleseprogramme merkbar; die Korrektur kostet nichts.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Esc schließt Aufgeklapptes nur an manchen Stellen",
+  "seite": "Suche, Kategorien, Mail",
+  "beleg": "Gemessen: Dateien – die Menüs „Ansicht wählen“, „Anordnung“, „Sortieren“ schließen mit Esc und der Fokus geht zurück (native/pb-arrange.js:75). Dagegen: Suche – Quellen hinter dem Pfeil bei „Überall“ offen, Fokus auf einem Haken, Esc → bleibt offen. Kategorien – Leiste unter „+ Neuer Ordner“ offen, Fokus in „Schema“, Esc → bleibt offen (aria-expanded weiter true). Mail – „Weitere Aktionen“ offen, Fokus auf „Konto hinzufügen“, Esc → bleibt offen. Schließen geht dort nur, indem man zum Auslöser zurücktabbt und ihn noch einmal drückt.",
+  "vorschlag": "Dieselbe Regel wie in pb-arrange.js überall: Esc klappt zu und setzt den Fokus auf den Auslöser (Pfeil, Kachel „+ Neuer Ordner“, „Weitere Aktionen“). Der zweite Tipp auf den Auslöser bleibt zusätzlich.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen: Quellen hinter dem Pfeil bei „Überall“, Leiste unter „+ Neuer Ordner“ und „Weitere Aktionen“ im Postfach bleiben nach Esc offen, der Fokus bleibt im Inneren; die Menüs in Dateien schließen dagegen laut Code (pb-arrange.js) mit Esc. Pfeil und Kachel „+ Neuer Ordner“ sind vom 16.11., „Weitere Aktionen“ ist älter. Kleinigkeit nur für Tastaturnutzer; der zweite Tipp auf den Auslöser bleibt, es fällt nichts weg.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Knopf „Übersetzen“ in der Leseansicht von „Alle Konten“ hat keinen Namen",
+  "seite": "Mail → Alle Konten → gespeicherte Mail",
+  "beleg": "Gemessen 2,5 s nach dem Öffnen einer gespeicherten Mail: button[data-mail-translate=open] sichtbar (43 px breit), textContent leer, kein aria-label, kein title – nur das Symbol. Im normalen Postfach heißt derselbe Knopf „Übersetzen“. Ursache: native/native-mail-translation.js:104 beschriftet nur Teile, die schon in der Seite hängen (node.isConnected); native/native-mail-index.js:694 ruft mount() aber auf, bevor der Leser in die Seite gehängt ist. Auch sehende Nutzer bekommen hier keinen Hinweistext.",
+  "vorschlag": "Die Beschriftung beim Einhängen ohne die Bedingung isConnected setzen (oder mount erst nach dem Einhängen des Lesers aufrufen) und dem Knopf zusätzlich aria-label/title geben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen 2,5 s nach dem Öffnen einer gespeicherten Mail in „Alle Konten“: der Knopf ist sichtbar (43 px), hat aber keinen Text, kein aria-label und keinen title – nur das Symbol. Ursache wie beschrieben: die Beschriftung wird nur gesetzt, wenn das Teil schon in der Seite hängt, der Leser wird aber erst danach eingehängt. Der Aufruf stand schon vor dem 16.11. so im Code; die Korrektur kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "„An Familienakte“: dieselbe Meldung kommt zweimal, und der Knopf heißt an zwei Stellen verschieden",
+  "seite": "Mail (Leseansicht „Alle Konten“ und normales Postfach)",
+  "beleg": "native/native-mail-index.js:686-687: erst status.textContent = text (Zeile mit role=status), direkt danach alert(text). Gemessen mit gestelltem Tresor: Hinweisfenster „An die Familienakte übergeben: 1 von 1.“ muss mit OK bestätigt werden, und dieselben Worte stehen zugleich in der Meldezeile. Das ist ein zusätzlicher Klick; ein Screenreader liest den Satz doppelt. Außerdem heißt der Knopf in „Alle Konten“ „An Familienakte“ (native-mail-index.js:118), in der geöffneten Mail des Postfachs „An Familienakte teilen“ (gemessene Knopfreihe). Während des Abholens der Mail zeigt der Knopf keinen Zustand (kein aria-busy, nicht gesperrt).",
+  "vorschlag": "Nur die Meldezeile verwenden (sie wird schon angesagt); das Hinweisfenster nur bei einem Fehler zeigen. Einen Namen für beide Stellen: „An Familienakte“. Während des Abholens aria-busy am Knopf setzen. Die Übergabe selbst bleibt gleich.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen mit gestelltem Tresor: der Satz „An die Familienakte übergeben: 1 von 1.“ steht in der Meldezeile und kommt zugleich als Hinweisfenster zum Bestätigen; im Code heißt der Knopf hier „An Familienakte“, in der geöffneten Postfach-Mail „An Familienakte teilen“, ein aria-busy am Knopf gibt es nicht. Der Knopf in „Alle Konten“ samt Hinweisfenster ist vom 16.11. Vorsicht beim Vorschlag: fällt das Fenster weg, muss die Meldezeile am Tablet gut sichtbar neben dem Knopf stehen, sonst übersieht man die Bestätigung.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Suche: Feld ohne Namen, Trefferzahl wird nicht angesagt, Fokus am Feld kaum zu sehen",
+  "seite": "Suche",
+  "beleg": "Gemessen: #q hat kein aria-label, kein label, kein title – nur den Platzhalter „z. B. das schwarze Auto …“; ein Screenreader liest den Beispielsatz statt „Suche“. Nach Enter bleibt der Fokus im Feld (gut), aber die Zeile „1 Treffer · 0.40 ms …“ (.searchmeta, index.html:546) hat weder role=status noch aria-live; #results auch nicht. Angesagt wird nur der neue Bereich darunter („Aus anderen Programmen: 1 Treffer“, role=status) – die eigenen Treffer nicht. Fokus: alle anderen Bedienteile zeigen einen 2-px-Rahmen, das Suchfeld nur einen 1-px-Farbwechsel am Rand (native/native.css:643-644, outline:0), und der bleibt auch an, wenn × oder Lupe den Fokus haben (focus-within).",
+  "vorschlag": "Dem Feld aria-label „Suche“ geben; der Zeile mit der Trefferzahl role=status geben; für das Feld denselben 2-px-Fokusrahmen wie überall (an der Hülle bei :has(#q:focus-visible)). Aussehen und Funktion bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen: das Suchfeld hat weder aria-label noch label noch title, nur den Beispielsatz als Platzhalter; die Zeile mit der Trefferzahl und die Trefferliste haben kein role=status/aria-live. Mit Tastaturfokus zeigt das Feld keinen Rahmen (outline 0), nur die Hülle wechselt die 1-px-Randfarbe, die Lupe daneben zeigt 2 px. Feld und Trefferzeile waren schon vorher unbenannt; nur der schwache Fokusrand kam mit der neuen Suchleiste am 16.11. dazu.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "tastatur",
+  "titel": "Mehrere Knöpfe mit genau gleichem Namen – vorgelesen ist nicht zu erkennen, wozu sie gehören",
+  "seite": "Dateien (Baum, Vorschlag mit Haken, Dateiliste)",
+  "beleg": "Gemessen (aria-label/Text): drei Pfeile im Ordnerbaum heißen alle nur „Zuklappen“ (assets/workspace.js:424, ohne Ordnernamen, ohne aria-controls); im Vorschlag „2 Dateien sehen aus wie Verträge“ heißen beide Knöpfe nur „Ansehen“ (kein aria-label), die Haken daneben tragen den Dateinamen („Mietvertrag Wohnung.pdf · gehört dazu“) – das ist gut; in der Dateiliste dreimal „Öffnen“ und dreimal „+ Kategorie“ ohne Dateinamen, zweimal „Ordner öffnen“. Der Vorschlag-Kasten (.topic-suggest) hat keine Rolle und keinen Namen. Die Fenster <dialog class=\"live-dialog\"> (z. B. „Original erneut auswählen“, native/native-originals.js:118) haben eine Überschrift, aber kein aria-labelledby – der Screenreader sagt nur „Dialog“.",
+  "vorschlag": "Nur die Namen für Vorleseprogramme ergänzen, sichtbar bleibt alles gleich: „Zuklappen: Dokumente“, „Ansehen: Mietvertrag Wohnung.pdf“, „Öffnen: …“, „Ordner öffnen: …“; dem Vorschlag role=group mit aria-label geben; Fenster über aria-labelledby mit ihrer Überschrift verbinden.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgemessen auf der Seite Dateien: drei Pfeile heißen nur „Zuklappen“ (ohne aria-controls), drei Knöpfe „Ansehen“ im Vorschlag ohne aria-label, viermal „Öffnen“ und „+ Kategorie“, zweimal „Ordner öffnen“; der Vorschlag-Kasten hat weder Rolle noch Namen, und das Fenster „Original erneut auswählen“ hat im Code kein aria-labelledby. Die Knöpfe „Ansehen“ im Vorschlag sind vom 16.11., der Rest ist älter. Betrifft nur Vorleseprogramme; sichtbar ändert sich durch den Vorschlag nichts.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "„An BookLedgerPro teilen“ legt dieselbe Mail bei jedem Tipp noch einmal in den Tresor",
+  "seite": "Mail (geöffnete Mail) → „An BookLedgerPro teilen“ → „In den Tresorordner legen“",
+  "beleg": "Messung im Prüfbrowser (gestellte Brücke, /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/datenwege/mess.mjs, M6): dieselbe Mail zweimal → 2 Aufrufe tresorMailAblegen, zweimal die Meldung „Im Tresorordner abgelegt: Eingang-BookLedgerPro/Mails“, kein Hinweis „schon abgelegt“. Code: native/native-tresorordner.js:184-205 kennt keine Merkliste; android/.../tresor/TresorOrdner.java:386 vergibt je Ablage eine neue Zufallsnummer (UUID), also liegt die Mail danach wirklich doppelt im Fach. Die Liste „Ausgang“ in den Einstellungen zeigt diese Mails gar nicht (gemessen: nur Familienakte-Zeilen). Zum Vergleich: der Familienakte-Weg ist im Tresor gegen Doppelte gesichert (Uebergaben.java:63-73).",
+  "vorschlag": "Den BookLedgerPro-Weg über dieselbe Übergabe führen wie die Familienakte (PBProVerbund.send mit Ziel „bookledgerpro“, das gibt es schon für Dateien) oder mindestens vor dem Ablegen prüfen, ob diese Mail schon im Fach liegt, und dann sagen „Schon abgelegt, nicht noch einmal“. So erscheint sie auch in der Liste „Ausgang“. Der Weg über Androids Teilen-Liste bleibt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: native-tresorordner.js (Zeile 184–205) merkt sich nichts, und die Ablage (TresorEinzug.mailAblegen → TresorOrdner.ablegen) vergibt jedes Mal eine neue Zufallsnummer, also liegt die Mail wirklich doppelt im Fach; in der Liste „Ausgang“ taucht sie nicht auf, weil dort nur Übergaben stehen. Der Fehler ist alt (seit Oktober), nicht von heute. Vorsicht beim Vorschlag: der Umbau auf den Übergabe-Weg brächte die 20-MiB-Grenze mit und setzt voraus, dass BookLedgerPro dort liest – die Variante „vorher prüfen und ‚schon abgelegt‘ sagen“ kostet dagegen nichts.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Tresor nicht erreichbar: die App sagt „Kein Pro-Tresor verbunden“ und öffnet gleich Androids Teilen-Liste",
+  "seite": "Mail (geöffnete Mail) → „An Familienakte teilen“",
+  "beleg": "Messung (M3): Tresor gewählt, aber Ordner nicht erreichbar (z. B. SD-Karte heraus) → Meldung „Kein Pro-Tresor verbunden – die Mail wird normal geteilt; dort Familienakte wählen.“ und sofort Aufruf openOriginal (Androids Teilen-Liste). Derselbe Zustand in der Mail-Liste (M3b) sagt richtig: „Der Ordner des Pro-Tresors ist gerade nicht erreichbar. Nichts wurde übergeben.“ Ursache: native/native-pro-verbund.js:209-212 – der Fall erreichbar===false fällt in den Zweig „ohne Tresor“.",
+  "vorschlag": "In der geöffneten Mail denselben Satz wie in der Liste zeigen („Ordner gerade nicht erreichbar“) und dann wie beim gesperrten Tresor fragen: „Normal teilen“ oder „Abbrechen“. Nichts geht ohne eigene Wahl an die Teilen-Liste.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig (native-pro-verbund.js Zeile 209–212): ist der Ordner gewählt, aber nicht erreichbar, landet die geöffnete Mail im Zweig „ohne Tresor“ – falscher Satz und sofort die Teilen-Liste; die Mail-Liste sagt im selben Zustand richtig „Ordner gerade nicht erreichbar“. Die Stelle stand schon vor heute so da (alter Stand Zeile 163). Der Vorschlag kostet keine Funktion, der Weg über die Teilen-Liste bleibt nach Rückfrage.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Zweiter Tipp schickt noch einmal – und die App sagt nur in der Liste „schon übergeben“",
+  "seite": "Mail (geöffnete Mail) „An Familienakte teilen“; Datei-Fenster „An Pro-App …“",
+  "beleg": "Messung M1: dieselbe geöffnete Mail zweimal an die Familienakte → beim zweiten Mal wieder 1 Aufruf „senden“ und wieder die Meldung „Mail mit Anhängen an die Familienakte weitergegeben …“. Dieselbe Mail danach über die Mail-Liste: 0 Aufrufe, Ergebnis „schon“ („Schon früher übergeben, nicht noch einmal geschickt“). Grund: nur die Liste setzt einmal:true (native-pro-verbund.js:222 und :83). Messung M2: im Fenster „Datei weitergeben“ ist der Knopf „Weitergeben“ nach dem Erfolg wieder aktiv; zweiter Tipp → senden = 2, Text bleibt „Weitergegeben – Übernahme offen“ (native-pro-verbund.js:140-143). Im Tresor entsteht dabei kein Doppel (gleiche Kennung), aber der Nutzer bekommt zweimal „weitergegeben“ gesagt.",
+  "vorschlag": "Überall dieselbe Regel wie in der Liste: ist die Mail/Datei schon weitergegeben, sagt die App „Schon weitergegeben am … – nicht noch einmal geschickt“ und bietet daneben „Trotzdem erneut weitergeben“ an. Im Fenster „Datei weitergeben“ nach Erfolg den Knopf „Weitergeben“ ausblenden, nur „Schließen“ zeigen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: nur die Mail-Liste ruft das Senden mit „einmal“ auf (Zeile 222 und 83), die geöffnete Mail und das Fenster „Datei weitergeben“ schicken erneut, und der Knopf „Weitergeben“ wird nach Erfolg wieder freigegeben (Zeile 143). Im Tresor entsteht kein Doppel (gleiche Kennung, Uebergaben.java prüft das), es ist also nur eine irreführende zweite Erfolgsmeldung. Das Verhalten ist alt; neu von heute ist nur, dass die Liste es besser macht und der Unterschied dadurch auffällt.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Drei Knöpfe, ein und dieselbe Teilen-Liste – und für jedes Ziel ein anderer Ablauf",
+  "seite": "Mail (geöffnete Mail): „Original teilen / sichern“, „An BookLedgerPro teilen“, „An Familienakte teilen“",
+  "beleg": "Ohne verbundenen Tresor rufen alle drei Knöpfe denselben Weg openOriginal (Androids Teilen-Liste) auf: assets/live-mail.js:1289, native/native-tresorordner.js:191, native/native-pro-verbund.js:212 (Familienakte zeigt vorher noch eine Meldung zum Wegtippen). Mit offenem Tresor ist der Ablauf je Ziel verschieden: BookLedgerPro fragt jedes Mal mit drei Knöpfen „In den Tresorordner legen / Teilen … / Abbrechen“ (gemessen M6), Familienakte schickt sofort ohne Frage (M1). Dazu gibt es im Datei-Fenster einen vierten Weg „An Pro-App …“ mit Ziel-Auswahl (gemessen M2: Knöpfe „Öffnen mit …“, „Teilen …“, „An Pro-App …“).",
+  "vorschlag": "Ein Knopf „Weitergeben …“ in der Mail, der eine kleine Auswahl öffnet: Familienakte · BookLedgerPro · Andere App (Teilen-Liste) · Als Datei sichern. Gleicher Ablauf für jedes Pro-Ziel: Tresor offen → direkt hinein mit Ergebnis-Satz; gesperrt → einmal fragen. Dieselbe Auswahl kann das Datei-Fenster benutzen. Kein Ziel fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code belegt: ohne Tresor enden alle drei Knöpfe bei openOriginal (live-mail.js Zeile 1289, native-tresorordner.js Zeile 191, native-pro-verbund.js Zeile 212); mit offenem Tresor fragt BookLedgerPro jedes Mal mit drei Knöpfen, die Familienakte schickt sofort. Das ist kein Fehler, sondern eine gewachsene Uneinheitlichkeit von früher. Der Vorschlag lässt kein Ziel wegfallen, kostet aber für jedes Weitergeben einen Tipp mehr und ist ein sichtbarer Umbau, der Klaus' Ja braucht.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Fünf Wörter für dasselbe und drei Namen für denselben Tresor",
+  "seite": "Mail, Datei-Fenster, Einstellungen (Zusammenarbeit mit Pro-Apps)",
+  "beleg": "Texte im Code: Knopf „An Familienakte teilen“ (native/native-mail.js:33), Erfolg „… an die Familienakte weitergegeben“ (native-pro-verbund.js:18), Listen-Ergebnis „An die Familienakte übergeben: 1 von 1“ und „Nichts übergeben“ (assets/live-mail.js:246-275), Fenster „Datei weitergeben“ (native-pro-verbund.js:8), BookLedgerPro „In den Tresorordner legen“ / „abgelegt“ (native-tresorordner.js:37-40). Der gemeinsame Ordner heißt je Stelle „Pro-Tresor“ (native-pro-verbund.js:18), „Tresorordner“ (native-tresorordner.js:33-34) und „Tresor (alle Pro-Apps)“ (native-tresorordner.js:14). Ein Nutzer kann nicht wissen, dass alles dasselbe meint.",
+  "vorschlag": "Ein Wort festlegen: „weitergeben“ für den Weg über den Tresor an eine Pro-App, „teilen“ nur für Androids Teilen-Liste. Ein Name für den Ordner („Pro-Tresor“). Nur Texte ändern, in allen vier Sprachen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Die Texte stehen so im Code: „teilen“ (Knopf), „weitergegeben“ (Erfolg), „übergeben“ (Mail-Liste), „Datei weitergeben“ (Fenster), „In den Tresorordner legen/abgelegt“ (BookLedgerPro), dazu „Pro-Tresor“, „Tresorordner“ und „Tresor (alle Pro-Apps)“ für denselben Ordner. Der größte Teil ist alt; nur das Wort „übergeben“ in der Mail-Liste kam heute dazu. Reine Textänderung in vier Sprachen, keine Funktion geht verloren.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "„Bestätigungen prüfen“ und „Erneut weitergeben“ geben keine Rückmeldung",
+  "seite": "Einstellungen → Zusammenarbeit mit Pro-Apps",
+  "beleg": "Messung M4: Tipp auf „Bestätigungen prüfen“ → Hinweiszeile bleibt leer, Liste unverändert („Weitergegeben – Übernahme offen“). Tipp auf „Erneut weitergeben“ → 1 Aufruf senden, Hinweiszeile leer, Zeile unverändert. Der Nutzer sieht nicht, ob etwas geschehen ist, und tippt noch einmal. Code: native/native-pro-verbund.js:94-99 (confirm und deliver setzen keinen Text; work() meldet nur Fehler).",
+  "vorschlag": "Nach „Bestätigungen prüfen“ einen Satz zeigen, z. B. „Geprüft: 0 von 2 schon bei der Ziel-App aufgenommen.“; nach „Erneut weitergeben“: „Noch einmal in den Eingang gelegt.“ Die Bestätigungen können auch von selbst beim Öffnen des Kastens geprüft werden, der Knopf bleibt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig (native-pro-verbund.js Zeile 94–99 und 132): beide Wege setzen keinen Hinweistext, nur ein Fehler wird gemeldet; ändert sich kein Stand, sieht der Nutzer nach dem Tipp genau dasselbe wie vorher (eine alte Hinweiszeile bleibt sogar stehen). Das war schon vor heute so. Ein Ergebnis-Satz kostet keine Funktion.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Eingang: ein Fehler wird nur gezählt, der Grund verschluckt",
+  "seite": "Einstellungen → Zusammenarbeit mit Pro-Apps → „Eingang prüfen und übernehmen“",
+  "beleg": "Messung M5: eine Datei im Eingang, Lesen schlägt fehl (TRESOR_NICHT_VERFUEGBAR) → Anzeige nur „Im Eingang aufgenommen: 0. Offen: 1.“ – kein Dateiname, kein Grund. Code: native/native-pro-verbund.js:70 „catch{failed++;}“ wirft jede Ursache weg (Ordner weg, Datei beschädigt, falsches Ziel, Import abgelehnt sehen alle gleich aus). „Offen“ klingt zudem nach „wartet noch“, nicht nach „hat nicht geklappt“.",
+  "vorschlag": "Je nicht übernommener Datei eine Zeile mit Name und einfachem Grund zeigen („Brief.txt: Ordner nicht erreichbar – bleibt im Eingang, später noch einmal versuchen“). Das Wort „Offen“ durch „Nicht übernommen (bleibt im Eingang)“ ersetzen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig (native-pro-verbund.js Zeile 70: „catch{failed++;}“): jede Ursache wird weggeworfen, angezeigt wird nur „Im Eingang aufgenommen: n. Offen: f.“ ohne Dateiname und Grund. Die Stelle ist alt (schon im Stand vor heute Zeile 70). Name und Grund je Datei zu zeigen kostet nichts; die Datei bleibt ohnehin im Eingang.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "datenweg",
+  "titel": "Liste „Ausgang“ zeigt die technische Begleitdatei als eigene Zeile; Listen-Ergebnis kommt doppelt",
+  "seite": "Einstellungen → Zusammenarbeit mit Pro-Apps → „Ausgang“; Mail-Liste → „An Familienakte“",
+  "beleg": "Messung M4: nach einer Mail an die Familienakte stehen zwei Zeilen im Ausgang – „familienakte-uebergabe.json → Familienakte Pro: Weitergegeben – Übernahme offen“ und „Rechnung.eml → …“, jede mit eigenem Knopf „Erneut weitergeben“ (native/native-pro-verbund.js:131-132 filtert die Begleitdatei nicht). Bei 20 Mails sind das 40 Zeilen und 40 Knöpfe. Außerdem schreibt die Mail-Liste das Ergebnis in die Hinweiszeile und zeigt denselben Satz zusätzlich als Meldung zum Wegtippen (assets/live-mail.js:1007-1009).",
+  "vorschlag": "Die Begleitdatei bei ihrer Mail mitführen: eine Zeile je Mail mit dem Zusatz „mit Vorsortierung“, „Erneut weitergeben“ schickt beide. Das Ergebnis aus der Liste nur einmal zeigen (Hinweiszeile genügt; Meldung zum Wegtippen nur bei Fehlern).",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: die Begleitdatei geht als eigene Übergabe hinaus und die Ausgang-Liste (Zeile 131–132) filtert sie nicht, also zwei Zeilen und zwei Knöpfe je Mail; die Mail-Liste schreibt das Ergebnis in die Hinweiszeile und zeigt es zusätzlich als Meldung (live-mail.js batchFamilienakte). Beides ist erst heute entstanden (Begleitdatei und Listen-Knopf sind neu, im alten Stand gab es „alert(sum.text)“ nicht). Beim Zusammenlegen muss „Erneut weitergeben“ weiter beide Dateien schicken, dann geht nichts verloren.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Suche: Trefferzeile und Trefferkarte bleiben deutsch – in Englisch, Russisch und Polnisch",
+  "seite": "Suche",
+  "beleg": "Gemessen im Prüfbrowser mit pb_lang=en/ru/pl, Suche „Mietvertrag“ (Skript scratchpad/pruefung/sprachen/info.mjs und scan4.mjs): Die Zeile unter den Filtern heißt in allen drei Sprachen „1 Treffer · 0.20 ms · Bedeutungssuche“, bei Filter „Stöbern (Filter) · Filter aktiv“, ohne Fund „Kein Treffer.“. In der Karte: „Gefunden, weil im Namen … · sinnverwandt (65%).“, Knopf „Öffnen“, Knopf „merken“, daneben „Katalog: 1 Dateien“. Tooltips: „Diese Suche als Knopf speichern“, „In den verschlüsselten Tresor legen“, „Diese Datei an ihrem Ort löschen (Müll)“, „Findet zusätzlich Verwandtes …“. Direkt daneben stehen übersetzte Teile („0 Письма · 1 Файлы“, „Состояние“), also halb/halb. Stellen: index.html:1906-1909 (Trefferzeile), 1911 („Kein Treffer.“), 1939-1940 (Tooltips Tresor/Löschen), 1968-1973 („Gefunden, weil“), 542 („merken“), 550, 2741 („Katalog: n Dateien“). Nebenbei auch auf Deutsch: dieselbe Zahl steht zweimal in der Zeile („1 Dateien“ und „Katalog: 1 Dateien“), und es heißt „1 Dateien“.",
+  "vorschlag": "Diese Texte in die vorhandene Sprachtabelle (I18N in index.html) aufnehmen und beim Zeichnen der Treffer von dort holen, so wie es die Zählerzeile daneben schon tut. „Katalog: n Dateien“ kann entfallen, weil die Zahl der Dateien schon davor steht (keine Funktion geht verloren). Einzahl beachten („1 Datei“).",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser selbst gesehen (EN, RU, PL): „1 Treffer · … · Bedeutungssuche“, „Kein Treffer.“, „Gefunden, weil …“, „Öffnen“, „merken“, „Katalog: 1 Dateien“ und die Tooltips bleiben deutsch, daneben stehen übersetzte Teile. Die Sätze stehen fest im Code von index.html und sind älter als heute. Einschränkung zum Vorschlag: „Katalog: n“ zählt Mails mit, die Zahl davor nur Dateien – die Angabe steckt aber in „E-Mails + Dateien“, es geht also nichts verloren.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Einstellungen: die Themen-Knöpfe sind immer deutsch – sogar in Englisch, obwohl englische Namen vorhanden sind",
+  "seite": "Einstellungen",
+  "beleg": "Gemessen (scan3.mjs, Themen eingeschaltet, pb_lang=en, frisch geladen): Knöpfe heißen „Tresor & Ablage, Pro-Apps, Sprache & Diktat, Bedeutungssuche, Texterkennung, Bildbeschreibung, KI-Schlüssel (EU), Ordner & Katalog, Siegel & Chefcode, Werkzeuge, Aussehen & App, Weiteres“, Rückweg „‹ Alle Themen“. Gleiches in RU und PL, auch nach Umschalten im laufenden Betrieb. Ursache: assets/einstellungen-themen.js:15 liest die Sprache ein einziges Mal beim Laden (da steht noch „de“), Zeile 38 und die Tabelle Zeile 18-31 kennen nur Deutsch/Englisch. Zweite Folge: Der Kasten „E-Mail-Anhänge“ hat auf Deutsch ein eigenes Thema (13 Knöpfe), in EN/RU/PL fehlt dieser Knopf (12 Knöpfe) und der Kasten liegt unter „Weiteres“, weil Zeile 25 nur die deutsche Überschrift erkennt.",
+  "vorschlag": "Die Sprache beim Zeichnen lesen statt einmal beim Laden und bei Sprachwechsel neu beschriften; Namen für Russisch und Polnisch ergänzen. Den Anhänge-Kasten über ein festes Merkmal (Kennung) statt über die deutsche Überschrift zuordnen, damit er in jeder Sprache am selben Platz liegt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen: In EN, RU und PL heißen alle Knöpfe und „‹ Alle Themen“ deutsch, auch nach Umschalten; auf Deutsch gibt es 13 Knöpfe, sonst 12, „E-Mail-Anhänge“ liegt dann unter „Weiteres“. Ursache wie beschrieben in assets/einstellungen-themen.js (Sprache nur einmal beim Laden gelesen, Zuordnung über die deutsche Überschrift); die Datei wurde heute nicht geändert. Der Vorschlag kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Einstellungen: mehrere ganze Kästen sind in keiner Fremdsprache übersetzt",
+  "seite": "Einstellungen",
+  "beleg": "Gemessen je Thema in EN, RU und PL (scan3.mjs): Thema Bedeutungssuche: „Was hier offline läuft“, „lädt / Rückfall aktiv“, „(neuronales Modell, mehrsprachig) — versteht Synonyme …“, „Stärkere Cloud-KI (EU) …“ (index.html:639 ff.). Thema KI-Schlüssel: „Anbieter für Bild-Texterkennung (OCR)“, „— aus (rein offline) —“, „Nur EU-Anbieter zulassen“, „API-Schlüssel (nur in diesem Browser)“, „Schlüssel in diesem Browser merken …“ (index.html:649-659). Thema Bildbeschreibung: „Bessere Beschreibung per … Nutzt deinen Mistral-Schlüssel (oben) …“ (index.html:671). Thema Ordner & Katalog: „Verbundene Ordner“, „Kein Ordner verbunden …“, „Katalog verwalten“, „Speicher dauerhaft machen“, „Katalog leeren“, „Mehrere Rechner / Arbeitsplätze zusammenführen“, „Vollständig sichern“, „Katalog zusammenführen…“ (index.html:694-710). Thema Aussehen & App (Zustand): „Signierte Dateien“, „nein (Browser darf löschen)“ (index.html:631, 2871). Die Kästen daneben (Tresor, Sprache, Texterkennung, Siegel, Werkzeuge) sind sauber übersetzt.",
+  "vorschlag": "Diese fest im Seitentext stehenden Sätze mit data-i18n an die Sprachtabelle hängen, wie es bei den übrigen Kästen schon gemacht ist. Dabei „in diesem Browser“ für die App passend formulieren („auf diesem Gerät“).",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen in EN, RU und PL: die Kästen Bedeutungssuche („Was hier offline läuft“), KI-Schlüssel, der Mistral-Satz bei Bildbeschreibung, Ordner & Katalog und „Signierte Dateien“ im Zustand stehen deutsch da, die Nachbarkästen sind übersetzt. Es ist fester Seitentext aus dem älteren Webprojekt, nicht von heute. Übersetzen nimmt keine Funktion weg.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Mail „Alle Konten → Aufräumen“ zeigt noch bunte Emojis statt Liniensymbole",
+  "seite": "Mail (Alle Konten, Aufräumen)",
+  "beleg": "Gemessen mit gestelltem Mailkonto (scan4.mjs, Bild s4-ru-mail-all-clean.png): sichtbar sind „⌛ Abgelaufen (1)“, „✅ Läuft noch (1)“ und im Erklärsatz „⚡ direkt … ✉ per Mail … 🌐 Webseite“. Stellen: native/native-mail-index.js:73, 75, 97, 99, 101, 110 („📰 Ist Werbung“), 113, 743 („🗑“). Auf allen anderen geprüften Seiten (Suche, Hinzufügen, Explorer, Übersicht, Kategorien, Doppelte, Postfach, alle Einstellungs-Themen, ☰-Menü) fand die Messung kein sichtbares Emoji (emoji.mjs). In Meldungen stehen noch zwei: index.html:2315 („🖼️ … Bild(er) im Hintergrund beschrieben“) und index.html:3388 („🗑 Datei gelöscht“). Klaus' Regel lautet „keine Emojis, nirgends“; der Wächter in test-design-26 sieht diese Ansicht offenbar nicht.",
+  "vorschlag": "Die Emojis in diesen Texten durch die vorhandenen Liniensymbole ersetzen (für die drei Abmelde-Wege je ein kleines Strichsymbol vor dem Wort) und den Emoji-Wächter um die Aufräum-Ansicht und die Meldungstexte erweitern.",
+  "bestaetigt": true,
+  "gegenpruefung": "Mit gestelltem Mailkonto selbst gesehen: sichtbar sind „⌛ Abgelaufen (1)“, „✅ Läuft noch (1)“, „⚡ direkt“ im Erklärsatz und zusätzlich „🗑 In den Papierkorb“ an den Knöpfen; andere Überschriften dort sind schon ohne Emoji. Die Texte stehen so in native/native-mail-index.js und sind älter als heute; der Emoji-Wächter öffnet diese Ansicht nicht. Ersetzen durch Strichsymbole kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Meldungen, Rückfragen und leere Seiten kommen auf Deutsch, egal welche Sprache gewählt ist",
+  "seite": "Suche, Kategorien, Doppelte, Einstellungen",
+  "beleg": "Gemessen in EN, RU und PL (info.mjs, scan.mjs): Rückfrage bei „Katalog leeren“: „Katalog leeren? Es wird KEINE deiner Dateien gelöscht — nur das Bedeutungs-Verzeichnis.“ (index.html:2863); Meldung nach „merken“: „Suche gemerkt.“ (index.html:2465); leere Seite Doppelte: „Keine doppelten Inhalte gefunden.“ (index.html:601); leere Seite Kategorien: „Noch keine Dateien signiert.“ (index.html:570). Weitere fest deutsche Meldungen im Code: index.html:2104 („Nichts ausgewählt.“), 2109, 2130, 2135, 2147, 2153, 2323, 2507, 2638, 2668, 2847, 2866 („Katalog geleert. Deine Originale sind unberührt.“). Gerade bei einer Rückfrage vor dem Leeren muss der Nutzer den Satz verstehen können.",
+  "vorschlag": "Diese Sätze in die Sprachtabelle aufnehmen (DE/EN/RU/PL) und an den Stellen von dort holen. Zuerst die Rückfragen (Katalog leeren, Ordner entfernen), dann die Meldungen und leeren Seiten.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen in EN, RU und PL: die Rückfrage „Katalog leeren? …“, die Meldung „Suche gemerkt.“ und die leeren Seiten „Noch keine Dateien signiert.“ / „Keine doppelten Inhalte gefunden.“ erscheinen deutsch. Die übrigen genannten Meldungen stehen im Code ebenfalls fest auf Deutsch (z. B. „Nichts ausgewählt.“, „Katalog geleert …“). Alt, nicht von heute; Übersetzen kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Explorer: Einordnungszeile und eigene Kategorien bleiben deutsch; Tresor-Hilfe gibt es nur auf Deutsch und Englisch",
+  "seite": "Explorer, Tresor-Hilfe",
+  "beleg": "Gemessen (scan.mjs, scan4.mjs): Unter jeder Datei steht in EN, RU und PL die Zeile aus dem Sortier-Kern auf Deutsch, z. B. „Vertrag · Mietvertrag Wohnung Lindenweg · Haus & Wohnung“ und „Foto · eigenes Foto · Fotos“ (Texte kommen aus assets/sortierkern/siebe.js:58 u. a.; der Kern ist gepinnt und darf nicht geändert werden). Eigene Kategorien: in RU und PL „+ Kategorie“, Feld „Neue Kategorie …“, Knöpfe „Anlegen“ und „Abbrechen“ – assets/eigene-kategorien.js:10-15 hat nur de und en. Ebenso nur de/en: native/native-tresor-hilfe.js (Zeile 53, Reparatur-Hinweise, wenn die Ablage fehlt) und native/native-wo-liegt-was.js:70 (dort im Kopf vermerkt: „Russisch und Polnisch zeigen Deutsch“). Das ist bei „Wo liegt was“ so festgelegt, trifft aber gerade die Hilfe im Störfall: ein russischer oder polnischer Nutzer bekommt die Reparatur-Anleitung auf Deutsch.",
+  "vorschlag": "Für die Einordnungszeile eine kleine Übersetzungsliste im app-eigenen Anschluss (assets/sortierkern-anschluss.js) für die festen Wörter des Kerns (Art und Bereich) – der Kern selbst bleibt unberührt. In eigene-kategorien.js und native-tresor-hilfe.js Russisch und Polnisch ergänzen; solange das fehlt, lieber auf Englisch als auf Deutsch zurückfallen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gesehen: die Zeile „Vertrag · … · Haus & Wohnung“ ist in EN, RU und PL deutsch, „+ Kategorie“ ist in RU und PL deutsch (Englisch stimmt: „+ Category“). Im Code haben eigene-kategorien.js, native-tresor-hilfe.js und native-wo-liegt-was.js nur Deutsch und Englisch. Heute kam nur das „+“ vor dem Wort dazu, die fehlende Übersetzung ist älter; der Vorschlag lässt den gepinnten Sortier-Kern unberührt und kostet keine Funktion.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Vorlese-Namen und Tooltips einzelner Knöpfe bleiben deutsch oder stimmen erst nach Neuladen",
+  "seite": "alle Seiten (Kopf, Suche, Explorer, Mail)",
+  "beleg": "Gemessen in EN/RU/PL (scan.mjs, scan2.mjs): aria-label „Sprache / Language“ (index.html:397), „Hauptseiten“ (index.html:422), „Ordner“ am Ordnerbaum (index.html:491), „Postfach“ an der Mail-Ordnerleiste, „Mailkonto“ an der Kontoauswahl (assets/live-mail.js:342). Mikrofon in der Suche: der Tooltip ist übersetzt („Search by voice“), der Vorlese-Name bleibt „Per Sprache suchen“ (index.html:513 – nur title hängt an der Sprachtabelle). Knopf „A··A“ im ☰-Menü: Tooltip und Name „Schriftgröße“ in allen Sprachen, obwohl native/pro-bedienung.js:27 die Übersetzung hat (Knopf wird in native/native-toolbar.js:214 einmal beim Start gebaut). Nach Umschalten ohne Neuladen: ⓘ-Knopf bleibt „Hilfe anzeigen“ / „Bildbeschreibung: Hilfe anzeigen“ und „Help for Kategorien“; frisch geladen stimmt es („Show help“, „Help for Categories“). Wer mit Vorlesefunktion arbeitet, hört also Deutsch.",
+  "vorschlag": "Die festen aria-label in index.html mit an die Sprachtabelle hängen (wie title beim Mikrofon), den Schriftknopf und die ⓘ-Knöpfe bei Sprachwechsel neu beschriften (die übrigen Bausteine tun das schon über den Beobachter auf <html lang>).",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gemessen in EN, RU und PL: „Sprache / Language“, „Hauptseiten“, „Ordner“, „Per Sprache suchen“ (Tooltip dagegen übersetzt) und „Schriftgröße“ bleiben deutsch; „Mailkonto“ steht fest in assets/live-mail.js:342. Nach Umschalten ohne Neuladen bleiben ⓘ-Namen gemischt („Help for Kategorien“, „Bildbeschreibung: Hilfe anzeigen“), frisch geladen stimmen sie. Betrifft vor allem Nutzer mit Vorlesefunktion; nicht von heute, Vorschlag ohne Funktionsverlust.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "sprachen",
+  "titel": "Russisch und Polnisch: falsche Wortformen bei Zahlen",
+  "seite": "Suche, Mail (Alle Konten)",
+  "beleg": "Gemessen (info.mjs, scan4.mjs): Zählerzeile der Suche „0 Письма · 1 Файлы · 0 локальные ссылки“ und „0 Wiadomości · 1 Pliki · 0 powiązane lokalnie“ (assets/workspace.js:51 – es gibt nur eine Mehrzahlform, mit großem Anfangsbuchstaben). Alle Konten: „info@shop.invalid · 2 писем“ (richtig: 2 письма), Stand-Zeile „131 писем · 2 аккаунтов“ (richtig: 2 аккаунта), Aufräumen: „1 истёкших предложений“ (native/native-mail-index.js:26-28: je Wort nur Einzahl und eine Mehrzahl). Englisch: „From other programs: 1 results“. Deutsch hat dasselbe Muster: „1 Dateien“.",
+  "vorschlag": "Eine kleine gemeinsame Hilfsfunktion für Zahlwörter (Intl.PluralRules gibt es im Gerät ohne Netz) mit den Formen eins/wenige/viele je Sprache; die Zähler in workspace.js und native-mail-index.js darüber bilden.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst gesehen: „0 Письма · 1 Файлы“, „0 Wiadomości · 1 Pliki“, in Alle Konten „2 писем“, „2 аккаунтов“, „2 kont“, „1 истёкших предложений“, englisch „1 expired offers“, deutsch „1 Dateien“. Im Code gibt es je Wort nur eine Mehrzahlform (assets/workspace.js, native/native-mail-index.js). Schönheitsfehler, verständlich bleibt es; älter als heute, die Hilfsfunktion kostet keine Funktion.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Dateien, die man während eines laufenden Einlesens auswählt, verschwinden ohne Meldung",
+  "seite": "Hinzufügen",
+  "beleg": "Messung im Prüfbrowser (Skript /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/fehlerjaeger/m3.mjs, gestellte Datei-Brücke mit 400 ms Verzögerung): 3 Dateien gewählt (lauf-1..3), nach 250 ms – Einlesen läuft, Knopf „Dateien wählen“ ist NICHT gesperrt (pickDisabled=false) – 2 weitere gewählt (spaeter-1, spaeter-2). Ergebnis: Im Katalog nur lauf-1..3, in „Gerade hinzugefügt“ keine Zeile für spaeter-1/2, Meldung nur „Fertig · 3 neu signiert“. Ursache: index.html:1564 `if(signing) return accepted;` – der zweite Stapel wird einfach verworfen. Das Verhalten ist älter, fällt aber mit der neuen Liste stärker auf, weil der Nutzer jetzt erwartet, jede gewählte Datei dort zu sehen.",
+  "vorschlag": "Den zweiten Stapel nicht verwerfen, sondern hinten anstellen (Warteschlange) und in „Gerade hinzugefügt“ gleich als „wartet“ zeigen. Kleinste Lösung: während des Einlesens einen klaren Satz zeigen („Es wird noch gelesen – diese Dateien bitte danach noch einmal wählen“). Keine Funktion fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: Während drei Dateien eingelesen wurden, war der Knopf „Dateien wählen“ frei; zwei weitere gewählte Dateien kamen weder in den Katalog noch in „Gerade hinzugefügt“, die Meldung sagte nur „3 neu signiert“. Ursache ist die Zeile `if(signing) return accepted;` in index.html (signBatch); sie stand schon vor dem 16.11. so da. Eine Warteschlange oder ein klarer Hinweissatz nimmt keine Funktion weg.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Nach dem Leeren des Suchfelds (×) kommen die alten Treffer von selbst zurück, wenn das Bedeutungs-Modell langsam antwortet",
+  "seite": "Suche (Startseite)",
+  "beleg": "Messung (m1.mjs, Teil T4): Modell gestellt mit 1,5 s Antwortzeit, „Bedeutung“ an. „mietvertrag“ getippt → nach 0,7 s 1 Treffer (Wortsuche). × getippt → Feld leer, 0 Treffer. 1,8 s später: Feld weiter leer, aber wieder 1 Treffer und Zeile „1 Treffer · 7 ms · Bedeutungssuche“ (Bild T4.png im selben Ordner). Ursache: index.html:1878 – die nachgereichte Antwort ruft renderResults(query) mit der ALTEN Frage auf und prüft nur die Laufnummer `_seq`; die wird aber nur bei einer neuen Bedeutungs-Suche hochgezählt (index.html:1863), nicht beim Leeren des Felds und nicht beim Umschalten auf Namenssuche.",
+  "vorschlag": "Die Laufnummer bei jedem Aufruf von renderResults hochzählen (ganz oben in der Funktion) und beim Nachreichen zusätzlich prüfen, dass im Suchfeld noch dieselbe Frage steht. Sonst nichts ändern.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt (Modell mit 1,5 s Antwortzeit): nach × war das Feld leer und die Liste leer, 1,8 s später stand wieder 1 Treffer mit „Bedeutungssuche“ da, obwohl das Feld leer blieb. Ursache im Code eindeutig: die Laufnummer wird nur bei einer neuen Bedeutungssuche hochgezählt, nicht beim Leeren; das Nachreichen stammt vom 15.11. (1.0.52), nicht von heute. Der Vorschlag (Laufnummer immer hochzählen, Feldinhalt vergleichen) kostet keine Funktion.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Treffer „Aus anderen Programmen“ bleiben von der alten Frage stehen, wenn man weitertippt",
+  "seite": "Suche (Startseite)",
+  "beleg": "Messung (m1.mjs, Teil T3, Bild T3.png): „mietvertrag“ + Lupe → darunter „Aus anderen Programmen: 1 Treffer – Scan Mietvertrag Garage.pdf“. Dann im Feld „urlaub“ getippt (ohne Lupe): die große Liste zeigt sofort Urlaub-Treffer, der Bereich darunter zeigt weiter „Aus anderen Programmen: 1 Treffer – Scan Mietvertrag Garage.pdf“. Ursache: Beim Tippen zeichnet nur index.html:2773 die eigene Liste neu; der Bereich der anderen Programme wird nur in native/native-ueberall.js bei Lupe/Enter (suchen, Zeile 100 ff.), bei × und beim Ausschalten von „Überall“ geleert.",
+  "vorschlag": "Sobald sich der Text im Suchfeld ändert, den Bereich der anderen Programme leeren (oder grau mit dem Satz „gilt für: mietvertrag – Lupe tippen für die neue Frage“). Tresor und Netz werden weiter nur nach Lupe/Enter gefragt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: nach „mietvertrag“ + Lupe und anschließendem Tippen von „urlaub“ zeigte die große Liste Urlaub-Treffer, darunter stand weiter „Aus anderen Programmen: 1 Treffer – Scan Mietvertrag Garage.pdf“. Der Bereich unter der Liste ist heute neu gebaut und wird nur bei Lupe, × und Ausschalten geleert. Leeren beim Tippen kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Modell startet jetzt erst beim Tippen – die Liste wird danach aber nicht neu gesucht und heißt trotzdem „Bedeutungssuche“",
+  "seite": "Suche (Startseite)",
+  "beleg": "Messung (m4.mjs): Modell auf dem Gerät vorhanden (gestellt, Start dauert 1,5 s), alle Einträge schon eingeordnet. „mietvertrag“ getippt: genau EIN Aufruf von renderResults, zu dem Zeitpunkt war das Modell noch nicht bereit (embedder=false). Danach wird das Modell bereit (inits=1, EMBED.ready=true), aber 4 s lang folgt kein weiterer Aufruf; die Zeile sagt „1 Treffer · Bedeutungssuche“. Ursache: native/native-semantic.js startModel() (ab Zeile 183) zeichnet nur den Kasten in den Einstellungen neu; index.html initEmbedding (Zeile 916–927) ruft die Suche nur über embedBackfill neu auf, und das nur, wenn noch Einträge ohne Bedeutungswert da sind (Zeile 947).",
+  "vorschlag": "Nach erfolgreichem Start des Modells einmal renderResults mit dem aktuellen Text des Suchfelds aufrufen. Dann kommen die Bedeutungs-Treffer von selbst nach, ohne dass der Nutzer noch einen Buchstaben tippen muss.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: beim Tippen gab es genau einen Suchlauf, zu dem das Modell noch nicht bereit war; danach wurde es bereit, aber 4 s lang folgte kein neuer Suchlauf, die Zeile sagte trotzdem „Bedeutungssuche“. startModel in native-semantic.js zeichnet nur den Einstellungskasten neu, und index.html sucht nur neu, wenn noch Einträge einzuordnen sind. Entstanden durch die heutige Änderung (Modell startet nicht mehr beim Öffnen); ein einmaliger neuer Suchlauf nach dem Start kostet nichts.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Mehrere Mails „An Familienakte“: nach dem Lauf sind alle Häkchen weg, und es steht nicht da, WELCHE Mails nicht übergeben wurden",
+  "seite": "Mail (Liste eines Kontos)",
+  "beleg": "assets/live-mail.js:1002–1008 (batchFamilienakte): nach jedem Lauf, der überhaupt begonnen hat, `selected.clear(); drawNativeList();` – auch wenn Mails gescheitert sind. Der Schlusssatz (Zeile 989–996) nennt nur Zahlen und Gründe, z. B. „An die Familienakte übergeben: 17 von 20. Nicht übergeben: 3 (3 beim Anbieter nicht ladbar).“ – so legt es auch die Probe tools/native/test-mail-device.mjs:313 fest. Warum trotzdem ein Problem: Bei 20 markierten Mails weiß der Nutzer danach nicht, welche 3 fehlen, und muss alle 20 neu suchen und markieren (die schon übergebenen werden zwar nicht doppelt geschickt, aber er muss raten).",
+  "vorschlag": "Die nicht übergebenen Mails markiert lassen (nur die übergebenen und die „schon früher übergebenen“ abwählen). Dann genügt ein zweiter Tipp auf „An Familienakte“. Der Satz bleibt wie er ist.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig belegt (assets/live-mail.js, batchFamilienakte): nach jedem begonnenen Lauf wird die ganze Auswahl gelöscht, auch wenn Mails gescheitert sind; der Schlusssatz nennt nur Zahlen und Gründe, keine Betreffs. Die Sammelübergabe in der Mail-Liste ist heute neu dazugekommen. Gescheiterte Mails markiert zu lassen nimmt nichts weg; es braucht nur zusätzlich die Angabe je Mail, ob sie durchging.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "„auch gesucht als …“ erscheint bei ganz normalen Sätzen mit einem Wort, das der Nutzer nie gemeint hat",
+  "seite": "Suche (Startseite)",
+  "beleg": "Messung (m1.mjs Teil T6 und m2.mjs, Bild mama.png), Bestand mit „Rechnungen 2024“, „Briefen an das Amt“, „Brief Mama“: Frage „brief an mama“ → Zeile „… · auch gesucht als „briefen mama““, und in der Bedeutungssuche kommt dadurch „Briefen an das Amt“ als 2. Treffer dazu. Frage „rechnung in berlin“ → „auch gesucht als „rechnungen berlin““. Ursache: assets/such-frage.js:89–95 zieht zwei Nachbarwörter auch dann zusammen, wenn eines ein Füllwort ist („brief“+„an“ = „briefan“) und lässt dann 1 Buchstaben Unterschied zu („briefen“). index.html:1887–1896 hängt diese Treffer immer an, nicht nur wenn sonst nichts gefunden wurde. Das Diktat-Beispiel „An Tropic“ → „Anthropic“ braucht diese Lockerung nicht.",
+  "vorschlag": "Die Ein-Buchstaben-Abweichung nur erlauben, wenn keines der beiden Wörter ein bekanntes Wort der Sammlung ist (bei „brief an“ ist „brief“ bekannt → nicht zusammenziehen). „An Tropic“ → „Anthropic“ bleibt erhalten, weil „tropic“ unbekannt ist.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: „brief an mama“ wird zu „briefen mama“, „rechnung in berlin“ zu „rechnungen berlin“, und die Zeile zeigt das an. Die Funktion ist heute neu. Eine Angabe im Befund stimmt nicht: „An Tropic“ → „Anthropic“ braucht die Ein-Buchstaben-Abweichung sehr wohl (antropic/anthropic); der Vorschlag selbst erhält das Beispiel aber, weil weder „an“ noch „tropic“ im Wortschatz steht (nur Wörter ab 4 Buchstaben).",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Das × zum Leeren fehlt, wenn die Frage nicht getippt, sondern eingesetzt wurde (gemerkte Suche)",
+  "seite": "Suche (Startseite)",
+  "beleg": "Messung (m1.mjs Teil T2b): gemerkte Suche „mietvertrag“ angetippt → im Feld steht „mietvertrag“, aber #pbSuchLeeren ist versteckt (kreuzHidden=true). Ursache: native/native-ueberall.js:182–184 zeigt das × nur nach einem Tipp-Ereignis („input“); index.html:2471 (gemerkte Suche) und index.html:2151 (Browser-Diktat der PWA) setzen den Text ohne dieses Ereignis. Das Diktat in der App (native-speech.js:100) meldet sich richtig.",
+  "vorschlag": "Das × auch nach jedem Neuzeichnen der Trefferliste prüfen (z. B. am Ende von suchen() und nach einem Tipp auf eine gemerkte Suche) – oder an den zwei Stellen in index.html nach dem Setzen ein „input“-Ereignis auslösen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: nach Antippen einer gemerkten Suche stand „mietvertrag“ im Feld, das × war aber versteckt. Das × ist heute neu und wird nur beim Tipp-Ereignis ein- und ausgeblendet. Die Korrektur kostet keine Funktion; man kann das Feld auch von Hand leeren, daher eine Kleinigkeit.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "fehlerjagd",
+  "titel": "Pfeil neben „Überall“: Angaben für Vorleser stehen versehentlich in einem Kommentar und werden nie gesetzt",
+  "seite": "Suche (Startseite)",
+  "beleg": "native/native-ueberall.js:189 – die Befehle `rad.setAttribute('aria-expanded','false'); rad.setAttribute('aria-controls','pbUeberallQuellen');` stehen hinter `//` in derselben Zeile und laufen deshalb nicht. Messung (m1.mjs Teil T1): #pbUeberallRad hat aria-expanded=null und aria-controls=null beim Start. Ein Vorleseprogramm sagt dann nicht, dass der Pfeil etwas aufklappt und ob es offen ist (erst nach dem ersten Tipp wird aria-expanded gesetzt).",
+  "vorschlag": "Die beiden Befehle in eine eigene Zeile unter den Kommentar setzen. Sonst ändert sich nichts.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig (native/native-ueberall.js Zeile 189): die beiden setAttribute-Befehle stehen hinter „//“ in derselben Zeile und laufen nie; aria-controls wird nirgends gesetzt, aria-expanded erst nach dem ersten Tipp. Der Pfeil ist heute neu. Betrifft nur Nutzer mit Vorleseprogramm; die Korrektur ändert sonst nichts.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Einstellungen nach Themen: Sprung von „Hinzufügen“ landet bei allen 13 Themen, Themenwechsel kostet immer zwei Tipps",
+  "seite": "Hinzufügen / Einstellungen",
+  "beleg": "Gemessen im Prüfbrowser (1000×800, gestelltes Capacitor, pb_einstellungen_themen=an wie am Gerät). (a) Hinzufügen → Zeile „Speicherort: Noch kein Speicherort gewählt“ → Knopf „Einstellungen“: danach Reiter settings, PBEinstellungen.thema === null, also die Übersicht mit 13 Themen-Knöpfen. Ursache native/native-vault.js:122 (`lineButton.onclick = () => window.PBWorkspace?.navigate('settings')`). Bis „Speicherort wählen“ sind es 3 Tipps mit Suchen (Einstellungen → Tresor & Ablage → Speicherort wählen). (b) In einem offenen Thema (tresor) noch einmal aufs Zahnrad getippt: thema bleibt 'tresor', Themenleiste bleibt versteckt (assets/einstellungen-themen.js:78 setzt nur zurück, wenn die Seite verlassen wird). Wechsel von Thema zu Thema geht nur über „‹ Alle Themen“ + Thema = 2 Tipps. (c) In 4 Themen steht dieselbe Überschrift zweimal direkt untereinander (H2 Thema + H3 Kasten): „Tresor & Ablage“, „Texterkennung“, „Bildbeschreibung“, „E-Mail-Anhänge“; das Thema „Weiteres“ enthält nur einen Lizenz-Link. Messskripte: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/vereinfacher/inv2.mjs und inv4.mjs.",
+  "vorschlag": "(a) Der Knopf auf „Hinzufügen“ öffnet gleich das Thema „Tresor & Ablage“ (PBEinstellungen.oeffne('tresor') nach dem Wechsel) und heißt dann besser „Speicherort wählen“: spart 1 Tipp und das Suchen. (b) Ein Tipp aufs Zahnrad, wenn schon ein Thema offen ist, führt zurück zu allen Themen; zusätzlich die Themen als schmale Auswahl neben „‹ Alle Themen“ stehen lassen, dann kostet ein Themenwechsel 1 statt 2 Tipps. (c) Die Kasten-Überschrift ausblenden, wenn sie gleich dem Thema lautet; den Lizenz-Link aus „Weiteres“ unter „Aussehen & App“ stellen. Alle Kästen und Knöpfe bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser nachgestellt: Der Knopf „Einstellungen“ in der Speicherort-Zeile führt zur Übersicht mit 13 Themen (kein Thema offen), ein Tipp aufs Zahnrad bei offenem Thema ändert nichts, und in vier Themen (Tresor & Ablage, Texterkennung, Bildbeschreibung, E-Mail-Anhänge) steht die Überschrift doppelt. Die Stellen (native-vault.js, einstellungen-themen.js) wurden heute nicht geändert. Der Vorschlag kostet keine Funktion; alle Kästen bleiben.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Dieselbe Datei hat in „Suche“ und in „Dateien“ verschiedene Knöpfe: Löschen, Tresor, KI und Tag nur in der Suche, Kategorie nur in Dateien",
+  "seite": "Suche / Dateien (Explorer)",
+  "beleg": "Gemessen an derselben Datei „Mietvertrag Wohnung“. Trefferkarte in der Suche: Vorschau, „+ Tag“, Pfad, „Öffnen“, Prüfstand-Marke, „KI“, Tresor (Schloss), Löschen (Papierkorb). Zeile in Dateien (article.explorer-row): Vorschau, Prüfstand-Marke, „Öffnen“, „+ Kategorie“. Quellen: index.html:1937–1940 (kiBtn, tresorBtn, delBtn nur in der Trefferkarte), assets/workspace.js:454–467 (Explorer-Zeile nur „Öffnen“ + Kategorie). Das Datei-Fenster hat nur Schließen, Öffnen, Teilen (native/native-navigation.js:24–28). Wer eine Datei in „Dateien“ sieht und sie löschen, in den Tresor legen oder die KI fragen will, muss zur Suche wechseln, den Namen tippen und dort den Knopf nehmen (mindestens 3 Schritte mehr); umgekehrt gibt es „+ Kategorie“ nicht am Suchtreffer. Im Datei-Organizer benutzen alle Seiten denselben Baustein für die Datei-Knöpfe (seiten.tsx:183 DateiAktionen: Ansehen, Ändern, Entfernen).",
+  "vorschlag": "Ein gemeinsamer Satz Datei-Knöpfe für beide Listen, wie im Datei-Organizer: in beiden Zeilen „Öffnen“ sichtbar, der Rest hinter einem „⋯“ (KI, Tresor, Löschen, Tag, Kategorie). Nichts fällt weg, jede Aktion ist an beiden Orten erreichbar; spart den Umweg über die Suche (rund 3 Tipps plus Tippen des Namens).",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt an „Mietvertrag Wohnung“: Suchtreffer zeigt + Tag, Öffnen, KI, Schloss, Papierkorb; die Zeile in „Dateien“ nur Öffnen und + Kategorie; das Datei-Fenster hat laut Code nur Schließen, Öffnen, Teilen. Das war schon vor heute so. Achtung beim Vorschlag: Hinter „⋯“ kosten KI, Tresor und Löschen in der Suche künftig einen Tipp mehr als heute; es fällt aber nichts weg.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Geöffnete Mail löschen kostet zwei Tipps; der sichtbare Papierkorb daneben ist grau",
+  "seite": "Mail",
+  "beleg": "Gemessen mit gestelltem Konto, Mail geöffnet, 1000×800: Über der Mail stehen direkt nur Antworten, Weiterleiten, „In Katalog“ (102 px breit), „Nachrichtenaktionen“ (180 px) und „Übersetzen“. „In Papierkorb“ und „Archivieren“ für die offene Mail liegen im zugeklappten Menü „Nachrichtenaktionen“ (inMenu:true, menuOpen:false) → 2 Tipps. Der Papierkorb-Knopf in der Listenspalte ([data-native-selection=\"trash\"]) ist dabei sichtbar, aber disabled:true, solange kein Kästchen angehakt ist – auch dort also 2 Tipps (Kästchen + Papierkorb). Bildbeleg: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/vereinfacher/shot-mail-open.png.",
+  "vorschlag": "Den Papierkorb als Symbolknopf (36 px) direkt neben Antworten/Weiterleiten stellen; „In Katalog“ dafür nur als Symbol mit Hinweis beim Darüberfahren, dann passt alles in eine Zeile. Die übrigen Nachrichtenaktionen bleiben im Menü. Die häufigste Handlung kostet 1 statt 2 Tipps.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig belegt (assets/live-mail.js, Zeilen 1296–1300 und 852): In der App wandern alle Knöpfe nach Antworten/Weiterleiten außer „In Katalog“ ins zugeklappte Menü „Nachrichtenaktionen“, also auch „In Papierkorb“; der Papierkorb über der Liste ist ohne angehaktes Kästchen gesperrt. Nicht mit gestelltem Konto im Browser nachgespielt, nur gelesen. Diese Anordnung stammt nicht von heute; der Vorschlag nimmt keine Funktion weg.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Aussehen an drei Orten: Palette (4 Farben), Mond im ☰-Menü (nur 2 davon), Thema „Aussehen & App“ ohne Aussehen",
+  "seite": "Kopfleiste / ☰-Menü / Einstellungen",
+  "beleg": "Gemessen: Der Paletten-Knopf rechts in der Reiterzeile öffnet „Erscheinungsbild“ mit Klarblau, Graphit, Petrol, Nachtblau (native/native-palette.js). Der Mond im ☰-Menü (#themeToggle, „Hell / Dunkel umschalten“) schaltet von klarblau auf nachtblau – also dieselbe Einstellung, nur mit zwei der vier Möglichkeiten; nach dem Tipp klappt das Menü zu. In Einstellungen → „Aussehen & App“ steht nur der Kasten „Zustand“ (Speicherbelegung), kein einziges Bedienelement zum Aussehen: der Kasten #pb-theme-settings ist da, aber hidden=true (native/native-help.js:133–136, absichtlich versteckt, weil die Palette ihn ersetzt). Bild: .../pruefung/vereinfacher/shot-set-app.png.",
+  "vorschlag": "Ein Ort fürs Aussehen: die Palette. Den Mond aus dem ☰-Menü nehmen (Hell/Dunkel bleibt über Klarblau/Nachtblau in der Palette, 1 Tipp weniger im Menü zu lesen). Das Thema in den Einstellungen entweder in „App & Zustand“ umbenennen oder dort einen Knopf „Farben wählen“ zeigen, der die Palette öffnet. Keine Farbe und keine Funktion fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt: Die Palette bietet Klarblau, Graphit, Petrol, Nachtblau; der Mond im Menü schaltet nur zwischen Klarblau und Nachtblau; unter „Aussehen & App“ ist nur der Kasten „Zustand“ sichtbar, der Farbkasten ist absichtlich versteckt. Das war schon vor heute so. Ohne Mond fehlt der schnelle Hell/Dunkel-Tipp im Menü, die Wahl bleibt aber über die Palette erreichbar; das Umbenennen des Themas kostet nichts.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Sprache an drei Orten, und unter „Sprache & Diktat“ fehlt die App-Sprache; zwei Knöpfe „DE“ mit verschiedener Wirkung",
+  "seite": "☰-Menü / Suche / Einstellungen",
+  "beleg": "Gemessen: Die App-Sprache (DE/EN/RU/PL, [data-lang]) gibt es genau 4-mal und nur im ☰-Menü (#langsw); in #panel-settings stehen 0 solcher Knöpfe. Einstellungen → „Sprache & Diktat“ enthält nur die Auswahl „Such- und Diktatsprache“ (#pb-input-language-setting, 11 Sprachen). Dieselbe Such- und Diktatsprache steht zusätzlich als Knopf „DE“ rechts neben dem Suchfeld (#pb-search-language, gleiche 11 Sprachen). Auf der Suchseite gibt es damit bei offenem Menü zwei Knöpfe „DE“: der im Menü stellt die Sprache der App um, der am Suchfeld die Sprache fürs Suchen und Diktieren. Wer die App auf Englisch stellen will und unter „Sprache & Diktat“ sucht, findet es dort nicht.",
+  "vorschlag": "Unter „Sprache & Diktat“ beide zeigen: oben „Sprache der App“ (dieselben vier Knöpfe wie im ☰-Menü), darunter „Sprache zum Suchen und Diktieren“. Der Knopf am Suchfeld bekommt ein Mikrofon-/Sprechblasen-Zeichen vor dem „DE“ oder den Hinweis „Diktat: DE“, damit er nicht wie der App-Sprachknopf aussieht. Menü-Knöpfe und Schnellwahl am Suchfeld bleiben.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen: Die vier App-Sprachknöpfe gibt es nur im ☰-Menü, in den Einstellungen keinen; „Sprache & Diktat“ enthält nur die Such- und Diktatsprache (11 Sprachen), und am Suchfeld steht dafür ein zweiter Knopf, der nur „DE“ zeigt. Nicht heute entstanden. Der Vorschlag fügt nur hinzu und verdeutlicht, nichts fällt weg.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Dieselbe Sache heißt verschieden: Dateien/Explorer, Mail/Postfach, „Ablage“ für zwei verschiedene Ordner, SBKIM-Netz/SBKIM-Fenster",
+  "seite": "alle Seiten",
+  "beleg": "Gemessen an der laufenden App: (1) Reiter heißt „Dateien“, die Seite darunter trägt die Überschrift „Explorer“ (assets/workspace.js:8 `explorer:['📁 Explorer',…]`), Hilfetexte sagen „Im Explorer zeigen“ (workspace.js:33). (2) Reiter „Mail“, Überschrift „Postfach“; Reiter „Suche“ mit Hinweis „Finden“. (3) Auf „Hinzufügen“ steht „Ablage: noch kein Ordner gewählt“ mit Knopf „Ablageordner wählen“ (gemeint: Ordner für zusätzliche Kopien, native/native-folders.js:6/11) und direkt darunter „Speicherort: …“; in Einstellungen → „Tresor & Ablage“ heißt aber der verschlüsselte Speicherort „Ablage von Private Brain“ (Knopf „Speicherort wählen“). „Ablage“ meint also an zwei Stellen zwei verschiedene Ordner; dazu kommen „Tresor“ und „Tresorordner“. (4) Im ☰-Menü „SBKIM-Netz“, in Einstellungen → Siegel derselbe Knopf als „SBKIM-Fenster öffnen“ (native/native-mycel.js:11). (5) Mail: „Mails importieren“ springt auf „Hinzufügen“ und öffnet dieselbe Auswahl wie dort „Mails (.mbox / .eml)“ (assets/mail-workspace.js:167). (6) Suche: „+ Tag“, Dateien: „+ Kategorie“.",
+  "vorschlag": "Je Sache ein Wort, überall gleich: „Dateien“ (Überschrift und Hilfetexte statt „Explorer“), „Mail“, „Kopien-Ordner“ für den Ablageordner und „Speicherort (verschlüsselt)“ für den Tresor-Speicher, „SBKIM-Fenster“ an beiden Knöpfen, „Mails importieren“ an beiden Knöpfen. Nur Beschriftungen ändern sich, kein Knopf fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser gesehen: Reiter „Dateien“ mit Überschrift „Explorer“, Reiter „Mail“ mit „Postfach“, „Ablage: …“ (Kopien-Ordner) direkt über „Speicherort: …“, in den Einstellungen „Ablage von Private Brain“ für den verschlüsselten Speicher, „SBKIM-Netz“ und „SBKIM-Fenster öffnen“. Fast alles ist älter; nur der Zeilenanfang „Ablage:“ auf „Hinzufügen“ wurde heute auf Klaus' Wunsch so gesetzt, ein neues Wort dafür braucht also sein Ja. Es ändern sich nur Beschriftungen, keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "In „Dateien“ steht derselbe Ordner dreimal gleichzeitig zur Wahl (Ansichtswahl, Baum, Ordnerkarte), dazu noch einmal in „Übersicht“",
+  "seite": "Dateien (Explorer) / Übersicht",
+  "beleg": "Gemessen bei 1000×800 mit 4 erfundenen Dateien: Die Ansichtswahl oben links („Alle Dateien ▾“) bietet Alle Dateien, PDF, Dokumente, Fotos und Bilder. Der Baum links daneben zeigt gleichzeitig Alle Dateien › Dokumente (3) › …, Fotos und Bilder (1). Die Liste rechts beginnt mit den Karten „Dokumente ›“ und „Fotos und Bilder ›“ (button.explorer-dir-open). „Dokumente“ ist also auf einem Bildschirm dreimal antippbar, mit derselben Wirkung; nur „PDF“ gibt es allein in der Ansichtswahl. Die Seite „Übersicht“ zeigt dieselben Ordner ein viertes Mal als Liste, die wieder in „Dateien“ springt. Bild: .../pruefung/vereinfacher/shot-1000-explorer.png.",
+  "vorschlag": "Wenn der Baum sichtbar ist (breites Fenster): „PDF“ als Zeile in den Baum nehmen und die Ansichtswahl ausblenden; die Ordnerkarten oben in der Liste nur zeigen, wenn der Baum eingeklappt ist oder am Handy (dort bleibt die Ansichtswahl wie heute). Jede Ansicht bleibt mit einem Tipp erreichbar, es stehen aber rund 6 Knöpfe weniger auf der Seite.",
+  "bestaetigt": true,
+  "gegenpruefung": "Nachgestellt bei 1000×800: „Alle Dateien ▾“ oben, der Baum links mit Dokumente/Fotos und Bilder und die Ordnerkarten „Dokumente ›“ und „Fotos und Bilder ›“ oben in der Liste stehen gleichzeitig da. Das ist doppelt, stört aber nicht beim Arbeiten und ist nicht von heute. Der Vorschlag kostet keine Funktion, solange Ansichtswahl und Karten bei eingeklapptem Baum und am Handy bleiben; die Übersicht habe ich nicht eigens nachgemessen.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "vereinfacher",
+  "titel": "Zeile unter dem Suchfeld: zwischen „Bedeutungssuche“ und „0 E-Mails“ fehlt der Trennpunkt",
+  "seite": "Suche",
+  "beleg": "Gemessen nach einer Suche „Rechnung“: #searchInfo („1 Treffer · 0.20 ms · Bedeutungssuche“) endet bei x=246, #searchMailCount („0 E-Mails“) beginnt bei x=246 – ohne Abstand, zu lesen als „Bedeutungssuche0 E-Mails · 0 Dateien · 0 lokal verknüpft“. Ursache native/design-layout.css:301: der Trennpunkt wird nur zwischen zwei .pb-meta-count gesetzt (`.pb-meta-count:not(:empty) ~ .pb-meta-count:not(:empty)::before`), nicht nach #searchInfo. Bild: .../pruefung/vereinfacher/shot-1000-search.png.",
+  "vorschlag": "Die Regel um `#searchInfo:not(:empty) ~ .pb-meta-count:not(:empty)::before` ergänzen, dann steht auch vor „0 E-Mails“ der Punkt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Prüfbrowser gesehen: Nach einer Suche steht „Bedeutungssuche0 E-Mails“ ohne Abstand (beide Kanten bei x = 245,5; vor „0 E-Mails“ wird kein Punkt gesetzt). Ursache ist die genannte Regel in native/design-layout.css, die heute nicht geändert wurde. Die vorgeschlagene Ergänzung ist reine Darstellung und kostet nichts.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Update-Fähnchen ist am Handy vom Siegel und der Internet-Lampe verdeckt",
+  "seite": "Kopfleiste (alle Seiten), schmale Schirme",
+  "beleg": "Messung im Prüfbrowser mit gestelltem ProUpdates (Update 1.0.54 vorhanden), Siegel am unberührten Startplatz: Bei 360 px Breite liegt #pbUpdateFahne bei x 175–246, y 13–33. Von 17 Messpunkten quer über das Fähnchen sind nur 3 antippbar; auf den anderen liegen sbkim-widget (Siegel), native-net-lamp (Lampe) und der Zurück-Knopf. 320 px: 3 von 17. 412 px: 5 von 17. Ab 600 px: 17 von 17 frei. Bild: /tmp/claude-0/-home-user-Privat-Brain-Pro/68669560-90ec-54bf-82db-19c4065f2a90/scratchpad/pruefung/einrichter/kopf-360b.png (rotes Fähnchen schaut nur links und rechts unter dem Stern hervor). Code: native/native.js:158–166 hängt das Fähnchen direkt hinter die Versionsnummer; native/native-seal-place.js:12 setzt das Siegel fest 152 px vom rechten Rand – genau dorthin. Nicht am echten Gerät gemessen.",
+  "vorschlag": "Auf schmalen Schirmen kein eigenes Fähnchen neben der Nummer, sondern die Versionsnummer selbst rot färben mit kleinem Punkt (der Tipp auf die Nummer lädt das Update ohnehin schon direkt). Oder das Siegel beim Start so weit nach rechts/unten setzen, dass es das Fähnchen nicht trifft. Nichts fällt weg.",
+  "bestaetigt": true,
+  "gegenpruefung": "Selbst nachgemessen mit gestelltem Update 1.0.54 und Siegel am Startplatz: bei 320 px sind 4 von 17 Punkten des Fähnchens antippbar, bei 360 px 3, bei 412 px 5, ab 600 px alle 17; darüber liegen Siegel, Lampe und Zurück-Knopf. Die beteiligten Dateien (native.js, native-seal-place.js) wurden heute nicht geändert, der Fehler ist also älter. Der Vorschlag kostet keine Funktion, weil der Tipp auf die Versionsnummer das Update schon direkt lädt; nicht am echten Gerät gemessen.",
+  "nutzen": "gross"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Bedeutungssuche zeigt dauerhaft „lädt / Rückfall aktiv“, obwohl nichts lädt – und zwei Texte beschreiben noch den alten Kasten",
+  "seite": "Einstellungen → Bedeutungssuche; docs",
+  "beleg": "Messung: Modell nicht geladen → oranges Schild „lädt / Rückfall aktiv … — bis dahin Stichwort-Bedeutung“, direkt darunter „Noch nicht geladen. Einmal etwa 154 MB“. Modell geladen → dasselbe Schild „lädt / Rückfall aktiv“, darunter „Geladen und geprüft (154 MB). Startet, sobald du mit „Bedeutung“ suchst.“ Es lädt in beiden Fällen nichts. Ursache: seit heute startet das Modell nicht mehr beim Öffnen, native/native-semantic.js (start(): EMBED.tried = true) setzt aber weiter den Zustand, für den index.html:970 „lädt / Rückfall aktiv“ schreibt. Früher wechselte das Schild nach dem Start auf „aktiv“, jetzt bleibt es so stehen. Bild: …/pruefung/einrichter/bedeutung.png. Dazu veraltet: docs/UEBERALL-SUCHEN.md:8 („Ein Kasten „Überall suchen“ …“, den gibt es seit heute nicht mehr) und assets/pro-verbund.html:232 (Karte im Thema Pro-Apps: „Veröffentlicht: 1.0.48 … Kasten „Überall suchen““; die Datei ist byte-gleich aus BookLedgerPro und muss dort gepflegt werden).",
+  "vorschlag": "Das Schild nach dem wirklichen Zustand beschriften: „nicht geladen“, „bereit – startet bei „Bedeutung““, „startet …“, „aktiv“. Die Wörter gibt es schon im Kasten darunter. docs/UEBERALL-SUCHEN.md um einen Absatz „seit 1.0.53: eine Liste, kein Kasten“ ergänzen; die Karte in BookLedgerPro nachziehen und neu kopieren.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen: mit und ohne geladenes Modell steht das Schild auf „lädt / Rückfall aktiv — bis dahin Stichwort-Bedeutung“, obwohl nichts lädt. Bei geladenem Modell ist das neu seit heute (früher startete es beim Öffnen und das Schild wurde „aktiv“); ohne Modell stand es schon vorher so da. Die alte Zeile in docs/UEBERALL-SUCHEN.md gibt es; eine andere Beschriftung nimmt keine Funktion weg.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Update steht an drei Stellen mit zwei verschiedenen Wegen; der Kasten in den Einstellungen liegt unter „Weiteres“ und weiß nichts vom Fähnchen",
+  "seite": "Kopfleiste und Einstellungen → Weiteres",
+  "beleg": "Messung mit vorhandenem Update: Im Kopf steht „Update 1.0.54“, die stille Prüfung lief (1 Aufruf check). Gleichzeitig steht im Thema „Weiteres“ nur „Auf Updates prüfen – Prüft öffentliche GitHub-Veröffentlichungen …“, der Knopf „APK herunterladen“ ist versteckt (hidden). Man muss dort noch einmal prüfen, also zweimal tippen. Code native/native.js: Fähnchen und Versionsnummer rufen direkt() (laden, prüfen, Installieren-Fenster), der Knopf im Kasten ruft updates.openDownload() (Zeile ~138) – ein anderer, älterer Weg. Das Thema „Weiteres“ enthält sonst nur den Lizenz-Link; „Update“ sucht dort niemand.",
+  "vorschlag": "Ein Weg: Der Kasten übernimmt den Stand der stillen Prüfung sofort („Neu: 1.0.54 (du hast 1.0.53)“) und sein Knopf ruft denselben direkten Weg wie Fähnchen und Versionsnummer. Den Kasten ins Thema mit der App legen und das Thema „App & Update“ nennen. „Auf Updates prüfen“ von Hand bleibt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen: Fähnchen zeigt „Update 1.0.54“ nach einer stillen Prüfung, der Kasten liegt im Thema „Weiteres“, zeigt nur den Prüf-Text und der Knopf „APK herunterladen“ ist versteckt. Im Code ruft dieser Knopf openDownload, Fähnchen und Versionsnummer dagegen den direkten Weg mit Installieren-Fenster. Der Vorschlag kostet nichts, solange der Knopf dort, wo es kein direktes Installieren gibt (Windows), weiter den Download öffnet – das macht der direkte Weg bereits selbst.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Thema „Aussehen & App“ enthält nichts zum Aussehen; Farben stehen an zwei anderen Stellen",
+  "seite": "Einstellungen → Aussehen & App, ☰-Menü, Farb-Knopf neben dem Zahnrad",
+  "beleg": "Messung (App-Fassung): Im Thema „Aussehen & App“ ist nur der Kasten „Zustand“ (gespeicherte Dateien, Speicher) sichtbar. Die drei anderen Kästen des Themas sind ausgeblendet: #pb-theme-settings „Erscheinungsbild“ (display none), „Analyse (Diagnose)“, „Als App installieren“. Die vier Farbthemen (Klarblau, Graphit, Petrol, Nachtblau) gibt es nur am Palette-Knopf #pb-palette-button. Dazu im ☰-Menü der Mond „Hell / Dunkel umschalten“: gemessen schaltet er nur zwischen dem letzten hellen Thema und Nachtblau um (Graphit → Mond → data-pb-theme nachtblau → Mond → graphit). Das ist dieselbe Einstellung wie „Nachtblau“ in der Palette, an einer zweiten Stelle.",
+  "vorschlag": "Das Thema nach seinem Inhalt benennen (z. B. „App & Update“, siehe Update-Befund) und dort eine Zeile „Farben: Palette-Knopf oben rechts“ oder die vier Farbknöpfe wieder zeigen. Den Mond aus dem ☰-Menü als fünfte Zeile „Hell/Dunkel wechseln“ in das Palette-Fenster legen – dann steht alles zum Aussehen an einer Stelle und der Schnellwechsel bleibt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen in der App-Fassung: im Thema ist nur der Kasten „Zustand“ sichtbar, „Erscheinungsbild“, „Analyse“ und „Als App installieren“ sind ausgeblendet; der Palette-Knopf ist vorhanden. Der Name des Themas passt also nicht zum Inhalt. Das Verhalten des Mondes im ☰-Menü habe ich nicht selbst nachgemessen; den Mond zu verlegen kostet einen Schnellzugriff im Menü, daher dort besser nur umbenennen oder einen Hinweis setzen.",
+  "nutzen": "klein"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Sprache der Oberfläche: Themen-Knöpfe bleiben immer deutsch, und im Thema „Sprache & Diktat“ fehlt sie",
+  "seite": "Einstellungen (Themen) und ☰-Menü",
+  "beleg": "Messung: App mit gespeicherter Sprache Englisch gestartet (html lang = en, Zahnrad heißt „Settings“) → Themen-Knöpfe trotzdem „Tresor & Ablage | Pro-Apps | Sprache & Diktat | …“, Kopf „‹ Alle Themen“. Ebenso nach Umschalten im Betrieb und bei RU/PL. Ursache assets/einstellungen-themen.js:15: die Sprache wird einmal beim Laden gelesen, bevor die App sie setzt, und nie wieder. Die englischen Namen in Zeile 18–31 erscheinen also nie. Zusätzlich fällt der Kasten „E-Mail-Anhänge“ in EN/RU/PL ins Thema „Weiteres“ (Zeile 25 erkennt nur die deutsche Überschrift; gemessen: „weiteres <- Email attachments“). Zum Springen: Die Oberflächensprache (DE/EN/RU/PL) gibt es nur im ☰-Menü; im Thema „Sprache & Diktat“ steht nur „Bleibt unabhängig von der Sprache der Oberfläche“, ohne zu sagen, wo man diese ändert.",
+  "vorschlag": "Sprache bei jedem Zeichnen der Themen neu lesen (und auf Wechsel von html lang hören, wie das SBKIM-Fenster). Den Anhänge-Kasten an einer Kennung statt an der deutschen Überschrift erkennen. Im Thema „Sprache & Diktat“ die vier Sprachknöpfe zusätzlich zeigen (dieselben wie im ☰-Menü) oder einen Satz „Sprache der App: ☰-Menü“.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen mit gespeicherter Sprache Englisch und Russisch: html lang ist en bzw. ru, die Themen-Knöpfe heißen trotzdem „Tresor & Ablage“ usw.; der Kasten „Email attachments“ landet im Thema „Weiteres“. Ursache ist Zeile 15 in assets/einstellungen-themen.js (Sprache wird nur einmal beim Laden gelesen); die Datei ist seit gestern unverändert. Für Klaus selbst (Deutsch) nicht spürbar, für Nutzer in EN/RU/PL ein echter Fehler; der Vorschlag kostet keine Funktion.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "„Schlüssel (oben)“ und „unten“ stimmen in der Themen-Ansicht nicht mehr; Mistral-Haken geht ohne Schlüssel an",
+  "seite": "Einstellungen → Bildbeschreibung, Bedeutungssuche, KI-Schlüssel (EU)",
+  "beleg": "index.html:671 (Bildbeschreibung): „Nutzt deinen Mistral-Schlüssel (oben)“. index.html:643 (Bedeutungssuche): „nur wenn du unten bewusst einen Schlüssel hinterlegst“. In der Themen-Ansicht steht der Schlüssel weder oben noch unten, sondern in einem anderen Thema „KI-Schlüssel (EU)“; man muss zurück zu „Alle Themen“ und dort suchen. Messung: Der Haken #capEU lässt sich ohne hinterlegten Schlüssel setzen (checked = true), es kommt kein Hinweis und kein Sprung; index.html:2845 speichert nur. Nebenbei gemessen: das Kästchen #capEU ist 9 × 13 px, das Kästchen darüber (#capEnable) 13 × 13 px (Bild …/pruefung/einrichter/bild.png).",
+  "vorschlag": "Statt „(oben)“/„unten“ einen kleinen Knopf „KI-Schlüssel eintragen ›“, der das Thema öffnet (PBEinstellungen.oeffne('ki') gibt es schon). Wird der Mistral-Haken ohne Schlüssel gesetzt: ein Satz „Es fehlt noch der Schlüssel“ mit demselben Knopf. Kästchen gleich groß machen.",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code stehen „(oben)“ (index.html 671) und „unten“ (643), der Schlüssel liegt aber in einem eigenen Thema. Gemessen: der Haken lässt sich ohne hinterlegten Schlüssel setzen, es kommt keine Meldung und kein Sprung; das Kästchen ist 7 × 13 px, das darüber 13 × 13 px. Ein Hinweis mit Sprung zum Thema nimmt nichts weg.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "„Zurück“ in einem geöffneten Thema verlässt die Einstellungen ganz",
+  "seite": "Einstellungen (Themen)",
+  "beleg": "Messung: Suche → Zahnrad → Thema „Bedeutungssuche“ öffnen → Pfeil „Zurück“ in der Kopfleiste. Ergebnis: Seite panel-search ist offen, PBEinstellungen.thema = null. Man landet also wieder in der Suche statt bei „Alle Themen“ und muss neu über das Zahnrad hinein (zwei Tipps mehr je Thema). assets/einstellungen-themen.js:70 (oeffne) trägt das Thema nicht in den Verlauf ein; laut CLAUDE.md nimmt Androids Zurück denselben Weg wie der Pfeil (native/native-navigation.js) – das habe ich nur am sichtbaren Pfeil gemessen, nicht am Gerät.",
+  "vorschlag": "Ein geöffnetes Thema als eigenen Schritt behandeln: Zurück führt zuerst zu „Alle Themen“, erst der nächste Zurück-Tipp verlässt die Einstellungen. „‹ Alle Themen“ bleibt.",
+  "bestaetigt": true,
+  "gegenpruefung": "Gemessen: Suche → Einstellungen → Thema „Bedeutungssuche“ → Zurück (derselbe Weg wie der Pfeil und Android-Zurück) führt direkt zur Suche, das Thema ist weg. Die Themen-Datei trägt ein geöffnetes Thema nicht in den Verlauf ein; sie ist seit gestern unverändert. Der Vorschlag kostet nichts außer einem zusätzlichen Zurück-Tipp beim Verlassen, „‹ Alle Themen“ bleibt; nicht am Gerät gemessen.",
+  "nutzen": "mittel"
+ },
+ {
+  "rolle": "einstellungen",
+  "titel": "Tresor gesperrt: der blaue Hauptknopf heißt „Anderen Speicherort wählen“, „Entsperren“ ist blass und steht zweimal; „Pro-Apps“ zeigt nur die Karte",
+  "seite": "Einstellungen → Tresor & Ablage und → Pro-Apps",
+  "beleg": "Messung mit eingerichtetem, gesperrtem Speicherort (gestellte Brücke): Text „gesperrt – zum Benutzen entsperren“, aber blau hervorgehoben sind „Anderen Speicherort wählen“ und „Tresor-Hilfe“; „Entsperren“ ist ein blasser Knopf dazwischen (Bild …/pruefung/einrichter/tresor-konfiguriert.png). Code: native/native-vault.js:103 macht immer nur „choose“ zum Hauptknopf, native/native-tresor-hilfe.js:169 macht „Tresor-Hilfe“ immer blau. Im selben Kasten steht darunter „Zusammenarbeit mit Pro-Apps – Gesperrt: Family_Projekt_de – Entsperren …“: ein zweiter Entsperren-Knopf. Ob ein Entsperren beides öffnet (seit „ein Passwort für Tresor und Ablage“), konnte ich ohne Gerät nicht messen. Das Thema „Pro-Apps“ enthält dagegen nur „Pro-App-Verbund (Vorschau) – Karte ansehen“; das Verbinden mit den Pro-Apps steht im Thema „Tresor & Ablage“.",
+  "vorschlag": "Der Hauptknopf folgt dem Zustand: nichts gewählt → „Speicherort wählen“ blau; gesperrt → „Entsperren“ blau, die anderen blass; „Tresor-Hilfe“ nur blau, wenn etwas nicht stimmt. Wenn das Passwort dasselbe ist: ein Entsperren öffnet beide, der zweite Knopf zeigt dann nur noch den Zustand. Im Thema „Pro-Apps“ eine Zeile mit dem Zustand der Zusammenarbeit und einem Sprung „Im Tresor einstellen ›“ (oder den Abschnitt dort zeigen).",
+  "bestaetigt": true,
+  "gegenpruefung": "Im Code eindeutig: native-vault.js macht nur den Knopf „choose“ blau und ändert das nie nach Zustand, „Entsperren“ ist immer blass; native-tresor-hilfe.js macht „Tresor-Hilfe“ immer blau. Gemessen: im Thema „Pro-Apps“ liegt nur die Verbund-Karte. Den gesperrten Zustand mit zweitem Entsperren-Knopf habe ich nicht selbst im Browser nachgestellt, und ob ein Entsperren beide öffnen darf, muss vorher geklärt werden (eigene Ablage und Pro-Tresor können getrennte Passwörter haben) – die Knopffarbe allein kostet keine Funktion.",
+  "nutzen": "mittel"
+ }
+]
