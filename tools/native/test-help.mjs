@@ -143,10 +143,12 @@ try{
   await page.waitForFunction(()=>{const button=document.querySelector('[data-pb-help-toggle=protection]');return button&&button!==helpOldProtection&&button.getAttribute('aria-expanded')==='true';});
   ok('A real protection-card rebuild remounts connected help and preserves its requested open state',await region(page,'protection').isVisible()&&await toggle(page,'protection').evaluate(button=>button.closest('#schutzPlace')?.contains(document.getElementById(button.getAttribute('aria-controls'))))&&await page.locator('#schutzPlace>.pb-schutz-line').evaluateAll(nodes=>nodes.length>=4&&nodes.every(node=>!node.closest('[data-pb-help-content]'))));
   await toggle(page,'protection').click();await layoutReady(page);
-  ok('Repeated help refreshes make no child-list mutations once the settings order is stable',await page.evaluate(async()=>{
-    let mutations=0;const observer=new MutationObserver(records=>{mutations+=records.filter(record=>record.type==='childList').length;});observer.observe(document.body,{childList:true,subtree:true});
-    PBHelp.refresh();PBHelp.refresh();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));observer.disconnect();return mutations===0;
-  }));
+  // On failure the message names what was rebuilt (target +added -removed), so a red run says where to look.
+  const stray=await page.evaluate(async()=>{
+    const seen=[],what=n=>n.id||(typeof n.className==='string'&&n.className)||n.nodeName;const observer=new MutationObserver(records=>{for(const record of records)if(record.type==='childList')seen.push(what(record.target)+' +'+[...record.addedNodes].map(what).join('/')+' -'+[...record.removedNodes].map(what).join('/'));});observer.observe(document.body,{childList:true,subtree:true});
+    PBHelp.refresh();PBHelp.refresh();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));observer.disconnect();return seen;
+  });
+  ok('Repeated help refreshes make no child-list mutations once the settings order is stable'+(stray.length?': '+stray.slice(0,6).join(' | '):''),stray.length===0);
   await chooseTheme(page,'graphit');await page.locator('#pb-input-language-setting').selectOption('ru');
   ok('Direct palette and input-language handlers still save the actual preferences',await page.evaluate(()=>PBTheme.current()==='graphit'&&PBInputLanguage.current()==='ru'&&localStorage.getItem('pb_pro_theme_v1')==='graphit'&&localStorage.getItem('pb_input_language_v1')==='ru'));
   ok('Normal saved language status occupies no extra row but retains its live role',await page.locator('.pb-input-language-status').evaluate(node=>node.getAttribute('role')==='status'&&node.textContent.trim()&&node.getBoundingClientRect().height<=2&&node.getBoundingClientRect().width<=2));
