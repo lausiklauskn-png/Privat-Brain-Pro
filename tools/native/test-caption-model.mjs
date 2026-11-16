@@ -95,7 +95,7 @@ try{
   const filter=page.locator('#pb-bild-filter');
   const place=await page.evaluate(()=>{const f=document.getElementById('pb-bild-filter'),row=document.getElementById('pb-bild-row'),box=document.querySelector('#panel-search .searchbox');const r=f.getBoundingClientRect();return {next:box.nextElementSibling===row&&row.firstElementChild===f&&!box.querySelector('.pb-bild-filter,.pb-bild-help,.pb-bild-help-toggle')&&box.getBoundingClientRect().height<=56,text:f.textContent.trim(),emoji:/\p{Extended_Pictographic}/u.test(f.textContent+f.title),h:r.height,shadow:getComputedStyle(f).boxShadow,pressed:f.getAttribute('aria-pressed'),help:document.getElementById('pb-bild-filter-help'),helpOpen:!document.getElementById('pb-bild-filter-help').hidden,helpText:document.getElementById('pb-bild-filter-help').textContent};});
   ok('A flat switch „Bildbeschreibung“ stands in its own row right under the search box (which keeps its height), off at first, without emoji or shadow',place.next&&place.text==='Bildbeschreibung'&&!place.emoji&&place.h<=46&&place.shadow==='none'&&place.pressed==='false');
-  ok('Its ⓘ explanation is open the first time and says what is searched',place.helpOpen&&/eigenen Worten/.test(place.helpText));
+  ok('Its ⓘ explanation is closed the first time (Klaus 2026-11-16, Punkt 22) and says what is searched',!place.helpOpen&&/eigenen Worten/.test(place.helpText));
   await page.evaluate(()=>{const q=document.getElementById('q');q.value='';q.dispatchEvent(new Event('input',{bubbles:true}));});
   await filter.click();
   await page.waitForFunction(A=>document.querySelector(`#results > .card[data-hash="${A}"]`)&&document.querySelectorAll('#results > .card').length===1,A,{timeout:8000}).catch(()=>{});
@@ -110,7 +110,9 @@ try{
   await page.waitForFunction(()=>document.querySelectorAll('#results > .card').length===2);
   ok('Switch off: the PDF is back',true);
   await page.locator('[data-pb-help-toggle="bild-filter"]').click();
-  ok('A tap on ⓘ closes the explanation',await page.evaluate(()=>document.getElementById('pb-bild-filter-help').hidden));
+  ok('A tap on ⓘ opens the explanation',await page.evaluate(()=>!document.getElementById('pb-bild-filter-help').hidden));
+  await page.locator('[data-pb-help-toggle="bild-filter"]').click();
+  ok('A second tap closes it again',await page.evaluate(()=>document.getElementById('pb-bild-filter-help').hidden));
   // ---------- explorer and lightbox ----------
   await page.evaluate(()=>window.PBWorkspace.navigate('explorer'));
   await page.waitForSelector(`#explorerFiles .explorer-row[data-hash="${A}"] .pb-bild-own`,{timeout:10000});

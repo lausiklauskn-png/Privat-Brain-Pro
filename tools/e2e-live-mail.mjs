@@ -229,6 +229,10 @@ try {
   );
   await page.locator('[data-lang="de"]').click();
   await settled();
+  // Seit 2026-11-16 werden die Anhänge nach dem Anzeigen der Mail geprüft: auf das Ergebnis warten.
+  await page.waitForFunction(
+    () => !document.querySelector("#pb-live-reader").hasAttribute("data-mail-checking"),
+  );
   ok(
     "Text- und Anhangprüfung sichtbar",
     (await page.locator("#pb-live-reader .mail-report").innerText()).includes(

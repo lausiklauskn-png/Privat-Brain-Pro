@@ -60,7 +60,8 @@ try{
       }}};
   },{MITTEL,GROSS,embedSrc});
   await page.goto(url);
-  await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBWorkspace&&window.PBMeaning&&EMBED.ready);
+  // Klaus 2026-11-16 (V2): the first model no longer starts when the app opens; PBSemantic.wanted() stands for the first search with „Bedeutung“.
+  await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBWorkspace&&window.PBMeaning&&(window.PBSemantic?.wanted?.(),EMBED.ready));
   const A='a'.repeat(64),B='b'.repeat(64);
   await page.evaluate(async({A,B})=>{
     const make=(h,name,snippet)=>{const t=tokens(name+' '+snippet);return{hash:h,name,path:'Docs/'+name,size:1000,category:'Rechnung / Verträge',type:'text/plain',ext:'txt',date:Date.now(),vector:buildVector(t),tf:termFreq(t),nameTokens:tokens(name),snippet,summary:'',tags:[],dupes:[],dirId:null,pruefung:{zeit:1,funde:[],angaben:[],hinweise:[],ungeprueft:false}};};
@@ -142,7 +143,7 @@ try{
   await page.evaluate(()=>localStorage.removeItem('pro_geraet_v1'));
   await settings();await box.locator('[data-stufe="mittel"]').click();
   await page.reload();
-  await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBMeaning&&CATALOG.length===26&&EMBED.ready);
+  await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBMeaning&&CATALOG.length===26&&(window.PBSemantic?.wanted?.(),EMBED.ready));
   await page.waitForFunction(()=>document.getElementById('pb-meaning')?.dataset.state==='aktiv');
   ok('After a restart the choice and the values are back, and the model is NOT started at app start',await page.evaluate(()=>PBMeaning.wahl==='mittel'&&!mean.log.includes('init:mittel')));
   await first('Gebiss Preis');
@@ -150,7 +151,7 @@ try{
   ok('The first meaning search starts the model (guarded) and then uses it',await first('Gebiss Preis')===A&&await page.evaluate(()=>mean.log.indexOf('markLoading:mittel')<mean.log.indexOf('markLoaded:mittel')));
   // ---------- crash guard ----------
   await page.evaluate(()=>{mean.stages.mittel.crashes=1;mean.save();});
-  await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBMeaning&&CATALOG.length===26&&EMBED.ready);
+  await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBMeaning&&CATALOG.length===26&&(window.PBSemantic?.wanted?.(),EMBED.ready));
   await settings();await page.waitForFunction(()=>document.getElementById('pb-meaning')?.dataset.state==='crashed');
   ok('After a crash the second model does not start by itself, the search uses Modul 03, „Erneut starten“ is offered',await first('Gebiss Preis')===B&&!(await page.evaluate(()=>mean.log.includes('init:mittel')))&&await page.evaluate(()=>!document.querySelector('#pb-meaning [data-meaning="retry"]').hidden));
   await settings();await box.locator('[data-meaning="retry"]').click();

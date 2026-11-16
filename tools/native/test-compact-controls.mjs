@@ -65,9 +65,12 @@ try{
       const viewports=touch?[[320,700],[768,1024]]:[[1600,900],[1000,900],[800,900],[600,900],[420,900],[600,1000]];
       for(const[width,height]of viewports){
         await page.setViewportSize({width,height});await navigateTo(page,'search');await settle(page);
-        const search=await geometry(page,'.main-pages>.tab,.native-toolbar-quick>button,#panel-search #mic,#panel-search #mode button,#pb-search-language,#panel-search .filterbar>select,#panel-search .filterbar>button,#results .cardbtns>button,#results .pb-result-meta button,#results .pb-result-meta [role=button]');
+        const search=await geometry(page,'.main-pages>.tab,.native-toolbar-quick>button,#results .cardbtns>button,#results .pb-result-meta button,#results .pb-result-meta [role=button]');
+        // Klaus 2026-11-16 („zu hoch, zu fett, ungleichmäßig“): the search row and its filters are flat on every pointer (32 px).
+        const flat=await geometry(page,'#panel-search #mic,#panel-search #mode button,#pb-search-language,#pb-bild-filter,#pbUeberallKnopf,#panel-search .filterbar .pb-filter,#panel-search .filterbar>button');
         ok(`${touch?'Touch':'Mouse'} ${width}x${height}: pointer is genuinely ${touch?'coarse-only':'fine'}`,search.fine===!touch,search);
         ok(`${touch?'Touch':'Mouse'} ${width}x${height}: search, result actions and navigation retain ${search.target}px height`,sizesFit(search),search);
+        ok(`${touch?'Touch':'Mouse'} ${width}x${height}: the search row and filters are flat and even (32px)`,flat.controls.length>=8&&flat.controls.every(control=>control.height>=31.9&&control.height<=33)&&!flat.pageOverflow,flat);
         ok(`${width}x${height}: no welcome block returns in search`,await page.locator('.search-welcome,[data-ws=find],[data-ws=findHelp]').count()===0);
         if(touch&&width===320){
           const badge=page.locator('#results .pb-check-badge').first();

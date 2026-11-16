@@ -19,7 +19,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url=`http://127.0.0.1:${server.address().port}/`;
 let browser,count=0;
-const ok=(name,value)=>{assert.ok(value,name);console.log('✓ '+name);count++;};
+const ok=(name,value,details)=>{assert.ok(value,details===undefined?name:name+'; '+JSON.stringify(details));console.log('✓ '+name);count++;};
 try{
   // Keep srcdoc resource interception in this test transport's target. DOM origin/sandbox
   // restrictions remain enforced; Android tests also check the default WebView boundary.
@@ -27,7 +27,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:900}});
   const errors=[],remote=[];
   page.on('pageerror',e=>errors.push(e.message));
-  page.on('dialog',d=>d.accept());
+  const dialogs=[];page.on('dialog',d=>{dialogs.push(d.message());d.accept();});
   /* Modul 03's library address is answered by the app itself (MainActivity/BundledLibrary), never by the internet. */
   await page.context().route('**/*',r=>{
     if(r.request().url().startsWith(url))return r.continue();
@@ -45,8 +45,8 @@ try{
         async accounts(args){log('accounts',args);if(window.accountMode==='vaultError')throw{code:'VAULT_UNAVAILABLE'};return{items:window.mailAccounts};},
         async addAccount(args){log('addAccount',args);if(window.accountMode==='cancel')throw{code:'CANCELLED'};window.mailAccounts=[fixture];return fixture;},
         async folders(args){log('folders',args);const T=window.folderTotals||(window.folderTotals={INBOX:125,Spam:2,Trash:4});return{items:[{path:'INBOX',name:'INBOX',specialUse:'',total:T.INBOX},{path:'Spam',name:'Spam',specialUse:'',total:T.Spam},{path:'Trash',name:'Trash',specialUse:'',total:T.Trash},{path:'Sent',name:'Sent',specialUse:''},{path:'Erledigt',name:'Erledigt',specialUse:''},{path:'Drafts',name:'Drafts',specialUse:''},{path:'Archiv',name:'Archiv',specialUse:''},{path:'@not-virtual',name:'@not-virtual',specialUse:''},{path:'@outbox',name:'@outbox',specialUse:''}]};},
-        async messages(args){log('messages',args);if(args.folder===window.failFolder)throw{code:'CONNECTION_FAILED'};if(args.folder==='Trash'||args.folder==='Spam')return{validity:'124',total:window.folderTotals?.[args.folder]??0,items:[{uid:9,subject:'Alte Mail im '+args.folder,from:'old@example.invalid',date:Date.now(),flags:['\\Seen']}],next:null};return{validity:'123',total:args.folder==='INBOX'?125:args.folder==='@outbox'?3:0,items:args.folder==='INBOX'?[{uid:7,subject:'Native <img src=x onerror=alert(1)>',from:'friend@example.invalid',flags:[],size:1000}]:[],next:null};},
-        async message(args){log('message',args);if(window.failMessage)throw{code:'MESSAGE_TOO_LARGE'};return{subject:'Native message',from:'friend@example.invalid',to:fixture.email,messageId:'<fixture@example.invalid>',replyTo:'friend@example.invalid',html:window.messageMode==='html'?`<html><head><style>body{background:#fff}td{padding:16px}.offer{color:#136b72}</style><link rel="stylesheet" href="https://blocked.example.invalid/style.css"><meta http-equiv="refresh" content="0;url=https://blocked.example.invalid/redirect"></head><body onload="parent.mailExecuted=true"><table width="600" bgcolor="#fff5dc"><tr><td><img alt="Shop logo" src="cid:logo@example.invalid"><h1 class="offer">Herbstangebote</h1><p>31 % Rabatt auf ausgewählte Artikel</p><img alt="Werbung" src="https://images.example.invalid/banner.png"><a href="https://shop.example.invalid/offer">Zum Angebot</a><a href="javascript:parent.mailExecuted=true">Unsafe</a><img src="https://localhost/secrets" onerror="parent.mailExecuted=true"><script>parent.mailExecuted=true</script><form action="https://blocked.example.invalid/post"><input name="secret"></form><iframe src="https://blocked.example.invalid/frame"></iframe><svg onload="parent.mailExecuted=true"></svg></td></tr></table></body></html>`:'',text:'Direct native inbox text',raw:'From: friend@example.invalid\r\nTo: sender@example.invalid\r\nSubject: Native message\r\n\r\nDirect native inbox text',attachments:[...(window.messageMode==='html'?[{name:'logo.png',type:'image/png',contentId:'logo@example.invalid',inline:true,data:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBv8AAAAASUVORK5CYII='}]:[]),{name:'test.txt',type:'text/plain',data:btoa('Local attachment test')}]};},
+        async messages(args){log('messages',args);if(args.folder===window.failFolder)throw{code:'CONNECTION_FAILED'};if(args.folder==='Trash'||args.folder==='Spam')return{validity:'124',total:window.folderTotals?.[args.folder]??0,items:[{uid:9,subject:'Alte Mail im '+args.folder,from:'old@example.invalid',date:Date.now(),flags:['\\Seen']}],next:null};return{validity:'123',total:args.folder==='INBOX'?125:args.folder==='@outbox'?3:0,items:args.folder==='INBOX'?window.inboxItems||[{uid:7,subject:'Native <img src=x onerror=alert(1)>',from:'friend@example.invalid',flags:[],size:1000}]:[],next:null};},
+        async message(args){log('message',args);if(window.failMessage)throw{code:'MESSAGE_TOO_LARGE'};return{subject:window.subjectByUid?.[args.uid]||'Native message',from:'friend@example.invalid',to:fixture.email,messageId:'<fixture@example.invalid>',replyTo:'friend@example.invalid',html:window.messageMode==='html'?`<html><head><style>body{background:#fff}td{padding:16px}.offer{color:#136b72}</style><link rel="stylesheet" href="https://blocked.example.invalid/style.css"><meta http-equiv="refresh" content="0;url=https://blocked.example.invalid/redirect"></head><body onload="parent.mailExecuted=true"><table width="600" bgcolor="#fff5dc"><tr><td><img alt="Shop logo" src="cid:logo@example.invalid"><h1 class="offer">Herbstangebote</h1><p>31 % Rabatt auf ausgewählte Artikel</p><img alt="Werbung" src="https://images.example.invalid/banner.png"><a href="https://shop.example.invalid/offer">Zum Angebot</a><a href="javascript:parent.mailExecuted=true">Unsafe</a><img src="https://localhost/secrets" onerror="parent.mailExecuted=true"><script>parent.mailExecuted=true</script><form action="https://blocked.example.invalid/post"><input name="secret"></form><iframe src="https://blocked.example.invalid/frame"></iframe><svg onload="parent.mailExecuted=true"></svg></td></tr></table></body></html>`:'',text:'Direct native inbox text',raw:'From: friend@example.invalid\r\nTo: sender@example.invalid\r\nSubject: Native message\r\n\r\nDirect native inbox text',attachments:[...(window.messageMode==='html'?[{name:'logo.png',type:'image/png',contentId:'logo@example.invalid',inline:true,data:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBv8AAAAASUVORK5CYII='}]:[]),{name:'test.txt',type:'text/plain',data:btoa('Local attachment test')}]};},
         async action(args){log('action',args);return{ok:true};},
         async actions(args){log('actions',args);const T=window.folderTotals;if(T&&args.action==='move'&&args.target in T){T[args.target]+=args.uids.length;if(args.folder in T)T[args.folder]-=args.uids.length;}return{ok:true,done:args.uids.length,missing:0};},
         async openAttachment(args){log('openAttachment',args);return{ok:true};},
@@ -95,6 +95,7 @@ try{
   ok('Custom @outbox cannot collide with native outbox label or counters',await mail.locator('.live-mail .mail-notice').textContent().then(s=>s.endsWith('@outbox'))&&await mail.locator('.live-mail [data-mail-folder="provider:@outbox"] small').textContent()==='3'&&await mail.locator('.live-mail [data-mail-folder=outbox] small').textContent()==='0');
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();
   await mail.locator('.live-mail [data-native-selection=all]').click();
+  ok('Without a Pro vault the mail list shows no "An Familienakte" button',await mail.locator('.live-mail [data-native-selection=familienakte]').isHidden());
   ok('Standard selection toolbar selects provider messages',await mail.locator('.live-mail .mail-count').textContent()==='1 ausgewählt');
   await mail.locator('.live-mail [data-native-selection=trash]').click();
   ok('Trash uses original account/folder/UIDVALIDITY/UID and provider target',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='actions'&&c.args.action==='move'&&c.args.target==='Trash'&&c.args.folder==='INBOX'&&c.args.validity==='123'&&JSON.stringify(c.args.uids)==='[7]')));
@@ -127,6 +128,52 @@ try{
   ok('Read action is bound to account, UID and UIDVALIDITY',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='action'&&c.args.uid===7&&c.args.validity==='123'&&c.args.folder==='INBOX'&&c.args.account==='11111111-1111-4111-8111-111111111111')));
   await mail.getByRole('button',{name:'↓ test.txt',exact:true}).click();
   ok('Attachment uses scoped native open operation',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openAttachment'&&c.args.index===0&&c.args.uid===7&&c.args.validity==='123')));
+  // Punkt 4 (Klaus 16.11.2026): die Mail steht sofort da, die Anhänge werden danach einzeln geprüft.
+  const settled=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  const checked=()=>page.waitForFunction(()=>!document.querySelector('.live-mail .mail-reader').hasAttribute('data-mail-checking'));
+  await checked();
+  const reportPlain=await mail.locator('.live-mail .mail-reader .mail-report').textContent();
+  const riskPlain=await mail.locator('.live-mail .mail-reader .mail-report').getAttribute('data-risky');
+  // The attachment check (text recognition or the rule checker) is held back by the test, like a slow scan on the tablet.
+  ok('The test can hold the attachment check',await page.evaluate(()=>{window.checkStarts=[];window.checkGates=[];window.holdChecks=true;
+    const held=(name,go)=>{checkStarts.push(name);return holdChecks?new Promise(r=>checkGates.push(r)).then(go):go();};
+    if(window.PBOCR){const real=window.PBOCR;window.PBOCR={...real,analyze:(name,bytes,o)=>held(name,()=>real.analyze(name,bytes,o))};return true;}
+    if(window.PrueferAnhang){const real=window.PrueferAnhang.pruefe;try{window.PrueferAnhang.pruefe=(name,bytes)=>held(name,()=>real(name,bytes));}catch{return false;}return window.PrueferAnhang.pruefe!==real;}
+    return false;}));
+  const opensBefore=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='openAttachment').length);
+  await mail.locator('[data-live-uid="7"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===1);await settled();
+  const during=await page.evaluate(()=>{const app=document.querySelector('.live-mail'),r=app.querySelector('.mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');b.click();
+    const off=key=>{const x=r.querySelector('[data-live-text='+key+']');return Boolean(x&&x.disabled);};
+    return {text:r.querySelector('.mail-text')?.textContent,subject:r.querySelector('h3')?.textContent,busy:app.hasAttribute('aria-busy'),inert:app.inert,checking:r.dataset.mailChecking,
+      wait:[...r.querySelectorAll('[data-mail-attachment-wait]')].map(x=>x.textContent),attachmentOff:b.disabled,forward:off('forward'),download:off('download'),bookledger:off('bookledger'),familienakte:off('familienakte'),reply:off('reply'),
+      report:r.querySelector('.mail-report').textContent,opens:window.mailCalls.filter(c=>c.method==='openAttachment').length};});
+  ok('Head and text of the mail stand there and can be used while the attachment is still being checked',during.text==='Direct native inbox text'&&during.subject==='Native message'&&!during.busy&&!during.inert&&during.checking==='true'&&!during.reply,during);
+  ok('Each attachment says that it is being checked',JSON.stringify(during.wait)===JSON.stringify(['test.txt · wird geprüft …']),during);
+  ok('Until its result is there the attachment cannot be opened, and the mail cannot be forwarded or shared with it',during.attachmentOff&&during.forward&&during.download&&during.bookledger&&during.familienakte&&during.opens===opensBefore&&!during.report.includes('test.txt'),during);
+  await page.evaluate(()=>{document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail .mail-reader [data-mail-attachment-wait]')?.textContent==='test.txt · being checked …');
+  ok('The waiting line follows the language',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.evaluate(()=>{window.checkGates.shift()();});await checked();
+  const after=await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');
+    return {wait:r.querySelectorAll('[data-mail-attachment-wait]').length,off:[b,...['forward','download','bookledger','familienakte'].map(k=>r.querySelector('[data-live-text='+k+']'))].map(x=>x.disabled||Boolean(x.closest('[inert]'))),report:r.querySelector('.mail-report').textContent,risky:r.querySelector('.mail-report').dataset.risky};});
+  ok('With the result the waiting line goes, attachment and sharing are free, and report and risk mark are the same as without waiting',after.wait===0&&after.off.every(x=>!x)&&after.report===reportPlain&&after.report.includes('test.txt')&&after.risky===riskPlain&&['true','false'].includes(after.risky),{after,reportPlain,riskPlain});
+  // A late result must not land in another mail.
+  await mail.locator('[data-live-uid="7"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===1);await settled();
+  await mail.locator('.live-mail [data-mail-folder=trash]').click();await settled();
+  await mail.locator('[data-live-uid="9"]').click();
+  await page.waitForFunction(()=>window.checkGates.length===2);await settled();
+  await page.evaluate(()=>{window.checkGates.shift()();});
+  await page.waitForTimeout(300);
+  const late=await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader'),b=[...r.querySelectorAll('button')].find(x=>x.textContent==='↓ test.txt');return {checking:r.dataset.mailChecking,wait:r.querySelectorAll('[data-mail-attachment-wait]').length,off:b.disabled,report:r.querySelector('.mail-report').textContent};});
+  ok('The late result of the mail before is not written into the mail that is open now',late.checking==='true'&&late.wait===1&&late.off&&!late.report.includes('test.txt'),late);
+  await page.evaluate(()=>{window.holdChecks=false;window.checkGates.shift()();});await checked();
+  ok('The open mail then gets its own result, once',await page.evaluate(()=>{const r=document.querySelector('.live-mail .mail-reader');return r.querySelector('.mail-report').textContent.split('test.txt').length===2&&!r.querySelector('[data-mail-attachment-wait]');})&&(await mail.locator('.live-mail .mail-reader .mail-report').textContent())===reportPlain);
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await settled();
+  await mail.locator('[data-live-uid="7"]').click();
+  await mail.locator('.mail-reader .mail-text').waitFor({state:'visible'});await checked();
   await mail.locator('.mail-message-tools>summary').click();
   await button('download').first().click();
   ok('Original EML uses native share/export, not unsupported blob download',await page.evaluate(()=>window.mailCalls.some(c=>c.method==='openOriginal'&&c.args.uid===7)));
@@ -217,6 +264,65 @@ try{
     await page.setViewportSize({width,height:900});
     ok(`${width}px: native mail history has no page overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   }
+  // Klaus 16.11.2026: markierte Mails aus der Liste an die Familienakte. Der Pro-Tresor ist hier gestellt; die echte Übergabe
+  // mit Begleitdatei prüft test-pro-verbund.
+  await page.evaluate(()=>{
+    window.famCalls=[];window.famOpens=0;window.famOpen=true;window.famVault=true;window.famPlan={};window.famGate=null;
+    window.inboxItems=[21,22,23].map(uid=>({uid,subject:'Rechnung '+uid,from:'friend@example.invalid',flags:[],size:1000,date:Date.now()}));
+    window.subjectByUid={21:'Rechnung 21',22:'Rechnung 22',23:'Rechnung 23'};
+    window.PBProVerbund={
+      familienakteTresor:async()=>({vorhanden:window.famVault,offen:window.famOpen}),
+      familienakteOeffnen:async()=>{window.famOpens++;return window.famOpen;},
+      mailAnFamilienakte:async(args,meta)=>{
+        const plan=window.famPlan[args.uid]||{ergebnis:'uebergeben',begleit:'ja'},call={args,name:meta.name,still:meta.still,subject:meta.mail?.subject,checksBefore:window.checkStarts.length};
+        if(plan.ergebnis!=='schon'&&meta.pruefen)call.geprueft=await meta.pruefen();
+        call.checksAfter=window.checkStarts.length;window.famCalls.push(call);
+        if(window.famGate&&args.uid===window.famGate.uid)await new Promise(r=>{window.famGate.go=r;});
+        return plan;}};
+  });
+  const fam=mail.locator('.live-mail [data-native-selection=familienakte]'),famSettled=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  const messagesFetched=()=>page.evaluate(()=>window.mailCalls.filter(c=>c.method==='message').map(c=>c.args.uid));
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="21"]').waitFor();
+  await page.waitForFunction(()=>{const b=document.querySelector('.live-mail [data-native-selection=familienakte]');return b&&!b.hidden&&b.querySelector('.compact-icon');});
+  ok('With a Pro vault the selection bar offers "An Familienakte": a line icon, the name in title and aria-label, flat like its neighbours',await fam.getAttribute('aria-label')==='An Familienakte'&&await fam.getAttribute('title')==='An Familienakte'&&await fam.locator('.compact-icon[data-icon-key=share]').count()===1&&await fam.locator('.compact-caption').count()===0&&await page.evaluate(()=>{const h=s=>Math.round(document.querySelector('.live-mail [data-native-selection='+s+']').getBoundingClientRect().height);return h('familienakte')===h('trash')&&!/\p{Extended_Pictographic}/u.test(document.querySelector('.live-mail [data-native-selection=familienakte]').textContent);}));
+  ok('Nothing is handed over before a mail is marked',await fam.isDisabled());
+  await page.evaluate(()=>{document.documentElement.lang='en';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail [data-native-selection=familienakte]')?.getAttribute('aria-label')==='To Familienakte');
+  ok('The list button follows the language',true);
+  await page.evaluate(()=>{document.documentElement.lang='de';});
+  await page.waitForFunction(()=>document.querySelector('.live-mail [data-native-selection=familienakte]')?.getAttribute('aria-label')==='An Familienakte');
+  await page.evaluate(()=>{window.famPlan={22:{ergebnis:'schon'},23:{ergebnis:'fehler',grund:'zuGross'}};window.famGate={uid:22};window.mailCalls=window.mailCalls.filter(c=>!['message','action','openOriginal'].includes(c.method));});
+  await mail.locator('.live-mail [data-native-selection=all]').click();
+  let dialogCount=dialogs.length;await fam.click();
+  await page.waitForFunction(()=>window.famGate?.go);
+  const progress=await page.evaluate(()=>({text:document.querySelector('#pb-activity .pb-activity-text')?.textContent,pct:document.querySelector('#pb-activity .pb-activity-pct')?.textContent,hidden:document.querySelector('#pb-activity')?.hidden}));
+  ok('While the mails go one after the other the activity line counts them, with per cent',progress.hidden===false&&progress.text==='Mail 2 von 3 an die Familienakte …'&&progress.pct==='33 %',progress);
+  await page.evaluate(()=>{const go=window.famGate.go;window.famGate=null;go();});await famSettled();
+  let famCalls=await page.evaluate(()=>window.famCalls);
+  ok('Each marked mail is fetched from the provider by account, folder, UIDVALIDITY and UID and handed over quietly under its subject',JSON.stringify(await messagesFetched())==='[21,22,23]'&&famCalls.length===3&&famCalls.every((c,i)=>c.still===true&&c.args.uid===21+i&&c.args.folder==='INBOX'&&c.args.validity==='123'&&c.args.account==='11111111-1111-4111-8111-111111111111'&&c.name==='Rechnung '+(21+i)+'.eml'&&c.subject==='Rechnung '+(21+i)),famCalls);
+  ok('The attachments of a mail are checked before it is handed over, as in the opened mail',famCalls[0].geprueft===true&&famCalls[0].checksAfter>famCalls[0].checksBefore&&famCalls[2].geprueft===true&&famCalls[2].checksAfter>famCalls[2].checksBefore,famCalls);
+  ok('A mail that was already handed over is skipped without a new check',famCalls[1].checksAfter===famCalls[1].checksBefore&&famCalls[1].geprueft===undefined);
+  ok('The locked-vault question is asked once for all marked mails, not per mail',await page.evaluate(()=>window.famOpens)===1);
+  ok('At the end one sentence gives the numbers: handed over, already handed over, findings of the attachment check, not handed over with the reason',dialogs.length===dialogCount+1&&dialogs.at(-1)==='An die Familienakte übergeben: 1 von 3. Schon früher übergeben, nicht noch einmal geschickt: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen. Nicht übergeben: 1 (1 größer als 20 MiB).',dialogs.at(-1));
+  ok('Handing over from the list neither opens nor marks a mail as read, shares nothing outside, and clears the selection',await page.evaluate(()=>!window.mailCalls.some(c=>c.method==='action'||c.method==='openOriginal'))&&await mail.locator('.live-mail .mail-count').textContent()==='0 ausgewählt'&&await page.evaluate(()=>document.querySelector('#pb-activity').hidden));
+  await page.evaluate(()=>{window.famPlan={21:{ergebnis:'uebergeben',begleit:'nein'}};});
+  await mail.locator('.live-mail .mail-item:has([data-live-uid="21"]) input[type=checkbox]').check();await fam.click();await famSettled();
+  ok('If only the pre-sorting failed the sentence says "Mail übergeben, Vorsortierung nicht"',dialogs.at(-1)==='An die Familienakte übergeben: 1 von 1. Mail übergeben, Vorsortierung nicht: 1. Bei 1 davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.',dialogs.at(-1));
+  await page.evaluate(()=>{window.famPlan={};window.failMessage=true;window.famCalls=[];});
+  await mail.locator('.live-mail .mail-item:has([data-live-uid="22"]) input[type=checkbox]').check();await fam.click();await famSettled();
+  ok('A mail that cannot be loaded from the provider is not handed over and is named',dialogs.at(-1)==='An die Familienakte übergeben: 0 von 1. Nicht übergeben: 1 (1 beim Anbieter nicht ladbar).'&&await page.evaluate(()=>window.famCalls.length===0),dialogs.at(-1));
+  await page.evaluate(()=>{window.failMessage=false;window.famOpen=false;window.mailCalls=window.mailCalls.filter(c=>c.method!=='message');});
+  await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
+  ok('Vault stays locked: nothing is fetched or handed over, the selection stays',dialogs.at(-1)==='Nichts übergeben: Der Pro-Tresor ist nicht offen.'&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famCalls.length===0)&&await mail.locator('.live-mail .mail-count').textContent()==='3 ausgewählt',dialogs.at(-1));
+  await page.evaluate(()=>{window.famOpen=true;window.famOpens=0;window.inboxItems=Array.from({length:21},(_,i)=>({uid:100+i,subject:'Viele '+i,from:'friend@example.invalid',flags:[],size:1000}));});
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="120"]').waitFor();
+  await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
+  ok('More than 20 marked mails: nothing starts, the limit is named',/^Höchstens 20 Mails auf einmal an die Familienakte – markiert sind 21\./.test(dialogs.at(-1))&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famOpens===0&&window.famCalls.length===0),dialogs.at(-1));
+  await page.evaluate(()=>{window.famVault=false;window.inboxItems=null;});
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="7"]').waitFor();
+  await page.waitForFunction(()=>document.querySelector('.live-mail [data-native-selection=familienakte]')?.hidden===true);
+  ok('Without a Pro vault the button is not shown in the list',await fam.isHidden());
+  await page.evaluate(()=>{delete window.PBProVerbund;});
   await mail.locator('.live-mail [data-mail-folder=inbox]').click();
   await mail.locator('.live-mail [data-native-selection=all]').click();
   await page.evaluate(()=>{window.mailAccounts.push({id:'22222222-2222-4222-8222-222222222222',email:'second@example.invalid',provider:'hetzner'});const select=document.querySelector('.mail-account-bar select');select.add(new Option('second@example.invalid','22222222-2222-4222-8222-222222222222'));});

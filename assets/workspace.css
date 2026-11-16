@@ -80,7 +80,7 @@ header .tools{max-width:100%;min-width:0}
 .pb-thema-titel{margin:0;font-size:1.1rem}
 /* Sprache & Diktat in einer Reihe (Klaus 15.11.2026, Punkt A): Sprache, Mikrofon und „Mikrofone suchen“ nebeneinander, gleich hoch */
 #pb-input-language-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
-#pb-input-language-settings>h3,#pb-input-language-settings>.hint,#pb-input-language-settings>details,#pb-input-language-settings>.pb-help-content{flex:1 0 100%}
+#pb-input-language-settings>h3,#pb-input-language-settings>.pb-help-heading,#pb-input-language-settings>.hint,#pb-input-language-settings>details,#pb-input-language-settings>.pb-help-content{flex:1 0 100%}
 #pb-input-language-settings>label,#pb-microphone-row>label{display:inline-block!important;margin:0!important;font-size:.85rem}
 #pb-microphone-row{display:contents}
 #pb-microphone-row .pb-microphone-controls{display:inline-flex;flex-wrap:nowrap;gap:8px;align-items:stretch;margin:0;min-width:0;max-width:100%}

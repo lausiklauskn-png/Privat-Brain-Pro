@@ -150,6 +150,7 @@
       "Dodaj konto",
     ],
     check: ["Prüfung", "Checks", "Проверка", "Kontrola"],
+    attachmentChecking: ["wird geprüft …", "being checked …", "проверяется …", "sprawdzanie …"],
     limit: [
       "Regelprüfung, kein Virenscanner. Anhänge können ungeprüfte Inhalte enthalten.",
       "Rule checks, not antivirus. Attachments may contain unchecked content.",
@@ -227,6 +228,56 @@
       "Передача здесь недоступна – письмо сохранено как .eml. Перетащите его во входящие Familienakte; вложения будут извлечены там.",
       "Udostępnianie nie jest tu możliwe – wiadomość zapisano jako .eml. Przeciągnij ją do skrzynki odbiorczej Familienakte; tam zostaną wyodrębnione załączniki.",
     ],
+    // Klaus 16.11.2026: markierte Mails aus der Liste an die Familienakte (nur in der App mit Pro-Tresor).
+    familienakteList: ["An Familienakte", "To Familienakte", "В Familienakte", "Do Familienakte"],
+    famMax: [
+      "Höchstens 20 Mails auf einmal an die Familienakte – markiert sind {n}. Bitte weniger markieren.",
+      "At most 20 emails at once to Familienakte – {n} are selected. Please select fewer.",
+      "Не более 20 писем за раз в Familienakte – выбрано {n}. Выберите меньше.",
+      "Najwyżej 20 wiadomości naraz do Familienakte – zaznaczono {n}. Zaznacz mniej.",
+    ],
+    famProgress: [
+      "Mail {i} von {n} an die Familienakte …",
+      "Email {i} of {n} to Familienakte …",
+      "Письмо {i} из {n} в Familienakte …",
+      "Wiadomość {i} z {n} do Familienakte …",
+    ],
+    famClosed: [
+      "Nichts übergeben: Der Pro-Tresor ist nicht offen.",
+      "Nothing passed on: the Pro vault is not open.",
+      "Ничего не передано: сейф Pro не открыт.",
+      "Nic nie przekazano: sejf Pro nie jest otwarty.",
+    ],
+    famDone: [
+      "An die Familienakte übergeben: {a} von {n}.",
+      "Passed on to Familienakte: {a} of {n}.",
+      "Передано в Familienakte: {a} из {n}.",
+      "Przekazano do Familienakte: {a} z {n}.",
+    ],
+    famKnown: [
+      "Schon früher übergeben, nicht noch einmal geschickt: {s}.",
+      "Already passed on earlier, not sent again: {s}.",
+      "Уже переданы раньше, повторно не отправлены: {s}.",
+      "Przekazane już wcześniej, nie wysłano ponownie: {s}.",
+    ],
+    famNoSort: [
+      "Mail übergeben, Vorsortierung nicht: {v}.",
+      "Email passed on, pre-sorting not: {v}.",
+      "Письмо передано, предварительная сортировка — нет: {v}.",
+      "Wiadomość przekazana, wstępne sortowanie nie: {v}.",
+    ],
+    famFindings: [
+      "Bei {r} davon steht etwas im Prüfbericht der Anhänge – Mail öffnen und ansehen.",
+      "For {r} of them the attachment check report has an entry – open the email and look.",
+      "У {r} из них есть запись в отчёте о проверке вложений – откройте письмо и посмотрите.",
+      "Dla {r} z nich raport kontroli załączników zawiera wpis – otwórz wiadomość i sprawdź.",
+    ],
+    famFailed: ["Nicht übergeben: {f}", "Not passed on: {f}", "Не передано: {f}", "Nie przekazano: {f}"],
+    famWhyLoad: ["beim Anbieter nicht ladbar", "could not be loaded from the provider", "не удалось загрузить у провайдера", "nie udało się pobrać od dostawcy"],
+    famWhyLarge: ["größer als 20 MiB", "larger than 20 MiB", "больше 20 МиБ", "ponad 20 MiB"],
+    famWhyCheck: ["Anhänge nicht geprüft", "attachments not checked", "вложения не проверены", "załączniki niesprawdzone"],
+    famWhyVault: ["Pro-Tresor nicht offen", "Pro vault not open", "сейф Pro не открыт", "sejf Pro nie jest otwarty"],
+    famWhyOther: ["Übergabe fehlgeschlagen", "handover failed", "передача не удалась", "przekazanie nie powiodło się"],
     filter: [
       "Ordner filtern",
       "Filter folder",
@@ -350,6 +401,13 @@
   }
   function leave() {
     return !dirty || confirm(T("discard"));
+  }
+  // Klaus 16.11.2026: jede geöffnete Mail hat eine Nummer; ein Prüfergebnis gilt nur, solange seine Mail noch offen ist.
+  let openTicket = 0;
+  /** The opened mail leaves the reader: its attachment checks stop and write nothing any more. */
+  function endChecks() {
+    openTicket++;
+    delete reader.dataset.mailChecking;
   }
   async function run(fn) {
     if (busy) return false;
@@ -570,6 +628,7 @@
   }
   function disconnect() {
     if (!leave()) return;
+    endChecks();
     token = "";
     accounts = [];
     mail = null;
@@ -631,7 +690,7 @@
   }
   async function loadFolders() {
     if (!leave()) return;
-    draft=null; dirty=false;
+    draft=null; dirty=false; endChecks();
     if(native){current=null;mail=null;items=[];validity='';next=null;selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));accountTools.querySelector('[data-live-text=catalog]').disabled=true;}
     if(native&&lastAccount!==account) {
       // Clear account-bound server state before the first await, including failure paths.
@@ -716,6 +775,7 @@
     );
   }
   async function loadList(more = false) {
+    endChecks();
     if(native&&!more){current=null;mail=null;items=[];validity='';selected.clear();list.replaceChildren();reader.replaceChildren(el('p','mail-muted',S('choose')));}
     if(native&&!foldersReady&&!['outbox','draft','exported'].includes(viewKey))throw new Error(T('foldersUnavailable'));
     let page;
@@ -733,7 +793,11 @@
       if(!entries.find(entry=>entry.id===viewKey)?.remote&&!['outbox','draft','sent','exported'].includes(viewKey))notice.textContent+=' · '+T('folderUnavailable');
       drawFolders();
     }
+    const place=list.scrollTop;
+    if(native)famProbe(true);
     drawList();
+    // Ein Ordnerwechsel beginnt oben; „Weitere laden“ bleibt, wo es war.
+    list.scrollTop=more?place:0;listPlace=list.scrollTop;
     if(native)accountTools.querySelector('[data-live-text=catalog]').disabled=!entries.find(e=>e.id===viewKey)?.remote||!items.length;
   }
   async function batchAction(type,target) {
@@ -749,11 +813,31 @@
     finally{await loadList();await refreshCounts();}
     if(failed)throw failed;
   }
+  // Klaus 16.11.2026: die Liste bleibt beim Neuzeichnen an ihrer Stelle; nur ein Ordnerwechsel (loadList) beginnt oben.
+  let listPlace = 0;
+  /** The opened row stays fully inside the list. Only the list itself is moved, never the page. */
+  function showCurrentRow() {
+    const row = list.querySelector('[data-live-uid][aria-current="true"]')?.closest(".mail-item");
+    if (!row || !list.clientHeight) return;
+    const frame = list.getBoundingClientRect(), box = row.getBoundingClientRect();
+    if (box.top < frame.top) list.scrollTop -= frame.top - box.top;
+    else if (box.bottom > frame.bottom) list.scrollTop += Math.min(box.bottom - frame.bottom, box.top - frame.top);
+    listPlace = list.scrollTop;
+  }
+  /** Back from a mail on a narrow screen: the list was hidden meanwhile and stands where it was again. */
+  function backToList() {
+    app.dataset.view = "list";
+    list.scrollTop = listPlace;
+    showCurrentRow();
+  }
   function drawNativeList() {
+    const place = list.scrollTop;
     list.replaceChildren();
     const search=el('input');search.type='search';search.placeholder=S('filter');search.setAttribute('aria-label',S('filter'));search.value=filterText;
     const actions=el('div','mail-list-actions'), rows=el('div'), count=el('p','mail-count');
     const all=el('button','mail-button',S('all')), trash=el('button','mail-button',S('delete')), move=el('select');
+    // „An Familienakte“: nur mit Pro-Tresor sichtbar; das Liniensymbol setzt native-toolbar.js, der Name steht in title/aria-label.
+    const fam=el('button','mail-button',T('familienakteList'));fam.type='button';fam.dataset.nativeSelection='familienakte';fam.hidden=!famVault;fam.onclick=()=>run(batchFamilienakte);famProbe();
     all.type=trash.type='button';all.disabled=!items.some(item=>!item.local);all.dataset.nativeSelection='all';trash.dataset.nativeSelection='trash';
     move.setAttribute('aria-label',S('move'));move.append(new Option(S('move'),''),...folders.filter(f=>f.path!==folder).map(f=>new Option(folderTitle(f.path),f.path)));
     const filtered=()=>items.filter(item=>(item.subject+' '+item.from).toLocaleLowerCase().includes(filterText.toLocaleLowerCase()));
@@ -765,7 +849,7 @@
     const backTarget=isTrash||isSpam?inbox:spamFolder?.path;
     back.hidden=!backTarget||backTarget===folder;
     back.onclick=()=>run(()=>batchAction('move',backTarget));
-    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?false:!trashFolder);back.disabled=!selected.size;move.disabled=!selected.size;}
+    function selection(){count.textContent=selected.size+' '+S('selected');trash.disabled=!selected.size||(isTrash?false:!trashFolder);back.disabled=!selected.size;fam.disabled=!selected.size;move.disabled=!selected.size;}
     all.onclick=()=>{const candidates=filtered().filter(item=>!item.local),on=candidates.some(item=>!selected.has(item.uid));for(const item of candidates)on?selected.add(item.uid):selected.delete(item.uid);drawNativeList();};
     trash.onclick=()=>run(()=>batchAction(isTrash?'delete':'move',isTrash?null:trashFolder.path));
     move.onchange=()=>{const target=move.value;move.value='';if(target)run(()=>batchAction('move',target));};
@@ -788,8 +872,9 @@
       if(!rows.childElementCount)rows.append(el('p','mail-muted',S('empty')));
     }
     search.oninput=()=>{filterText=search.value;selected.clear();drawRows();selection();};
-    actions.append(all,trash,back,move);list.append(search,actions,count,rows);drawRows();selection();
+    actions.append(all,trash,back,fam,move);list.append(search,actions,count,rows);drawRows();selection();
     if(next)list.append(btn('more',()=>loadList(true)));
+    list.scrollTop=place;
   }
   async function showSavedRecord(record) {
     if(!leave())return;dirty=false;draft=null;app.dataset.view='reader';
@@ -799,6 +884,7 @@
   }
   function drawList() {
     if (native) return drawNativeList();
+    const place = list.scrollTop;
     list.replaceChildren();
     const filter = el("input");
     filter.type = "search";
@@ -831,6 +917,95 @@
     }
     list.append(rows);
     if (next) list.append(btn("more", () => loadList(true)));
+    list.scrollTop = place;
+  }
+  // Klaus 16.11.2026: Mails aus der Liste an die Familienakte, ohne sie zu öffnen. Jede wird wie beim Öffnen vom Anbieter geholt,
+  // ihre Anhänge werden geprüft (dieselbe Regel wie beim Knopf in der geöffneten Mail), dann geht die .eml samt Vorsortierung
+  // über den Pro-Tresor. Der Tresor wird einmal gefragt, nicht je Mail; was schon übergeben ist, wird nicht noch einmal geschickt.
+  const FAM_MAX = 20;
+  let famVault = false, famProbed = 0;
+  function famProbe(force) {
+    if (!native?.familienakteTresor || (!force && Date.now() - famProbed < 2000)) return;
+    famProbed = Date.now();
+    native.familienakteTresor().then((z) => {
+      famVault = z?.vorhanden === true;
+      const b = list.querySelector('[data-native-selection="familienakte"]');
+      if (b) b.hidden = !famVault;
+    }, () => {});
+  }
+  const fill = (key, values) => T(key).replace(/\{(\w)\}/g, (_, k) => String(values[k]));
+  const emlNameOf = (subject) =>
+    ((subject || "mail").replace(/[\\/:*?"<>|\x00-\x1f]/g, "_").trim().slice(0, 80) || "mail") + ".eml";
+  const messageAt = (at) =>
+    api("/" + encodeURIComponent(at.account) + "/messages/" + at.uid + "?folder=" + encodeURIComponent(at.folder) + "&validity=" + encodeURIComponent(at.validity));
+  /** The whole mail of one provider place; a renumbered folder is found again by the Message-ID. */
+  async function fetchAt(ref) {
+    let at = { account: ref.account, folder: ref.folder, validity: ref.validity, uid: ref.uid };
+    try { return { at, data: await messageAt(at) }; }
+    catch (error) {
+      const found = ref.messageId && native.locate ? await native.locate({ account: ref.account, folder: ref.folder, messageId: ref.messageId }) : null;
+      if (!found?.uid) throw error;
+      at = { ...at, validity: found.validity, uid: found.uid };
+      return { at, data: await messageAt(at) };
+    }
+  }
+  /** refs: [{account, folder, validity, uid, messageId?, date?}] → numbers and one sentence (text). */
+  async function handToFamilienakte(refs) {
+    const n = refs.length, sum = { n, uebergeben: 0, schon: 0, ohneSortierung: 0, befund: 0, fehler: 0, gruende: {}, text: "" };
+    if (!n) return sum;
+    if (n > FAM_MAX) { sum.zuViele = true; sum.text = fill("famMax", { n }); return sum; }
+    if (!native?.familienakteOeffnen || !(await native.familienakteOeffnen())) { sum.geschlossen = true; sum.text = T("famClosed"); return sum; }
+    const failed = (grund) => { sum.fehler++; sum.gruende[grund] = (sum.gruende[grund] || 0) + 1; };
+    let i = 0, locked = false;
+    const job = window.PBActivity?.start({ label: () => fill("famProgress", { i: Math.min(i + 1, n), n }), percent: () => (i / n) * 100 });
+    try {
+      await job?.ready;
+      for (const ref of refs) {
+        job?.update({});
+        if (locked) { failed("gesperrt"); i++; continue; }
+        let got = null;
+        try { got = await fetchAt(ref); } catch { failed("laden"); i++; continue; }
+        const data = got.data;
+        let risky = false, result = null;
+        try {
+          result = await native.shareFamilienakte(got.at, {
+            name: emlNameOf(data.subject),
+            sourceBase64: data.sourceBase64 || "",
+            mail: { from: data.from || "", subject: data.subject || "", date: data.date || ref.date || "", text: data.text || "" },
+            still: true,
+            // Only for a mail that really goes out; an error in the check keeps the mail here.
+            pruefen: async () => { risky = await checkAttachments(data, el("div")); return true; },
+          });
+        } catch { result = null; }
+        if (result?.ergebnis === "uebergeben") {
+          sum.uebergeben++;
+          if (result.begleit === "nein") sum.ohneSortierung++;
+          if (risky) sum.befund++;
+        } else if (result?.ergebnis === "schon") sum.schon++;
+        else {
+          failed(result?.grund || "fehler");
+          if (result?.grund === "gesperrt") locked = true;
+        }
+        i++;
+      }
+    } finally { job?.finish(); }
+    const why = { laden: "famWhyLoad", zuGross: "famWhyLarge", ungeprueft: "famWhyCheck", gesperrt: "famWhyVault" };
+    sum.text = [
+      fill("famDone", { a: sum.uebergeben, n }),
+      sum.schon ? fill("famKnown", { s: sum.schon }) : "",
+      sum.ohneSortierung ? fill("famNoSort", { v: sum.ohneSortierung }) : "",
+      sum.befund ? fill("famFindings", { r: sum.befund }) : "",
+      sum.fehler ? fill("famFailed", { f: sum.fehler }) + " (" + Object.entries(sum.gruende).map(([g, c]) => c + " " + T(why[g] || "famWhyOther")).join(", ") + ")." : "",
+    ].filter(Boolean).join(" ");
+    return sum;
+  }
+  async function batchFamilienakte() {
+    const chosen = items.filter((item) => !item.local && selected.has(item.uid));
+    if (!chosen.length) return;
+    const sum = await handToFamilienakte(chosen.map((item) => ({ account, folder, validity, uid: item.uid, date: item.date })));
+    notice.textContent = sum.text;
+    if (!sum.zuViele && !sum.geschlossen) { selected.clear(); drawNativeList(); }
+    alert(sum.text);
   }
   async function fetchMail(item) {
     return api(prefix() + "/messages/" + item.uid + query());
@@ -874,7 +1049,8 @@
   function attachmentBytes(a) {
     return Uint8Array.from(atob(a.data), (c) => c.charCodeAt(0));
   }
-  async function checks(data, container) {
+  /** Rule check of the message itself: fast, no reading of attachments. Returns true when something was found. */
+  function checkText(data, container) {
     container.replaceChildren(
       el("strong", "", T("check")),
       el("p", "", T("limit")),
@@ -896,56 +1072,74 @@
       risky = true;
       container.append(el("p", "", finding.kennung + " · " + finding.satz));
     }
+    return risky;
+  }
+  /** One attachment: its report lines and whether it counts as risky (findings, unchecked parts, check failed). */
+  async function checkAttachment(a) {
+    const lines = [];
+    let risky = false;
+    // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
+    if (!a.data && window.PBVault) {
+      // 🛡 Klaus 2026-10-22: attachments in the folder are checked too (native/native-check.js).
+      const checked = window.PBCheck && a.stored && a.ref ? await PBCheck.checkVault(a).catch(() => null) : null;
+      if (!checked) return { risky: true, lines: [el("p", "", a.name + " · " + PBVault.uncheckedText())] };
+      if (checked.funde.length || checked.ungeprueft) risky = true;
+      return { risky, lines: [PBCheck.line(a.name, checked, a)] };
+    }
+    let result;
+    try {
+      const bytes = attachmentBytes(a);
+      result = await (window.PBOCR
+        ? PBOCR.analyze(a.name, bytes)
+        : PrueferAnhang.pruefe(a.name, bytes));
+    } catch {
+      risky = true;
+    }
+    if (
+      !result ||
+      result.befunde.length ||
+      result.textUngeprueft ||
+      result.bildUngeprueft
+    )
+      risky = true;
+    lines.push(
+      el(
+        "p",
+        "",
+        a.name +
+          " · " +
+          (result?.befunde
+            .map((f) => f.kennung + ": " + f.satz)
+            .join(" · ") || "–"),
+      ),
+    );
+    for (const hint of result?.hinweise || []) lines.push(el("p", "", hint));
+    if (result?.textUngeprueft || result?.bildUngeprueft)
+      lines.push(el("p", "", result.ungeprueftSatz || T("limit")));
+    return { risky, lines };
+  }
+  /** Attachments one after the other. `later` (opened mail): stale() stops as soon as another mail is shown, so a late
+      result is never written into it; done(a) is called once the result of this attachment stands in the report. */
+  async function checkAttachments(data, container, later) {
+    let risky = false;
     for (const a of data.attachments || []) {
-      // Android folder mode: the bytes stay encrypted in the chosen folder, not in this page.
-      if (!a.data && window.PBVault) {
-        // 🛡 Klaus 2026-10-22: attachments in the folder are checked too (native/native-check.js).
-        const checked = window.PBCheck && a.stored && a.ref ? await PBCheck.checkVault(a).catch(() => null) : null;
-        if (!checked) {
-          risky = true;
-          container.append(el("p", "", a.name + " · " + PBVault.uncheckedText()));
-          continue;
-        }
-        if (checked.funde.length || checked.ungeprueft) risky = true;
-        container.append(PBCheck.line(a.name, checked, a));
-        continue;
-      }
-      let result;
-      try {
-        const bytes = attachmentBytes(a);
-        result = await (window.PBOCR
-          ? PBOCR.analyze(a.name, bytes)
-          : PrueferAnhang.pruefe(a.name, bytes));
-      } catch {
-        risky = true;
-      }
-      if (
-        !result ||
-        result.befunde.length ||
-        result.textUngeprueft ||
-        result.bildUngeprueft
-      )
-        risky = true;
-      container.append(
-        el(
-          "p",
-          "",
-          a.name +
-            " · " +
-            (result?.befunde
-              .map((f) => f.kennung + ": " + f.satz)
-              .join(" · ") || "–"),
-        ),
-      );
-      for (const hint of result?.hinweise || [])
-        container.append(el("p", "", hint));
-      if (result?.textUngeprueft || result?.bildUngeprueft)
-        container.append(el("p", "", result.ungeprueftSatz || T("limit")));
+      if (later?.stale()) break;
+      const result = await checkAttachment(a);
+      if (later?.stale()) break;
+      if (result.risky) risky = true;
+      container.append(...result.lines);
+      later?.done(a);
     }
     return risky;
   }
+  async function checks(data, container) {
+    const text = checkText(data, container);
+    return (await checkAttachments(data, container)) || text;
+  }
   async function open(item) {
     if (!leave()) return;
+    endChecks();
+    const ticket = openTicket;
     draft = null;
     dirty = false;
     current = null;
@@ -961,11 +1155,13 @@
       action: "read",
     });
     item.flags = [...new Set([...item.flags, "\\Seen"])];
+    listPlace = list.scrollTop;
     drawList();
+    showCurrentRow();
     app.dataset.view = "reader";
     reader.replaceChildren(
       btn("back", () => {
-        if (leave()) app.dataset.view = "list";
+        if (leave()) backToList();
       }),
       el("h3", "", mail.subject),
       el("p", "mail-muted", mail.from + " → " + mail.to),
@@ -1073,7 +1269,8 @@
     // shared Pro vault it goes into the inbox "Eingang-Familienakte" (contract familienakte-uebergabe/1, at most
     // 20 MiB, native-pro-verbund.js); without the vault the system chooser; in the browser Web Share or a download.
     async function shareFamilienakte() {
-      const meta = { name: emlName(), sourceBase64: mail.sourceBase64 || "" };
+      // Kopf und Text gehen mit, damit die Vorsortierung auch ohne Katalog-Eintrag gebaut werden kann.
+      const meta = { name: emlName(), sourceBase64: mail.sourceBase64 || "", mail: { from: mail.from || "", subject: mail.subject || "", date: mail.date || item.date || "", text: mail.text || "" } };
       if (native) return native.shareFamilienakte
         ? native.shareFamilienakte({account,folder,validity,uid:item.uid}, meta)
         : native.openOriginal({account,folder,validity,uid:item.uid,name:emlName()});
@@ -1105,25 +1302,44 @@
     // Protection hints (rules, lists) stand between the actions and the message itself.
     reader.append(actions, ...(window.PBSchutz ? [PBSchutz.mailPanel(mail)] : []), window.PBMailView ? PBMailView.render(mail) : el("pre", "mail-text", mail.text));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:reader,actions,source:async()=>({subject:mail.subject || item.subject || '',from:mail.from,to:mail.to,cc:mail.cc,text:mail.text || ''})});
+    // Klaus 16.11.2026: Kopf und Text stehen sofort da; die Anhänge werden danach einzeln geprüft. Bis das Ergebnis eines
+    // Anhangs da ist, lässt er sich nicht öffnen oder herausgeben (vorher war dafür die ganze Mail gesperrt), und solange
+    // nicht alle geprüft sind, bleiben die Wege gesperrt, die die Mail samt Anhängen weitergeben.
+    const waiting = new Map(), opened = mail;
+    const hold = (nodes, on) => {
+      for (const node of nodes) {
+        node.inert = on; // also covers buttons that are added to a row later
+        for (const b of node.matches("button") ? [node] : node.querySelectorAll("button")) b.disabled = on;
+      }
+    };
+    const handsOut = ["forward", "download", "bookledger", "familienakte", ...(folders.find((f) => f.path === folder)?.specialUse === "\\Drafts" ? ["compose"] : [])]
+      .map((key) => actions.querySelector('[data-live-text="' + key + '"]')).filter(Boolean);
     for (const [index, a] of mail.attachments.entries()) {
-      if (a.inline) continue; // Still present in raw MIME and attachment checks.
+      if (a.inline) { waiting.set(a, null); continue; } // Still present in raw MIME and attachment checks.
+      const nodes = [];
       if (!a.data && window.PBVault) {
-        reader.append(PBVault.attachmentRow(a, () => run(async () => {
+        nodes.push(PBVault.attachmentRow(a, () => run(async () => {
           await native.forgetMessage({ account, folder, validity, uid: item.uid });
           await open(item);
         })));
-        continue;
+      } else {
+        const b = btn("download", () =>
+          native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
+            new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
+            a.name,
+          ),
+        );
+        b.textContent = "↓ " + a.name;
+        delete b.dataset.liveText;
+        nodes.push(b);
+        if (window.PBSchutz) nodes.push(PBSchutz.attachmentStatus(a));
       }
-      const b = btn("download", () =>
-        native ? native.openAttachment({account,folder,validity,uid:item.uid,index}) : downloadBlob(
-          new Blob([attachmentBytes(a)], { type: "application/octet-stream" }),
-          a.name,
-        ),
-      );
-      b.textContent = "↓ " + a.name;
-      delete b.dataset.liveText;
-      reader.append(b);
-      if (window.PBSchutz) reader.append(PBSchutz.attachmentStatus(a));
+      const wait = el("p", "mail-muted mail-attachment-wait", a.name + " · "), state = el("span", "", T("attachmentChecking"));
+      wait.dataset.mailAttachmentWait = ""; wait.setAttribute("role", "status");
+      state.dataset.liveText = "attachmentChecking"; wait.append(state);
+      hold(nodes, true);
+      waiting.set(a, { nodes, wait });
+      reader.append(...nodes, wait);
     }
     const report = el(native ? "details" : "div", "mail-report"), findings = el("div");
     if (native) report.append(el("summary", "", T("check")));
@@ -1132,10 +1348,30 @@
     native?.progress?.('checking');
     // Yield once so WebView can paint the real check phase before local parsing.
     if(native)await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-    await checks(mail, findings);
+    let risky = checkText(mail, findings);
+    if (!mail.attachments.length) { report.dataset.risky = String(risky); return; }
+    hold(handsOut, true);
+    reader.dataset.mailChecking = "true";
+    const stale = () => ticket !== openTicket || mail !== opened;
+    const release = (a) => {
+      const entry = waiting.get(a);
+      waiting.delete(a);
+      if (entry) { entry.wait.remove(); hold(entry.nodes, false); }
+    };
+    // Not awaited: the mail is usable from here on. The checks themselves are the same as before.
+    void checkAttachments(mail, findings, { stale, done: release })
+      .then((found) => { risky = risky || found; }, (error) => { risky = true; if (!stale()) notice.textContent = T("error") + " " + error.message; })
+      .finally(() => {
+        if (stale()) return; // another mail is shown: nothing of this one is written any more
+        for (const a of [...waiting.keys()]) release(a);
+        hold(handsOut, false);
+        report.dataset.risky = String(risky);
+        delete reader.dataset.mailChecking;
+      });
   }
   function compose(source = {}) {
     if (!leave()) return;
+    endChecks();
     draft = {
       submission: crypto.randomUUID(),
       to: "",
@@ -1322,6 +1558,15 @@
   }, 60000);
   window.PBLiveMail = {
     disconnect,
+    /** Hands mails of any connected account to Familienakte without opening them (used by "Alle Konten"). Null while the mailbox is busy. */
+    async familienakte(refs) {
+      if (!native) return null;
+      for (let i = 0; busy && i < 50; i++) await new Promise((r) => setTimeout(r, 200));
+      let sum = null;
+      await run(async () => { sum = await handToFamilienakte(refs); });
+      return sum;
+    },
+    familienakteTresor: async () => (native?.familienakteTresor ? native.familienakteTresor() : { vorhanden: false, offen: false }),
     /** Opens one mail of any connected account in the device mailbox (used by "Alle Konten"). */
     /** Resolves true when the mail is open, false otherwise (the reason stands in the mailbox notice). */
     async openRemote(ref) {

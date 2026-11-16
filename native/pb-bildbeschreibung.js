@@ -160,9 +160,9 @@
     setText(b.querySelector('.pb-bild-filter-label'), t('name')); b.title = t('filterTip'); b.setAttribute('aria-label', t('filterTip'));
     const help = document.getElementById('pb-bild-filter-help'); if (help) setText(help, t('filterHelp'));
   }
-  // The same ⓘ as everywhere (Sitzung 3): open the first time, remembered under pb_help_open_v1.
+  // The same ⓘ as everywhere: closed the first time (Klaus 2026-11-16), remembered under pb_help_open_v1.
   const HELP = 'pb_help_open_v1', helpKey = 'bild-filter';
-  const helpOpen = () => { try { const v = JSON.parse(localStorage.getItem(HELP) || 'null'); return v && typeof v[helpKey] === 'boolean' ? v[helpKey] : true; } catch { return true; } };
+  const helpOpen = () => { try { const v = JSON.parse(localStorage.getItem(HELP) || 'null'); return v && typeof v[helpKey] === 'boolean' ? v[helpKey] : false; } catch { return false; } };
   const helpRemember = open => { try { const v = JSON.parse(localStorage.getItem(HELP) || 'null') || {}; v[helpKey] = !!open; localStorage.setItem(HELP, JSON.stringify(v)); } catch {} };
   function mountFilter() {
     const box = document.querySelector('#panel-search .searchbox'); if (!box || document.getElementById('pb-bild-filter')) return;

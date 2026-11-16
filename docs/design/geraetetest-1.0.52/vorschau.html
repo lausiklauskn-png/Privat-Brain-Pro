@@ -1,0 +1,314 @@
+<title>Private Brain Pro – Vorschau 1.0.53</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: ein ruhiges Blatt; je Punkt links die Erklärung, darunter ein Tablet-Ausschnitt im Aussehen der App, dann Ja/Nein. */
+:root{
+  --bg:#f6f8fc; --bg2:#eef2f8; --card:#ffffff; --card2:#eaf1ff; --field:#f8fafd;
+  --line:#d5deea; --ink:#172033; --mut:#526176; --acc:#2563eb; --acc-ink:#ffffff;
+  --ok:#17764a; --ok-bg:#e4f4ea; --warn:#8a5b08; --warn-bg:#fbf1d9; --bad:#9a2a2f; --bad-bg:#fbe6e6;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111827; --bg2:#151f2f; --card:#182233; --card2:#223756; --field:#151f2f;
+  --line:#35465e; --ink:#f3f6fc; --mut:#b2bfd2; --acc:#6ea0ff; --acc-ink:#0b1220;
+  --ok:#7fd3a4; --ok-bg:#173a29; --warn:#e9c46a; --warn-bg:#3b2f12; --bad:#f2a1a5; --bad-bg:#44191c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111827; --bg2:#151f2f; --card:#182233; --card2:#223756; --field:#151f2f;
+  --line:#35465e; --ink:#f3f6fc; --mut:#b2bfd2; --acc:#6ea0ff; --acc-ink:#0b1220;
+  --ok:#7fd3a4; --ok-bg:#173a29; --warn:#e9c46a; --warn-bg:#3b2f12; --bad:#f2a1a5; --bad-bg:#44191c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--font);padding-block:28px 60px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:1.7rem;line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:1.25rem;margin:0;text-wrap:balance}
+h3{font-size:1.02rem;margin:0}
+p{margin:0}
+.lead{color:var(--mut);max-width:65ch}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+section{display:flex;flex-direction:column;gap:14px}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);background:var(--bg2)}
+td:first-child{font-weight:600;white-space:nowrap}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.tag.ok{background:var(--ok-bg);color:var(--ok)} .tag.warn{background:var(--warn-bg);color:var(--warn)} .tag.bad{background:var(--bad-bg);color:var(--bad)}
+ul.plain{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:6px;max-width:70ch}
+.punkt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.punkt>header{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.nr{font-weight:700;color:var(--acc);font-size:1.05rem}
+.was{color:var(--mut);font-size:.92rem;max-width:68ch}
+/* Tablet-Ausschnitt */
+.geraet{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.88rem}
+.geraet .cap{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.reihe{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.feld{flex:1 1 220px;min-width:0;display:flex;align-items:center;gap:4px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:0 4px 0 10px;min-height:38px}
+.feld span.txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feld .ph{color:var(--mut)}
+.k{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink);font:500 .84rem var(--font);white-space:nowrap}
+.k.haupt{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:600}
+.k.rund{width:30px;padding:0;border-radius:99px}
+.k.an{background:var(--card2);border-color:var(--acc);color:var(--acc)}
+.k.klein{min-height:24px;font-size:.76rem;padding:0 8px}
+.wahl{display:inline-flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:7px;background:var(--card);padding:3px 9px;min-width:104px}
+.wahl small{font-size:.66rem;color:var(--mut);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.wahl b{font-weight:500;font-size:.84rem}
+.zeile{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.zeile .n{font-weight:600;flex:1 1 200px;min-width:0}
+.zeile.mark{border-color:var(--acc);background:var(--card2)}
+.mini{width:34px;height:42px;border:1px solid var(--line);border-radius:5px;background:var(--bg2);display:grid;place-items:center;font-size:.6rem;color:var(--mut);font-weight:700}
+.mut{color:var(--mut)}
+.balken{height:4px;border-radius:99px;background:var(--bg2);overflow:hidden;flex:1 1 160px;min-width:120px}
+.balken i{display:block;height:100%;width:42%;background:var(--acc);border-radius:99px}
+.drop{border:2px dashed var(--acc);border-radius:12px;padding:22px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;background:var(--card)}
+.drop strong{font-size:1rem}
+.kachel{flex:1 1 130px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,var(--card2),var(--card) 60%);padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kachel.neu{border-style:dashed;border-color:var(--acc);color:var(--acc);font-weight:600}
+.kachel small{color:var(--mut)}
+.aufklapp{border-left:3px solid var(--line);padding:6px 10px;color:var(--mut)}
+.vn{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.vn .geraet.alt{opacity:.9}
+/* Entscheidung */
+.ent{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ent button{font:600 .9rem var(--font);min-height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.ent button:focus-visible,.kopie button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.ent button[aria-pressed="true"].ja{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.ent button[aria-pressed="true"].nein{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.ent input{flex:1 1 220px;min-width:0;min-height:38px;border:1px solid var(--line);border-radius:9px;background:var(--field);color:var(--ink);padding:0 10px;font:400 .9rem var(--font)}
+.kopie{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.kopie pre{margin:0;white-space:pre-wrap;font:500 .9rem/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg2);border-radius:8px;padding:12px;user-select:all}
+.kopie button{align-self:flex-start;font:600 .9rem var(--font);min-height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-ink);cursor:pointer}
+.frage{border-left:3px solid var(--acc);padding:4px 0 4px 12px}
+</style>
+
+<div class="page">
+<header style="display:flex;flex-direction:column;gap:8px">
+  <span class="eyebrow">Private Brain Pro · nach dem Gerätetest 1.0.52 · 16.11.2026</span>
+  <h1>Was ich gefunden habe und wie es in 1.0.53 aussehen soll</h1>
+  <p class="lead">Drei Teile: zuerst die Ursachen deiner gemeldeten Fehler, dann der Vergleich mit Familienakte, Datei-Organizer, PseudoDoc und den anderen Pro-Apps, dann die Vorschau V1 bis V8. Unter jedem Vorschau-Punkt tippst du Ja oder Nein. Gebaut ist davon noch nichts.</p>
+</header>
+
+<hr class="rule">
+
+<section>
+  <span class="eyebrow">Teil 1</span>
+  <h2>Ursachen deiner Fehler</h2>
+  <div class="tbl"><table>
+    <tr><th>Punkt</th><th>Was passiert wirklich</th><th>Wie sicher</th></tr>
+    <tr><td>1 · „Bitte warten“ beim Start</td><td>Zwei Dinge zusammen. Ist das Bedeutungsmodell einmal geladen, startet die App es bei <b>jedem</b> Start von selbst. Und die neue Warte-Zeile aus 1.0.52 sprang bei jeder Arbeit an, die die App im Hintergrund selbst macht. Das Zweite ist schon behoben (Punkt 24), das Erste noch nicht.</td><td><span class="tag ok">im Code belegt</span></td></tr>
+    <tr><td>3 · „Suchen“ tut nichts</td><td>Auf der Startseite gibt es zwei getrennte Suchen mit zwei getrennten Trefferlisten. „Suchen“ im Kasten „Überall suchen“ füllt nur die kleine Liste im Kasten, die große Trefferliste darunter bleibt leer. Die große Liste rechnet nur beim Tippen oder beim Ändern eines Filters. Dazu ist der Knopf „Suchen“ nach dem Tipp weiß auf hellblau und kaum zu lesen.</td><td><span class="tag ok">im Prüfbrowser gemessen</span></td></tr>
+    <tr><td>4 · Mail öffnen dauert, zweimal „Lesedurchgang“</td><td>„Lesedurchgang“ ist kein Mail-Abruf, sondern die Texterkennung: beim Öffnen prüft die App jeden Anhang, bei Bildern und Scan-PDFs liest sie den Text in zwei Durchgängen. Davor fragt sie den Anbieter viermal nacheinander (Konten, Ordner, ganze Ordnerliste, dann die Mail).</td><td><span class="tag ok">im Code belegt</span></td></tr>
+    <tr><td>8 · Bedeutung findet nichts</td><td>Nicht geklärt. Zwei wahrscheinliche Gründe: die PDFs sind noch nicht „eingeordnet“ (dann sucht die App nur nach Wörtern), oder das Diktat hat das Wort getrennt (Punkt 9). Ich brauche das Suchwort und einen Dateinamen aus deinem Test, dann baue ich genau dafür eine Probe.</td><td><span class="tag warn">offen</span></td></tr>
+    <tr><td>19 · Klick springt zur falschen Mail</td><td>Nach dem Öffnen baut die App die ganze Mail-Liste neu. Dabei springt die Liste an den Anfang, also zur neuesten Mail. Die angeklickte Mail ist geöffnet, aber die Liste zeigt sie nicht mehr.</td><td><span class="tag warn">im Code gelesen, nicht gemessen</span></td></tr>
+    <tr><td>21 · „Liste / Absender“ bei Suche</td><td>So gebaut: sobald ein Suchwort im Feld steht, zeigt „Alle Konten“ immer die flache Liste. Die Knöpfe „Absender“ und „Aufräumen“ werden dann übergangen, ohne es zu sagen.</td><td><span class="tag ok">im Code belegt</span></td></tr>
+    <tr><td>20 · „Aufräumen“ leer</td><td>Gibt es nichts aufzuräumen, steht nur der Einleitungssatz da und sonst nichts.</td><td><span class="tag ok">im Code belegt</span></td></tr>
+  </table></div>
+</section>
+
+<section>
+  <span class="eyebrow">Teil 2</span>
+  <h2>Vergleich mit deinen anderen Apps</h2>
+  <p class="lead">Gelesen: Meine Familienakte, Datei-Organizer 0.4.11, PseudoDoc, Workflow PDF Pro, BookLedgerPro. Hier liegt das Manko von Private Brain Pro.</p>
+  <div class="tbl"><table>
+    <tr><th>Thema</th><th>Familienakte / Datei-Organizer</th><th>Private Brain Pro heute</th></tr>
+    <tr><td>Suche</td><td>Ein Suchfeld, immer sichtbar, mit × und Mikrofon. Eine Trefferliste, nach Art gruppiert.</td><td>Fünf Suchfelder (Start, Überall-Kasten, Dateien, Postfach, Alle Konten), jedes verhält sich anders. Auf der Startseite zwei Trefferlisten. Kein ×, kein Bestätigen.</td></tr>
+    <tr><td>Hinzufügen</td><td>Eine Ablagefläche „Dateien hier hineinziehen“, darunter die Knöpfe. Danach eine Liste „Eingänge prüfen“ mit Zustand je Datei.</td><td>Zwei Kästen (Ablage und Einwurf), drei Erklärtexte, zwei ⓘ. Nach dem Einlesen keine Liste, was angekommen ist.</td></tr>
+    <tr><td>Vorschläge</td><td>Eine Zeile je Datei: Name, Vorschlag, Grund, „Stimmt“ oder ändern.</td><td>Ein Satz „2 Dateien sehen aus wie Rechnungen“, ohne die Dateien zu zeigen.</td></tr>
+    <tr><td>Laden</td><td>Ein Balken oben auf jeder Seite: „12 von 80 Dateien gelesen · 15 %“, dazu „Anhalten“.</td><td>Vier verschiedene Anzeigen (Warte-Zeile, Einlese-Balken, Modell-Balken, Texterkennung), an verschiedenen Stellen.</td></tr>
+    <tr><td>ⓘ-Hilfe</td><td>Überall anfangs zu. Auch in Workflow PDF Pro und BookLedgerPro.</td><td>Anfangs offen (alte Regel aus Sitzung 3).</td></tr>
+    <tr><td>Aussehen</td><td>Familienakte, Datei-Organizer und PseudoDoc: dunkelblau und türkis, Schrift Arial, Knöpfe 42 px, nur hell.</td><td>Private Brain Pro und BookLedgerPro: blau, Knöpfe 28–30 px, mehrere Farbthemen. Workflow PDF Pro: rot/blau, 40 px. Das sind drei Familien, nicht eine.</td></tr>
+    <tr><td>Zusammenspiel</td><td>Familienakte holt von selbst aus dem Fach „Eingang-Familienakte“ ab und kennt „An Pro-App geben … Private Brain Pro“.</td><td>„An Familienakte teilen“ ist da. Es fehlt: das neue Fach „Profile“ (Workflow PDF Pro hat 9 Fächer plus Profile, Private Brain Pro und BookLedgerPro sind einen Schritt dahinter). „Überall suchen“ sieht das eigene Eingangsfach nicht.</td></tr>
+  </table></div>
+  <p class="frage"><b>Entschieden (Klaus, 16.11.):</b> Die Farbthemen von Private Brain Pro bleiben, auch dort, wo die App mit den anderen Apps zusammenarbeitet. Angeglichen werden nur Aufbau und Bedienung (V1 bis V8).</p>
+</section>
+
+<hr class="rule">
+
+<section>
+  <span class="eyebrow">Teil 3</span>
+  <h2>Vorschau: Ja oder Nein je Punkt</h2>
+  <p class="lead">Die Kästen zeigen einen Ausschnitt, wie er am Tablet aussehen würde. Keine echte App, nichts lässt sich darin bedienen.</p>
+</section>
+
+<article class="punkt" data-v="V1">
+  <header><span class="nr">V1</span><h3>Startseite: eine Suche, eine Trefferliste</h3></header>
+  <p class="was">Löst 3, 5, 6, 7, 9, 16. Lupe startet die Suche, × leert das Feld. „Bedeutung“ ist ein Schalter, der an bleibt. „Überall“ ist kein Kasten mehr, sondern ein Knopf mit Zahnrad für die Quellen; seine Treffer stehen in derselben Liste, mit Herkunft. Die Filter haben Namen. Die Sortierung steht am Ende. Diktierte Wörter werden auch zusammengeschrieben geprüft („an tropic“ findet „Anthropic“).</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe">
+      <div class="feld"><span class="txt">rechnung an tropic</span><span class="k rund klein" title="Feld leeren">×</span><span class="k rund klein" title="Mikrofon">Mik</span><span class="k haupt klein" title="Suchen">Lupe</span></div>
+    </div>
+    <div class="reihe">
+      <span class="k an">Bedeutung an</span><span class="k">Bildbeschreibung</span><span class="k">Überall</span><span class="k rund" title="Quellen: Private Brain, Tresor, Netz">Rad</span>
+    </div>
+    <div class="reihe">
+      <span class="wahl"><small>Art</small><b>Alle</b></span>
+      <span class="wahl"><small>Kategorie</small><b>Alle</b></span>
+      <span class="wahl"><small>Zeitraum</small><b>Beliebig</b></span>
+      <span class="wahl"><small>Tag</small><b>Alle</b></span>
+      <span class="wahl" style="margin-left:auto"><small>Sortieren</small><b>Passendste zuerst</b></span>
+    </div>
+    <p class="mut">3 Treffer · gesucht auch als „antropic“</p>
+    <div class="zeile"><span class="mini">PDF</span><span class="n">Rechnung Anthropic Oktober.pdf</span><span class="mut">Private Brain</span></div>
+    <div class="zeile"><span class="mini">PDF</span><span class="n">Beleg Anthropic 10-2026</span><span class="mut">Tresor · BookLedgerPro</span></div>
+    <div class="zeile"><span class="mini">Mail</span><span class="n">Your receipt from Anthropic</span><span class="mut">Private Brain · Mail</span></div>
+  </div>
+  <p class="was">Im Zahnrad: Haken für „Private Brain“, „Tresorordner (alle Pro-Apps)“, „Netz“. Zeitraum bietet: letzte 7 Tage, letzte 30 Tage, dieses Jahr, beliebig. Die Arten stehen in derselben Reihenfolge wie bei „Dateien“.</p>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V1" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V1"></div>
+</article>
+
+<article class="punkt" data-v="V2">
+  <header><span class="nr">V2</span><h3>Modell lädt nur, wenn du es einschaltest</h3></header>
+  <p class="was">Löst 1, 2. Beim App-Start lädt nichts mehr von selbst. Tippst du „Bedeutung“, steht einmal ein Satz mit der Größe da, dazu ein schmaler Balken mit Prozent. Der Balken läuft ruhig durch und setzt nicht neu an.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe"><span class="k an">Bedeutung an</span><span>Modell wird geladen, etwa 130 MB</span><span class="balken"><i></i></span><b>42 %</b><span class="k klein">Abbrechen</span></div>
+    <p class="mut">Bis es fertig ist, sucht die App nach Wörtern. Ist das Modell schon auf dem Gerät: „Modell wird gestartet …“, ohne Größe.</p>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V2" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V2"></div>
+</article>
+
+<article class="punkt" data-v="V3">
+  <header><span class="nr">V3</span><h3>Hinzufügen nach dem Vorbild der Familienakte</h3></header>
+  <p class="was">Löst 10, 11, 12, 13. Eine große Ablagefläche mit klarem Satz, darin die Knöpfe. Ein einziges ⓘ, geschlossen; dahinter stehen alle Erklärungen („arbeitet an einer Kopie“, „bewegt nichts“). Der Ablageordner ist eine Zeile, kein eigener Kasten. Neu darunter: „Gerade hinzugefügt“ mit Zustand je Datei, wie die Eingangszentrale der Familienakte.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe"><b style="flex:1">Dateien hinzufügen</b><span class="k rund" title="Erklärung">i</span></div>
+    <div class="drop">
+      <strong>Dateien oder Ordner hierher ziehen</strong>
+      <span class="mut">PDF, Bild, Text, Mail oder ganze Ordner</span>
+      <div class="reihe" style="justify-content:center"><span class="k haupt">Dateien wählen</span><span class="k">Ordner verbinden</span><span class="k">Mails (.mbox / .eml)</span></div>
+    </div>
+    <div class="reihe"><span class="mut" style="flex:1">Ablage: noch kein Ordner gewählt, Dateien gelten nur für diese Sitzung.</span><span class="k klein">Ablageordner wählen</span></div>
+    <b>Gerade hinzugefügt · 3</b>
+    <div class="zeile"><span class="mini">PDF</span><span class="n">Rechnung Stadtwerke 2026.pdf</span><span class="tag ok">eingelesen</span><span class="mut">Rechnung · Energie</span></div>
+    <div class="zeile"><span class="mini">JPG</span><span class="n">Scan 0412.jpg</span><span class="tag warn">Text wird gelesen · 60 %</span></div>
+    <div class="zeile"><span class="mini">PDF</span><span class="n">Vertrag.pdf</span><span class="tag bad">doppelt, schon vorhanden</span></div>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V3" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V3"></div>
+</article>
+
+<article class="punkt" data-v="V4">
+  <header><span class="nr">V4</span><h3>Dateien: Vorschlag zeigt, welche Dateien gemeint sind</h3></header>
+  <p class="was">Löst 14, 15. Der Vorschlag nennt die Dateien, sie stehen markiert direkt darunter, mit Vorschau und einem Haken zum Abwählen. Er erscheint nur ohne Suchwort oder wenn er zur Suche passt. Das breite Feld „Kategorie“ unter jeder Datei wird ein kleiner Knopf.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="zeile mark" style="flex-direction:column;align-items:stretch">
+      <span><b>2 Dateien sehen aus wie Rechnungen.</b> Kategorie „Rechnungen“ anlegen? Nur eine Ansicht, die Dateien bleiben, wo sie sind.</span>
+      <div class="zeile mark"><span class="k rund klein">✓</span><span class="mini">PDF</span><span class="n">Rechnung Anthropic Oktober.pdf</span><span class="k klein">Ansehen</span></div>
+      <div class="zeile mark"><span class="k rund klein">✓</span><span class="mini">PDF</span><span class="n">Rechnung Stadtwerke 2026.pdf</span><span class="k klein">Ansehen</span></div>
+      <div class="reihe"><span class="k haupt">Für diese 2 anlegen</span><span class="k">Nein danke</span></div>
+    </div>
+    <div class="zeile"><span class="mini">TXT</span><span class="n">Notiz Urlaub.txt</span><span class="mut">Reisen &amp; Freizeit</span><span class="k klein">+ Kategorie</span><span class="k klein">Öffnen</span></div>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V4" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V4"></div>
+</article>
+
+<article class="punkt" data-v="V5">
+  <header><span class="nr">V5</span><h3>Mail: lesbare Links, klare Sätze, Liste bleibt stehen</h3></header>
+  <p class="was">Löst 4, 18, 19, 20, 21. Lange Adressen im gespeicherten Text werden ein antippbarer Knopf „Link öffnen“. „Aufräumen“ sagt, wenn nichts da ist. „Liste / Absender“ gelten auch bei einer Suche. Die Liste bleibt beim Öffnen an ihrer Stelle, die geöffnete Mail ist markiert. Die Mail erscheint sofort, die Anhänge werden danach geprüft, mit eigener Zeile.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe"><span class="k an">Absender</span><span class="k">Liste</span><span class="k">Aufräumen</span><span class="mut">92 Treffer für „rechnung“ · 14 Absender</span></div>
+    <div class="zeile"><span class="n">Stadtwerke Konstanz</span><span class="mut">31 Mails</span></div>
+    <div class="zeile mark"><span class="n">Anthropic · Your receipt</span><span class="mut">geöffnet</span></div>
+    <div class="zeile" style="flex-direction:column;align-items:stretch">
+      <span>Mit einem Klick im Browser öffnen <span class="k klein">Link öffnen ↗</span></span>
+      <span class="mut">Anhang „receipt.pdf“ wird geprüft · Text lesen 1 von 2</span>
+    </div>
+    <p class="mut">Aufräumen, wenn leer: „Nichts aufzuräumen. Abgelaufene Newsletter erscheinen hier von selbst.“</p>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V5" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V5"></div>
+</article>
+
+<article class="punkt" data-v="V6">
+  <header><span class="nr">V6</span><h3>ⓘ überall anfangs geschlossen</h3></header>
+  <p class="was">Löst 22. Gilt für Kategorien, Hinzufügen, Einstellungen, Bildbeschreibung, Suche. Wer ein ⓘ öffnet, findet es beim nächsten Mal wieder offen. Damit verhält sich Private Brain Pro wie Familienakte, Workflow PDF Pro und BookLedgerPro.</p>
+  <div class="vn">
+    <div class="geraet alt"><span class="cap">Heute</span><div class="reihe"><b style="flex:1">Kategorien</b><span class="k rund an">i</span></div><p class="aufklapp">Übersicht zählt deine Dateien und Ordner. Explorer zeigt sie so, wie sie auf dem Gerät liegen. Kategorien ordnet dieselben Dateien nach Bedeutung …</p></div>
+    <div class="geraet"><span class="cap">Neu</span><div class="reihe"><b style="flex:1">Kategorien</b><span class="k rund">i</span></div><p class="mut">Erklärung erst nach Tipp auf das ⓘ.</p></div>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V6" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V6"></div>
+</article>
+
+<article class="punkt" data-v="V7">
+  <header><span class="nr">V7</span><h3>Kategorien: „Neuer Ordner“ als Kachel</h3></header>
+  <p class="was">Löst 25. Der große Kasten „Neu ordnen – Kopie in einen neuen Ordner“ entfällt. Dafür eine Kachel neben den Kategorie-Kacheln. Ein Tipp zeigt erst das Schema, dann die zwei Knöpfe.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe"><span class="kachel"><b>Bild</b><small>1 · 20 KiB</small></span><span class="kachel"><b>Dokument</b><small>2 · 20 KiB</small></span><span class="kachel"><b>Text/Notiz</b><small>1 · 16 KiB</small></span><span class="kachel neu">+ Neuer Ordner<small>Kopie, aufgeräumt</small></span></div>
+    <div class="zeile" style="flex-direction:column;align-items:stretch">
+      <span class="mut">Nach Tipp auf „Neuer Ordner“:</span>
+      <div class="reihe"><span class="wahl"><small>Schema</small><b>Nach Kategorie</b></span><span class="k">Vorschau ansehen</span><span class="k haupt">In neuen Ordner kopieren …</span></div>
+    </div>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V7" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V7"></div>
+</article>
+
+<article class="punkt" data-v="V8">
+  <header><span class="nr">V8</span><h3>Eine Ladeanzeige für alles, wie im Datei-Organizer</h3></header>
+  <p class="was">Neu aus dem Vergleich. Statt vier verschiedener Anzeigen eine schmale Zeile unter der Kopfleiste, auf jeder Seite an derselben Stelle. Sie sagt, was lädt, zeigt Zahl und Prozent, wo es sie gibt, und hat „Anhalten“, wo man anhalten kann. Nur nach eigenem Tipp oder bei langen Aufgaben, die du gestartet hast.</p>
+  <div class="geraet">
+    <span class="cap">Neu</span>
+    <div class="reihe"><span>12 von 80 Dateien gelesen</span><span class="balken"><i style="width:15%"></i></span><b>15 %</b><span class="mut">Scan 0412.jpg</span><span class="k klein">Anhalten</span></div>
+    <div class="reihe"><span>Mail wird geladen …</span><span class="balken"><i style="width:60%"></i></span></div>
+  </div>
+  <div class="ent"><button class="ja" type="button" aria-pressed="false">Ja</button><button class="nein" type="button" aria-pressed="false">Nein</button><input id="n-V8" type="text" placeholder="Anmerkung (freiwillig)" aria-label="Anmerkung zu V8"></div>
+</article>
+
+<section>
+  <h2>Drei Fragen, die ich vor dem Bauen brauche</h2>
+  <ul class="plain">
+    <li><b>Anhänge in „Alle Konten“ (17):</b> beim Einlesen gleich mitholen (bis 20 MB je Mail, verschlüsselt in die Ablage) oder erst beim Öffnen vom Anbieter holen? Mein Vorschlag: erst beim Öffnen, das spart Speicher.</li>
+    <li><b>Suche (8, 9):</b> mit deinen Beispielen nachgemessen und schon behoben (im Zweig, nicht veröffentlicht): „an tropic“ findet jetzt Anthropic, und „Rechnung Anthropic“ zeigt auch das PDF. Offen: Ist dein Japanisch-PDF ein Scan?</li>
+    <li><b>Aussehen:</b> entschieden, die Farbthemen bleiben.</li>
+  </ul>
+</section>
+
+<div class="kopie">
+  <h3>Deine Antwort</h3>
+  <p class="was">Tippe oben Ja oder Nein. Der Text hier füllt sich von selbst. Kopiere ihn in den Chat.</p>
+  <pre id="antwort">Noch nichts gewählt.</pre>
+  <button type="button" id="kopieren">Antwort kopieren</button>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='pb-vorschau-1053', st={};
+  try{st=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){st={};}
+  var out=document.getElementById('antwort');
+  function merken(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+  function zeigen(){
+    var z=[];
+    document.querySelectorAll('.punkt').forEach(function(p){
+      var v=p.dataset.v,s=st[v]||{};
+      p.querySelector('.ja').setAttribute('aria-pressed',String(s.w==='Ja'));
+      p.querySelector('.nein').setAttribute('aria-pressed',String(s.w==='Nein'));
+      if(s.w||s.n) z.push(v+': '+(s.w||'offen')+(s.n?' – '+s.n:''));
+    });
+    out.textContent=z.length?z.join('\n'):'Noch nichts gewählt.';
+  }
+  document.querySelectorAll('.punkt').forEach(function(p){
+    var v=p.dataset.v,inp=p.querySelector('input');
+    if(st[v]&&st[v].n) inp.value=st[v].n;
+    p.querySelectorAll('.ent button').forEach(function(b){
+      b.addEventListener('click',function(){
+        var w=b.classList.contains('ja')?'Ja':'Nein';st[v]=st[v]||{};
+        st[v].w=st[v].w===w?'':w;merken();zeigen();
+      });
+    });
+    inp.addEventListener('input',function(){st[v]=st[v]||{};st[v].n=inp.value.trim();merken();zeigen();});
+  });
+  document.getElementById('kopieren').addEventListener('click',function(e){
+    var b=e.currentTarget;
+    function wahl(){var r=document.createRange();r.selectNodeContents(out);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Markiert – jetzt kopieren';}
+    try{navigator.clipboard.writeText(out.textContent).then(function(){b.textContent='Kopiert';},wahl);}catch(err){wahl();}
+  });
+  zeigen();
+})();
+</script>

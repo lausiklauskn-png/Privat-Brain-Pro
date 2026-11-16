@@ -43,6 +43,18 @@ try{
   ok('Invoices and pay slips are suggested; a single doctor\'s letter is not yet',JSON.stringify(await suggest.evaluateAll(n=>n.map(x=>x.dataset.topicSuggest)))===JSON.stringify(['invoice','salary']));
   ok('Suggestion names count, examples and that files stay where they are',(await suggest.first().textContent()).includes('3 Dateien sehen aus wie „Rechnungen“')&&(await suggest.first().textContent()).includes('Dateien bleiben, wo sie sind'));
   ok('Nothing is created before Klaus decides',await page.locator('#explorerTree [data-topic]').count()===0);
+  // Klaus 2026-11-16 (Gerätetest 1.0.52, Punkte 14 und 15): the suggestion shows which files it means; it stays away from unrelated searches.
+  ok('The suggestion lists the files it means, each with a tick and "Ansehen"',await suggest.first().evaluate(box=>{const rows=[...box.querySelectorAll('[data-topic-file]')];return rows.length===3&&rows.every(r=>r.querySelector('input[type=checkbox]').checked&&r.querySelector('.topic-file-name').textContent.length>3&&!!r.querySelector('.topic-file-view'));}));
+  ok('The button says for how many files',await suggest.first().locator('.topic-actions button').first().textContent()==='Für diese 3 anlegen');
+  await suggest.first().locator('[data-topic-file] input').first().uncheck();
+  ok('Unticking a file takes it out of the count',await suggest.first().locator('.topic-actions button').first().textContent()==='Für diese 2 anlegen');
+  await suggest.first().locator('[data-topic-file] input').first().check();
+  await page.fill('#explorerFilter','Urlaub');await page.waitForTimeout(250);
+  ok('A search for something else shows no suggestion',await page.locator('[data-topic-suggest]').count()===0);
+  await page.fill('#explorerFilter','Rechnung');await page.waitForTimeout(250);
+  ok('A search for invoices shows only the invoice suggestion',JSON.stringify(await page.locator('[data-topic-suggest]').evaluateAll(n=>n.map(x=>x.dataset.topicSuggest)))===JSON.stringify(['invoice']));
+  await page.fill('#explorerFilter','');await page.waitForTimeout(250);
+  ok('The per-file category control is a small "+ Kategorie" button, not a full-width field',await page.evaluate(()=>{const b=document.querySelector('#panel-explorer .pb-eigene-knopf');if(!b)return 'kein Knopf';const r=b.getBoundingClientRect(),row=b.parentElement.getBoundingClientRect();return b.textContent==='+ Kategorie'&&r.width<140&&r.width<row.width/2&&r.height<=30;})===true);
   const before=await page.evaluate(()=>JSON.stringify(CATALOG.map(r=>[r.hash,r.path,r.dirId])));
   await suggest.first().getByRole('button',{name:'Anlegen'}).click();
   ok('"Anlegen" adds "🧾 Rechnungen (3)" to the folder tree',(await page.locator('#explorerTree [data-topic=invoice]').textContent())==='🧾 Rechnungen (3)');
