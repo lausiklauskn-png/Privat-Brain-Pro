@@ -49,9 +49,16 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
 21. **„Liste“/„Absender“ wirken bei einer Suche nicht** (92 Treffer, Umschalten ändert nichts).
 
 ### F. Überall
+24. **„Bitte warten …“ springt immer wieder an (z. B. in „Kategorien“), ohne dass man etwas getan hat** – sieht aus wie ein
+    Suchfeld. Ursache: die Warte-Zeile aus 1.0.52 reagierte auch auf Geräte-Aufrufe, die die App im Hintergrund selbst macht.
+    **Behoben am 16.11. (PR nach #146, nicht veröffentlicht):** Punkte nur noch, wenn der Nutzer höchstens 2 s vorher selbst etwas
+    getan hat, und mit Namen („Mail wird geladen …“, „Ablage wird gelesen …“). Probe `test-activity` 39. Kommt mit 1.0.53.
 22. **ⓘ-Kästen anfangs geschlossen** (Kategorien, Hinzufügen, Einstellungen …). Ändert die Regel aus Sitzung 3 („anfangs offen
     und gemerkt“) – Klaus' neuer Wunsch.
 23. Übersicht und „Dateien“-Grundaufbau: vorerst so lassen.
+25. **Kategorien: Kasten „Neu ordnen – Kopie in einen neuen Ordner“ ist zu groß.** Klaus: als Knopf/Kachel wie die
+    Kategorie-Kacheln oben („Neuer Ordner“ als Dashboard-Kachel); ein Tipp darauf zeigt erst das Schema und dann die Knöpfe
+    „Vorschau ansehen“ / „In neuen Ordner kopieren …“. Kein eigener großer Kasten.
 
 ## Plan für die nächste Sitzung
 
@@ -69,6 +76,7 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
      zur Suche; „+ Kategorie“ klein.
    - V5 Mail: Links im gespeicherten Text als „Link öffnen ↗“; „Nichts aufzuräumen“; Liste/Absender auch bei Suche.
    - V6 ⓘ überall geschlossen.
+   - V7 Kategorien: „Neuer Ordner“ als Kachel neben den Kategorie-Kacheln, Schema und Knöpfe erst nach Tipp (25).
 3. **Bauen in Stücken**, je Stück Probe (vorher rot, nachher grün) und Gegenprobe:
    Laden (1, 2, 3, 4) → Startseite (5–9) → Mail (17–21) → Hinzufügen (10–13) → Dateien (14–16) → ⓘ (22).
 4. **Anhänge in „Alle Konten“ (17):** Weg wählen mit Klaus – entweder beim Einlesen mitholen (Größengrenze je Mail, z. B. 20 MB,
@@ -85,8 +93,8 @@ Proben, Fassung 1.0.53 nur auf sein Wort.
 
 ```
 Repo: lausiklauskn-png/Privat-Brain-Pro, Zweig von origin/main.
-Zuerst lesen: CLAUDE.md, BRIEF_SITZUNG_2026-11-16_GERAETETEST-1.0.52.md (Problemliste 1–23, Plan).
-Stand: 1.0.52 veröffentlicht (Android, Windows), Klaus' Gerätetest liegt als Liste vor; nichts davon gebaut.
-Schritt 1: Ursachen klären (Plan Punkt 1), ohne sichtbare Änderung. Schritt 2: eine HTML-Vorschau V1–V6, Ja je Punkt.
+Zuerst lesen: CLAUDE.md, BRIEF_SITZUNG_2026-11-16_GERAETETEST-1.0.52.md (Problemliste 1–25, Plan).
+Stand: 1.0.52 veröffentlicht (Android, Windows), Klaus' Gerätetest liegt als Liste vor; nur Punkt 24 (Warte-Zeile nur nach Tipp, PR #147) gebaut, nicht veröffentlicht.
+Schritt 1: Ursachen klären (Plan Punkt 1), ohne sichtbare Änderung. Schritt 2: eine HTML-Vorschau V1–V7, Ja je Punkt.
 Dann bauen in Stücken mit Proben. Veröffentlichen nur mit Klaus' Wort (nächste Fassung 1.0.53).
 ```
