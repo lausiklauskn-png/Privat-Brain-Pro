@@ -15,10 +15,10 @@ const more=i=>(extra[document.documentElement.lang]||extra.de)[i];
 /* Mail an die Familienakte (Klaus 2026-11-09): die unveränderte .eml mit allen Anhängen über den gemeinsamen Pro-Tresor
    ins Fach „Eingang-Familienakte“; die Familienakte löst die Anhänge dort auf Knopfdruck heraus. */
 const MAIL={
- de:{titel:'An Familienakte',gesperrt:'Der Pro-Tresor ist gesperrt. Entsperren und die Mail mit Anhängen in den Eingang der Familienakte legen?',entsperren:'Entsperren und weitergeben',teilen:'Normal teilen',abbrechen:'Abbrechen',gesendet:'Mail mit Anhängen an die Familienakte weitergegeben. Dort unter „Pro-Eingang prüfen“ aufnehmen.',ohne:'Kein Pro-Tresor verbunden – die Mail wird normal geteilt; dort Familienakte wählen.',gross:'Die Mail ist größer als 20 MiB und kann nicht über den Pro-Tresor gehen. Bitte normal teilen.'},
- en:{titel:'To Familienakte',gesperrt:'The Pro vault is locked. Unlock it and put the email with its attachments into the Familienakte inbox?',entsperren:'Unlock and pass on',teilen:'Share normally',abbrechen:'Cancel',gesendet:'Email with attachments passed on to Familienakte. Accept it there under “Check Pro inbox”.',ohne:'No Pro vault connected – the email is shared normally; choose Familienakte there.',gross:'The email is larger than 20 MiB and cannot go through the Pro vault. Please share it normally.'},
- ru:{titel:'В Familienakte',gesperrt:'Сейф Pro заблокирован. Разблокировать и положить письмо с вложениями во входящие Familienakte?',entsperren:'Разблокировать и передать',teilen:'Обычная передача',abbrechen:'Отмена',gesendet:'Письмо с вложениями передано в Familienakte. Примите его там через «Проверить входящие Pro».',ohne:'Сейф Pro не подключён – письмо передаётся обычным способом; выберите там Familienakte.',gross:'Письмо больше 20 МиБ и не может пройти через сейф Pro. Передайте его обычным способом.'},
- pl:{titel:'Do Familienakte',gesperrt:'Sejf Pro jest zablokowany. Odblokować i włożyć wiadomość z załącznikami do skrzynki Familienakte?',entsperren:'Odblokuj i przekaż',teilen:'Udostępnij zwykle',abbrechen:'Anuluj',gesendet:'Wiadomość z załącznikami przekazano do Familienakte. Przyjmij ją tam w „Sprawdź skrzynkę Pro”.',ohne:'Brak połączonego sejfu Pro – wiadomość zostanie udostępniona zwykle; wybierz tam Familienakte.',gross:'Wiadomość ma ponad 20 MiB i nie może przejść przez sejf Pro. Udostępnij ją zwykle.'}
+ de:{titel:'An Familienakte',gesperrt:'Der Pro-Tresor ist gesperrt. Entsperren und die Mail mit Anhängen in den Eingang der Familienakte legen?',entsperren:'Entsperren und weitergeben',teilen:'Normal teilen',abbrechen:'Abbrechen',gesendet:'Mail mit Anhängen an die Familienakte weitergegeben. Dort unter „Pro-Eingang prüfen“ aufnehmen.',ohne:'Kein Pro-Tresor verbunden – die Mail wird normal geteilt; dort Familienakte wählen.',gross:'Die Mail ist größer als 20 MiB und kann nicht über den Pro-Tresor gehen. Bitte normal teilen.',mitSortierung:'Die Vorsortierung (Bereich, Art, Hinweis) ging mit.',ohneSortierung:'Mail übergeben, Vorsortierung nicht. Die Mail liegt mit Anhängen im Eingang der Familienakte; dort bitte selbst einordnen.',gesperrtListe:'Der Pro-Tresor ist gesperrt. Entsperren und die gewählten Mails mit Anhängen in den Eingang der Familienakte legen?',unerreichbar:'Der Ordner des Pro-Tresors ist gerade nicht erreichbar. Nichts wurde übergeben.'},
+ en:{titel:'To Familienakte',gesperrt:'The Pro vault is locked. Unlock it and put the email with its attachments into the Familienakte inbox?',entsperren:'Unlock and pass on',teilen:'Share normally',abbrechen:'Cancel',gesendet:'Email with attachments passed on to Familienakte. Accept it there under “Check Pro inbox”.',ohne:'No Pro vault connected – the email is shared normally; choose Familienakte there.',gross:'The email is larger than 20 MiB and cannot go through the Pro vault. Please share it normally.',mitSortierung:'The pre-sorting (area, type, note) went along.',ohneSortierung:'Email passed on, pre-sorting not. The email with its attachments is in the Familienakte inbox; please file it there yourself.',gesperrtListe:'The Pro vault is locked. Unlock it and put the chosen emails with their attachments into the Familienakte inbox?',unerreichbar:'The Pro vault folder cannot be reached right now. Nothing was passed on.'},
+ ru:{titel:'В Familienakte',gesperrt:'Сейф Pro заблокирован. Разблокировать и положить письмо с вложениями во входящие Familienakte?',entsperren:'Разблокировать и передать',teilen:'Обычная передача',abbrechen:'Отмена',gesendet:'Письмо с вложениями передано в Familienakte. Примите его там через «Проверить входящие Pro».',ohne:'Сейф Pro не подключён – письмо передаётся обычным способом; выберите там Familienakte.',gross:'Письмо больше 20 МиБ и не может пройти через сейф Pro. Передайте его обычным способом.',mitSortierung:'Предварительная сортировка (область, вид, примечание) передана вместе с письмом.',ohneSortierung:'Письмо передано, предварительная сортировка — нет. Письмо с вложениями лежит во входящих Familienakte; разложите его там сами.',gesperrtListe:'Сейф Pro заблокирован. Разблокировать и положить выбранные письма с вложениями во входящие Familienakte?',unerreichbar:'Папка сейфа Pro сейчас недоступна. Ничего не передано.'},
+ pl:{titel:'Do Familienakte',gesperrt:'Sejf Pro jest zablokowany. Odblokować i włożyć wiadomość z załącznikami do skrzynki Familienakte?',entsperren:'Odblokuj i przekaż',teilen:'Udostępnij zwykle',abbrechen:'Anuluj',gesendet:'Wiadomość z załącznikami przekazano do Familienakte. Przyjmij ją tam w „Sprawdź skrzynkę Pro”.',ohne:'Brak połączonego sejfu Pro – wiadomość zostanie udostępniona zwykle; wybierz tam Familienakte.',gross:'Wiadomość ma ponad 20 MiB i nie może przejść przez sejf Pro. Udostępnij ją zwykle.',mitSortierung:'Wstępne sortowanie (obszar, rodzaj, uwaga) przekazano razem z wiadomością.',ohneSortierung:'Wiadomość przekazano, wstępnego sortowania nie. Wiadomość z załącznikami jest w skrzynce Familienakte; przyporządkuj ją tam samodzielnie.',gesperrtListe:'Sejf Pro jest zablokowany. Odblokować i włożyć wybrane wiadomości z załącznikami do skrzynki Familienakte?',unerreichbar:'Folder sejfu Pro jest teraz niedostępny. Nic nie przekazano.'}
 };
 const mt=k=>(MAIL[document.documentElement.lang]||MAIL.de)[k];
 const ausB64=v=>Uint8Array.from(atob(v),c=>c.charCodeAt(0));
@@ -70,14 +70,18 @@ async function receive(){
  }catch{failed++;}}
  note=items.length?t(25).replace('{n}',String(imported)).replace('{f}',String(failed)):t(30);return{imported,failed};
 }
-async function send(file,recordHash,target){
+/* wahl.bezug: Kennung der Übergabe, zu der diese Datei gehört (Begleitdatei → Mail). wahl.einmal: was schon weitergegeben ist,
+   wird nicht noch einmal geschickt (Ergebnis mit schon:true). wahl.vorher: läuft vor dem Weitergeben; false → nichts geht hinaus. */
+async function send(file,recordHash,target,wahl={}){
  const z=await active();if(!file||!file.size||file.size>MAX||!['familienakte','workflow-pdf-pro','bookledgerpro'].includes(target))throw Error(t(21));
  const pdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name),image=/^image\//.test(file.type);
  if(target==='workflow-pdf-pro'&&!pdf&&!image||target==='bookledgerpro'&&!pdf&&!image&&!/\.eml$/i.test(file.name))throw Error(t(21));
  const sha=await hash(await file.arrayBuffer()),history=(await receipts()).filter(r=>r.kind==='eingang'&&r.vaultId===z.kennung&&r.hashes?.includes(recordHash)).sort((a,b)=>b.date-a.date);
- const bezug=history[0]?.vertrag.id,dokumentId=recordHash||sha;
+ const bezug=wahl.bezug||history[0]?.vertrag.id,dokumentId=recordHash||sha;
  const id='pb-'+await textHash([z.kennung,dokumentId,target,file.name,file.type,sha,bezug||'']);
  const m=contract({vertrag:'familienakte-uebergabe/1',id,quelle:APP,ziel:target,dokumentId,name:file.name,mime:file.type,groesse:file.size,sha256:sha,...(bezug?{bezug}:{})},target);
+ if(wahl.einmal){const alt=(await receipts()).find(x=>x.kind==='ausgang'&&x.vaultId===z.kennung&&x.vertrag.id===m.id);if(alt?.entryId&&alt.stand!=='offen')return{...alt,schon:true};}
+ if(wahl.vorher&&!(await wahl.vorher()))return{ungeprueft:true};
  const r=await reserve('ausgang',z.kennung,m);
  await PBOriginals.storeItem({file,path:file.name,dirId:null});return deliver(r);
 }
@@ -151,29 +155,78 @@ async function mailEml(hash){
  if(!ref&&window.PBMail?.getRaw){try{const raw=await PBMail.getRaw(hash);if(raw)return new File([raw],name,{type:'message/rfc822'});}catch{/* .txt wie bisher */}}
  return null;
 }
-function frageGesperrt(){
- return new Promise(resolve=>{const dialog=make('dialog');dialog.className='live-dialog';dialog.dataset.mailFamilienakteFrage='';dialog.append(make('h2',mt('titel')),make('p',mt('gesperrt')));let wahl=null;
-  for(const [key,value] of [['entsperren','entsperren'],['teilen','teilen'],['abbrechen',null]]){const b=make('button',mt(key));b.type='button';b.dataset.wahl=value||'';if(value==='entsperren')b.className='primary';b.onclick=()=>{wahl=value;dialog.close();};dialog.append(b);}
+function frageGesperrt(liste=false){
+ return new Promise(resolve=>{const dialog=make('dialog');dialog.className='live-dialog';dialog.dataset.mailFamilienakteFrage='';dialog.append(make('h2',mt('titel')),make('p',mt(liste?'gesperrtListe':'gesperrt')));let wahl=null;
+  for(const [key,value] of [['entsperren','entsperren'],...(liste?[]:[['teilen','teilen']]),['abbrechen',null]]){const b=make('button',mt(key));b.type='button';b.dataset.wahl=value||'';if(value==='entsperren')b.className='primary';b.onclick=()=>{wahl=value;dialog.close();};dialog.append(b);}
   document.body.append(dialog);dialog.addEventListener('close',()=>{dialog.remove();resolve(wahl);},{once:true});dialog.showModal();});
 }
+/* Für die Mail-Liste (Klaus 16.11.2026): gibt es einen Pro-Tresor für Übergaben, und ist er offen? */
+async function familienakteTresor(){
+ try{const z=await api.tresorZustand({});return{vorhanden:Boolean(z?.gewaehlt&&z.uebergaben),offen:Boolean(z?.offen&&z.kennung&&z.uebergaben)};}catch{return{vorhanden:false,offen:false};}
+}
+/* Vor mehreren Mails einmal fragen, nicht je Mail. true = der Tresor ist offen. */
+async function familienakteOeffnen(){
+ let z=null;try{z=await api.tresorZustand({});}catch{return false;}
+ if(z?.offen&&z.kennung&&z.uebergaben)return true;
+ if(!(z?.gewaehlt&&z.uebergaben))return false;
+ if(z.erreichbar===false){alert(mt('unerreichbar'));return false;}
+ if(await frageGesperrt(true)!=='entsperren')return false;
+ try{const r=await api.tresorEinziehen({...options(),nurVerbinden:true});return Boolean(r&&!r.abgebrochen&&r.offen);}catch(error){alert(t(20)+' '+String(error?.message||''));return false;}
+}
+/* Vorsortierung (Klaus 16.11.2026): nach der Mail geht als zweite Übergabe die Begleitdatei „familienakte-uebergabe.json“ ins
+   selbe Fach – ein Eintrag mit Name und Prüfsumme der .eml und der Einordnung des Sortier-Kerns; „bezug“ trägt die Kennung der
+   Mail-Übergabe. Ohne Einordnung keine Begleitdatei. Ergebnis: 'ja' oder 'keine'; ein Fehler wird geworfen. */
+function mailEintrag(rec,meta,bytes){
+ let r=rec;
+ if(!r){
+  let kopf=meta.mail;
+  if(!kopf&&window.PBMail?.parseEml){try{const m=PBMail.parseEml(new TextDecoder().decode(bytes.subarray(0,262144)));kopf={from:m.from,subject:m.subject,date:m.date,text:m.body};}catch{/* ohne Kopf keine Einordnung */}}
+  if(!kopf)return null;
+  const text=String(kopf.text||'').slice(0,24000);
+  r={name:String(kopf.subject||meta.name||'mail'),ext:'eml',type:'message/rfc822',size:bytes.length,date:new Date(kopf.date||0).getTime()||0,
+   mail:{from:String(kopf.from||''),to:'',subject:String(kopf.subject||''),date:kopf.date||''},snippet:text.slice(0,600),mailBody:text};
+ }
+ if(r.kern&&!r.kern.fehler)return r;
+ try{return window.PBSortierkern?.felder?{...r,kern:PBSortierkern.felder(r,null)}:r.eigeneKategorie?r:null;}catch{return r.eigeneKategorie?r:null;}
+}
+async function begleitung(mail,rec,meta,bytes){
+ const B=window.PBFamilienakteBegleitung,m=mail.vertrag;if(!B)return'keine';
+ const r=mailEintrag(rec,meta,bytes);if(!r)return'keine';
+ const e=B.eintrag(r,m.name,m.sha256);if(!(e.lebensbereich||e.dokumentart||e.hinweis))return'keine';
+ const alt=(await receipts()).find(x=>x.kind==='ausgang'&&x.vaultId===mail.vaultId&&x.vertrag.ziel==='familienakte'&&x.vertrag.name===B.NAME&&x.vertrag.bezug===m.id);
+ if(alt){if(alt.entryId&&alt.stand!=='offen')return'ja';try{await deliver(alt);return'ja';}catch{/* neu bauen */}}
+ const b=B.begleitdatei([{r,name:m.name,sha256:m.sha256}]);if(!b)return'keine';
+ await send(new File([b.text],b.name,{type:'application/json'}),null,'familienakte',{bezug:m.id});return'ja';
+}
+/* meta.still (Mail-Liste): keine Meldungen und keine Fragen; der Tresor muss offen sein. Ergebnis dann in „ergebnis“:
+   'uebergeben' (mit begleit 'ja'|'nein'|'keine'), 'schon' (früher übergeben, nichts geschickt) oder 'fehler' (mit grund).
+   meta.pruefen läuft nur für Mails, die wirklich hinausgehen sollen; false → nichts geht hinaus. */
 async function mailAnFamilienakte(args,meta={}){
- const device=window.PBMailDevice,name=emlDatei(meta.name),teilen=()=>device.openOriginal({...args,name});
+ const device=window.PBMailDevice,name=emlDatei(meta.name),teilen=()=>device.openOriginal({...args,name}),still=meta.still===true;
  let z=null;try{z=await api.tresorZustand({});}catch{/* ohne Tresor: teilen */}
  if(!(z?.offen&&z.kennung&&z.uebergaben)){
+  if(still)return{ergebnis:'fehler',grund:'gesperrt'};
   if(z?.gewaehlt&&z.uebergaben&&z.erreichbar!==false){
    const wahl=await frageGesperrt();if(wahl==='teilen')return teilen();if(wahl!=='entsperren')return{abgebrochen:true};
    try{const r=await api.tresorEinziehen({...options(),nurVerbinden:true});if(r?.abgebrochen||!r?.offen)return{abgebrochen:true};}catch(error){alert(t(20)+' '+String(error?.message||''));return{fehler:true};}
   }else{alert(mt('ohne'));return teilen();}
  }
+ let geladen=false;
  try{
   let base64=typeof meta.sourceBase64==='string'?meta.sourceBase64:'';
   if(!base64)base64=(await device.original(args))?.sourceBase64||'';
   const bytes=ausB64(base64);if(!bytes.length)throw Error(t(21));
-  if(bytes.length>MAX){alert(mt('gross'));return{zuGross:true};}
+  geladen=true;
+  if(bytes.length>MAX){if(!still)alert(mt('gross'));return{zuGross:true,ergebnis:'fehler',grund:'zuGross'};}
   const rec=typeof CATALOG!=='undefined'?CATALOG.find(r=>r.mailRemote&&r.mailRemote.account===args.account&&r.mailRemote.folder===args.folder&&String(r.mailRemote.validity)===String(args.validity)&&r.mailRemote.uid===args.uid):null;
-  const result=await send(new File([bytes],name,{type:'message/rfc822'}),rec?.hash||null,'familienakte');
-  alert(mt('gesendet'));void render();return result;
- }catch(error){const code=String(error?.message||'');alert(/MESSAGE_TOO_LARGE/.test(code)?mt('gross'):t(20)+' '+code);return{fehler:true};}
+  const result=await send(new File([bytes],name,{type:'message/rfc822'}),rec?.hash||null,'familienakte',still?{einmal:true,vorher:meta.pruefen}:{});
+  if(result.ungeprueft)return{ergebnis:'fehler',grund:'ungeprueft'};
+  if(result.schon)return{...result,ergebnis:'schon'};
+  // Scheitert nur die Begleitdatei, gilt die Mail trotzdem als übergeben – und das wird gesagt.
+  let begleit='keine';try{begleit=await begleitung(result,rec,meta,bytes);}catch{begleit='nein';}
+  if(!still)alert(begleit==='nein'?mt('ohneSortierung'):mt('gesendet')+(begleit==='ja'?' '+mt('mitSortierung'):''));
+  void render();return{...result,ergebnis:'uebergeben',begleit};
+ }catch(error){const code=String(error?.message||''),gross=/MESSAGE_TOO_LARGE/.test(code);if(!still)alert(gross?mt('gross'):t(20)+' '+code);return{fehler:true,ergebnis:'fehler',grund:gross?'zuGross':geladen?'fehler':'laden',meldung:code};}
 }
 function viewer(host,entry){let b=host.querySelector('[data-pro-transfer]');if(!b){b=make('button');b.type='button';b.dataset.proTransfer='';host.append(b);}b.textContent=t(15);b.hidden=!entry;b.onclick=()=>entry&&choose(entry);}
 // Backup contains only bounded receipts, never a vault key or original bytes. Merge all-or-nothing;
@@ -200,7 +253,7 @@ async function restore(rows){
  });
  window.dispatchEvent(new Event('pb-pro-receipts'));
 }
-window.PBProVerbund={receive,send,confirm,render,viewer,contract,restore,receipts,mailAnFamilienakte,mailEml};
+window.PBProVerbund={receive,send,confirm,render,viewer,contract,restore,receipts,mailAnFamilienakte,mailEml,familienakteTresor,familienakteOeffnen};
 new MutationObserver(()=>void render()).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 const start=()=>{if(typeof db!=='undefined'&&db&&document.querySelector('#vaultPlace'))void render();else setTimeout(start,300);};start();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void render();});
