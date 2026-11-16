@@ -716,3 +716,22 @@ button.pb-leiste-pfeil:not(:disabled):active { transform:none; z-index:30; }
 .pb-thema-farben>button { min-height:28px; padding:2px 10px; font-size:.82rem; }
 .pb-thema-titel:focus { outline:none; }
 .pb-thema-titel:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+
+/* Generalprüfung 16.11.2026 – Mail am Handy.
+   Menü „Weitere Aktionen“: hing mit der rechten Kante am Knopf und ragte links aus dem Bild. Im schmalen Fenster richtet es
+   sich an der Kopfzeile des Postfachs aus (ganze Breite); der Knopf zeigt dort nur die drei Punkte, sein Name bleibt für Vorlesen und
+   Tooltip. So bekommt die Kontoauswahl den Platz. Alle Einträge bleiben. */
+@media(max-width:650px) {
+  #mailWorkspace .live-mail>.mail-head { position:relative; }
+  #mailWorkspace .live-mail>.mail-head .mail-account-tools { position:static; }
+  #mailWorkspace .live-mail>.mail-head .mail-account-menu { left:4px; right:4px; width:auto; max-width:none; min-width:min(280px,calc(100vw - 40px)); }
+  #mailWorkspace .live-mail>.mail-head .mail-account-tools>summary>.compact-caption { display:none; }
+  /* „Alle Konten“ vor dem ersten Abruf: Überschrift in einer Zeile, der blaue Abruf-Knopf darunter in ganzer Breite. */
+  .mail-all-head { flex-wrap:wrap; }
+  .mail-all-head > h2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mail-all-head > .mail-primary { order:9; flex:1 1 100%; justify-content:center; white-space:normal; }
+  .mail-all-head > details > summary > .compact-caption { display:none; }
+}
+/* Ergebnis von „Senden“ und von „An Familienakte“: steht einmal da, gut lesbar. */
+#mailWorkspace .mail-notice[data-mail-result] { font-size:.86rem; font-weight:600; color:var(--ink); border-left:4px solid var(--acc); }
+#mailWorkspace .mail-notice[data-mail-result="offen"] { border-left-color:var(--bad, #991b1b); }

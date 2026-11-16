@@ -37,7 +37,7 @@ try{
   await page.click('[data-tab=mail]');const mail=page.locator('#mailWorkspace'),live=mail.locator('.live-mail'),select=mail.locator('.mail-account-bar select').first();
   const settled=()=>page.waitForFunction(()=>document.querySelector('.live-mail')?.getAttribute('aria-busy')!=='true');
   const choose=async id=>{await select.selectOption(id);await settled();};
-  await mail.locator('[data-live-text=connect]').click();await mail.locator('[data-live-uid="7"]').waitFor();
+  /* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});await mail.locator('[data-live-uid="7"]').waitFor();
   await mail.locator('[data-live-uid="7"]').click();await live.locator('.mail-reader h3').waitFor();
   ok('Initial provider reader and total are present',await live.locator('[data-mail-folder=inbox] small').textContent()==='125');
   await page.evaluate(()=>window.failures.folders='cancel');await choose(await page.evaluate(()=>googleAccount));

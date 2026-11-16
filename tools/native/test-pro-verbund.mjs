@@ -10,7 +10,7 @@ const root=resolve(process.env.PB_PRO_TEST_ROOT||'www'),types={'.html':'text/htm
 const server=createServer(async(req,res)=>{if(req.url==='/seed'){res.setHeader('content-type','text/html');res.end('<!doctype html><html><body>Migration fixture</body></html>');return;}const path=resolve(root,'.'+new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html'));if(!path.startsWith(root+sep)){res.writeHead(403).end();return;}try{const body=await readFile(path);res.writeHead(200,{'content-type':types[extname(path)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const digest=x=>createHash('sha256').update(x).digest('hex'),incoming=new Map(),saved=new Map(),pending=new Map(),sent=new Map(),targetMarks=new Set(),ack=[],invalid=[];
-let vaultId='vault-a',open=true,chosen=true,unlocks=0,alerts=[],failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[],failBegleit=false,sendCalls=0;
+let vaultId='vault-a',open=true,chosen=true,unlocks=0,alerts=[],failRead='',badContract='',corruptRead='',failAck='',failSend=false,switchOnRead=false,backup,backupParts=[],failBegleit=false,sendCalls=0,reachable=true;
 const add=(id,name,text,overrides={})=>{const bytes=Buffer.from(text);incoming.set(id,{entryId:id,bytes,vertrag:{vertrag:'familienakte-uebergabe/1',id,quelle:'familienakte',ziel:'private-brain',dokumentId:'doc-'+id,name,mime:'text/plain',groesse:bytes.length,sha256:digest(bytes),...overrides}});};
 add('first','Brief.txt','Erfundener Brief zur privaten Ablage');
 let browser,page,count=0;const ok=(name,value)=>{assert.ok(value,name);console.log('PASS '+name);count++;};
@@ -21,7 +21,7 @@ try{
  await page.route('**/*',r=>r.request().url().startsWith(url)?r.continue():r.abort());
  await page.exposeFunction('proFixture',async(method,args={})=>{
   if(method==='state')return{configured:true,unlocked:true,location:'device',reachable:true};
-  if(method==='tresorZustand')return{uebergaben:true,gewaehlt:chosen,offen:chosen&&open,erreichbar:true,kennung:vaultId,ordner:'Erfundener gemeinsamer Ordner',eingezogen:false};
+  if(method==='tresorZustand')return{uebergaben:true,gewaehlt:chosen,offen:chosen&&open&&reachable,erreichbar:reachable,kennung:vaultId,ordner:'Erfundener gemeinsamer Ordner',eingezogen:false};
   if(method==='tresorEinziehen'){assert.equal(args.nurVerbinden,true);assert.ok(!('password' in args));open=true;unlocks++;return{offen:true};}
   if(method==='tresorSperren'){open=false;return{};}
   if(method==='attachments')return{items:[]};
@@ -187,6 +187,45 @@ try{
  await page.waitForFunction(()=>document.querySelector('dialog[open] p[role=status]')?.textContent.includes('Weitergegeben'));
  ok('File viewer: "To Pro app" sends a catalogued mail to Familienakte as the raw .eml, not as .txt',sent.size===count0+1&&lastSent().name==='Rechnung Mai.eml'&&lastSent().mime==='message/rfc822'&&lastSent().sha256===digest(eml)&&lastSent().dokumentId==='c'.repeat(64));
  await page.locator('dialog[open] button').filter({hasText:'Schließen'}).click();
+ // Generalprüfung 16.11.2026: Tresor gewählt, Ordner gerade nicht erreichbar (z. B. SD-Karte heraus) – richtiger Satz, erst fragen.
+ reachable=false;await page.evaluate(()=>{mailDeviceCalls.length=0;});count0=sent.size;let alertsAway=alerts.length;
+ const awayDialog=page.locator('dialog[open][data-mail-familienakte-frage=unerreichbar]');
+ waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Karte heraus.eml'}),ref);
+ const awayShown=await awayDialog.waitFor({timeout:5000}).then(()=>true,()=>false);
+ const away=awayShown?{text:await awayDialog.locator('p').textContent(),choices:await awayDialog.locator('[data-wahl]').evaluateAll(n=>n.map(b=>b.dataset.wahl)),shared:(await calls()).some(c=>c.method==='openOriginal')}:{};
+ if(awayShown)await awayDialog.locator('[data-wahl=""]').click();
+ let awayResult=await waiting;
+ ok('Vault chosen but its folder cannot be reached: the opened mail says "nicht erreichbar", not "Kein Pro-Tresor verbunden"',awayShown&&/gerade nicht erreichbar/.test(away.text)&&/Nichts wurde übergeben/.test(away.text)&&!alerts.slice(alertsAway).some(a=>/Kein Pro-Tresor/.test(a)));
+ ok('It asks first with "Normal teilen" or "Abbrechen"; nothing goes to the system chooser without a choice, and cancel shares nothing',JSON.stringify(away.choices)==='["teilen",""]'&&away.shared===false&&awayResult?.abgebrochen===true&&!(await calls()).some(c=>c.method==='openOriginal')&&sent.size===count0&&alerts.length===alertsAway);
+ waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Karte heraus.eml'}),ref);asked=await awayDialog.locator('[data-wahl=teilen]').waitFor({timeout:5000}).then(()=>true,()=>false);if(asked)await awayDialog.locator('[data-wahl=teilen]').click();await waiting;
+ ok('"Normal teilen" then hands the .eml to the system chooser as before; nothing goes through the vault',asked&&(await calls()).filter(c=>c.method==='openOriginal'&&c.args.name==='Karte heraus.eml').length===1&&sent.size===count0);
+ await page.evaluate(()=>{document.documentElement.lang='en';});
+ waiting=page.evaluate(ref=>PBProVerbund.mailAnFamilienakte(ref,{name:'Karte heraus.eml'}),ref);await awayDialog.waitFor({timeout:5000});
+ ok('The question follows the language',/cannot be reached right now/.test(await awayDialog.locator('p').textContent()));
+ await awayDialog.locator('[data-wahl=""]').click();await waiting;await page.evaluate(()=>{document.documentElement.lang='de';});
+ reachable=true;open=true;
+ // Generalprüfung 16.11.2026: Liste „Ausgang“ – die Begleitdatei der Vorsortierung ist keine eigene Zeile mehr.
+ await page.evaluate(()=>PBProVerbund.render());
+ const outbox=()=>page.evaluate(async()=>{await PBProVerbund.render();const rows=[...document.querySelectorAll('#pro-verbund ul li')];const all=(await PBProVerbund.receipts()).filter(r=>r.kind==='ausgang');
+  return {rows:rows.map(li=>({text:[...li.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join(''),mit:li.dataset.proMitSortierung||'',buttons:li.querySelectorAll('button').length})),
+   receipts:all.length,companions:all.filter(r=>r.vertrag.name==='familienakte-uebergabe.json').length};});
+ let box=await outbox();
+ ok('The outbox list no longer shows the technical companion file "familienakte-uebergabe.json" as a row of its own',box.companions>=4&&box.rows.length===box.receipts-box.companions&&!box.rows.some(r=>r.text.includes('familienakte-uebergabe.json')));
+ ok('Its mail says "mit Vorsortierung" instead – one row per mail',box.rows.filter(r=>r.mit==='1'&&/\.eml \(mit Vorsortierung\) → Familienakte Pro: /.test(r.text)).length===box.companions&&box.rows.filter(r=>!r.mit).every(r=>!r.text.includes('Vorsortierung')));
+ ok('Every row that is not yet accepted keeps exactly one "Erneut weitergeben"',box.rows.every(r=>r.buttons<=1)&&box.rows.filter(r=>/Übernahme offen|Noch offen/.test(r.text)).every(r=>r.buttons===1)&&box.rows.some(r=>r.buttons===1));
+ const againMail=mails().find(m=>companions().some(c=>c.bezug===m.id)),againName=againMail.name;sends0=sendCalls;const sentLog=[];const realSet=sent.set.bind(sent);sent.set=(k,v)=>{sentLog.push(v.name);return realSet(k,v);};
+ await page.evaluate(name=>{[...document.querySelectorAll('#pro-verbund ul li[data-pro-mit-sortierung]')].find(li=>li.textContent.startsWith(name+' ')).querySelector('button').click();},againName);
+ await page.waitForFunction(()=>!document.querySelector('#pro-verbund button:disabled'));await new Promise(r=>setTimeout(r,300));sent.set=realSet;
+ ok('"Erneut weitergeben" at the mail still works and passes on both: the mail and its pre-sorting',sendCalls===sends0+2&&JSON.stringify(sentLog)===JSON.stringify([againName,'familienakte-uebergabe.json']));
+ targetMarks.add('entry-'+againMail.id);await page.evaluate(()=>PBProVerbund.confirm());box=await outbox();
+ ok('When the target app has taken the mail but not yet its pre-sorting, "Erneut weitergeben" stays for the pre-sorting alone',await page.evaluate(name=>{const li=[...document.querySelectorAll('#pro-verbund ul li[data-pro-mit-sortierung]')].find(li=>li.textContent.startsWith(name+' '));return li.textContent.includes('Im Eingang der Ziel-App')&&li.querySelectorAll('button').length===1;},againName));
+ sends0=sendCalls;sentLog.length=0;sent.set=(k,v)=>{sentLog.push(v.name);return realSet(k,v);};
+ await page.evaluate(name=>{[...document.querySelectorAll('#pro-verbund ul li[data-pro-mit-sortierung]')].find(li=>li.textContent.startsWith(name+' ')).querySelector('button').click();},againName);
+ await page.waitForFunction(()=>!document.querySelector('#pro-verbund button:disabled'));await new Promise(r=>setTimeout(r,300));sent.set=realSet;
+ ok('Then only the pre-sorting is passed on again, not the accepted mail',sendCalls===sends0+1&&JSON.stringify(sentLog)===JSON.stringify(['familienakte-uebergabe.json']));
+ await page.evaluate(()=>{document.documentElement.lang='en';});await page.evaluate(()=>PBProVerbund.render());
+ ok('The addition follows the language',await page.evaluate(()=>[...document.querySelectorAll('#pro-verbund ul li[data-pro-mit-sortierung]')].every(li=>li.textContent.includes('(with pre-sorting)'))));
+ await page.evaluate(()=>{document.documentElement.lang='de';});await page.evaluate(()=>PBProVerbund.render());
  ok('Every companion sent in this run keeps the agreement, and each belongs to exactly one mail',companions().length>=4&&companions().every(c=>mails().filter(m=>m.id===c.bezug).length===1&&brauchbar(companionOf(mails().find(m=>m.id===c.bezug))))&&new Set(companions().map(c=>c.id)).size===companions().length);
  ok('No source is falsely acknowledged or sent before its receipt commits',invalid.length===0);
  ok('No uncaught page errors in common-vault integration',errors.length===0);

@@ -234,7 +234,11 @@
       try{await readSource();if(before!==generation||!currentHost())return;}catch{if(before===generation&&currentHost())setStatus('unavailable');return;}
       mask();refresh();if(!src.text.trim())setStatus('empty');else if(route.value==='device')void translateLocal();
     };
-    actions.append(open);actions.after(panel);active.add({panel,refresh,currentHost,cancelLocal});refresh();
+    actions.append(open);actions.after(panel);active.add({panel,refresh,currentHost,cancelLocal});
+    // Generalprüfung 16.11.2026: „Alle Konten“ hängt die Leseansicht erst nach mount() in die Seite – refresh() beschriftet nur
+    // Eingehängtes, der Knopf „Übersetzen“ blieb dort ohne Namen. Die frisch gebauten Teile bekommen ihren Text hier einmal fest.
+    for(const [node,key] of labels)node.textContent=t(key);
+    refresh();
     if(route.value==='device'){panel.hidden=false;open.setAttribute('aria-expanded','true');void translateLocal();}
     return Object.freeze({button:open,panel});
   }

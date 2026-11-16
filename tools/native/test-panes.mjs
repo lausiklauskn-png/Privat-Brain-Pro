@@ -122,7 +122,12 @@ try{
   for(const size of [{width:1024,height:1366},{width:768,height:1024},{width:360,height:800}]){await page.setViewportSize(size);await settle(page);ok(`${size.width}x${size.height}: portrait uses a full-width file pane with no active separator`,await explorer.isHidden()&&await page.locator('#explorerTree').isHidden()&&await width(page,'#explorerFiles')>size.width*.8&&await noOverflow(page));}
   await page.setViewportSize({width:1920,height:1080});await settle(page);ok('Returning from portrait restores the persisted wide split',near(await width(page,'#explorerTree'),persisted));
 
-  await navigateTo(page,'mail');const local='.mail-app:not(.live-mail)',localFolders=local+' '+selector.folders,localList=local+' '+selector.list;
+  await navigateTo(page,'mail');
+  /* Generalprüfung 16.11.2026: mit gespeichertem Konto steht das Postfach von selbst da */
+  await page.locator('#mailWorkspace .live-mail').waitFor({state:'visible'});await page.locator('.live-mail [data-live-uid="1"]').waitFor();
+  // „Lokale Mails“ bleibt über „Weitere Aktionen“ erreichbar.
+  await page.locator('#mailWorkspace .mail-account-tools>summary').first().click();await page.locator('#mailWorkspace .mail-account-menu [data-live-text=local]').click();
+  const local='.mail-app:not(.live-mail)',localFolders=local+' '+selector.folders,localList=local+' '+selector.list;
   await page.locator(localFolders).waitFor({state:'visible'});ok('The local mailbox exposes two accessible separators',await accessibleSeparators(page,localFolders+','+localList,2));
   const localFolderStart=await width(page,local+' .mail-folders');await drag(page,localFolders,65);ok('The local mailbox folder width can be changed with the mouse',await width(page,local+' .mail-folders')>localFolderStart+45&&await noOverflow(page));
   const localListStart=await width(page,local+' .mail-list');await drag(page,localList,75);ok('The local mailbox message-list width is independently resizable',await width(page,local+' .mail-list')>localListStart+50&&await width(page,local+' .mail-reader')>=250);
@@ -130,7 +135,7 @@ try{
   const localValues=await page.locator('#pb-mail-to,#pb-mail-subject,#pb-mail-body').evaluateAll(nodes=>nodes.map(node=>node.value));await drag(page,localList,-40);
   ok('Resizing the local composer keeps all entered fields',JSON.stringify(await page.locator('#pb-mail-to,#pb-mail-subject,#pb-mail-body').evaluateAll(nodes=>nodes.map(node=>node.value)))===JSON.stringify(localValues));
   await page.locator(local+' [data-mail-text=save]').click();await page.waitForFunction(()=>CATALOG.some(record=>record.name==='Local preserved draft'&&record.mailKind==='draft'));
-  await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('.live-mail [data-live-uid="1"]').waitFor();
+  await page.locator('#mailWorkspace>.mail-head [data-live-text=remote]').click();await page.locator('.live-mail [data-live-uid="1"]').waitFor();
   const live='.live-mail',folders=live+' '+selector.folders,list=live+' '+selector.list;await page.locator(folders).waitFor({state:'visible'});
   ok('The native mailbox exposes two accessible separators',await accessibleSeparators(page,folders+','+list,2));
   const liveFolderStart=await width(page,live+' .mail-folders');await drag(page,folders,55);ok('Native mailbox folders resize with genuine pointer input',await width(page,live+' .mail-folders')>liveFolderStart+35);
@@ -154,7 +159,7 @@ try{
   }
   await page.setViewportSize({width:1920,height:1080});await settle(page);ok('Returning to DeX restores both mail widths and keeps the draft',near(await width(page,live+' .mail-folders'),mailFolderPersisted)&&near(await width(page,live+' .mail-list'),mailListPersisted)&&await page.evaluate(expected=>['to','cc','bcc','subject','text'].every((key,index)=>document.getElementById('pb-live-'+key).value===expected[index]),expected));
   await page.locator(live+' [data-live-text=draft]').click();await page.waitForFunction(()=>Boolean(window.paneSavedDraft));ok('The resized composer still saves the complete native draft exactly once',await page.evaluate(()=>paneCalls.filter(call=>call.method==='saveDraft').length===1&&paneSavedDraft.cc==='copy@example.invalid'&&paneSavedDraft.bcc==='blind@example.invalid'));
-  await page.reload();await page.waitForFunction(()=>window.PBMailDevice&&window.PBWorkspace&&typeof db!=='undefined'&&db);await navigateTo(page,'mail');await page.locator('#mailWorkspace [data-live-text=connect]').click();await page.locator('.live-mail [data-live-uid="1"]').waitFor();await settle(page);
+  await page.reload();await page.waitForFunction(()=>window.PBMailDevice&&window.PBWorkspace&&typeof db!=='undefined'&&db);await navigateTo(page,'mail');await page.locator('.live-mail [data-live-uid="1"]').waitFor();await settle(page);
   ok('Native mail widths survive a real reload and reconnection',near(await width(page,live+' .mail-folders'),mailFolderPersisted)&&near(await width(page,live+' .mail-list'),mailListPersisted));
   await page.locator(list).dblclick();await page.locator(folders).dblclick();await settle(page);ok('Both native mail separators support resetting their widths',await width(page,live+' .mail-folders')<mailFolderPersisted&&await width(page,live+' .mail-list')<mailListPersisted+10&&await noOverflow(page));
   ok('Resizing never sends a mail or starts the microphone',await page.evaluate(()=>!paneCalls.some(call=>call.method==='send'||call.method==='listen')));
