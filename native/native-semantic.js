@@ -18,7 +18,7 @@
       none: 'Noch nicht geladen. Einmal etwa {mb} MB, am besten im WLAN. Danach ohne Internet.',
       partial: 'Teilweise geladen ({done} von {mb} MB). „Modell laden“ macht dort weiter.',
       loading: 'Wird geladen: {done} von {mb} MB · {source}', checking: 'Wird geprüft …',
-      ready: 'Geladen und geprüft ({mb} MB). Startet beim Öffnen der App.', active: 'Aktiv: die Suche versteht Bedeutung.',
+      ready: 'Geladen und geprüft ({mb} MB). Startet, sobald du mit „Bedeutung“ suchst.', active: 'Aktiv: die Suche versteht Bedeutung.',
       starting: 'Modell startet …', startFailed: 'Das Modell ist da, startete aber nicht. Die Suche nutzt Stichworte.',
       crashed: 'Beim letzten Start des Modells wurde die Ansicht beendet (vermutlich zu wenig Speicher). Es startet deshalb nicht von selbst.',
       offline: 'Die App ist vom Internet getrennt. Zum Laden die Lampe oben auf Grün stellen.',
@@ -33,7 +33,7 @@
       none: 'Not loaded yet. About {mb} MB once, ideally on Wi-Fi. Works without internet afterwards.',
       partial: 'Partly loaded ({done} of {mb} MB). “Load model” continues there.',
       loading: 'Loading: {done} of {mb} MB · {source}', checking: 'Checking …',
-      ready: 'Loaded and checked ({mb} MB). Starts when the app opens.', active: 'Active: search understands meaning.',
+      ready: 'Loaded and checked ({mb} MB). Starts as soon as you search with “Meaning”.', active: 'Active: search understands meaning.',
       starting: 'Model is starting …', startFailed: 'The model is there but did not start. Search uses keywords.',
       crashed: 'The view ended while the model was starting last time (probably not enough memory). It will not start by itself.',
       offline: 'The app is cut off from the internet. Turn the lamp at the top green to load.',
@@ -48,7 +48,7 @@
       none: 'Ещё не загружена. Один раз около {mb} МБ, лучше по Wi-Fi. Потом работает без интернета.',
       partial: 'Загружено частично ({done} из {mb} МБ). «Загрузить модель» продолжит.',
       loading: 'Загрузка: {done} из {mb} МБ · {source}', checking: 'Проверка …',
-      ready: 'Загружена и проверена ({mb} МБ). Запускается при открытии приложения.', active: 'Активна: поиск понимает смысл.',
+      ready: 'Загружена и проверена ({mb} МБ). Запускается, как только вы ищете по смыслу.', active: 'Активна: поиск понимает смысл.',
       starting: 'Модель запускается …', startFailed: 'Модель есть, но не запустилась. Поиск по ключевым словам.',
       crashed: 'При последнем запуске модели окно закрылось (вероятно, мало памяти). Сама она больше не запускается.',
       offline: 'Приложение отключено от интернета. Для загрузки переключите лампу вверху на зелёный.',
@@ -63,7 +63,7 @@
       none: 'Jeszcze nie pobrany. Jednorazowo około {mb} MB, najlepiej przez Wi-Fi. Potem działa bez internetu.',
       partial: 'Pobrano częściowo ({done} z {mb} MB). „Pobierz model” kontynuuje.',
       loading: 'Pobieranie: {done} z {mb} MB · {source}', checking: 'Sprawdzanie …',
-      ready: 'Pobrany i sprawdzony ({mb} MB). Uruchamia się przy otwarciu aplikacji.', active: 'Aktywny: wyszukiwanie rozumie znaczenie.',
+      ready: 'Pobrany i sprawdzony ({mb} MB). Uruchamia się, gdy szukasz według znaczenia.', active: 'Aktywny: wyszukiwanie rozumie znaczenie.',
       starting: 'Model się uruchamia …', startFailed: 'Model jest, ale się nie uruchomił. Wyszukiwanie po słowach.',
       crashed: 'Przy ostatnim uruchomieniu modelu widok został zamknięty (prawdopodobnie za mało pamięci). Nie uruchomi się sam.',
       offline: 'Aplikacja jest odłączona od internetu. Aby pobrać, przełącz lampkę u góry na zielono.',
@@ -185,6 +185,23 @@
     render();
   }
 
+  // Start on demand: only from the user's own action, once per app run. A model that is not on the device is never
+  // downloaded from here (that stays the explicit switch in Settings); a crashed start is not repeated by itself.
+  let wantedOnce = false, wired = false;
+  const meaningOn = () => { try { return typeof MODE === 'string' ? MODE === 'mean' : true; } catch { return true; } };
+  function wanted() {
+    if (wantedOnce || !starter || !state.installed || state.crashes > 0) return false;
+    wantedOnce = true; void startModel(); return true;
+  }
+  function wire() {
+    if (wired) return; wired = true;
+    document.addEventListener('click', event => {
+      if (event.target.closest?.('#mode [data-m="mean"]')) setTimeout(() => { if (meaningOn()) wanted(); }, 0);
+    }, true);
+    const field = document.getElementById('q');
+    field?.addEventListener('input', () => { if (field.value.trim() && meaningOn()) wanted(); });
+  }
+
   // Klaus 2026-10-27 (Windows test): connecting to the Mycel and creating the seal identity (andock wizard)
   // call Modul 03 directly. Without the downloaded model they failed with "Modell … konnte nicht geladen
   // werden" and a yellow lamp, although another app (with its own storage) had the model. Now a step the user
@@ -257,11 +274,12 @@
     async start(initEmbedding) {
       starter = initEmbedding;
       await refresh();
-      if (state.installed && state.crashes === 0) return startModel();
-      // Not loaded (or stopped after a crash): the search stays on keywords, without waiting.
+      // Klaus 2026-11-16 (Gerätetest 1.0.52, Punkte 1 und 2): the model no longer starts by itself when the app opens.
+      // It starts when the user switches „Bedeutung“ on or searches with it on (wanted()). Until then: keywords, no waiting.
       try { if (typeof EMBED === 'object') { EMBED.tried = true; renderEmbFlag(); } } catch {}
+      wire();
     },
-    refresh, showSwitch, ensureModel, get state() { return state; }
+    wanted, refresh, showSwitch, ensureModel, get state() { return state; }
   };
   const boot = () => refresh();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();

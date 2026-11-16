@@ -138,19 +138,19 @@ try{
   const tabTo=async name=>{await page.locator(`button[data-tab="${name}"]:visible`).first().click();await page.waitForTimeout(200);};
   const help=key=>page.locator(`[data-pb-help-toggle="${key}"]`);
   await tabTo('settings');
-  const fresh=await page.evaluate(()=>['tresor','offline','catalog','attachments'].map(k=>{const b=document.querySelector(`[data-pb-help-toggle="${k}"]`),c=b&&document.getElementById(b.getAttribute('aria-controls'));return !!b&&b.getAttribute('aria-expanded')==='true'&&!!c&&!c.hidden&&!/\p{Extended_Pictographic}/u.test(b.textContent);}));
-  ok('Point 7/9a: in the settings every explanation has an ⓘ and is open the first time',fresh.every(Boolean));
+  const fresh=await page.evaluate(()=>['tresor','offline','catalog','attachments'].map(k=>{const b=document.querySelector(`[data-pb-help-toggle="${k}"]`),c=b&&document.getElementById(b.getAttribute('aria-controls'));return !!b&&b.getAttribute('aria-expanded')==='false'&&!!c&&c.hidden&&!/\p{Extended_Pictographic}/u.test(b.textContent);}));
+  ok('Point 7/9a (Klaus 2026-11-16, Punkt 22): in the settings every explanation has an ⓘ and is closed the first time',fresh.every(Boolean));
   await help('catalog').click();
-  ok('Point 7: one tap on ⓘ closes the explanation',await help('catalog').getAttribute('aria-expanded')==='false');
+  ok('Point 7: one tap on ⓘ opens the explanation',await help('catalog').getAttribute('aria-expanded')==='true');
   const tresorBox=await page.evaluate(()=>{const t=document.getElementById('tresorNote'),l=document.getElementById('vaultList'),n=document.getElementById('vaultNote');return !!t&&!!l&&t.contains(l)&&(!n||n.hidden||!n.getClientRects().length);});
   ok('Point 9d: the vault contents stand in the vault block right under its buttons, no separate box below',tresorBox);
   await page.reload();await page.waitForFunction(()=>typeof db!=='undefined'&&db&&window.PBHelp);
   await tabTo('settings');await page.waitForSelector('[data-pb-help-toggle="catalog"]');
-  ok('Point 7: after a restart closed stays closed and open stays open',await help('catalog').getAttribute('aria-expanded')==='false'&&await help('tresor').getAttribute('aria-expanded')==='true');
+  ok('Point 7: after a restart open stays open and closed stays closed',await help('catalog').getAttribute('aria-expanded')==='true'&&await help('tresor').getAttribute('aria-expanded')==='false');
   await help('catalog').click();
-  ok('Point 7: a second tap opens it again',await help('catalog').getAttribute('aria-expanded')==='true');
+  ok('Point 7: a second tap closes it again',await help('catalog').getAttribute('aria-expanded')==='false');
   await tabTo('order');await page.waitForSelector('[data-pb-help-toggle="reorg"]');
-  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, open at first',await help('reorg').getAttribute('aria-expanded')==='true'&&await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible());
+  ok('Point 7: „Neu ordnen“ in the categories has its ⓘ, closed at first',await help('reorg').getAttribute('aria-expanded')==='false'&&!(await page.locator('#reorgNote [data-pb-help-content="reorg"]').isVisible()));
   ok('Point 7/9: no runtime errors',errors.length===0);
   await page.close();
   // ---------- Klaus 2026-10-26: keine Emojis, Strichgrafiken („kein Bilderbuch“) ----------

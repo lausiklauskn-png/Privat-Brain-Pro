@@ -12,11 +12,12 @@
   };
   const copy = () => words[String(root.lang || 'de').slice(0,2)] || words.de;
   // Klaus 2026-10-26 (Sitzung 3, Punkt 7): one tap opens, a second closes; the choice stays, also after a restart.
-  // Whoever never touches it sees the explanation open.
+  // Klaus 2026-11-16 (Gerätetest 1.0.52, Punkt 22): whoever never touches it sees the explanation closed,
+  // as in Familienakte, Workflow PDF Pro and BookLedgerPro. An explicit choice is still remembered.
   const STORE = 'pb_help_open_v1';
   let remembered = {};
   try { const v = JSON.parse(localStorage.getItem(STORE) || 'null'); if (v && typeof v === 'object') remembered = v; } catch {}
-  const wasOpen = key => typeof remembered[key] === 'boolean' ? remembered[key] : true;
+  const wasOpen = key => typeof remembered[key] === 'boolean' ? remembered[key] : false;
   const remember = (key, value) => { remembered[key] = !!value; try { localStorage.setItem(STORE, JSON.stringify(remembered)); } catch {} };
   const one = (host, selector) => host?.querySelector(selector);
   function symbol() {
