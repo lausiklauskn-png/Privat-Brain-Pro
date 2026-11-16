@@ -23,6 +23,8 @@ try{
       new MutationObserver(()=>{barSeen.push(parseFloat(f.style.width)||0);stepSeen.push(c.textContent);}).observe(f,{attributes:true,attributeFilter:['style']});
       new MutationObserver(()=>stepSeen.push(c.textContent)).observe(c,{childList:true,characterData:true,subtree:true});};
     document.addEventListener('DOMContentLoaded',watch);
+    // Klaus 2026-11-16 (V8): the shared loading line under the header names the import with count and percent, on every page.
+    window.lineSeen=[];document.addEventListener('DOMContentLoaded',()=>new MutationObserver(()=>{const r=document.getElementById('pb-activity');if(r&&!r.hidden&&r.textContent&&lineSeen.at(-1)!==r.textContent)lineSeen.push(r.textContent);}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true}));
   });
   await page.goto(url);await page.waitForFunction(()=>window.PBOriginals&&typeof signBatch==='function');
   const text='Ein langer Bericht über die Heizung. '.repeat(40000);   // about 1.4 MB, six chunks of 256 KiB
@@ -34,6 +36,9 @@ try{
   ok('The bar only moves forward',seen.bar.every((v,i)=>i===0||v>=seen.bar[i-1]||v===0)||console.log(seen.bar));
   ok('The bar ends at 100 %',seen.bar[seen.bar.length-1]===100);
   ok('The step is named: copy, reading, signing',['Kopie wird abgelegt','Text wird gelesen','wird signiert'].every(w=>seen.steps.some(s=>s.includes('Heizung.txt · '+w)))||console.log([...new Set(seen.steps)]));
+  const lines=await page.evaluate(()=>lineSeen);
+  ok('The shared loading line names the import with the count, the file and a rising percentage',lines.some(l=>/0 von 1 Dateien gelesen · Heizung\.txt/.test(l)&&/\d+ %/.test(l))&&new Set(lines.map(l=>(l.match(/(\d+) %/)||[])[1]).filter(Boolean)).size>=3||console.log(lines.slice(0,8)));
+  ok('The shared loading line is gone after the import',await page.evaluate(()=>{const r=document.getElementById('pb-activity');return !r||r.hidden;}));
   ok('No step hook is left behind after the import',await page.evaluate(()=>window.PBImportStep===undefined));
   ok('No runtime errors',errors.length===0||console.log(errors));
   console.log(`${count} import progress checks passed (native copy simulated with delays).`);

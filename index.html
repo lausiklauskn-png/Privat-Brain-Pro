@@ -1563,6 +1563,7 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   const accepted=[], durable=options.durable===true;
   if(signing) return accepted;
   signing=true;
+  let lauf=null;   // gemeinsame Ladezeile (Klaus 16.11.2026, V8): auf jeder Seite sichtbar, was gerade eingelesen wird
   try {
   if(window.PBWorkspace && !await PBWorkspace.prepareImport(items)) return accepted;
   cancelReq=false;
@@ -1575,9 +1576,11 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   // ihren Stand innerhalb der Datei (0…1) und den Schritt; der Balken zeigt (fertige + Anteil) / alle.
   const STEP={de:["Kopie wird abgelegt","Text wird gelesen","wird signiert"],en:["Saving copy","Reading text","Signing"],
     ru:["Сохраняю копию","Читаю текст","Подписываю"],pl:["Zapisywanie kopii","Czytanie tekstu","Podpisywanie"]};
-  let stepName="";
+  let stepName="", teil=0;
+  const GELESEN={de:"{d} von {n} Dateien gelesen",en:"{d} of {n} files read",ru:"Прочитано файлов: {d} из {n}",pl:"Przeczytano plików: {d} z {n}"};
+  lauf=window.PBActivity?.start({label:()=>(GELESEN[(document.documentElement.lang||"de").slice(0,2)]||GELESEN.de).replace("{d}",done).replace("{n}",total)+(stepName?" · "+String(stepName).split("/").pop().slice(0,40):""),percent:()=>total?(done+teil)/total*100:null})||null;
   window.PBImportStep=(fraction, phase)=>{
-    const x=Math.max(0,Math.min(1,Number(fraction)||0));
+    const x=Math.max(0,Math.min(1,Number(fraction)||0)); teil=x; lauf?.update({});
     fill.style.width=((done+x)/total*100).toFixed(1)+"%";
     if(phase!==undefined){ const w=(STEP[document.documentElement.lang]||STEP.de)[phase]; if(w){ cur.textContent=stepName+" · "+w+" …"; recentStep(recent, w); } }
   };
@@ -1616,7 +1619,7 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
       recentEnd(recent, "fail", {reason:String(e&&e.message||e||"").slice(0,160), hash:null}); }
     done++;
     fill.style.width = (done/total*100).toFixed(1)+"%";
-    cnt.textContent = `${done} / ${total}`;
+    cnt.textContent = `${done} / ${total}`; teil=0; lauf?.update({});
     if(done%5===0) await new Promise(r=>setTimeout(r)); // UI atmen lassen
   }
   delete window.PBImportStep;
@@ -1633,7 +1636,7 @@ async function signBatch(items, options={}){ // items: [{file, path, dirId}]
   toast(cancelReq ? `Abgebrochen · ${added} neu signiert`
                   : `Fertig · ${added} neu signiert, ${skipped} schon bekannt (übersprungen)${failed ? ` · ${failed} fehlgeschlagen — siehe Diagnose` : ""}`);
   return accepted;
-  } finally { signing=false; KI_LAUF=null; delete window.PBImportStep; window.PBWorkspace?.refresh(); }
+  } finally { signing=false; KI_LAUF=null; delete window.PBImportStep; lauf?.finish(); window.PBWorkspace?.refresh(); }
 }
 
 /* ============================================================================
