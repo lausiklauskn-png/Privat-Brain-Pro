@@ -4,7 +4,7 @@ package de.familyprojekt.privatebrain.pro;
 final class DesktopHtml {
     static String text(String html) {
         org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(html);
-        doc.select("script,style,template,noscript").remove();
+        doc.select("head,script,style,template,noscript").remove();
         return doc.wholeText();
     }
 }

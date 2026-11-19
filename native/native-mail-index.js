@@ -699,7 +699,7 @@
     const famLine = el('p', 'mail-notice'); famLine.setAttribute('role', 'status'); famLine.dataset.mailFamNote = ''; famLine.hidden = true;
     if (famNote?.hash === r.hash) showFamNote(famLine); else famNote = null;
     box.append(famLine);
-    box.append(storedText(r.mailBody || t('textMissing')));
+    box.append(storedText((window.mailLesbar ? mailLesbar(r.mailBody) : r.mailBody) || t('textMissing')));
     if (window.PBMailTranslation) PBMailTranslation.mount({host:box,actions:tools,source:async()=>({subject:r.name,from:r.mail.from,to:r.mail.to,cc:r.mail.cc,text:r.mailBody || ''}),scope:'index'});
     if (remoteFailed === r.hash) box.insertBefore(el('p', 'mail-notice', t('remoteFailed')), box.children[2] || null);
     if (window.PBLiveMail?.openRemote && r.mailRemotes?.length) box.append(button(t('provider'), () => openMail(r, true), 'mail-primary'));

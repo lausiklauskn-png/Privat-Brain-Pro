@@ -28,7 +28,7 @@ for(const name of names){
   // Explicit platform imports only. Protocol and crypto bodies stay shared.
   text=text.replace(/^import android\.[^;]+;\r?\n/gm,'');
   text=text.replace(/\bContext\b/g,'DesktopState').replace(/\bSharedPreferences\b/g,'DesktopState.Preferences');
-  if(name==='MailMime')text=text.replaceAll('Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(bodies.html)');
+  if(name==='MailMime')text=text.replaceAll('Html.fromHtml(clean, Html.FROM_HTML_MODE_LEGACY).toString()','DesktopHtml.text(clean)');
   if(name==='OriginalFileStore'){
     const guards=[
       ['hash(hash); return new File(root, hash);','hash(hash); File directory=new File(root, hash); DesktopFiles.noLinks(directory.toPath()); return directory;'],
