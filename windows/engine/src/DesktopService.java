@@ -295,6 +295,15 @@ final class DesktopService {
             }else account=fields;
             MailAccount value=new MailAccount(account);mail.verify(value);JSONObject result=mail.saveAccount(value);backup();return result;
         }
+        if(method.equals("renewPassword")){
+            // Klaus 19.11.2026: neues Passwort für ein vorhandenes Konto – derselbe Dialog, nur dieser Anbieter, Adresse fest.
+            MailAccount existing=mail.account(required(o,"account"));if(!existing.authType.equals("password"))throw new MailFailure("INVALID_INPUT");
+            MailProvider provider=MailProvider.find(existing.provider);JSONArray help=new JSONArray();for(int language=0;language<4;language++)help.put(provider.help(language));
+            JSONArray templates=new JSONArray().put(new JSONObject().put("id",provider.id).put("label",provider.label).put("imap",existing.imap).put("smtp",existing.smtp).put("editable",false).put("customUser",provider.customUser()).put("ready",true).put("help",help).put("plan",new JSONArray()));
+            JSONObject fields=host.call("account",new JSONObject().put("providers",templates).put("renew",new JSONObject().put("email",existing.email).put("user",existing.user)));
+            if(fields.optBoolean("cancelled"))throw new MailFailure("CANCELLED");
+            MailAccount value=mail.renewed(existing.id,fields.getString("password"));mail.verify(value);JSONObject result=mail.replaceAccount(value);backup();return result;
+        }
         if(method.equals("removeAccount")){mail.removeAccount(required(o,"account"));backup();return yes();}
         if(method.equals("saved"))return new JSONObject().put("items",mail.saved(required(o,"account")));
         if(method.equals("savedDraft"))return mail.savedDraft(required(o,"account"),required(o,"id"));

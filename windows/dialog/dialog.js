@@ -68,7 +68,13 @@
     }
     if(value.kind==='account'){
       $('provider').replaceChildren(...(value.providers||[]).map(p=>{const option=document.createElement('option');option.value=p.id;option.textContent=p.label;return option;}));
-      provider();$('provider').focus();
+      provider();
+      if(value.renew){
+        // Passwort erneuern: Anbieter und Adresse stehen fest, gefragt wird nur das neue Passwort.
+        $('title').textContent=({de:'Passwort erneuern',en:'Renew password',ru:'Обновить пароль',pl:'Odnów hasło'}[value.language]||'Renew password');
+        $('provider').disabled=true;$('email').value=value.renew.email||'';$('email').readOnly=true;$('user').value=value.renew.user||'';$('user').readOnly=true;
+        $('password').focus();
+      }else $('provider').focus();
     }else $('password').focus();
   });
 })();

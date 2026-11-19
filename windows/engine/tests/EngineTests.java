@@ -410,6 +410,17 @@ public final class EngineTests {
         ok(new MailOutbox(store).send(account,draft,new byte[]{1},ambiguous).getString("status").equals("uncertain"),"ambiguous SMTP reports uncertainty");
         DesktopState restart = new DesktopState(root.resolve("device-a"), protection);
         ok(new MailOutbox(new EncryptedMailStore(restart)).send(account,draft,new byte[]{1},ambiguous).getString("status").equals("uncertain")&&sends[0]==1,"restart never resends an ambiguous SMTP attempt");
+        // Passwort erneuern (Klaus 19.11.2026): gleiche Kennung, nur das Passwort neu, kein zweiter Eintrag; Adresse/Server unveränderlich.
+        MailEngine engine=new MailEngine(store);
+        JSONObject saved=engine.saveAccount(new MailAccount(new JSONObject().put("provider","telekom").put("email","probe@t-online.de").put("password","alt")
+            .put("imap",MailProvider.TELEKOM.imap).put("smtp",MailProvider.TELEKOM.smtp)));
+        String id=saved.getString("id");
+        engine.replaceAccount(engine.renewed(id,"neu"));
+        ok(engine.account(id).password.equals("neu")&&engine.accounts().length()==1&&engine.account(id).email.equals("probe@t-online.de"),"renewing keeps the account id and entry and replaces only the password");
+        fails("INVALID_INPUT",()->engine.replaceAccount(new MailAccount(engine.account(id).privateJson().put("email","other@t-online.de"))));
+        fails("ACCOUNT_MISSING",()->engine.replaceAccount(new MailAccount(engine.account(id).privateJson().put("id",UUID.randomUUID().toString()))));
+        fails("INVALID_INPUT",()->engine.renewed(id,""));
+        ok(engine.account(id).password.equals("neu"),"a rejected renewal leaves the stored password unchanged");
         AppNetwork.initialize(state);
         try(java.net.ServerSocket listener=new java.net.ServerSocket(0,1,java.net.InetAddress.getLoopbackAddress());java.net.Socket client=new java.net.Socket("127.0.0.1",listener.getLocalPort());java.net.Socket accepted=listener.accept()){
             AppNetwork.track(client);AppNetwork.setOffline(state,true);

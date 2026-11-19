@@ -54,7 +54,8 @@
     "openOriginal",
     "original",
     "openAttachment",
-    "addAccount"
+    "addAccount",
+    "renewPassword"
   ],
   "ProNetwork": [
     "getState",

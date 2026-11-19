@@ -81,7 +81,7 @@
       return result;
     }
     catch (error) {
-      if (error?.code === 'CANCELLED' && method === 'addAccount') return null;
+      if (error?.code === 'CANCELLED' && (method === 'addAccount' || method === 'renewPassword')) return null;
       // Folder mode: ask once for the folder password (native dialog), then repeat the same request.
       if (error?.code === 'VAULT_LOCKED' && !retried && window.PBVault && await window.PBVault.unlock().catch(() => false)) return invoke(method, args, true);
       const known=Object.hasOwn(messages,error?.code);
@@ -106,6 +106,7 @@
     text,
     accounts: async () => withItems(await invoke('accounts')).items,
     addAccount: () => invoke('addAccount', {language:document.documentElement.lang, dark:document.documentElement.dataset.theme === 'dunkel'}),
+    renewPassword: account => invoke('renewPassword', {account, language:document.documentElement.lang, dark:document.documentElement.dataset.theme === 'dunkel'}),
     saved: async account => withItems(await invoke('saved', {account})).items,
     savedDraft: (account,id) => invoke('savedDraft',{account,id}),
     openAttachment: args => invoke('openAttachment', args),

@@ -94,6 +94,30 @@ final class MailEngine {
         store.write("accounts", new JSONObject().put("items", values));
         return account.publicJson();
     }
+    /**
+     * Neues Passwort für ein vorhandenes Konto (Klaus 19.11.2026: nach einem neuen Telekom-„Passwort für E-Mail-Programme“ musste das
+     * Konto sonst neu angelegt werden). Nur Passwort-Konten; Kennung, Anbieter, Adresse, Benutzername und Server bleiben. Wird erst nach
+     * erfolgreicher Anmeldeprobe gerufen.
+     */
+    MailAccount renewed(String id, String password) throws Exception {
+        MailAccount existing = account(id);
+        if (!existing.authType.equals("password")) throw new MailFailure("INVALID_INPUT");
+        return new MailAccount(existing.privateJson().put("password", password));
+    }
+    JSONObject replaceAccount(MailAccount account) throws Exception {
+        JSONObject root = store.read("accounts");
+        JSONArray values = root == null ? new JSONArray() : root.getJSONArray("items");
+        for (int n = 0; n < values.length(); n++) {
+            MailAccount existing = new MailAccount(values.getJSONObject(n));
+            if (!existing.id.equals(account.id)) continue;
+            if (!existing.provider.equals(account.provider) || !existing.email.equals(account.email) || !existing.user.equals(account.user)
+                || !existing.imap.equals(account.imap) || !existing.smtp.equals(account.smtp)) throw new MailFailure("INVALID_INPUT");
+            values.put(n, account.privateJson());
+            store.write("accounts", new JSONObject().put("items", values));
+            return account.publicJson();
+        }
+        throw new MailFailure("ACCOUNT_MISSING");
+    }
     void removeAccount(String id) throws Exception {
         account(id);
         JSONArray values = store.read("accounts").getJSONArray("items"), result = new JSONArray();
