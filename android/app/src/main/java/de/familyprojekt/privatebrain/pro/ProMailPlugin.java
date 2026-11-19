@@ -315,6 +315,49 @@ public class ProMailPlugin extends Plugin {
             dialog.show();
         });
     }
+    private static final String[] RENEW_TITLE = {"Passwort erneuern", "Renew password", "Обновить пароль", "Odnów hasło"};
+    /** Neues Passwort für ein vorhandenes Passwort-Konto: nur das Passwort wird abgefragt, geprüft und ersetzt (gleiche Kennung). */
+    @PluginMethod public void renewPassword(PluginCall call) {
+        Activity activity = getActivity();
+        MailAccount existing; MailProvider preset;
+        try {
+            existing = engine.account(required(call, "account")); preset = MailProvider.find(existing.provider);
+            if (!existing.authType.equals("password")) throw new MailFailure("INVALID_INPUT");
+        } catch (Exception error) { call.reject(code(error), code(error)); return; }
+        activity.runOnUiThread(() -> {
+            int language = ArraysIndex.language(call.getString("language", "de"));
+            String[] t = WORDS[language];
+            boolean dark = call.getBoolean("dark", false);
+            ContextThemeWrapper context = new ContextThemeWrapper(activity, dark ?
+                androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert : androidx.appcompat.R.style.Theme_AppCompat_Light_Dialog_Alert);
+            LinearLayout form = new LinearLayout(context); form.setOrientation(LinearLayout.VERTICAL);
+            int padding = Math.round(20 * activity.getResources().getDisplayMetrics().density);
+            form.setPadding(padding, padding / 2, padding, padding / 2);
+            TextView address = new TextView(context); address.setText(existing.email); form.addView(address);
+            EditText password = field(form, t[3], InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            TextView help = new TextView(context); help.setText(preset.help(language)); form.addView(help);
+            TextView status = new TextView(context); status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); form.addView(status);
+            ScrollView scroll = new ScrollView(context); scroll.setFillViewport(true); scroll.addView(form);
+            AlertDialog dialog = new AlertDialog.Builder(context).setTitle(RENEW_TITLE[language]).setView(scroll)
+                .setPositiveButton(t[4], null).setNegativeButton(t[5], null).create();
+            AtomicBoolean finished = new AtomicBoolean(false), testing = new AtomicBoolean(false);
+            dialog.setOnCancelListener(d -> { password.setText(""); synchronized (finished) { if (finished.compareAndSet(false, true)) call.reject("Password renewal cancelled", "CANCELLED"); } });
+            dialog.setOnDismissListener(d -> { password.setText(""); synchronized (finished) { if (finished.compareAndSet(false, true)) call.reject("Password renewal cancelled", "CANCELLED"); } });
+            dialog.setOnShowListener(d -> {
+                GradientDrawable background = new GradientDrawable(); background.setColor(Color.parseColor(dark ? "#171d25" : "#faf6f0"));
+                background.setCornerRadius(18 * activity.getResources().getDisplayMetrics().density);
+                if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawable(background);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                    if (password.getText().length() == 0) { status.setText(t[8]); return; }
+                    if (!testing.compareAndSet(false, true)) return;
+                    password.setEnabled(false);
+                    try { verifySetup(call, engine.renewed(existing.id, password.getText().toString()), activity, dialog, status, t, language, testing, finished, () -> password.setEnabled(true), true); }
+                    catch (Exception error) { testing.set(false); password.setEnabled(true); status.setText(t[8]); }
+                });
+            });
+            dialog.show();
+        });
+    }
     private static final String[] GOOGLE_SIGN_IN = {"Mit Google anmelden", "Sign in with Google", "Войти через Google", "Zaloguj się przez Google"};
     private static String googleError(String code, int language) { return GmailMessages.error(code,language); }
     private static void showField(EditText field, boolean visible) {
@@ -324,6 +367,10 @@ public class ProMailPlugin extends Plugin {
     }
     private void verifySetup(PluginCall call, MailAccount account, Activity activity, AlertDialog dialog, TextView status,
             String[] t, int language, AtomicBoolean testing, AtomicBoolean finished, Runnable restoreForm) {
+        verifySetup(call, account, activity, dialog, status, t, language, testing, finished, restoreForm, false);
+    }
+    private void verifySetup(PluginCall call, MailAccount account, Activity activity, AlertDialog dialog, TextView status,
+            String[] t, int language, AtomicBoolean testing, AtomicBoolean finished, Runnable restoreForm, boolean replace) {
         status.setText(t[7]);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         worker.execute(() -> {
             if(finished.get())return;
@@ -332,7 +379,7 @@ public class ProMailPlugin extends Plugin {
                 JSONObject saved;
                 synchronized (finished) {
                     if (finished.get()) return;
-                    saved = engine.saveAccount(account);finished.set(true);
+                    saved = replace ? engine.replaceAccount(account) : engine.saveAccount(account);finished.set(true);
                 }
                 backup();
                 activity.runOnUiThread(() -> {

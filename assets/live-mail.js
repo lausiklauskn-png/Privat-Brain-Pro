@@ -62,6 +62,18 @@
       "В каталог",
       "Do katalogu",
     ],
+    renewPassword: [
+      "Passwort erneuern",
+      "Renew password",
+      "Обновить пароль",
+      "Odnów hasło",
+    ],
+    renewed: [
+      "Neues Passwort gespeichert. Die Ordner werden neu geladen.",
+      "New password saved. Folders are reloading.",
+      "Новый пароль сохранён. Папки загружаются заново.",
+      "Nowe hasło zapisane. Foldery są wczytywane ponownie.",
+    ],
     removeAccount: [
       "Kontoverbindung entfernen",
       "Remove account connection",
@@ -355,6 +367,7 @@
         return;
       }
       account = accountSelect.value;
+      renewVisible();
       if (native) switchMode(true);
       await loadFolders();
     });
@@ -366,6 +379,16 @@
     btn("account", () => setupAccount()),
     ...(native ? [btn("saved", () => savedItems())] : []),
     btn("disconnect", disconnect),
+    // Klaus 19.11.2026: nach einem neuen Passwort beim Anbieter (Telekom: „Passwort für E-Mail-Programme“) nur das Passwort ersetzen,
+    // statt das Konto neu anzulegen – Kennung, Ordner und gemerkte Mails bleiben dem Konto zugeordnet. Nur Geräte-Konten mit Passwort.
+    ...(native && native.renewPassword ? [btn("renewPassword", async () => {
+      if (!leave() || !account) return;
+      const renewed = await native.renewPassword(account);
+      if (!renewed) return;
+      accounts = await native.accounts();
+      await loadFolders();
+      notice.textContent = T("renewed");
+    })] : []),
     btn("removeAccount", async () => {
       if (!leave() || !account || !confirm(T("removeConfirm"))) return;
       await api("/accounts/" + account, null, "DELETE");
@@ -379,7 +402,7 @@
     const tools = el("details", "mail-account-tools"), summary = el("summary", "mail-button", T("tools")), menu = el("div", "mail-account-menu");
     summary.dataset.liveText = "tools";
     tools.append(summary, menu);
-    for (const key of ["account", "saved", "disconnect", "removeAccount"])
+    for (const key of ["account", "saved", "renewPassword", "disconnect", "removeAccount"].filter(k => accountTools.querySelector('[data-live-text="' + k + '"]')))
       menu.append(accountTools.querySelector('[data-live-text="' + key + '"]'));
     menu.append(localButton);
     menu.addEventListener("click", event => { if (event.target.closest("button")) tools.open = false; });
@@ -409,6 +432,12 @@
   }
   function leave() {
     return !dirty || confirm(T("discard"));
+  }
+  /** „Passwort erneuern“ nur bei Konten mit Passwort (nicht bei Google, das sich über die Google-Anmeldung erneuert). */
+  function renewVisible() {
+    const b = app.parentNode?.querySelector?.('[data-live-text="renewPassword"]') || document.querySelector('[data-live-text="renewPassword"]');
+    const current = accounts.find((a) => a.id === account);
+    if (b) b.hidden = !account || (!!current && (current.authType || "password") !== "password");
   }
   // Klaus 16.11.2026: jede geöffnete Mail hat eine Nummer; ein Prüfergebnis gilt nur, solange seine Mail noch offen ist.
   let openTicket = 0;
@@ -597,6 +626,7 @@
       account = accounts[0]?.id || "";
     accountSelect.value = account;
     if (native) accountTools.hidden = !account;
+    renewVisible();
     if (account) await loadFolders();
     else if (native) disconnect();
     else setupAccount();

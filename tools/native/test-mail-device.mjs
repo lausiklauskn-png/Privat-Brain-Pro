@@ -55,6 +55,7 @@ try{
         async saved(args){log('saved',args);return{items:args.account!==window.historyAccount?[]:window.sendReceipts.length?window.sendReceipts:window.localDraft?[{id:'draft-fixture',status:'draft',subject:window.localDraft.subject,to:window.localDraft.to,created:Date.now()}]:[]};},
         async savedDraft(args){log('savedDraft',args);return structuredClone(window.localDraft);},
         async send(args){log('send',args);window.historyAccount=args.account;window.sendReceipts=[{id:'outbox-fixture',status:window.sendMode,subject:args.draft.subject,to:args.draft.to,created:Date.now()}];return{status:window.sendMode,noticeCode:window.sendMode==='uncertain'?'SEND_UNCERTAIN':''};},
+        async renewPassword(args){log('renewPassword',args);if(window.renewMode==='cancel')throw{code:'CANCELLED'};return window.mailAccounts.find(a=>a.id===args.account);},
         async removeAccount(args){log('removeAccount',args);window.mailAccounts=[];return{ok:true};}
       }
     }};
@@ -415,6 +416,27 @@ try{
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   ok('Account switch fetches the new account and clears previous selection',await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='messages').at(-1).args.account==='22222222-2222-4222-8222-222222222222')&&await mail.locator('.live-mail .mail-count').textContent()==='0 ausgewählt');
   ok('Outbox count does not leak between accounts',await mail.locator('.live-mail [data-mail-folder=outbox] small').textContent()==='0');
+  // Passwort erneuern (Klaus 19.11.2026): im Menü, nur für Passwort-Konten, ruft das Gerät mit genau dieser Kennung;
+  // das Passwort selbst geht nie durch die Seite (der native Dialog fragt es ab), Abbrechen ändert nichts.
+  await mail.locator('.mail-account-tools>summary').click();
+  ok('"Passwort erneuern" stands in the account menu for a password account',await button('renewPassword').isVisible()&&(await button('renewPassword').innerText()).trim()==='Passwort erneuern');
+  await page.evaluate(()=>{window.renewMode='cancel';});await button('renewPassword').click();
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  const renewCalls=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='renewPassword'));
+  ok('Renewing asks the device for exactly this account, with only account, language and theme',renewCalls.length===1&&renewCalls[0].args.account==='22222222-2222-4222-8222-222222222222'&&Object.keys(renewCalls[0].args).sort().join(',')==='account,dark,language');
+  ok('Cancelling the renewal changes nothing and shows no error',!/fehlgeschlagen|failed/i.test(await mail.locator('.live-mail .mail-notice').first().textContent()));
+  // Ein Google-Konto kommt dazu; die Konten werden nach dem erfolgreichen Erneuern neu gelesen.
+  await page.evaluate(()=>{window.mailAccounts.push({id:'33333333-3333-4333-8333-333333333333',email:'g@gmail.example',provider:'gmail',authType:'oauth2'});const select=document.querySelector('.mail-account-bar select');select.add(new Option('g@gmail.example','33333333-3333-4333-8333-333333333333'));});
+  const foldersBefore=await page.evaluate(()=>window.mailCalls.filter(c=>c.method==='folders').length);
+  await page.evaluate(()=>{window.renewMode='';});await mail.locator('.mail-account-tools>summary').click();await button('renewPassword').click();
+  await page.waitForFunction(n=>window.mailCalls.filter(c=>c.method==='folders').length>n,foldersBefore);
+  ok('After a successful renewal the folders are loaded again and the notice says so',await page.evaluate(()=>document.querySelector('.live-mail .mail-notice').textContent).then(t=>/Neues Passwort gespeichert/.test(t)));
+  await mail.locator('.mail-account-bar select').selectOption('33333333-3333-4333-8333-333333333333');
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  ok('A Google account has no "Passwort erneuern" (Google renews through its own sign-in)',await page.evaluate(()=>document.querySelector('[data-live-text="renewPassword"]').hidden));
+  await mail.locator('.mail-account-bar select').selectOption('22222222-2222-4222-8222-222222222222');
+  await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
+  await page.evaluate(()=>{window.mailAccounts=window.mailAccounts.filter(a=>a.provider!=='gmail');});
   await mail.locator('.mail-account-tools>summary').click();
   await button('removeAccount').click();
   ok('Removing final native account clears old message UI and returns to local mailbox',await mail.locator('.live-mail').isHidden()&&await mail.locator('.live-mail .mail-reader').textContent()==='');
