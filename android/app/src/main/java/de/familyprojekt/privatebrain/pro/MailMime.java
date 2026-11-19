@@ -128,6 +128,17 @@ final class MailMime {
                 .put("inline", inline).put("data", Base64.encodeToString(content, Base64.NO_WRAP)));
         }
     }
+    /**
+     * Text of an HTML-only mail. Html.fromHtml keeps the content of style, script and head as text (Klaus 19.11.2026:
+     * newsletters showed their CSS in the explorer), so those blocks and comments go first. Parsing only, nothing loads.
+     */
+    static String htmlText(String html) {
+        if (html == null || html.isEmpty()) return "";
+        String clean = html.replaceAll("(?is)<!--.*?-->", " ")
+            .replaceAll("(?is)<(style|script|head|title|noscript|template)\\b[^>]*>.*?</\\1\\s*>", " ")
+            .replaceAll("(?is)<(style|script)\\b[^>]*>.*$", " ");
+        return Html.fromHtml(clean, Html.FROM_HTML_MODE_LEGACY).toString().replace("\uFFFC", "").trim();
+    }
     static JSONObject parse(byte[] raw, Session session) throws Exception {
         if (raw.length > MAX_RAW) throw new MailFailure("MESSAGE_TOO_LARGE");
         MimeMessage message = new MimeMessage(session, new ByteArrayInputStream(raw));
@@ -135,7 +146,7 @@ final class MailMime {
         extract(message, bodies, 0);
         // Separate catalog/reply text from the original HTML representation and raw MIME.
         // The UI displays HTML only in its script-free, opaque-origin sandbox.
-        String text = bodies.plain.isEmpty() ? Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString() : bodies.plain;
+        String text = bodies.plain.isEmpty() ? htmlText(bodies.html) : bodies.plain;
         return new JSONObject().put("raw", new String(raw, StandardCharsets.UTF_8))
             .put("sourceBase64", Base64.encodeToString(raw, Base64.NO_WRAP))
             .put("subject", message.getSubject() == null ? "" : message.getSubject())
@@ -160,7 +171,7 @@ final class MailMime {
             Bodies bodies = new Bodies();
             bodies.sink = sink; bodies.head = head;
             extract(message, bodies, 0);
-            String text = bodies.plain.isEmpty() ? Html.fromHtml(bodies.html, Html.FROM_HTML_MODE_LEGACY).toString() : bodies.plain;
+            String text = bodies.plain.isEmpty() ? htmlText(bodies.html) : bodies.plain;
             // The check report reads headers and text; the complete source stays with the provider.
             StringBuilder headers = new StringBuilder();
             java.util.Enumeration<?> lines = message.getAllHeaderLines();

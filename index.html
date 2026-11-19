@@ -2104,12 +2104,29 @@ function renderWhy(hit){
 }
 function chip(t){ return `<span class="chip">${escapeHtml(t)}</span>`; }
 
+/* Mailtext lesbar machen (Klaus 19.11.2026): Android wandelte reine HTML-Mails samt <style>-Inhalt in Text um –
+   gespeicherte Mails zeigten dann Gestaltungsregeln statt Text. Entfernt nur, was eindeutig CSS ist (Selektor {Eigenschaft: Wert}). */
+function mailLesbar(text){
+  let s=String(text==null?"":text);
+  if(!/[{}\uFFFC]/.test(s)) return s;
+  s=s.replace(/\uFFFC/g,"").replace(/@(?:import|charset|namespace)\b[^;{}\n]*;/gi,"");
+  const istRegel=b=>b.split(";").every(d=>!d.trim()||/^\s*[-a-zA-Z][-\w]*\s*:/.test(d));
+  let vorher;
+  do{ vorher=s;
+    s=s.replace(/([^{}\n]*)\{([^{}]*)\}/g,(m,a,b)=>{
+      if(!istRegel(b)) return m;
+      const sel=a.match(/[\s\w.#:,>*+~\[\]="'()\-@%!\/|^$]*$/)[0];
+      return a.slice(0,a.length-sel.length);
+    });
+  }while(s!==vorher);
+  return s.replace(/^[ \t]+$/gm,"").replace(/\n{3,}/g,"\n\n").trim();
+}
 /* ---------- Öffnen (über Handle re-lesen — kein Kopieren) ---------- */
 async function openFile(hash){
   const r = CATALOG.find(x=>x.hash===hash); if(!r) return;
   // 0) Mail (kein Original auf der Platte — Text aus dem Katalog zeigen)
   if(r.mailBody!=null){
-    const txt="Betreff: "+(r.name||"")+"\nVon: "+((r.mail&&r.mail.from)||"")+"\nAn: "+((r.mail&&r.mail.to)||"")+"\nDatum: "+((r.mail&&r.mail.date)||"")+"\n\n"+r.mailBody;
+    const txt="Betreff: "+(r.name||"")+"\nVon: "+((r.mail&&r.mail.from)||"")+"\nAn: "+((r.mail&&r.mail.to)||"")+"\nDatum: "+((r.mail&&r.mail.date)||"")+"\n\n"+mailLesbar(r.mailBody);
     return showBlob(new File([txt], (r.name||"mail")+".txt", {type:"text/plain"}), r);
   }
   // 1) Sitzungs-Datei (per Datei-Auswahl geladen)

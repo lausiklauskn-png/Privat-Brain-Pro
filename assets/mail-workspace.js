@@ -145,7 +145,7 @@
     if(r.mailKind==='draft')actions.append(button('edit',()=>{editing=structuredClone(r);copyRecipientsOpen=Boolean(editing.mail.cc||editing.mail.bcc);dirty=false;drawReader();}),button('queue',async()=>{r.mailFolder='outbox';await persist(r);go('outbox');update();toast(T('queued'),7000);}));
     if(where(r)==='trash')actions.append(button('restore',()=>move(r.mailPreviousFolder && r.mailPreviousFolder!=='trash'?r.mailPreviousFolder:'inbox')));
     actions.append(button('export',()=>exportMail(r)));reader.append(actions);
-    const switches=node('div','mail-reader-actions'),text=node('pre','mail-text',r.mailBody);reader.append(switches,text);
+    const switches=node('div','mail-reader-actions'),text=node('pre','mail-text',window.mailLesbar?mailLesbar(r.mailBody):r.mailBody);reader.append(switches,text);
     const original=button('original',()=>{text.textContent=sourceBody;aiBox.hidden=true;});const ai=button('aiView',async()=>{await bodyReady;aiBox.hidden=false;mask();});switches.append(original,ai);
     const checks=node('div','mail-report',T('pending'));reader.append(checks);
     inspect(r).then(data=>{if(version===readerVersion)checks.replaceWith(reportNode(data));}).catch(()=>{if(version===readerVersion)checks.textContent=T('unavailable');});
