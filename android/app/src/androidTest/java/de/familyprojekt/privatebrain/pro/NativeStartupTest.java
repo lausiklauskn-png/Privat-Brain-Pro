@@ -368,8 +368,11 @@ public class NativeStartupTest {
             awaitTrue(scenario,"Boolean(window.PBMailDevice)");
             evaluate(scenario,"PBMailDevice.accounts().then(items=>window.__providerBefore=JSON.stringify(items));window.__providersCancelled=false;PBMailDevice.addAccount().then(value=>window.__providersCancelled=value===null);true");
             var password=androidx.test.espresso.matcher.ViewMatchers.withInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            for(MailProvider preset:new MailProvider[]{MailProvider.WEBDE,MailProvider.GMX,MailProvider.YAHOO,MailProvider.IONOS}){
-                chooseMailProvider(preset.label);
+            boolean[] firstTelekom={true};
+            // Klaus 19.11.2026: Telekom ist beim Öffnen schon gewählt – die Server müssen sofort drinstehen, auch nach dem Zurückwechseln.
+            for(MailProvider preset:new MailProvider[]{MailProvider.TELEKOM,MailProvider.WEBDE,MailProvider.GMX,MailProvider.YAHOO,MailProvider.IONOS,MailProvider.TELEKOM}){
+                if(!(preset==MailProvider.TELEKOM&&firstTelekom[0]))chooseMailProvider(preset.label);
+                firstTelekom[0]=false;
                 onView(withText(preset.imap)).inRoot(isDialog()).perform(androidx.test.espresso.action.ViewActions.scrollTo())
                     .check(matches(org.hamcrest.Matchers.allOf(isDisplayed(),org.hamcrest.Matchers.not(androidx.test.espresso.matcher.ViewMatchers.isEnabled()))));
                 onView(withText(preset.smtp)).inRoot(isDialog()).perform(androidx.test.espresso.action.ViewActions.scrollTo())
@@ -381,7 +384,7 @@ public class NativeStartupTest {
                 onView(withText("Verbinden und prüfen")).inRoot(isDialog()).perform(click());
                 onView(androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom(android.widget.Spinner.class)).inRoot(isDialog())
                     .check(matches(androidx.test.espresso.matcher.ViewMatchers.isEnabled()));
-                onView(withText("Anmeldung fehlgeschlagen. E-Mail-Adresse, E-Mail-Passwort und Servernamen prüfen.")).inRoot(isDialog())
+                onView(withText("Bitte die E-Mail-Adresse vollständig eintragen.")).inRoot(isDialog())
                     .perform(androidx.test.espresso.action.ViewActions.scrollTo()).check(matches(isDisplayed()));
             }
             chooseMailProvider("Hetzner");
