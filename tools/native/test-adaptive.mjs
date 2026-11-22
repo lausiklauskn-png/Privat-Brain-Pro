@@ -121,7 +121,7 @@ try{
  check('Composer Tab reaches the named Cc/Bcc disclosure',await tabTo(page,'.live-mail .mail-copy-fields>summary'));
  check('Expanded Cc field is reachable by keyboard',await tabTo(page,'#pb-live-cc'));
  const expected=await page.evaluate(()=>['to','cc','bcc','subject','text'].map(k=>document.getElementById('pb-live-'+k).value));
- for(const theme of ['klarblau','graphit','petrol','nachtblau']){
+ for(const theme of ['klarblau','graphit','petrol','erdton','petrolwarm','schiefer','weich','nachtblau']){
    await page.evaluate(theme=>PBTheme.choose(theme),theme);await page.waitForTimeout(160);
    for(const [width,height]of sizes){
      await page.setViewportSize({width,height});await page.waitForTimeout(45);

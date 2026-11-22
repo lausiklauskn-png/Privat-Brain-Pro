@@ -62,8 +62,8 @@ try {
   }
   let {context, page, errors} = await fixture();
   ok('Existing light preference becomes the modern light profile', await page.locator('html').getAttribute('data-pb-theme') === 'klarblau');
-  ok('Settings has no duplicate appearance card while its original source remains available',await page.locator('#pb-theme-settings').evaluate(card=>card.hidden&&card.getBoundingClientRect().height===0&&card.querySelectorAll('[data-pb-theme-choice]').length===4));
-  const profiles = [['klarblau','#2563eb'],['graphit','#475569'],['petrol','#0f766e'],['nachtblau','#7ca7ff']];
+  ok('Settings has no duplicate appearance card while its original source remains available',await page.locator('#pb-theme-settings').evaluate(card=>card.hidden&&card.getBoundingClientRect().height===0&&card.querySelectorAll('[data-pb-theme-choice]').length===8));
+  const profiles = [['klarblau','#2563eb'],['graphit','#475569'],['petrol','#0f766e'],['erdton','#7d5c2e'],['petrolwarm','#0e6b6b'],['schiefer','#ad4410'],['weich','#a63a6a'],['nachtblau','#7ca7ff']];
   for (const [name, accent] of profiles) {
     await chooseProfile(page,name);
     const state = await page.evaluate(() => {
@@ -123,9 +123,9 @@ try {
   }));
   for(const [name] of profiles){
     await paletteButton.click();await palette.waitFor();
-    ok(name+': the direct palette focuses the current choice and offers four existing profiles',await page.evaluate(()=>{
-      const popup=document.getElementById('pb-palette');return popup.querySelectorAll('[data-pb-palette-choice]').length===4&&
-        document.activeElement===popup.querySelector('[aria-pressed=true]')&&document.querySelectorAll('#pb-theme-settings [data-pb-theme-choice]').length===4;
+    ok(name+': the direct palette focuses the current choice and offers all eight profiles',await page.evaluate(()=>{
+      const popup=document.getElementById('pb-palette');return popup.querySelectorAll('[data-pb-palette-choice]').length===8&&
+        document.activeElement===popup.querySelector('[aria-pressed=true]')&&document.querySelectorAll('#pb-theme-settings [data-pb-theme-choice]').length===8;
     }));
     await page.locator('[data-pb-palette-choice="'+name+'"]').click();
     ok(name+': choosing a swatch applies immediately without losing the page or query',await page.evaluate(name=>
@@ -151,7 +151,8 @@ try {
   ok('Home focuses the first profile',await page.locator('[data-pb-palette-choice=klarblau]').evaluate(button=>document.activeElement===button));
   await page.keyboard.press('ArrowUp');await page.keyboard.press('Enter');
   ok('Keyboard activation applies the focused profile and returns focus',await page.evaluate(()=>PBTheme.current()==='nachtblau')&&await palette.isHidden()&&await paletteButton.evaluate(button=>document.activeElement===button));
-  const paletteWords={de:['Farbthema wählen',['Klarblau','Graphit','Petrol','Nachtblau']],en:['Choose a colour theme',['Clear blue','Graphite','Petrol','Night blue']],ru:['Выбрать цветовую тему',['Чистый синий','Графит','Петроль','Ночной синий']],pl:['Wybierz motyw kolorystyczny',['Czysty błękit','Grafit','Petrol','Nocny błękit']]};
+  // Klaus 22.11.2026: vier Themen aus V3 dazu (Erdton, Petrol warm, Schiefer kompakt, Weich und luftig).
+  const paletteWords={de:['Farbthema wählen',['Klarblau','Graphit','Petrol','Erdton','Petrol warm','Schiefer kompakt','Weich und luftig','Nachtblau']],en:['Choose a colour theme',['Clear blue','Graphite','Petrol','Earth tone','Warm petrol','Compact slate','Soft and airy','Night blue']],ru:['Выбрать цветовую тему',['Чистый синий','Графит','Петроль','Землистое','Тёплый петроль','Компактный сланец','Мягкое и лёгкое','Ночной синий']],pl:['Wybierz motyw kolorystyczny',['Czysty błękit','Grafit','Petrol','Ziemisty','Ciepły petrol','Kompaktowy łupek','Miękki i lekki','Nocny błękit']]};
   for(const [language,[label,names]] of Object.entries(paletteWords)){
     await page.evaluate(()=>document.documentElement.style.fontSize='16px');
     await clickMenuControl(page,'[data-lang="'+language+'"]');
@@ -168,7 +169,7 @@ try {
         const choices=[...popup.querySelectorAll('[data-pb-palette-choice]')].map(button=>{const box=button.getBoundingClientRect(),name=button.querySelector('.pb-palette-name');return{rect:box.toJSON(),name:name.textContent,nameScroll:name.scrollWidth,nameWidth:name.clientWidth};});
         const checks={visible:!popup.hidden,inset:rect.left>=7&&rect.right<=innerWidth-7&&rect.top>=7&&rect.bottom<=innerHeight-7,
           noOverflow:popup.scrollWidth<=popup.clientWidth+1,trigger:trigger.left>=0&&trigger.right<=innerWidth&&trigger.width>=target&&trigger.height>=target,
-          quickRight:quick.left>=tabs.right-1,choices:choices.length===4&&choices.every(choice=>choice.rect.height>=target&&choice.rect.left>=rect.left&&choice.rect.right<=rect.right&&choice.nameScroll<=choice.nameWidth+1),
+          quickRight:quick.left>=tabs.right-1,choices:choices.length===8&&choices.every(choice=>choice.rect.height>=target&&choice.rect.left>=rect.left&&choice.rect.right<=rect.right&&choice.nameScroll<=choice.nameWidth+1),
           desktopDensity:!compact||parseFloat(getComputedStyle(document.documentElement).fontSize)>16||trigger.height<=34&&choices.every(choice=>choice.rect.height<=34)};
         return{ok:Object.values(checks).every(Boolean),checks,target,viewport:{width:innerWidth,height:innerHeight},popup:rect.toJSON(),trigger:trigger.toJSON(),quick:quick.toJSON(),tabs:tabs.toJSON(),choices};
       });

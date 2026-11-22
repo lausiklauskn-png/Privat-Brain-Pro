@@ -111,7 +111,7 @@ try{
   ok('A real folder failure remains visible beside the actions while help is closed',await page.locator('#libraryStatus').isVisible()&&await page.locator('#libraryStatus').evaluate(node=>!node.closest('[data-pb-help-content]'))&&await region(page,'import-drop').evaluate(node=>node.hidden));
   await navigateTo(page,'settings');
   for(const key of SETTINGS_HELP)ok(`${key}: optional settings explanation starts collapsed`,await toggle(page,key).getAttribute('aria-expanded')==='false'&&await region(page,key).evaluate(node=>node.hidden));
-  ok('The large theme card is hidden while its original palette source remains complete',await page.locator('#pb-theme-settings').evaluate(panel=>panel.hidden&&panel.querySelectorAll('[data-pb-theme-choice]').length===4&&!panel.querySelector('[data-pb-help-toggle]'))&&await page.locator('#pb-palette-button').isVisible()&&await page.locator('#pb-input-language-setting').isVisible());
+  ok('The large theme card is hidden while its original palette source remains complete',await page.locator('#pb-theme-settings').evaluate(panel=>panel.hidden&&panel.querySelectorAll('[data-pb-theme-choice]').length===8&&!panel.querySelector('[data-pb-help-toggle]'))&&await page.locator('#pb-palette-button').isVisible()&&await page.locator('#pb-input-language-setting').isVisible());
   ok('Actual controls, live states and cloud opt-in conditions remain outside information',await page.evaluate(()=>{
     const controls=['pb-input-language-setting','vaultStatus','schutzStatus','schutz-auto','aiProvider','aiKey','aiPersist','euOnly','capEnable','capModel','capServer','capEU','capStatus','capCrashHint','attToggle','dirList','btnPersist','btnExport','btnClear','btnFullExport','btnImport'];
     const provider=document.getElementById('aiProvider').closest('.note'),offline=document.getElementById('ocrFlag').closest('.note');
@@ -194,7 +194,7 @@ try{
   }
   ok('Collapsed import explanations still receive all four real translations without replacing their nodes',new Set(translatedImportHelp).size===4&&await page.evaluate(()=>helpOriginalNodes.help===document.querySelector('[data-ws=libraryHelp]')&&helpOriginalNodes.hint===document.getElementById('fsHint')));
   await toggle(page,'input-language').click();
-  for(const theme of ['klarblau','graphit','petrol','nachtblau']){
+  for(const theme of ['klarblau','graphit','petrol','erdton','petrolwarm','schiefer','weich','nachtblau']){
     await chooseTheme(page,theme);
     for(const [width,height]of [[320,740],[768,1024],[1280,800],[1920,1080]]){
       await page.setViewportSize({width,height});await layoutReady(page);
