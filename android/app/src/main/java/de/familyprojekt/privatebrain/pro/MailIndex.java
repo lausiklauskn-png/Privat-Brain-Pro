@@ -31,7 +31,14 @@ final class MailIndex {
     static final class Body {
         String text = "", html = "";
         boolean attachments;
+        /** Klaus 22.11.2026: names, sizes and types of the attachments for "Alle Konten" – never their content. At most MAX_FILES. */
+        final java.util.List<FileInfo> files = new java.util.ArrayList<>();
     }
+    static final class FileInfo {
+        final String name, type; final long size;
+        FileInfo(String name, String type, long size) { this.name = name; this.type = type; this.size = size; }
+    }
+    static final int MAX_FILES = 20;
 
     private MailIndex() { }
 
@@ -107,7 +114,7 @@ final class MailIndex {
     private static void walk(Part part, Body body, int depth, int[] parts) throws Exception {
         if (depth > 12 || ++parts[0] > 120) return;
         boolean attachment = Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition()) || part.getFileName() != null;
-        if (attachment) { body.attachments = true; return; }
+        if (attachment) { body.attachments = true; note(part, body); return; }
         if (part.isMimeType("multipart/*")) {
             Object content = part.getContent();
             if (!(content instanceof Multipart)) return;
@@ -118,7 +125,7 @@ final class MailIndex {
         }
         boolean plain = part.isMimeType("text/plain"), html = part.isMimeType("text/html");
         if (!plain && !html) {
-            if (!part.isMimeType("message/rfc822") && part.getSize() != 0) body.attachments = true;
+            if (!part.isMimeType("message/rfc822") && part.getSize() != 0) { body.attachments = true; note(part, body); }
             return;
         }
         if ((plain && !body.text.isEmpty()) || (html && !body.html.isEmpty())) return;
@@ -126,6 +133,18 @@ final class MailIndex {
         if (part.getSize() < 0 || part.getSize() > MAX_PART) return;
         String text = read(part, plain ? MAX_TEXT : MAX_HTML);
         if (plain) body.text = text; else body.html = text;
+    }
+
+    /** Remembers name, type and size of one attachment. Only header fields are read; the content stays on the server. */
+    private static void note(Part part, Body body) {
+        if (body.files.size() >= MAX_FILES) return;
+        String name = "", type = "";
+        long size = -1;
+        try { String raw = part.getFileName(); if (raw != null) name = MimeUtility.decodeText(raw); } catch (Exception ignored) { /* stays without a name */ }
+        try { type = new ContentType(part.getContentType()).getBaseType().toLowerCase(Locale.ROOT); } catch (Exception ignored) { /* unknown type */ }
+        try { size = part.getSize(); } catch (Exception ignored) { /* unknown size */ }
+        name = cut(name.replaceAll("[\\p{Cntrl}]", " ").trim(), 200);
+        body.files.add(new FileInfo(name, cut(type, 100), size));
     }
 
     private static String read(Part part, int limit) throws Exception {

@@ -291,7 +291,9 @@ final class MailEngine {
                     MailIndex.Body body;
                     try { body = MailIndex.body(message); }
                     catch (Exception unreadable) { body = new MailIndex.Body(); /* Listed by header only. */ }
-                    items.put(new JSONObject().put("uid", uid).put("text", body.text).put("html", body.html).put("attachments", body.attachments));
+                    JSONArray files = new JSONArray();
+                    for (MailIndex.FileInfo f : body.files) files.put(new JSONObject().put("name", f.name).put("type", f.type).put("size", f.size));
+                    items.put(new JSONObject().put("uid", uid).put("text", body.text).put("html", body.html).put("attachments", body.attachments).put("files", files));
                 }
                 return new JSONObject().put("items", items);
             } finally { folder.close(false); }
