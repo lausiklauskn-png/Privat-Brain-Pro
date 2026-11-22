@@ -40,3 +40,10 @@ Hol das Repo Privat-Brain-Pro-V3 dazu. Prüfe zuerst V3 PR #35 (CI) und führe i
 Dann V3 Schritt 2 „Suche“ nach Pro nachziehen (gleiches Vorgehen: dreiwegig gegen 1c947a3, V3-Eigenes behalten,
 Proben aus Pro übernehmen und an V3 anpassen), danach Schritt 3 „Tresor und Ablage“. Veröffentlichen nur mit Klaus' Wort.
 ```
+
+## Nachtrag 22.11.2026 abends
+
+- V3 Schritt 2 „Suche“ ist auf main (V3 PR #36), Private Akte 0.9.9 ist auf main (PR #89, Web-App über Pages).
+- **Klaus nach Schritt 2: V3 bleibt eigenständig.** Gegenprobe zu Pro ohne Anbindung an die Familienakte; Schritt 3
+  „Tresor und Ablage“ und Schritt 4 „Gerät“ entfallen. Der Startauftrag oben ist damit für V3 erledigt. Was an V3
+  besser gefällt, wird in Pro eingebaut. Stilllegen von V3 (PWA leitet auf Pro um) nur auf Klaus' Wort.
