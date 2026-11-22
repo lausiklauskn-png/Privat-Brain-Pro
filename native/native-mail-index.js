@@ -128,7 +128,10 @@
   };
   const t = key => (labels[key] || [key])[Math.max(0, languages.indexOf(document.documentElement.lang.slice(0, 2)))] || labels[key]?.[0] || key;
   const DAY = 864e5, YEAR = 365 * DAY, INTERVAL = 30 * 60 * 1000;
-  const KEYS = { since: 'pb_mail_index_since', state: 'pb_mail_index_state', view: 'pb_mail_index_view', last: 'pb_mail_index_last', unsubAuto: 'pb_mail_unsub_auto' };
+  const KEYS = { since: 'pb_mail_index_since', state: 'pb_mail_index_state', view: 'pb_mail_index_view', last: 'pb_mail_index_last', unsubAuto: 'pb_mail_unsub_auto', folders: 'pb_mail_index_folders' };
+  // Klaus 22.11.2026: der Index merkt alle Ordner (auch Gesendet, Entwürfe, Spam, Papierkorb) und die Angaben der Anhänge.
+  // Mails, die nur noch im Spam oder Papierkorb liegen, zählen in „Nach Absender“ und „Aufräumen“ nicht mit.
+  const ASIDE = ['trash', 'spam'];
   function load(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; } }
   function store(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Preference only. */ } }
   const view = Object.assign({ mode: 'senders', order: 'newest', account: 'all' }, load(KEYS.view, {}));
@@ -160,7 +163,8 @@
   const locKey = (account, folder, validity, uid) => account + '\n' + folder + '\n' + validity + '\n' + uid;
   const hashText = async text => sha256(new TextEncoder().encode(text).buffer);
   const indexed = () => CATALOG.filter(r => r.mailIndex && r.mail);
-  const visible = () => indexed().filter(r => !r.mailTrashed);
+  const inUse = r => !(r.mailRemotes || []).length || (r.mailRemotes || []).some(l => !ASIDE.includes(l.role));
+  const visible = () => indexed().filter(r => !r.mailTrashed && inUse(r));
   // The header choice "Alle Konten" or one account narrows every list, search and clean-up view.
   const shown = () => view.account === 'all' ? visible() : visible().filter(r => (r.mailRemotes || []).some(l => l.account === view.account));
   function knownAccounts() { const map = new Map(); for (const r of indexed()) for (const l of r.mailRemotes || []) if (l.email && !map.has(l.account)) map.set(l.account, l.email); return map; }
@@ -171,7 +175,8 @@
 
   // ---------- catalog records ----------
   function textFields(rec) {
-    const text = [rec.name, 'Von: ' + (rec.mail.from || ''), 'An: ' + (rec.mail.to || ''), rec.mailBody].filter(Boolean).join('\n');
+    const files = (rec.mailFiles || []).map(f => f.name).filter(Boolean).join(', ');
+    const text = [rec.name, 'Von: ' + (rec.mail.from || ''), 'An: ' + (rec.mail.to || ''), files ? 'Anhänge: ' + files : '', rec.mailBody].filter(Boolean).join('\n');
     const toks = tokens((rec.name + ' ').repeat(2) + ' ' + text);
     rec.vector = buildVector(toks); rec.tf = termFreq(toks); rec.snippet = text.slice(0, typeof SNIPPET_LEN !== 'undefined' ? SNIPPET_LEN : 600);
     rec.summary = summarize(rec.mailBody || ''); rec.nameTokens = tokens(rec.name); delete rec.evec;
@@ -191,7 +196,7 @@
   /** Overwrite in place: server facts change, the user's own marks and folders stay. */
   function overwrite(rec, item, body, loc, accountEmail) {
     const checkedText = rec.pruefung?.mail ? JSON.stringify([rec.mail?.from || '', rec.mail?.to || '', rec.mail?.subject || rec.name || '', rec.mailBody || rec.snippet || '']) : null;
-    const before = JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes]);
+    const before = JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes, rec.mailFiles]);
     rec.name = (item.subject || rec.name || t('noSubject')).slice(0, 140);
     rec.mail = { ...(rec.mail || {}), from: item.from || rec.mail?.from || '', subject: item.subject || rec.mail?.subject || '', date: item.date ? new Date(item.date).toUTCString() : rec.mail?.date || '' };
     if (!rec.mail.to) rec.mail.to = accountEmail || '';
@@ -199,12 +204,12 @@
     rec.mailIndex = 1; rec.mailSeen = Boolean(item.seen); rec.mailFlagged = Boolean(item.flagged);
     rec.mailList = Boolean(item.list || item.bulk); rec.mailMessageId = item.messageId || rec.mailMessageId || '';
     const unsub = unsubInfo(item, body, rec.mailUnsub); if (unsub) rec.mailUnsub = unsub;
-    if (body) { rec.mailHasAttachments = Boolean(body.attachments); const text = body.text || htmlToText(body.html); if (text && text.length >= (rec.mailBody || '').length) { rec.mailBody = text.slice(0, 8000); rec.size = text.length; } }
+    if (body) { rec.mailHasAttachments = Boolean(body.attachments); setFiles(rec, body); const text = body.text || htmlToText(body.html); if (text && text.length >= (rec.mailBody || '').length) { rec.mailBody = text.slice(0, 8000); rec.size = text.length; } }
     if (rec.mailBody == null) rec.mailBody = '';
     addLocation(rec, loc); rec.tags = rec.tags || []; rec.dupes = rec.dupes || [];
-    // Found again in a read folder: someone took it back out of the trash. Never move it by itself again.
-    if (rec.mailTrashed) { delete rec.mailTrashed; rec.mailKeep = 1; }
-    const changed = before !== JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes]);
+    // Found again in a read folder (not in trash or spam): someone took it back out of the trash. Never move it by itself again.
+    if (rec.mailTrashed && !ASIDE.includes(loc.role)) { delete rec.mailTrashed; rec.mailKeep = 1; }
+    const changed = before !== JSON.stringify([rec.name, rec.mail?.from, rec.mail?.to, rec.mail?.subject, rec.date, rec.mailSeen, rec.mailFlagged, rec.mailList, rec.mailBody, rec.mailRemotes, rec.mailFiles]);
     if (changed) textFields(rec);
     // Keep historical findings, but never present a check of an older text as the current one.
     if (checkedText !== null && checkedText !== JSON.stringify([rec.mail?.from || '', rec.mail?.to || '', rec.mail?.subject || rec.name || '', rec.mailBody || rec.snippet || ''])) rec.pruefung = { ...rec.pruefung, mailStale: true };
@@ -224,6 +229,7 @@
       mail: { from: item.from || '', to: accountEmail || '', cc: '', subject, date: item.date ? new Date(item.date).toUTCString() : '' },
       mailIndex: 1, mailMessageId: item.messageId || '', mailSeen: Boolean(item.seen), mailFlagged: Boolean(item.flagged),
       mailList: Boolean(item.list || item.bulk), mailHasAttachments: Boolean(body?.attachments) };
+    setFiles(rec, body);
     const unsub = unsubInfo(item, body); if (unsub) rec.mailUnsub = unsub;
     addLocation(rec, loc); textFields(rec);
     const known = ctx.senders.get(senderAddress(item.from));
@@ -236,6 +242,12 @@
     }
     CATALOG.push(rec); HASHSET.add(hash); addTwin(ctx.twins, rec);
     return rec;
+  }
+  /** Names, types and sizes of the attachments (never their content), as the device read them. */
+  function setFiles(rec, body) {
+    if (!body || !Array.isArray(body.files)) return;
+    const files = body.files.slice(0, 20).map(f => ({ name: String(f?.name || '').slice(0, 200), type: String(f?.type || '').slice(0, 100), size: Number.isSafeInteger(f?.size) && f.size >= 0 ? f.size : null }));
+    if (files.length) rec.mailFiles = files; else delete rec.mailFiles;
   }
   /** Same mail filed earlier without identifier (older "Katalogisieren"): adopt it instead of a copy. */
   function legacyTwin(item, ctx) {
@@ -251,11 +263,21 @@
   let running = null, stopRequested = false, lastProblem = '', progressText = '', syncedSinceStart = false;
   async function folderState() { return load(KEYS.state, {}); }
   async function stateKey(account, path) { return (await hashText('state\n' + account + '\n' + path)).slice(0, 32); }
+  /** Every folder that holds its own mails, each with its role. Collections (Gmail „Alle Nachrichten“, \\All, \\Flagged,
+      \\Important) only repeat mails of other folders and are left out; so are an outbox and unselectable parents. */
   function chooseFolders(folders) {
     const roles = window.PBMailFolders ? PBMailFolders.resolve(folders).roles : new Map();
-    const skip = new Set(['trash', 'spam', 'draft', 'sent', 'outbox'].map(r => roles.get(r)?.path).filter(Boolean));
-    return folders.filter(f => !f.collection && !skip.has(f.path) && !['\\Trash', '\\Junk', '\\Drafts', '\\Sent'].includes(f.specialUse))
+    const roleOf = new Map([...roles].map(([role, f]) => [f.path, role]));
+    return folders.filter(f => !f.collection && !f.noSelect && !['\\All', '\\Flagged', '\\Important'].includes(f.specialUse) && roleOf.get(f.path) !== 'outbox')
+      .map(f => Object.assign({}, f, { role: roleOf.get(f.path) || '' }))
       .sort((a, b) => (b.path === 'INBOX') - (a.path === 'INBOX'));
+  }
+  /** What the folder bar of "Alle Konten" needs: every account's folders with role, name and the server's count. */
+  function rememberFolders(acc, folders) {
+    const all = load(KEYS.folders, {}), roles = window.PBMailFolders ? PBMailFolders.resolve(folders).roles : new Map();
+    const roleOf = new Map([...roles].map(([role, f]) => [f.path, role]));
+    all[acc.id] = { email: acc.email, at: Date.now(), list: folders.map(f => ({ path: f.path, name: f.name || f.path, specialUse: f.specialUse || '', collection: Boolean(f.collection), role: roleOf.get(f.path) || '', total: Number.isSafeInteger(f.total) ? f.total : null })) };
+    store(KEYS.folders, all);
   }
   async function syncFolder(acc, folder, ctx, states) {
     const key = await stateKey(acc.id, folder.path), st = states[key] || {};
@@ -263,7 +285,7 @@
     while (!stopRequested) {
       const page = await device.index({ account: acc.id, folder: folder.path, since: ctx.since, before });
       if (st.validity !== page.validity) { st.validity = page.validity; st.complete = null; }
-      const loc = uid => ({ account: acc.id, email: acc.email, folder: folder.path, validity: page.validity, uid });
+      const loc = uid => ({ account: acc.id, email: acc.email, folder: folder.path, role: folder.role || '', validity: page.validity, uid });
       const need = [];
       let fresh = 0, changed = false;
       for (const item of page.items) {
@@ -312,17 +334,19 @@
     }
     return ctx;
   }
-  async function sync(auto = false) {
+  async function sync(auto = false, only = null) {
     if (running) return running;
     stopRequested = false; lastProblem = ''; progressText = t('running'); draw();
     running = (async () => {
       const ctx = context(), states = await folderState(), failed = [];
       let accounts = [];
       try { accounts = await device.accounts(); } catch (error) { lastProblem = error.message; return; }
-      for (const acc of accounts) {
+      // A quick refresh after an action reads only the accounts it touched; the regular fetch reads all of them.
+      for (const acc of accounts.filter(a => !only || only.includes(a.id))) {
         if (stopRequested) break;
         try {
           const folders = await device.request('/' + encodeURIComponent(acc.id) + '/folders');
+          rememberFolders(acc, folders);
           for (const folder of chooseFolders(folders)) { if (stopRequested) break; await syncFolder(acc, folder, ctx, states); }
         } catch (error) {
           if (/APP_OFFLINE/.test(error.message)) { lastProblem = t('offline'); break; }
@@ -330,7 +354,7 @@
         }
       }
       if (failed.length) lastProblem = t('failed') + ' ' + failed.join(', ');
-      if (!stopRequested && accounts.length) {
+      if (!stopRequested && accounts.length && !only) {
         store(KEYS.last, { at: Date.now(), accounts: accounts.length });
         syncedSinceStart = true;
       }
@@ -340,7 +364,7 @@
         if (due.length) await trashRecords(due, 'auto');
         await autoUnsubscribe();
       }
-    })().finally(() => { running = null; progressText = stopRequested ? t('stopped') : ''; rebuildIndex(); refreshAll(); draw(); drawDupes(); });
+    })().finally(() => { running = null; progressText = stopRequested ? t('stopped') : ''; rebuildIndex(); refreshAll(); draw(); drawDupes(); announce(); });
     return running;
   }
   function progress(text) { progressText = text; if (status) status.textContent = text; }
@@ -572,6 +596,49 @@
     }
   }
 
+  // ---------- „Alle Konten“ als Postfach (Klaus 22.11.2026): Lesezugriff für assets/live-mail.js ----------
+  /** Tells the mailbox that the index changed (after a fetch, a move, a flag). */
+  function announce() { try { dispatchEvent(new CustomEvent('pb:mail-index')); } catch { /* old WebView */ } }
+  /** Every place of every mail, filtered by role ("inbox", "sent" …) or by one account's folder; newest first. */
+  function places(filter) {
+    const out = [];
+    for (const rec of indexed()) for (const l of rec.mailRemotes || []) {
+      if (filter.role != null ? l.role !== filter.role : !(l.account === filter.account && l.folder === filter.path)) continue;
+      out.push({ rec, loc: l });
+    }
+    return out.sort((a, b) => (b.rec.date || 0) - (a.rec.date || 0));
+  }
+  const findPlace = (account, folder, uid) => { for (const rec of indexed()) { const l = (rec.mailRemotes || []).find(x => x.account === account && x.folder === folder && x.uid === uid); if (l) return { rec, loc: l }; } return null; };
+  /** A mail left a folder (moved, deleted, gone on the server): that place is forgotten. The catalog entry stays. */
+  async function forget(list) {
+    let changed = 0;
+    for (const { account, folder, uid } of list) {
+      const hit = findPlace(account, folder, uid); if (!hit) continue;
+      hit.rec.mailRemotes = hit.rec.mailRemotes.filter(l => l !== hit.loc);
+      hit.rec.mailRemote = hit.rec.mailRemotes[0] ? { base: device.base, ...hit.rec.mailRemotes[0] } : null;
+      await idbPut('catalog', hit.rec); changed++;
+    }
+    if (changed) { rebuildIndex(); refreshAll(); draw(); announce(); }
+    return changed;
+  }
+  /** Seen/star changed in the mailbox: the index says the same at once, not only after the next fetch. */
+  async function setFlags(account, folder, uid, flags) {
+    const hit = findPlace(account, folder, uid); if (!hit) return false;
+    if ('seen' in flags) hit.rec.mailSeen = Boolean(flags.seen);
+    if ('flagged' in flags) hit.rec.mailFlagged = Boolean(flags.flagged);
+    await idbPut('catalog', hit.rec); return true;
+  }
+  // The tools of "Alle Konten" (Nach Absender, Aufräumen) stand in the list pane of the mailbox instead of their own page.
+  let embedded = false;
+  function mount(container, mode) {
+    embedded = true; view.mode = mode === 'clean' ? 'clean' : 'senders'; view.account = 'all'; selectedSender = null; openRecord = null;
+    container.replaceChildren(panel); panel.hidden = false; panel.classList.add('mail-all-embedded'); draw();
+  }
+  function unmount() {
+    if (!embedded) return;
+    embedded = false; panel.hidden = true; panel.classList.remove('mail-all-embedded'); host.append(panel);
+  }
+
   // ---------- view ----------
   const panel = document.createElement('section'); panel.className = 'mail-app mail-all'; panel.hidden = true; panel.id = 'pb-mail-all';
   let status = null, selectedSender = null, openRecord = null, query = '';
@@ -584,7 +651,7 @@
   function entry() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'mail-folder'; b.dataset.mailAll = 'open';
     b.setAttribute('aria-current', 'false'); b.append(el('span', 'native-mail-all-label', t('open')), el('small', '', String(visible().length || '')));
-    b.onclick = () => show(true); return b;
+    b.onclick = () => (window.PBLiveMail?.showAll ? PBLiveMail.showAll() : show(true)); return b;
   }
   function button(text, fn, cls = '') {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'mail-button' + (cls ? ' ' + cls : ''); b.textContent = text;
@@ -710,8 +777,11 @@
   let remoteFailed = null, famNote = null;
   function showFamNote(line) { line.textContent = famNote.text; line.dataset.mailResult = famNote.done ? 'fertig' : 'offen'; line.hidden = false; }
   async function openMail(r, again = false) {
-    const l = r.mailRemotes?.[0];
-    if (l && window.PBLiveMail?.openRemote && (again || remoteFailed !== r.hash)) {
+    const l = (r.mailRemotes || []).find(x => !ASIDE.includes(x.role)) || r.mailRemotes?.[0];
+    if (embedded && l && window.PBLiveMail?.openInAll && (again || remoteFailed !== r.hash)) {
+      if (await PBLiveMail.openInAll({ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid })) { remoteFailed = null; return; }
+      remoteFailed = r.hash;
+    } else if (l && window.PBLiveMail?.openRemote && (again || remoteFailed !== r.hash)) {
       show(false);
       const ok = await PBLiveMail.openRemote({ account: l.account, folder: l.folder, validity: l.validity, uid: l.uid, messageId: r.mailMessageId || '', subject: r.name, from: r.mail.from, date: r.date });
       if (ok) { remoteFailed = null; return; }
@@ -729,13 +799,14 @@
     panel.replaceChildren();
     const head = el('div', 'mail-head mail-all-head'), last = load(KEYS.last, null);
     const back = button(t('close'), () => show(false), 'mail-back'); back.title = t('closeLong'); back.setAttribute('aria-label', t('closeLong'));
+    if (embedded) view.account = 'all';
     // One row: Zurück · Kontoauswahl (zeigt „Alle Konten“ oder die Adresse) · ⟳ · ⋯
     const accounts = knownAccounts(), pick = el('select', 'mail-all-account'); pick.setAttribute('aria-label', t('chooseAccount')); pick.dataset.mailAll = 'account';
     pick.append(new Option(t('title'), 'all'), ...[...accounts].map(([id, email]) => new Option(email, id)));
     if (view.account !== 'all' && !accounts.has(view.account)) view.account = 'all';
     pick.value = view.account; pick.onchange = () => { view.account = pick.value; selectedSender = null; openRecord = null; store(KEYS.view, view); draw(); };
     const title = el('h2', 'mail-all-title', t('title')); title.hidden = accounts.size > 0;
-    head.append(back, title); if (accounts.size) head.append(pick);
+    if (!embedded) { head.append(back, title); if (accounts.size) head.append(pick); }
     if (running) head.append(button(t('stop'), () => { stopRequested = true; progress(t('stopped')); }));
     else if (last) { const again = button('', () => sync(false), 'mail-all-refresh'); again.append(refreshIcon()); again.title = t('refresh'); again.setAttribute('aria-label', t('refresh')); again.dataset.mailAll = 'refresh'; head.append(again); }
     else head.append(button(t('fetch'), () => sync(false), 'mail-primary'));
@@ -766,7 +837,7 @@
     // On a phone only the arrow shows; the full name stays for tooltips and screen readers.
     order.append(el('span', 'mail-all-order-label', view.order === 'newest' ? t('newest') : t('oldest')));
     order.dataset.mailAll = 'order'; order.title = view.order === 'newest' ? t('newestLong') : t('oldestLong'); order.setAttribute('aria-label', order.title);
-    switches.append(modeList, modeSenders, modeClean, order);
+    if (embedded) switches.append(order); else switches.append(modeList, modeSenders, modeClean, order);
     panel.append(search, switches);
     if (keepFocus) { search.focus(); try { search.setSelectionRange(caret, caret); } catch { /* Not every input supports it. */ } }
     const current = openRecord && all.find(r => r.hash === openRecord);
@@ -844,5 +915,8 @@
     if (!syncedSinceStart) autoRun();
   }, 5000);
   drawDupes();
-  window.PBMailIndex = { entry, sync, read: hash => { if (!indexed().some(r => r.hash === hash)) return false; openRecord = hash; show(true); return true; }, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
+  window.PBMailIndex = { entry, sync, places, forget, setFlags, mount, unmount, announce,
+    folderInfo: () => load(KEYS.folders, {}), synced: () => Boolean(load(KEYS.last, null)),
+    // „Nach Absender“ zählt die Absender, „Aufräumen“ die abgelaufenen Angebote.
+    count: mode => mode === 'clean' ? sorted().expired.length : new Set(visible().map(r => senderAddress(r.mail.from))).size, read: hash => { if (!indexed().some(r => r.hash === hash)) return false; openRecord = hash; show(true); return true; }, trash: list => trashRecords(list, 'manual'), undo: undoRun, stop: () => { stopRequested = true; }, show, running: () => Boolean(running), senderAddress, senderName, unsubscribe: (address) => unsubscribe(address, indexed().filter(x => senderAddress(x.mail.from) === address)) };
 })();

@@ -84,3 +84,15 @@ Hol das Repo Privat-Brain-Pro-V3 dazu. Reihenfolge:
 3. Aufgabe 3 (V3 auf den Stand von Pro, mit Aufgabe 1 und den Themen): erst die Liste der Unterschiede zeigen, dann nachziehen.
 Veröffentlichen (Pro 1.0.58, V3 als PWA/APK/Windows) nur mit Klaus' Wort. Am Ende Abschlussbrief mit Startauftrag.
 ```
+
+## Stand 22.11.2026 (Sitzung „Alle Konten“)
+
+- **Vorschau** `docs/design/alle-konten-1.0.58/vorschau.html` gezeigt. **Klaus' Antwort (22.11., diktiert, gekürzt):** die Schalter
+  „Liste“ hatten keine sichtbare Wirkung; Listen kurz halten (10–15 Mails) mit „Weitere laden“ wie bei der Telekom; die Anhänge gleich
+  mitladen; **der Index soll Gesendet, Entwürfe, Spam, Papierkorb und die Anhänge mitmerken**, damit die Ansicht nicht fragen muss und
+  die eigenen Ordner nicht extra zugeordnet werden müssen; die Suche über den Index bleibt.
+- **Entscheidung Aufgabe 1:** Liste aus dem Index (nicht live je Konto). Gebaut in 1.0.58, siehe `CLAUDE.md` (Abschnitt „Alle Konten“ als
+  drittes Postfach-Konto). Nicht veröffentlicht.
+- **Aufgabe 2 und 3:** Klaus hat Frage 2 (alle vier Themen oder ohne „Petrol warm“) und Frage 3 (Reihenfolge V3: Mail → Suche → Tresor und
+  Ablage → Texterkennung und Übersetzung, Windows jeweils mit) noch nicht beantwortet. Abstand V3 zu Pro: rund 200 Dateien nur in Pro,
+  179 verschieden (Zählung in der Vorschau, Abschnitt 4).

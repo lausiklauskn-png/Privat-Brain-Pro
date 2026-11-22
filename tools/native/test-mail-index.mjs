@@ -28,7 +28,7 @@ try{
   const dialogs=[];page.on('dialog',d=>{dialogs.push(d.message());d.accept();});
   /* Modul 03's library address is answered by the app itself (MainActivity/BundledLibrary), never by the internet. */
   await page.context().route('**/*',r=>{if(r.request().url().startsWith(url))return r.continue();if(r.request().url().startsWith('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'))return r.fulfill({status:404,body:''});remote.push(r.request().url());return r.abort();});
-  await page.addInitScript(()=>{
+  await page.addInitScript(()=>{window.pbMailPrefetch=false;
     const day=864e5,now=Date.now();
     window.mailCalls=[];window.offline=false;
     const A={id:'11111111-1111-4111-8111-111111111111',email:'klaus@example.invalid',provider:'telekom'};
@@ -100,7 +100,9 @@ try{
   const allAccountsEntry=mail.locator('.live-mail .mail-folders > :first-child');
   await allAccountsEntry.locator('svg.native-folder-icon[data-icon-key="accounts"]').waitFor();
   ok('"Alle Konten" is the first named folder entry with the shared accounts symbol',await allAccountsEntry.evaluate(button=>button.dataset.mailAll==='open'&&button.querySelector('.native-mail-all-label')?.innerText.trim()==='Alle Konten'&&Boolean(button.querySelector('svg.native-folder-icon[data-icon-key="accounts"][aria-hidden="true"]'))&&button.getBoundingClientRect().height>0));
-  await mail.getByRole('button',{name:/^Alle Konten\s*\d*$/}).click();
+  // Klaus 22.11.2026: mit zwei Konten schaltet „Alle Konten“ das Postfach selbst um (Probe test-mail-alle-konten.mjs).
+  // Diese Probe prüft weiter den Index und seine Werkzeuge auf der eigenen Seite, wie sie bei nur einem Konto erscheint.
+  await page.evaluate(()=>PBMailIndex.show(true));
   await capture(page,'1-erster-abruf');
   ok('First view explains reading only, 12 months and no attachments',(await panel.textContent()).includes('12 Monate')&&(await panel.textContent()).includes('Anhänge werden nicht geladen'));
   ok('Other mailbox parts are hidden while the overview is open',await mail.locator('.live-mail').isHidden()&&await mail.locator('.mail-account-bar').isHidden());
@@ -119,8 +121,9 @@ try{
   const calls=await page.evaluate(()=>window.mailCalls);
   const indexed=calls.filter(c=>c.method==='index');
   ok('Both accounts are fetched',new Set(indexed.map(c=>c.args.account)).size===2);
-  ok('Inbox and own folders are read; trash, spam, sent, drafts and Gmail collections are not',
-    indexed.every(c=>['INBOX','Archiv'].includes(c.args.folder))&&indexed.some(c=>c.args.folder==='Archiv'));
+  // Klaus 22.11.2026: der Index merkt auch Gesendet, Entwürfe, Spam und Papierkorb; nur Sammelansichten (Gmail „Alle Nachrichten“) nicht.
+  ok('Every folder is read – inbox, own folders, sent, drafts, spam, trash – but no Gmail collection',
+    ['INBOX','Archiv','Papierkorb','Spam','Gesendet','Entwürfe','[Gmail]/Sent Mail'].every(f=>indexed.some(c=>c.args.folder===f))&&!indexed.some(c=>c.args.folder==='[Gmail]/Alle Nachrichten'));
   ok('Second page of a large inbox is requested below the last UID',indexed.some(c=>c.args.folder==='INBOX'&&c.args.before>0));
   ok('Fetch window is the last 12 months',Math.abs(indexed[0].args.since-(Date.now()-365*864e5))<60000);
   ok('No full message download, no server action, nothing sent',!calls.some(c=>['message','action','send','saveDraft'].includes(c.method)));
@@ -361,7 +364,7 @@ try{
   ok('A tap on a mail in "Alle Konten" opens it whole, like in its own account (Klaus 15.11.)',opened.account==='22222222-2222-4222-8222-222222222222'&&opened.folder==='INBOX'&&opened.uid===3000&&await panel.isHidden());
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   // Anbieter nicht erreichbar: der gespeicherte Text erscheint, mit einem Satz dazu – nichts bleibt still hängen.
-  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await page.evaluate(()=>PBMailIndex.show(true));
   await panel.locator('[data-mail-all=list]').click();
   await page.evaluate(()=>{window.offline=true;});
   await panel.locator('[data-mail-all-id]').first().click();
@@ -408,7 +411,7 @@ try{
   await page.evaluate(()=>PBMailIndex.show(false));
   await page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   // A background redraw keeps the reading position
-  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await page.evaluate(()=>PBMailIndex.show(true));
   await panel.locator('[data-mail-all=list]').click();
   await page.setViewportSize({width:390,height:600});
   const kept=await page.evaluate(async()=>{const p=document.getElementById('pb-mail-all');p.scrollTop=400;const before=p.scrollTop;await PBMailIndex.sync();await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return [before,p.scrollTop];});
@@ -416,7 +419,7 @@ try{
   await page.setViewportSize({width:1280,height:900});
   await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
   // One header row: Zurück, account choice, ⟳ (no text), ⋯
-  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await page.evaluate(()=>PBMailIndex.show(true));
   await panel.locator('[data-mail-all=list]').click();
   const head=await page.evaluate(()=>{const h=document.querySelector('#pb-mail-all .mail-all-head'),kids=[...h.children].filter(x=>!x.hidden);const children=kids.map(x=>{const r=x.getBoundingClientRect(),s=getComputedStyle(x);return {tag:x.tagName,class:x.className,top:r.top,height:r.height,width:r.width,display:s.display,transform:s.transform,open:x.open};});const mids=children.map(r=>r.top+r.height/2);return {rows:Math.max(...mids)-Math.min(...mids)<6?1:2,back:h.querySelector('.mail-back').textContent,refresh:h.querySelector('[data-mail-all=refresh]')?.textContent.trim(),label:h.querySelector('[data-mail-all=refresh]')?.getAttribute('aria-label'),options:[...h.querySelector('[data-mail-all=account]').options].map(o=>o.textContent),viewport:{width:innerWidth,height:innerHeight},fontStatus:document.fonts.status,running:PBMailIndex.running(),children};});
   ok('Header is one row: "← Zurück", account choice, refresh symbol without text',head.rows===1&&head.back==='← Zurück'&&head.refresh===''&&head.label==='Jetzt aktualisieren'&&JSON.stringify(head.options)===JSON.stringify(['Alle Konten','klaus@example.invalid','zweit@example.invalid']),head);
@@ -435,14 +438,14 @@ try{
   await page.waitForFunction(()=>!PBMailIndex.running());
   await panel.getByRole('button',{name:'Zurück zum Postfach'}).click();
   // Languages and phone width
-  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await page.evaluate(()=>PBMailIndex.show(true));
   await page.evaluate(()=>{document.documentElement.lang='en';});
   await page.waitForFunction(()=>document.querySelector('#pb-mail-all h2')?.textContent==='All accounts');
   ok('Switches to English without reload',(await panel.textContent()).includes('Senders')&&(await panel.textContent()).includes('Clean up'));
   await panel.locator('.mail-all-head>.mail-back').click();
   await page.waitForFunction(()=>{const entry=document.querySelector('.live-mail [data-mail-all=open]');return !document.querySelector('.live-mail').hidden&&entry?.querySelector('.native-mail-all-label')?.innerText.trim()==='All accounts';});
   ok('The existing all-accounts folder label also follows the locale without losing its SVG',await mail.locator('.live-mail [data-mail-all=open]').evaluate(button=>button.querySelector('.native-mail-all-label')?.innerText.trim()==='All accounts'&&button.querySelectorAll('svg.native-folder-icon[data-icon-key=accounts]').length===1));
-  await mail.locator('.live-mail [data-mail-all=open]').click();
+  await page.evaluate(()=>PBMailIndex.show(true));
   await page.evaluate(()=>{document.documentElement.lang='de';});
   await page.setViewportSize({width:360,height:740});
   ok('Fits a phone screen without sideways scrolling',await page.evaluate(()=>{const p=document.querySelector('#pb-mail-all');return p.scrollWidth<=p.clientWidth+1&&document.documentElement.scrollWidth<=window.innerWidth+1;}));
@@ -458,6 +461,9 @@ try{
   const idle=()=>page.waitForFunction(()=>!document.querySelector('.live-mail').hasAttribute('aria-busy'));
   await idle();
   await mail.locator('.live-mail select[aria-label=Mailkonto]').selectOption('11111111-1111-4111-8111-111111111111');
+  // Klaus 22.11.2026: 15 Mails je Seite – für eine lange Liste zweimal „Weitere laden“.
+  await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=15);await idle();
+  for(let i=0;i<2;i++){await mail.locator('.live-mail .mail-list>[data-live-text=more]').click();await idle();}
   await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=40);
   await idle();
   const listState=()=>page.evaluate(()=>{const l=document.querySelector('.live-mail .mail-list'),c=l.querySelector('[data-live-uid][aria-current=true]'),lr=l.getBoundingClientRect(),cr=c?.getBoundingClientRect();
@@ -488,8 +494,8 @@ try{
   await page.setViewportSize({width:1280,height:900});
   await mail.locator('.live-mail .mail-folders .mail-folder').nth(2).click();await idle();
   await mail.locator('.live-mail .mail-folders .mail-folder').nth(1).click();
-  await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=40);await idle();
-  ok('Changing the folder still starts at the top',(await listState()).top===0);
+  await page.waitForFunction(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length>=15);await idle();
+  ok('Changing the folder still starts at the top, with the first 15 mails again',(await listState()).top===0&&await page.evaluate(()=>document.querySelectorAll('.live-mail .mail-list [data-live-uid]').length===15));
   // Generalprüfung 16.11.2026: wer das Postfach selbst schließt, bekommt es in dieser Sitzung nicht von selbst wieder; „Lokale
   // Mails“ bleibt erreichbar. Nach einem neuen Start steht es wieder da – bei getrenntem Internet ohne Abruf, mit dem Grund.
   await mail.locator('.mail-account-tools>summary').first().click();await mail.locator('.mail-account-menu [data-live-text=local]').click();

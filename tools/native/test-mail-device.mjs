@@ -35,7 +35,7 @@ try{
     if(r.request().url()==='https://images.example.invalid/banner.png') { remote.push(r.request().url()); return r.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jBv8AAAAASUVORK5CYII=','base64')}); }
     remote.push(r.request().url());return r.abort();
   });
-  await page.addInitScript(()=>{
+  await page.addInitScript(()=>{window.pbMailPrefetch=false;
     window.mailCalls=[];window.mailAccounts=[];window.accountMode='cancel';window.sendMode='uncertain';window.localDraft=null;window.messageMode='plain';window.sendReceipts=[];window.failFolder='';window.failMessage=false;window.historyAccount='';
     const fixture={id:'11111111-1111-4111-8111-111111111111',email:'sender@example.invalid',provider:'telekom'};
     const log=(method,args)=>window.mailCalls.push({method,args});
@@ -401,7 +401,11 @@ try{
   await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
   ok('Vault stays locked: nothing is fetched or handed over, the selection stays',await famNote()==='Nichts übergeben: Der Pro-Tresor ist nicht offen.'&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famCalls.length===0)&&await mail.locator('.live-mail .mail-count').textContent()==='3 ausgewählt',await famNote());
   await page.evaluate(()=>{window.famOpen=true;window.famOpens=0;window.inboxItems=Array.from({length:21},(_,i)=>({uid:100+i,subject:'Viele '+i,from:'friend@example.invalid',flags:[],size:1000}));});
-  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="120"]').waitFor();
+  await mail.locator('.live-mail [data-mail-folder=inbox]').click();await mail.locator('[data-live-uid="100"]').waitFor();
+  // Klaus 22.11.2026: die Liste zeigt erst 15 Mails, „Weitere laden“ die nächsten; „Alle auswählen“ gilt für die gezeigten.
+  ok('A long list shows 15 mails first and "Weitere laden" below',await mail.locator('.live-mail [data-live-uid]').count()===15&&await mail.locator('.live-mail .mail-list>[data-live-text=more]').isVisible());
+  await mail.locator('.live-mail .mail-list>[data-live-text=more]').click();await mail.locator('[data-live-uid="120"]').waitFor();
+  ok('"Weitere laden" shows the rest without asking the server again',await mail.locator('.live-mail [data-live-uid]').count()===21&&await mail.locator('.live-mail .mail-list>[data-live-text=more]').count()===0);
   await mail.locator('.live-mail [data-native-selection=all]').click();await fam.click();await famSettled();
   ok('More than 20 marked mails: nothing starts, the limit is named',/^Höchstens 20 Mails auf einmal an die Familienakte – markiert sind 21\./.test(await famNote())&&(await messagesFetched()).length===0&&await page.evaluate(()=>window.famOpens===0&&window.famCalls.length===0),await famNote());
   await page.evaluate(()=>{window.famVault=false;window.inboxItems=null;});

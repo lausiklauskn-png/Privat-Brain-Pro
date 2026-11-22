@@ -735,3 +735,12 @@ button.pb-leiste-pfeil:not(:disabled):active { transform:none; z-index:30; }
 /* Ergebnis von „Senden“ und von „An Familienakte“: steht einmal da, gut lesbar. */
 #mailWorkspace .mail-notice[data-mail-result] { font-size:.86rem; font-weight:600; color:var(--ink); border-left:4px solid var(--acc); }
 #mailWorkspace .mail-notice[data-mail-result="offen"] { border-left-color:var(--bad, #991b1b); }
+
+/* „Alle Konten“ als drittes Konto im Postfach (Klaus 22.11.2026) */
+.live-mail .mail-account-tag { display:flex; align-items:center; gap:4px; font-size:.78rem; color:var(--mut); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.live-mail .mail-account-dot { flex:none; width:8px; height:8px; border-radius:50%; display:inline-block; }
+.live-mail .mail-files { flex:none; }
+.live-mail .mail-folders > .mail-folder-group { margin:8px 8px 2px; padding-top:6px; border-top:1px solid var(--line); font-size:.78rem; color:var(--mut); }
+.live-mail .mail-all-embedded { border:0; box-shadow:none; margin:0; padding:0; background:transparent; min-height:0; }
+.live-mail .mail-all-embedded > .mail-head { padding:6px 8px; }
+.live-mail label[data-mail-from], .live-mail .mail-reader > label.mail-muted select { margin-left:4px; }

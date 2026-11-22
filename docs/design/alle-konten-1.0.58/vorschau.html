@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alle Konten als Postfach</title>
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--line:#dfe4ec;--ink:#1c2430;--mut:#5d6878;--acc:#2563eb;--soft:#e8efff;--sel:#eef3ff;
+ --k1:#2563eb;--k2:#c2410c;--k3:#15803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111827;--card:#1a2233;--line:#2c3648;--ink:#e6eaf2;--mut:#9aa6b8;--acc:#7ca7ff;--soft:#22304a;--sel:#20304d;--k1:#7ca7ff;--k2:#f59e5b;--k3:#5fd08b}}
+:root[data-theme="dark"]{--bg:#111827;--card:#1a2233;--line:#2c3648;--ink:#e6eaf2;--mut:#9aa6b8;--acc:#7ca7ff;--soft:#22304a;--sel:#20304d;--k1:#7ca7ff;--k2:#f59e5b;--k3:#5fd08b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+main{max-width:1180px;margin:0 auto}
+h1{font-size:22px;margin:4px 0 4px}h2{font-size:18px;margin:28px 0 8px}h3{font-size:15px;margin:0 0 6px}
+p{margin:6px 0}.mut{color:var(--mut)}
+.frage{background:var(--soft);border-left:4px solid var(--acc);padding:10px 12px;border-radius:6px;margin:10px 0}
+/* Postfach-Attrappe */
+.app{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kopf{display:flex;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.kopf h4{margin:0 8px 0 2px;font-size:15px}
+.b{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;height:28px;padding:0 9px;font:inherit;font-size:13px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.b.h{background:var(--acc);color:#fff;border-color:transparent}
+.sel{border:1px solid var(--line);border-radius:6px;height:28px;padding:0 8px;font-size:13px;display:inline-flex;align-items:center;background:var(--card)}
+.sp{flex:1}
+.drei{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,1.15fr);min-height:430px}
+.ord{border-right:1px solid var(--line);padding:6px;font-size:13.5px}
+.ord .o{display:flex;justify-content:space-between;padding:5px 8px;border-radius:6px}
+.ord .o.akt{background:var(--sel);font-weight:600}
+.ord .o span:last-child{color:var(--mut)}
+.ord .trenn{border-top:1px solid var(--line);margin:6px 0;padding-top:6px;color:var(--mut);font-size:12px;padding-left:8px}
+.liste{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.suche{margin:6px;border:1px solid var(--line);border-radius:6px;height:30px;display:flex;align-items:center;padding:0 8px;color:var(--mut);font-size:13px}
+.zeile2{display:flex;gap:5px;padding:0 6px 6px;flex-wrap:wrap}
+.m{display:grid;grid-template-columns:18px 1fr auto;gap:6px;padding:7px 8px;border-top:1px solid var(--line);font-size:13px;align-items:start}
+.m.akt{background:var(--sel)}.m.neu .betr{font-weight:650}
+.m input{margin-top:3px}
+.betr{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.von{color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.konto{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--mut)}
+.punkt{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.zeit{color:var(--mut);font-size:12px;text-align:right}
+.lese{padding:10px 12px;font-size:13.5px;min-width:0}
+.lese .zeile2{padding:0 0 8px}
+.hin{background:var(--soft);border-radius:6px;padding:6px 8px;font-size:12.5px;margin:8px 0}
+.menu{position:relative}
+.pop{position:absolute;right:0;top:32px;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.15);padding:4px;width:210px;z-index:2;font-size:13px}
+.pop div{padding:6px 8px;border-radius:5px}.pop .an{background:var(--sel);font-weight:600}
+.legende{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);padding:6px 8px;border-top:1px solid var(--line)}
+ol li,ul li{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}
+td,th{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--soft)}
+.themen{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.thema{border-radius:12px;padding:12px;border:1px solid var(--line)}
+.thema .karte{border-radius:var(--r);padding:10px;margin-top:8px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.thema .knopf{display:inline-block;color:#fff;border-radius:calc(var(--r) - 4px);padding:4px 10px;font-size:13px;margin-top:6px}
+.thema .leise{font-size:12.5px}
+@media (max-width:820px){.drei{grid-template-columns:1fr}.ord{border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:2px}.ord .o{gap:6px}.ord .trenn{width:100%}.liste{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body><main>
+<h1>„Alle Konten“ als drittes Postfach-Konto</h1>
+<p class="mut">Vorschau für Private Brain Pro 1.0.58 (danach V3). Alle Namen und Mails sind erfunden. Gebaut nach Klaus' Antwort vom 22.11.2026 (siehe „Technisch entschieden“).</p>
+
+<h2>1 · So soll es aussehen</h2>
+<div class="app">
+ <div class="kopf">
+  <h4>Mail</h4>
+  <span class="sel">Alle Konten&nbsp;▾</span>
+  <span class="b">⟳</span>
+  <span class="b h">Neue Mail</span>
+  <span class="sp"></span>
+  <span class="b">Weitere Aktionen ▾</span>
+  <span class="menu"><span class="b">Anordnung ▾</span>
+   <div class="pop"><div class="an">Nebeneinander</div><div>Übereinander</div><div class="an">Ordner anzeigen</div><div>Alle Ordner einklappen</div></div></span>
+ </div>
+ <div class="drei">
+  <nav class="ord">
+   <div class="o akt"><span>Posteingang</span><span>1.284</span></div>
+   <div class="o"><span>Entwürfe</span><span>6</span></div>
+   <div class="o"><span>Postausgang</span><span>0</span></div>
+   <div class="o"><span>Gesendet</span><span>412</span></div>
+   <div class="o"><span>Archiv</span><span>2.031</span></div>
+   <div class="o"><span>Spam</span><span>57</span></div>
+   <div class="o"><span>Papierkorb</span><span>93</span></div>
+   <div class="o"><span>Exportiert</span><span>4</span></div>
+   <div class="trenn">Ordner der Anbieter</div>
+   <div class="o"><span>▸ beispiel@telekom.test (5)</span><span></span></div>
+   <div class="o"><span>▸ beispiel@googlemail.test (13)</span><span></span></div>
+   <div class="trenn">Werkzeuge</div>
+   <div class="o"><span>Nach Absender</span><span></span></div>
+   <div class="o"><span>Aufräumen</span><span>12</span></div>
+  </nav>
+  <section class="liste">
+   <div class="suche">In allen Konten suchen …&nbsp;&nbsp;<span style="margin-left:auto">Mikrofon</span></div>
+   <div class="zeile2"><span class="b">Alle auswählen</span><span class="b">Papierkorb</span><span class="b">Als Spam</span><span class="b">Teilen</span><span class="sel">Verschieben nach … ▾</span></div>
+   <div class="m neu akt"><input type="checkbox"><div><span class="betr">Ihre Rechnung für November</span><span class="von">Stadtwerke Musterstadt</span><span class="konto"><i class="punkt" style="background:var(--k1)"></i>beispiel@telekom.test</span></div><div class="zeit">09:14</div></div>
+   <div class="m neu"><input type="checkbox"><div><span class="betr">Termin am Donnerstag</span><span class="von">Praxis Dr. Beispiel</span><span class="konto"><i class="punkt" style="background:var(--k2)"></i>beispiel@googlemail.test</span></div><div class="zeit">08:52</div></div>
+   <div class="m"><input type="checkbox" checked><div><span class="betr">Wochenangebote bis Sonntag</span><span class="von">Markt Muster</span><span class="konto"><i class="punkt" style="background:var(--k2)"></i>beispiel@googlemail.test</span></div><div class="zeit">gestern</div></div>
+   <div class="m"><input type="checkbox" checked><div><span class="betr">Ihr Paket ist unterwegs</span><span class="von">Versand Beispiel</span><span class="konto"><i class="punkt" style="background:var(--k3)"></i>info@hetzner-beispiel.test</span></div><div class="zeit">gestern</div></div>
+   <div class="m"><input type="checkbox"><div><span class="betr">Fotos vom Wochenende</span><span class="von">Anna Beispiel</span><span class="konto"><i class="punkt" style="background:var(--k1)"></i>beispiel@telekom.test</span></div><div class="zeit">20.11.</div></div>
+   <div class="m"><input type="checkbox"><div><span class="betr">Neue Kontoauszüge verfügbar</span><span class="von">Musterbank</span><span class="konto"><i class="punkt" style="background:var(--k3)"></i>info@hetzner-beispiel.test</span></div><div class="zeit">19.11.</div></div>
+   <div class="legende"><span>2 ausgewählt (aus 2 Konten)</span><span>Weitere laden</span></div>
+  </section>
+  <section class="lese">
+   <div class="zeile2"><span class="b">Antworten</span><span class="b">Weiterleiten</span><span class="b">Löschen</span><span class="b">In Katalog</span><span class="b">Nachrichtenaktionen ▾</span><span class="b">Übersetzen</span></div>
+   <h3>Ihre Rechnung für November</h3>
+   <p class="mut">Stadtwerke Musterstadt · an beispiel@telekom.test · 22.11.2026 09:14</p>
+   <p class="konto"><i class="punkt" style="background:var(--k1)"></i>Konto: beispiel@telekom.test · Ordner: Posteingang</p>
+   <div class="hin">Geprüft: keine Auffälligkeiten nach den Regeln der App (kein Virenscanner).</div>
+   <p>Guten Tag, anbei Ihre Rechnung für den Monat November …</p>
+   <p class="mut">„Antworten“ schreibt vom Konto beispiel@telekom.test aus.</p>
+  </section>
+ </div>
+</div>
+
+<h2>2 · Was dabei gilt</h2>
+<ul>
+ <li><b>Gleiche Oberfläche wie ein einzelnes Konto:</b> Ordnerspalte, Liste, Lesebereich und dasselbe Anordnungs-Menü. Die gemerkte Wahl (nebeneinander/übereinander, Ordner zeigen/einklappen) gilt auch hier.</li>
+ <li><b>Zahlen an den Ordnern:</b> zusammengezählt aus allen Konten (die Zahlen kommen wie bisher vom Server jedes Anbieters).</li>
+ <li><b>Jede Mail trägt ihr Konto:</b> Farbpunkt und Adresse unter dem Absender. Jedes Konto behält seine Farbe.</li>
+ <li><b>Aktionen gehen an das Konto, dem die Mail gehört:</b> Papierkorb, Als Spam / Kein Spam, Wiederherstellen, Stern, Gelesen, Antworten und Weiterleiten (vom richtigen Konto aus), In Katalog, Übersetzen, An Familienakte. Sind Mails aus mehreren Konten angehakt, geht je Konto ein Auftrag mit einer Verbindung hinaus.</li>
+ <li><b>„Verschieben nach …“</b> zeigt bei Mails aus mehreren Konten nur die gemeinsamen Ordner (Posteingang, Archiv, Spam, Papierkorb). Die eigenen Ordner eines Anbieters erscheinen, wenn alle angehakten Mails aus diesem Konto stammen.</li>
+ <li><b>„Ordner der Anbieter“</b> stehen je Konto zum Aufklappen da (ab Werk zu).</li>
+ <li><b>Die bisherigen Werkzeuge bleiben:</b> „Nach Absender“ (Bündel) und „Aufräumen“ (Newsletter, Abmelden) stehen unten in der Ordnerspalte; unsichere Doppel-Mails bleiben auf der Seite „Doppelte“. Die Suche oben in der Liste sucht über alle Konten. Die eigene breite Seite „Alle Konten“ mit „← Zurück“ entfällt.</li>
+ <li><b>Entwürfe und Postausgang</b> zeigen die auf dem Gerät gespeicherten Entwürfe und Versandversuche aller Konten. Nichts wird von selbst noch einmal gesendet.</li>
+</ul>
+<p class="mut"><b>Technisch entschieden (Klaus 22.11.2026 nach der Vorschau):</b> Der Index von „Alle Konten“ merkt jetzt alle Ordner jedes Kontos – auch Gesendet, Entwürfe, Spam und Papierkorb – und zu jeder Mail Name, Art und Größe der Anhänge (nicht ihren Inhalt). Die Ansicht liest daraus und muss die Anbieter beim Öffnen nicht fragen. Die Liste zeigt 15 Mails, „Weitere laden“ die nächsten. Die Mails der gezeigten Seite werden samt Anhängen im Hintergrund vorausgeladen. Nach einer Aktion liest der Index die betroffenen Konten kurz neu. Gilt für Android und Windows.</p>
+
+<h2>3 · Themen aus V3, die Pro noch nicht hat</h2>
+<p>Pro hat heute: Klarblau, Graphit, Petrol (hellgrau mit Petrol), Nachtblau. V3 hat: Erdton, Klar, Petrol warm, Schiefer kompakt, Weich und luftig. „Klar“ entspricht „Klarblau“ und kommt nicht dazu. Vorschlag, neu in Pro:</p>
+<div class="themen">
+ <div class="thema" style="--r:12px;background:#faf6f0;color:#2b2418"><b>Erdton</b><div class="leise">Sand und Ocker</div><div class="karte" style="background:#fffdf9">Rechnung November<br><span class="knopf" style="background:linear-gradient(160deg,#b08d57,#8a6a3a)">Neue Mail</span></div></div>
+ <div class="thema" style="--r:16px;background:#f6f1ea;color:#2a2622"><b>Petrol warm</b><div class="leise">Sand und Petrol (anders als das Petrol in Pro)</div><div class="karte" style="background:#fffdf9">Rechnung November<br><span class="knopf" style="background:linear-gradient(180deg,#188585,#0b5d5d)">Neue Mail</span></div></div>
+ <div class="thema" style="--r:8px;background:#eceef1;color:#1a1d22"><b>Schiefer kompakt</b><div class="leise">Grau und Orange, dichter</div><div class="karte" style="background:#fbfbfc">Rechnung November<br><span class="knopf" style="background:linear-gradient(180deg,#d0571a,#a8420c)">Neue Mail</span></div></div>
+ <div class="thema" style="--r:20px;background:#f7f4f7;color:#2a2229"><b>Weich und luftig</b><div class="leise">Rosé und Beere, runder</div><div class="karte" style="background:#fff">Rechnung November<br><span class="knopf" style="background:linear-gradient(135deg,#c64d84,#8f2f5d)">Neue Mail</span></div></div>
+</div>
+<p class="mut">Jedes Thema bekommt Hell und Dunkel (der Hell/Dunkel-Schalter bleibt). Lesbarkeit wird in jedem Thema gemessen (Kontrast-Probe), keine Emojis.</p>
+
+<h2>4 · V3 und Pro: wie weit sie auseinander sind</h2>
+<p>V3 wurde am 24.10. aus Pro kopiert und seitdem nur in Teilen nachgezogen (Designsitzungen 2–5, Chefcode). Pro ist seither von 1.0.36 auf 1.0.57 gewachsen.</p>
+<table>
+<tr><th>Gezählt</th><th>Zahl</th></tr>
+<tr><td>Dateien, die es nur in Pro gibt (ohne Briefe/Doku)</td><td>rund 200 (u. a. 45 Seiten-Bausteine unter <code>native/</code>, 8 unter <code>assets/</code>, 20 Java-Klassen)</td></tr>
+<tr><td>Dateien in beiden, aber verschieden</td><td>179 (davon 50 Seiten-Dateien, 33 Android, 30 Windows, 39 Proben)</td></tr>
+<tr><td>Nur in V3 (eigene Art, bleibt)</td><td>V3-Oberfläche (<code>v3-ui</code>), Themen, Kennung, Signatur, Update-Kanal, Pages-Bau, Symbole</td></tr>
+</table>
+<p><b>Vorschlag für die Reihenfolge</b> (je Schritt ein PR, V3-Eigenes bleibt unangetastet):</p>
+<ol>
+ <li><b>Mail</b>: „Alle Konten“ wie oben, Passwort erneuern, Telekom-Fenster, Mailtext ohne Gestaltungsregeln, Ladeanzeige, Update-Fähnchen-Teil für V3s eigenen Kanal.</li>
+ <li><b>Suche</b>: eine Suchzeile mit Sortier-Kern, Suchfrage, eigene Kategorien, Einstellungen nach Themen.</li>
+ <li><b>Ablage und Tresor</b>: Tresorordner, Tresor-Hilfe, Pro-Verbund mit der Familienakte.</li>
+ <li><b>Gerät</b>: Texterkennung, Übersetzung, zweites Bedeutungs-Modell, Hintergrundaufgabe (macht die APK größer).</li>
+ <li><b>Windows</b> jeweils mit dem Schritt, Proben und Pages-Bau am Ende.</li>
+</ol>
+<p class="mut">Das ist mehr als eine Sitzung. In dieser Sitzung schaffbar: Schritt 1 (zusammen mit Aufgabe 1).</p>
+
+<div class="frage"><b>Bitte um dein Wort:</b><br>
+1. „Alle Konten“ so bauen? (Ja / Änderungen)<br>
+2. Themen: alle vier (Erdton, Petrol warm, Schiefer kompakt, Weich und luftig) oder ohne „Petrol warm“?<br>
+3. V3 in dieser Reihenfolge nachziehen?</div>
+</main></body></html>
