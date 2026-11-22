@@ -1,24 +1,24 @@
-/* Four local appearance profiles; preserve the existing light/dark control and its handler. */
+/* Local appearance profiles (four since .30, four more from V3 since 1.0.58); preserve the existing light/dark control and its handler. */
 (() => {
   'use strict';
   if (window.PBTheme) return;
   const root = document.documentElement;
   const KEY = 'pb_pro_theme_v1', LIGHT_KEY = 'pb_pro_light_theme_v1';
-  const NAMES = ['klarblau', 'graphit', 'petrol', 'nachtblau'];
-  const BACKGROUNDS = { klarblau: '#f6f8fc', graphit: '#f7f8fa', petrol: '#f5f9f9', nachtblau: '#111827' };
-  const ACCENTS = { klarblau: '#2563eb', graphit: '#475569', petrol: '#0f766e', nachtblau: '#7ca7ff' };
+  const NAMES = ['klarblau', 'graphit', 'petrol', 'erdton', 'petrolwarm', 'schiefer', 'weich', 'nachtblau'];
+  const BACKGROUNDS = { klarblau: '#f6f8fc', graphit: '#f7f8fa', petrol: '#f5f9f9', erdton: '#faf6f0', petrolwarm: '#f6f1ea', schiefer: '#eceef1', weich: '#f7f4f7', nachtblau: '#111827' };
+  const ACCENTS = { klarblau: '#2563eb', graphit: '#475569', petrol: '#0f766e', erdton: '#7d5c2e', petrolwarm: '#0e6b6b', schiefer: '#ad4410', weich: '#a63a6a', nachtblau: '#7ca7ff' };
   const WORDS = {
     de: { title: 'Erscheinungsbild', group: 'Farbthema wählen', help: 'Ein Thema ändert die Farben. Deine Daten und Funktionen bleiben gleich.',
-      names: ['Klarblau', 'Graphit', 'Petrol', 'Nachtblau'], descriptions: ['Helle Flächen und ein klarer blauer Akzent.', 'Neutrale Grautöne für konzentriertes Arbeiten.', 'Helle Flächen und ein ruhiger Petrolakzent.', 'Dunkle Flächen mit gut lesbaren hellen Akzenten.'],
+      names: ['Klarblau', 'Graphit', 'Petrol', 'Erdton', 'Petrol warm', 'Schiefer kompakt', 'Weich und luftig', 'Nachtblau'], descriptions: ['Helle Flächen und ein klarer blauer Akzent.', 'Neutrale Grautöne für konzentriertes Arbeiten.', 'Helle Flächen und ein ruhiger Petrolakzent.', 'Sand und Ocker.', 'Sand und Petrol.', 'Grau und Orange, eng gesetzt.', 'Rosé und Beere, rund.', 'Dunkle Flächen mit gut lesbaren hellen Akzenten.'],
       selected: 'Ausgewählt: {name}', unsaved: 'Das Thema gilt für diese Sitzung; die Einstellung konnte nicht gespeichert werden.' },
     en: { title: 'Appearance', group: 'Choose a colour theme', help: 'A theme changes the colours. Your data and functions stay the same.',
-      names: ['Clear blue', 'Graphite', 'Petrol', 'Night blue'], descriptions: ['Light surfaces with a clear blue accent.', 'Neutral greys for focused work.', 'Light surfaces with a calm teal accent.', 'Dark surfaces with clearly readable light accents.'],
+      names: ['Clear blue', 'Graphite', 'Petrol', 'Earth tone', 'Warm petrol', 'Compact slate', 'Soft and airy', 'Night blue'], descriptions: ['Light surfaces with a clear blue accent.', 'Neutral greys for focused work.', 'Light surfaces with a calm teal accent.', 'Sand and ochre.', 'Sand and petrol.', 'Grey and orange, compact.', 'Rosé and berry, rounded.', 'Dark surfaces with clearly readable light accents.'],
       selected: 'Selected: {name}', unsaved: 'The theme applies to this session; the preference could not be saved.' },
     ru: { title: 'Оформление', group: 'Выбрать цветовую тему', help: 'Тема меняет цвета. Данные и функции остаются прежними.',
-      names: ['Чистый синий', 'Графит', 'Петроль', 'Ночной синий'], descriptions: ['Светлые поверхности и чёткий синий акцент.', 'Нейтральные серые тона для сосредоточенной работы.', 'Светлые поверхности и спокойный бирюзовый акцент.', 'Тёмные поверхности и хорошо читаемые светлые акценты.'],
+      names: ['Чистый синий', 'Графит', 'Петроль', 'Землистое', 'Тёплый петроль', 'Компактный сланец', 'Мягкое и лёгкое', 'Ночной синий'], descriptions: ['Светлые поверхности и чёткий синий акцент.', 'Нейтральные серые тона для сосредоточенной работы.', 'Светлые поверхности и спокойный бирюзовый акцент.', 'Песок и охра.', 'Песок и петроль.', 'Серый и оранжевый, плотно.', 'Розовый и ягодный, округло.', 'Тёмные поверхности и хорошо читаемые светлые акценты.'],
       selected: 'Выбрано: {name}', unsaved: 'Тема действует в этом сеансе; сохранить настройку не удалось.' },
     pl: { title: 'Wygląd', group: 'Wybierz motyw kolorystyczny', help: 'Motyw zmienia kolory. Dane i funkcje pozostają bez zmian.',
-      names: ['Czysty błękit', 'Grafit', 'Petrol', 'Nocny błękit'], descriptions: ['Jasne powierzchnie i wyraźny niebieski akcent.', 'Neutralne szarości ułatwiające skupienie.', 'Jasne powierzchnie i spokojny morski akcent.', 'Ciemne powierzchnie i czytelne jasne akcenty.'],
+      names: ['Czysty błękit', 'Grafit', 'Petrol', 'Ziemisty', 'Ciepły petrol', 'Kompaktowy łupek', 'Miękki i lekki', 'Nocny błękit'], descriptions: ['Jasne powierzchnie i wyraźny niebieski akcent.', 'Neutralne szarości ułatwiające skupienie.', 'Jasne powierzchnie i spokojny morski akcent.', 'Piasek i ochra.', 'Piasek i petrol.', 'Szary i pomarańcz, zwarto.', 'Róż i jagoda, zaokrąglone.', 'Ciemne powierzchnie i czytelne jasne akcenty.'],
       selected: 'Wybrano: {name}', unsaved: 'Motyw obowiązuje w tej sesji; nie udało się zapisać ustawienia.' }
   };
   const words = () => WORDS[(root.lang || 'de').slice(0, 2)] || WORDS.de;

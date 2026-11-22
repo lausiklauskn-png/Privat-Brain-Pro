@@ -18,6 +18,37 @@
   --bg: #f5f9f9; --bg2: #edf5f3; --card2: #e7f4f2; --field: #f6fafa; --line: #d4e3e1;
   --acc: #0f766e; --acc2: #0f766e; --gold: #0f766e; --pb-focus: #0f766e;
 }
+/* Klaus 22.11.2026: die vier Themen aus Private Brain V3, die Pro noch nicht hatte. Farben aus V3 (assets/themes.css und dessen
+   Grundton „Erdton“); Akzente dort, wo sie auf weißer Schrift oder heller Fläche unter 4,5:1 lagen, leicht abgedunkelt. Nur Farben,
+   Rundungen und Schatten; Aufbau und Größen bleiben wie in den anderen Pro-Themen. */
+:root[data-pb-theme="erdton"] {
+  --bg: #faf6f0; --bg2: #f3ece1; --card: #fffdf9; --card2: #f3eadb; --field: #fbf7ef;
+  --line: #e6ddcf; --ink: #24201d; --mut: #6b6156; --mut2: #6b6156;
+  --acc: #7d5c2e; --acc2: #7d5c2e; --gold: #7d5c2e; --good: #2f6f45; --warn: #8a5a12; --bad: #9c2f48; --pb-focus: #7d5c2e; --pb-border-control: #8c7f70;
+  --radius: 14px; --radius-sm: 9px;
+  --shadow-sm: 0 2px 8px rgba(60,46,32,.10); --shadow: 0 8px 24px rgba(60,46,32,.16);
+}
+:root[data-pb-theme="petrolwarm"] {
+  --bg: #f6f1ea; --bg2: #efe6d9; --card: #fffdf9; --card2: #f2ebe0; --field: #f7f2ea;
+  --line: #e5dacb; --ink: #2a2622; --mut: #6b6055; --mut2: #6b6055;
+  --acc: #0e6b6b; --acc2: #0e6b6b; --gold: #0e6b6b; --good: #2b7a4b; --warn: #8a5508; --bad: #a33a46; --pb-focus: #0e6b6b; --pb-border-control: #8a7e70;
+  --radius: 14px; --radius-sm: 9px;
+  --shadow-sm: 0 3px 12px rgba(90,65,30,.10); --shadow: 0 6px 22px rgba(90,65,30,.12);
+}
+:root[data-pb-theme="schiefer"] {
+  --bg: #eceef1; --bg2: #e3e6ea; --card: #fbfbfc; --card2: #f1f3f5; --field: #f1f3f5;
+  --line: #d8dce2; --ink: #1a1d22; --mut: #535b66; --mut2: #535b66;
+  --acc: #ad4410; --acc2: #ad4410; --gold: #ad4410; --good: #1f7444; --warn: #8a5800; --bad: #b83a3a; --pb-focus: #ad4410; --pb-border-control: #737b86;
+  --radius: 8px; --radius-sm: 5px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08); --shadow: 0 2px 8px rgba(0,0,0,.10);
+}
+:root[data-pb-theme="weich"] {
+  --bg: #f7f4f7; --bg2: #f1ebf0; --card: #ffffff; --card2: #f8eef3; --field: #f7f3f6;
+  --line: #ece3e9; --ink: #2a2229; --mut: #6c5f70; --mut2: #6c5f70;
+  --acc: #a63a6a; --acc2: #a63a6a; --gold: #a63a6a; --good: #227547; --warn: #8a560a; --bad: #b8384f; --pb-focus: #a63a6a; --pb-border-control: #8f8090;
+  --radius: 18px; --radius-sm: 12px;
+  --shadow-sm: 0 6px 18px rgba(70,30,55,.08); --shadow: 0 10px 30px rgba(70,30,55,.12);
+}
 :root[data-pb-theme="nachtblau"] {
   --bg: #111827; --bg2: #151f2f; --card: #182233; --card2: #223756; --field: #151f2f;
   --line: #35465e; --ink: #f3f6fc; --mut: #b2bfd2; --mut2: #b2bfd2;

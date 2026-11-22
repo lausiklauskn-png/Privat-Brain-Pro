@@ -12,7 +12,7 @@ assert.ok(sourceVersion, 'The fixture must use the actual app version');
 const displayVersion = 'v' + sourceVersion.replace(/-debug$/, '').replace(/^(\d+)\.(\d+)\.\d+-preview\.(\d+)$/, '$1.$2.$3');
 const profiles = {
   klarblau: {background:'#f6f8fc', accent:'#2563eb'}, graphit: {background:'#f7f8fa', accent:'#475569'},
-  petrol: {background:'#f5f9f9', accent:'#0f766e'}, nachtblau: {background:'#111827', accent:'#7ca7ff'}
+  petrol: {background:'#f5f9f9', accent:'#0f766e'}, erdton: {background:'#faf6f0', accent:'#7d5c2e'}, petrolwarm: {background:'#f6f1ea', accent:'#0e6b6b'}, schiefer: {background:'#eceef1', accent:'#ad4410'}, weich: {background:'#f7f4f7', accent:'#a63a6a'}, nachtblau: {background:'#111827', accent:'#7ca7ff'}
 };
 const types = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.svg':'image/svg+xml', '.woff2':'font/woff2'};
 let browser, count = 0;

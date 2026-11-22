@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const root=document.documentElement;
-  const colours={klarblau:'#f6f8fc',graphit:'#f7f8fa',petrol:'#f5f9f9',nachtblau:'#111827'};
+  const colours={klarblau:'#f6f8fc',graphit:'#f7f8fa',petrol:'#f5f9f9',erdton:'#faf6f0',petrolwarm:'#f6f1ea',schiefer:'#eceef1',weich:'#f7f4f7',nachtblau:'#111827'};
   const read=key=>{try{return localStorage.getItem(key);}catch{return null;}};
   const saved=read('pb_pro_theme_v1');
   const theme=Object.hasOwn(colours,saved)?saved:read('pb_theme')==='dunkel'?'nachtblau':'klarblau';

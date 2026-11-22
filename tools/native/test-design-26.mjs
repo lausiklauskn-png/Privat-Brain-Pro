@@ -212,7 +212,7 @@ try{
   // Zahl in Textfarbe ≥ 4,5; die grüne und rote Zahl sind groß und fett (≥ 3 nach WCAG für große Schrift, hier ≥ 4 verlangt); Nebentexte ≥ 4,5.
   ok(`Point 5: text stays readable on the tint – ink number ≥ 4.5, coloured numbers ≥ 4, title and note ≥ 4.5 (measured ${tiles.map(t=>[t.v,t.k,t.u].map(x=>x.toFixed(1)).join('/')).join(' · ')})`,tiles.every((t,i)=>(i===1||i===3?t.v>=4:t.v>=4.5)&&t.k>=4.5&&t.u>=4.5));
   // Alle Themen: Verlauf aus dem jeweiligen Akzent, Text lesbar (Attribute am <html> wie native-theme.js/themes.js sie setzen).
-  const THEMES=[['klarblau',{'data-pb-theme':'klarblau'}],['graphit',{'data-pb-theme':'graphit'}],['petrol',{'data-pb-theme':'petrol'}],['nachtblau',{'data-pb-theme':'nachtblau','data-theme':'dunkel'}]];
+  const THEMES=[['klarblau',{'data-pb-theme':'klarblau'}],['graphit',{'data-pb-theme':'graphit'}],['petrol',{'data-pb-theme':'petrol'}],['erdton',{'data-pb-theme':'erdton'}],['petrolwarm',{'data-pb-theme':'petrolwarm'}],['schiefer',{'data-pb-theme':'schiefer'}],['weich',{'data-pb-theme':'weich'}],['nachtblau',{'data-pb-theme':'nachtblau','data-theme':'dunkel'}]];
   const before=await page.evaluate(()=>['data-pb-theme','data-look','data-theme'].map(a=>[a,document.documentElement.getAttribute(a)]));
   const perTheme=[];
   for(const [name,attrs] of THEMES){
