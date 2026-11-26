@@ -26,6 +26,9 @@ try {
   const html=await readFile(root+'/index.html','utf8');
   ok('No PWA installation script or service-worker registration in native build', !html.includes('src="assets/installieren.js') && !html.includes('navigator.serviceWorker.register('));
   ok('Light Pro icon matches the bundled asset', (await readFile('icon-512.png')).equals(await readFile(root+'/icon-512.png')));
+  // Klaus 2026-11-26: Pro (App) dunkel, Basic (Web-App) hell – im Kopf der App steht das Pro-Symbol, nicht das der Web-App.
+  ok('Dark Pro icon is bundled and shown in the native header', (await readFile('icon-pro-512.png')).equals(await readFile(root+'/icon-pro-512.png')) && html.includes('<img src="icon-pro-512.png"') && !html.includes('<img src="icon-512.png"'));
+  ok('Android launcher uses the dark Pro icon', (await readFile('android/app/src/main/res/values/colors.xml','utf8')).includes('#0a011b') && (await readFile('android/app/src/main/res/drawable-nodpi/private_brain_icon.png')).length > 50000);
   const engine=process.env.PB_BROWSER_ENGINE||'chromium';
   assert.ok(['chromium','firefox','webkit'].includes(engine),'Known browser engine');
   browser=await ({chromium,firefox,webkit})[engine].launch(engine==='chromium'?{executablePath:process.env.CB_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox']}:{});
