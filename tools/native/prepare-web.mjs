@@ -13,7 +13,7 @@ import { join } from 'node:path';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const out = join(root, 'www');
 // Explicit public inputs: never package the checkout, services, credentials or caches.
-const inputs = ['assets', 'modules', 'models', 'vendor', 'sbkim/spore.json', 'icon-192.png', 'icon-512.png',
+const inputs = ['assets', 'modules', 'models', 'vendor', 'sbkim/spore.json', 'icon-192.png', 'icon-512.png', 'icon-pro-192.png', 'icon-pro-512.png',
   'catalog-emblem.png', 'pb-caption.js', 'sicherheit.html', 'impressum.html', 'LICENSE', 'RECHTE.md'];
 async function rejectLinks(path) {
   const stat = await lstat(path);
@@ -33,7 +33,9 @@ let html = await readFile(join(root, 'index.html'), 'utf8');
 for (const [before, after] of [
   ['<title>Private Brain — nach Bedeutung suchen</title>', '<title>Private Brain Pro — nach Bedeutung suchen</title>'],
   ['<meta name="apple-mobile-web-app-title" content="Private Brain">', '<meta name="apple-mobile-web-app-title" content="Private Brain Pro">'],
-  ['<h1>Private Brain</h1>', '<h1>Private Brain Pro</h1>']
+  ['<h1>Private Brain</h1>', '<h1>Private Brain Pro</h1>'],
+  // Klaus 2026-11-26: Pro trägt in der App das dunkle Symbol, die Web-App (Basic) das helle.
+  ['<img src="icon-512.png" alt="" width="46" height="46">', '<img src="icon-pro-512.png" alt="" width="46" height="46">']
 ]) {
   if (!html.includes(before)) throw new Error('Review native branding after source changes');
   html = html.replace(before, after);

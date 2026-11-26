@@ -26,7 +26,7 @@ try{
   ok('Drei Datei-Hauptseiten und ergänztes Postfach',await page.locator('.main-pages .tab').count()===4);
   ok('Kopf zeigt das originale 3D-Icon; Leerzustand behält sein flaches Symbol',await page.locator('.logo img').evaluate(img=>img.complete && img.naturalWidth===512 && img.getAttribute('src')==='icon-512.png') && await page.locator('#searchEmpty .brain-emoji circle').count()===4);
   const manifest=await (await page.request.get(url+'app-manifest.json')).json();
-  ok('Desktop- und Touch-Icons verwenden das originale 3D-Bild',manifest.icons.every(i=>i.src==='icon-'+i.sizes.split('x')[0]+'.png?v=3d') && await page.locator('link[rel="apple-touch-icon"]').getAttribute('href')==='icon-192.png?v=3d');
+  ok('Desktop- und Touch-Icons verwenden das originale 3D-Bild',manifest.icons.every(i=>i.src==='icon-'+i.sizes.split('x')[0]+'.png?v=4') && await page.locator('link[rel="apple-touch-icon"]').getAttribute('href')==='icon-192.png?v=4');
   ok('Suche steht einmal in der Hauptnavigation, ohne zusätzlichen Kopfknopf',await page.locator('.main-pages [data-tab="search"]').count()===1 && await page.locator('#globalSearch').count()===0);
   const light=await page.locator('.main-pages .tab').first().evaluate(n=>getComputedStyle(n).backgroundColor);
   await page.click('#themeToggle');

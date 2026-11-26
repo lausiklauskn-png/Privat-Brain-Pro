@@ -21,7 +21,7 @@ for(const name of ['kimboard','kimseek']){
   text=text.replace('<script src="../tool-gate.js"></script>','<script src="../tool-gate.js"></script><script src="../windows/tool-client.js"></script>');
   await writeFile(path,text);
 }
-await cp(join(root,'icon-512.png'),join(dist,'windows/icon.png'));
+await cp(join(root,'icon-pro-512.png'),join(dist,'windows/icon.png'));
 let html=await readFile(join(dist,'index.html'),'utf8');
 // The same app CSP plus Tauri's private IPC transport; no remotely loaded app.
 html=html.replace("connect-src 'self' https:","connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost https:");
