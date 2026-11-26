@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Private Brain Pro – dunkles App-Symbol (Klaus 2026-11-26).
+"""Private Brain Pro – dunkles App-Symbol (Klaus 2026-11-26). ERSATZWEG: die gültige Vorlage
+artwork/private-brain-pro-dark.png hat Klaus mit ChatGPT neu erzeugen lassen; dieses Skript
+überschreibt sie. Nur benutzen, wenn kein neues Bild zur Hand ist.
 
 Regel für alle Pro-Apps: die Pro-Fassung (Android, Windows) trägt einen dunklen
 Grund mit Verlauf von der Mitte nach außen, die Basic-Fassung (Web-App) ist hell.
@@ -20,7 +22,7 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.abspath(os.path.join(HIER, '..', '..', '..'))
 ap = argparse.ArgumentParser()
 ap.add_argument('--blau', action='store_true')
-ap.add_argument('--out', default=os.path.join(WURZEL, 'artwork', 'private-brain-pro-dark.png'))
+ap.add_argument('--out', default=os.path.join(WURZEL, 'artwork', 'private-brain-pro-dark-umgefaerbt.png'))
 A = ap.parse_args()
 
 # Mitte, Zwischenton, Rand; dazu die Farbe, in die der frühere weiße Schein übergeht.
