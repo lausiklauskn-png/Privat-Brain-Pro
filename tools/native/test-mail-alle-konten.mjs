@@ -95,6 +95,13 @@ try{
   ok('The folders are the standard ones of a single account, in the same order',JSON.stringify(await live.locator('.mail-folders [data-mail-folder]').evaluateAll(n=>n.map(b=>b.dataset.mailFolder).filter(id=>!id.startsWith('provider:')&&!id.startsWith('tool:'))))===JSON.stringify(['inbox','draft','outbox','sent','archive','spam','trash','exported']));
   ok('Folder numbers add up all accounts (inbox 21 + 2, sent 1 + 1, spam 1 + 0)',await num('inbox')==='23'&&await num('sent')==='2'&&await num('spam')==='1',[await num('inbox'),await num('sent'),await num('spam')]);
   ok('Drafts count the server drafts of all accounts plus the local draft',await num('draft')==='2');
+  // Klaus 27.11.2026 (Bild): „Alle Konten“ zeigte Posteingang 0 bei voller Liste – Serverzahlen kannte der Index erst für ein Konto.
+  const savedFolders=await page.evaluate(()=>localStorage.getItem('pb_mail_index_folders'));
+  await page.evaluate(B=>{const all=JSON.parse(localStorage.getItem('pb_mail_index_folders'));delete all[B];for(const f of Object.values(all)[0].list)if(f.role==='inbox')f.total=0;
+    localStorage.setItem('pb_mail_index_folders',JSON.stringify(all));dispatchEvent(new CustomEvent('pb:mail-index-progress'));},B);
+  ok('Without server numbers (yet) a folder counts at least the mails already loaded (21 + 2), and the number follows the running fetch',await num('inbox')==='23'&&await num('sent')==='2',[await num('inbox'),await num('sent')]);
+  await page.evaluate(v=>{localStorage.setItem('pb_mail_index_folders',v);},savedFolders);await new Promise(r=>setTimeout(r,1100));
+  await page.evaluate(()=>dispatchEvent(new CustomEvent('pb:mail-index-progress')));
   const rows=live.locator('.mail-list [data-live-uid]');
   ok('The inbox list shows 15 mails first, newest on top, from both accounts',await rows.count()===15&&(await rows.first().locator('.mail-subject').textContent())==='Rechnung November'&&(await rows.nth(1).locator('.mail-subject').textContent())==='Sonntag');
   await capture(page,'app-breit',1366,860);await capture(page,'app-handy',390,844);

@@ -324,6 +324,15 @@
         ),
       )
     ] || k;
+  /** Klaus 27.11.2026: lange Dateinamen nur mit Anfang … Ende (Endung bleibt), der ganze Name steht im Hinweis. */
+  const shortName = (name, max = 26) => {
+    const s = String(name || "");
+    if (s.length <= max) return s;
+    const dot = s.lastIndexOf("."), ext = dot > 0 && s.length - dot <= 8 ? s.slice(dot) : "";
+    const tail = Math.min(6, Math.max(0, s.length - ext.length - 8)), head = Math.max(6, max - ext.length - tail - 1);
+    return s.slice(0, head) + "…" + s.slice(s.length - ext.length - tail);
+  };
+  const named = (node, name) => { if (shortName(name) !== String(name || "")) { node.title = name; if (node.tagName === "BUTTON") node.setAttribute("aria-label", (node.textContent.startsWith("↓ ") ? "↓ " : "") + name); } return node; };
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -831,22 +840,43 @@
     allFolders = PBMailIndex.folderInfo();
     savedCache = await savedAll();
     const known = accounts.filter((a) => allFolders[a.id]);
-    const roleCount = (role) => { let sum = null; for (const a of known) for (const f of allFolders[a.id].list) if (f.role === role && Number.isSafeInteger(f.total)) sum = (sum || 0) + f.total; return sum; };
-    totals.clear();
-    entries = shared.standard.map((id) => ({ id, name: S(id), path: "@all:" + id, remote: known.some((a) => allFolders[a.id].list.some((f) => f.role === id)) }));
-    for (const e of entries) { const n = roleCount(e.id); if (n != null) totals.set(e.id, n); }
+    entries = shared.standard.map((id) => ({ id, name: S(id), path: "@all:" + id, remote: known.some((a) => allFolders[a.id].list.some((f) => f.role === id)) || PBMailIndex.places({ role: id }).length > 0 }));
     for (const a of known) for (const f of allFolders[a.id].list) {
       if (f.role || f.collection) continue;
       const id = "provider:" + a.id + "\n" + f.path;
       entries.push({ id, name: a.email + " · " + f.name, path: "@acc:" + a.id + "\n" + f.path, remote: true, account: a.id, real: f.path });
-      if (Number.isSafeInteger(f.total)) totals.set(id, f.total);
     }
+    allTotals();
     foldersReady = true;
     if (!entries.some((e) => e.id === viewKey) && !String(viewKey).startsWith("tool:")) viewKey = "inbox";
     folder = entries.find((e) => e.id === viewKey)?.path || "@all:inbox";
     drawFolders();
     if (String(viewKey).startsWith("tool:")) return showTool(viewKey.slice(5));
     await loadList();
+  }
+  /** Klaus 27.11.2026: „Alle Konten“ zeigte Posteingang 0, obwohl die Liste voller Mails war – die Serverzahlen kannte der Index
+      erst für ein Konto. Jetzt zählt je Konto die größere Zahl: die vom Server oder die der schon geladenen Mails. */
+  function allTotals() {
+    totals.clear();
+    for (const e of entries) {
+      if (e.account) {
+        const f = (allFolders[e.account]?.list || []).find((x) => x.path === e.real), seen = PBMailIndex.places({ account: e.account, path: e.real }).length;
+        const server = Number.isSafeInteger(f?.total) ? f.total : null;
+        if (server != null || seen) totals.set(e.id, Math.max(server || 0, seen));
+        continue;
+      }
+      const seen = new Map();
+      for (const p of PBMailIndex.places({ role: e.id })) seen.set(p.loc.account, (seen.get(p.loc.account) || 0) + 1);
+      let sum = null;
+      for (const id of new Set([...Object.keys(allFolders), ...seen.keys()])) {
+        let server = null;
+        for (const f of allFolders[id]?.list || []) if (f.role === e.id && Number.isSafeInteger(f.total)) server = (server || 0) + f.total;
+        const loaded = seen.get(id) || 0;
+        if (server == null && !loaded) continue;
+        sum = (sum || 0) + Math.max(server || 0, loaded);
+      }
+      if (sum != null) totals.set(e.id, sum);
+    }
   }
   /** Turns one place of the index into a row of the list. */
   function placeItem({ rec, loc }) {
@@ -1104,6 +1134,7 @@
     app.dataset.view = "list";
     list.scrollTop = listPlace;
     showCurrentRow();
+    if (native) void prefetch(); // goes on where it stopped; mails already fetched are skipped
   }
   function drawNativeList() {
     if (allMode && String(viewKey).startsWith("tool:")) return; // the index draws its own tool there
@@ -1310,7 +1341,7 @@
   }
   async function fetchMail(item) {
     const k = placeKey(account, folder, validity, item.uid);
-    if (prefetched.has(k)) { const data = prefetched.get(k); prefetched.delete(k); return data; }
+    if (prefetched.has(k)) return prefetched.get(k); // kept: „Zurück“ and opening it again need no second download
     return api(prefix() + "/messages/" + item.uid + query());
   }
   async function catalogOne(data, item) {
@@ -1469,6 +1500,9 @@
     mail = null;
     reader.replaceChildren(el("p", "mail-muted", native ? S("choose") : T("body")));
     if (allMode) useItemAccount(item);
+    // Klaus 27.11.2026 (langsames Netz): the mail tapped now must not wait behind the background prefetch – it pauses
+    // here and goes on after „Zurück“.
+    prefetchRound++;
     native?.progress?.('download');
     try { mail = await fetchMail(item); }
     catch (error) {
@@ -1675,12 +1709,13 @@
             a.name,
           ),
         );
-        b.textContent = "↓ " + a.name;
+        b.textContent = "↓ " + shortName(a.name);
+        named(b, a.name);
         delete b.dataset.liveText;
         nodes.push(b);
         if (window.PBSchutz) nodes.push(PBSchutz.attachmentStatus(a));
       }
-      const wait = el("p", "mail-muted mail-attachment-wait", a.name + " · "), state = el("span", "", T("attachmentChecking"));
+      const wait = el("p", "mail-muted mail-attachment-wait", shortName(a.name) + " · "), state = el("span", "", T("attachmentChecking"));
       wait.dataset.mailAttachmentWait = ""; wait.setAttribute("role", "status");
       state.dataset.liveText = "attachmentChecking"; wait.append(state);
       hold(nodes, true);
@@ -1813,7 +1848,8 @@
         renderComposer();
       });
     for (const a of draft.attachments) {
-      const row = el("p", "mail-muted", a.name);
+      const row = el("p", "mail-muted mail-compose-file", shortName(a.name));
+      named(row, a.name);
       row.append(
         btn("remove", () => {
           draft.attachments = draft.attachments.filter((x) => x !== a);
@@ -1926,6 +1962,14 @@
   window.addEventListener("pb:mail-index", () => {
     if (!allMode || busy || app.hidden || draft || current || selected.size || String(viewKey).startsWith("tool:")) return;
     void run(() => loadAllFolders());
+  });
+  // While the index is still fetching, the numbers next to the folders grow with it; the list itself stays where it is.
+  let progressDrawn = 0;
+  window.addEventListener("pb:mail-index-progress", () => {
+    if (!allMode || !foldersReady || app.hidden || Date.now() - progressDrawn < 1000) return;
+    progressDrawn = Date.now();
+    allFolders = PBMailIndex.folderInfo();
+    allTotals(); drawFolders();
   });
   setInterval(autoRefresh, 60000);
   window.PBLiveMail = {

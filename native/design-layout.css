@@ -175,6 +175,17 @@ html[data-pb-theme] .pb-text-input-dialog input { min-height:32px; }
 html[data-pb-theme] .pb-text-input-dialog .btnrow { flex-wrap:wrap; justify-content:flex-end; }
 html[data-pb-theme] .pb-mail-translate-action { display:inline-flex; align-items:center; gap:5px; }
 html[data-pb-theme] .pb-mail-translate-icon { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+/* Klaus 27.11.2026: „Übersetzen“ und „Prüfung“ stehen unten unter der Mail, mit Abstand zum Mailtext, und klappen auf und zu.
+   Der Knopf ist so hoch wie seine Schrift. */
+html[data-pb-theme] .pb-mail-translation-box { margin:28px 0 6px; padding-top:10px; border-top:1px solid var(--line); }
+html[data-pb-theme] .pb-mail-translation-box + .mail-report { margin-top:6px; }
+html[data-pb-theme] .pb-mail-translate-toggle { min-height:0; height:auto; padding:3px 10px; font-size:.85rem; line-height:1.3; border-radius:6px; }
+html[data-pb-theme] .pb-mail-translate-toggle::after { content:"▸"; font-size:.75em; opacity:.7; }
+html[data-pb-theme] .pb-mail-translate-toggle[aria-expanded="true"]::after { content:"▾"; }
+html[data-pb-theme] .pb-mail-translation-box > .pb-mail-translation { margin-top:8px; }
+html[data-pb-theme] .mail-reader details.mail-report { padding:3px 10px; margin:6px 0 14px; }
+html[data-pb-theme] .mail-reader details.mail-report[open] { padding:8px 12px; }
+html[data-pb-theme] .mail-reader details.mail-report > summary { min-height:0; padding:2px 0; font-size:.85rem; line-height:1.3; }
 html[data-pb-theme] .pb-mail-translation { margin:14px 0; padding:12px; border:1px solid var(--line); border-radius:7px; background:var(--bg2); overflow-wrap:anywhere; }
 html[data-pb-theme] .pb-mail-translation h4 { margin:0 0 8px; font-size:.95rem; }
 html[data-pb-theme] .pb-mail-translation label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:6px 0; }

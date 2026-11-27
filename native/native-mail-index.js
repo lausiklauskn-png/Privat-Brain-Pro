@@ -311,7 +311,7 @@
         changed = true;
         progress(acc.email + ' · ' + (window.PBMailFolders ? folder.name : folder.path) + ' · ' + ctx.count + ' ' + t('mails'));
       }
-      if (changed) { rebuildIndex(); refreshAll(); draw(); }
+      if (changed) { rebuildIndex(); refreshAll(); draw(); progressed(); }
       if (stopRequested) break;
       // A folder read completely once only needs its newest page until a known mail appears.
       if (!fresh && st.complete != null && st.complete <= ctx.since) break;
@@ -346,7 +346,7 @@
         if (stopRequested) break;
         try {
           const folders = await device.request('/' + encodeURIComponent(acc.id) + '/folders');
-          rememberFolders(acc, folders);
+          rememberFolders(acc, folders); progressed();
           for (const folder of chooseFolders(folders)) { if (stopRequested) break; await syncFolder(acc, folder, ctx, states); }
         } catch (error) {
           if (/APP_OFFLINE/.test(error.message)) { lastProblem = t('offline'); break; }
@@ -599,6 +599,8 @@
   // ---------- „Alle Konten“ als Postfach (Klaus 22.11.2026): Lesezugriff für assets/live-mail.js ----------
   /** Tells the mailbox that the index changed (after a fetch, a move, a flag). */
   function announce() { try { dispatchEvent(new CustomEvent('pb:mail-index')); } catch { /* old WebView */ } }
+  /** While a fetch runs: the folder numbers of „Alle Konten“ may grow, the list is not redrawn. */
+  function progressed() { try { dispatchEvent(new CustomEvent('pb:mail-index-progress')); } catch { /* old WebView */ } }
   /** Every place of every mail, filtered by role ("inbox", "sent" …) or by one account's folder; newest first. */
   function places(filter) {
     const out = [];

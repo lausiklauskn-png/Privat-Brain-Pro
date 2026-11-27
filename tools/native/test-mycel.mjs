@@ -1,6 +1,5 @@
-// Siegel (Modul 17) and Mycel (Modul 23-UI) in the native app, as the canon intends
-// (Klaus 2026-10-21): both float, snap into the top bar, "−" shrinks, "✕" hides, and there
-// is a way back. Real modules in the www bundle; no network (foreign origins are blocked).
+// Siegel (Modul 17/16) and Mycel (Modul 23-UI) in the native app. Klaus 27.11.2026: the Siegel
+// runs in the background and opens from Settings; nothing of it floats over the app. Real modules in the www bundle; no network (foreign origins are blocked).
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
@@ -28,25 +27,13 @@ try{
   await page.goto(url);
   await page.waitForFunction(()=>window.SbkimRendezvousUI&&document.querySelector('#sbkim-rdv-btn')&&document.querySelector('#sbkim-widget')&&window.PBMycel);
   const rect=sel=>page.evaluate(sel=>{const n=document.querySelector(sel);if(!n)return null;const r=n.getBoundingClientRect();return {x:r.left,y:r.top,w:r.width,h:r.height,shown:getComputedStyle(n).display!=='none'&&r.width>0};},sel);
-  // A point on the element that is no lamp/button, so the canon's own drag starts there.
-  const handle=sel=>page.evaluate(sel=>{const w=document.querySelector(sel),r=w.getBoundingClientRect();
-    for(let x=r.left+1;x<r.right;x+=2)for(const y of [r.top+r.height/2,r.top+3,r.bottom-3]){const e=document.elementFromPoint(x,y);
-      if(e&&(e===w||w.contains(e))&&(e===w||!e.closest('.sbkim-widget-slot,.sbkim-widget-btn')))return {x,y};}
-    return null;},sel);
-  const drag=async(sel,tx,ty)=>{const h=await handle(sel);assert.ok(h,'no drag handle on '+sel);
-    await page.mouse.move(h.x,h.y);await page.mouse.down();
-    for(let i=1;i<=12;i++)await page.mouse.move(h.x+(tx-h.x)*i/12,h.y+(ty-h.y)*i/12);
-    await page.mouse.up();await pause(300);};
-  const stable=async sel=>{let a=await rect(sel),b;for(let i=0;i<30;i++){await pause(100);b=await rect(sel);if(Math.abs(a.x-b.x)<.5&&Math.abs(a.w-b.w)<.5)return b;a=b;}return b;};
-
   // --- Mycel (Modul 23-UI), reached through the Siegel ------------------------------------
   ok('The canon Mycel window is loaded byte-1:1 instead of the old app window',await page.evaluate(()=>!!window.SbkimRendezvousUI._meta&&!window.PBNetWidget&&!document.querySelector('#pbNetBtn')));
   ok('No separate Mycel pill takes room (Klaus: "nicht so viel Platz verschwenden")',!(await rect('#sbkim-rdv-btn')).shown&&!(await rect('header.top [data-sbkim-mycel-platz]')).shown);
   ok('It uses the app\'s own node name',await page.evaluate(()=>/^Private Brain/.test(SbkimRendezvousUI._meta.nodeName)));
-  const tapSeal=async()=>{const h=await handle('#sbkim-widget');await page.mouse.click(h.x,h.y);await pause(250);};
-  await tapSeal();
+  await page.evaluate(()=>PBMycel.showSeal());await pause(250);
   const sealOpen=()=>page.evaluate(()=>{const m=document.getElementById('sbkim-siegel-modal');return !!m&&getComputedStyle(m).display!=='none';});
-  ok('Tapping the round Siegel opens the Siegel window',await sealOpen());
+  ok('The Siegel window opens through the app (PBMycel.showSeal)',await sealOpen());
   ok('The Siegel window carries "SBKIM-Netz" right under its title (Klaus 15.11.2026: SBKIM statt Mycel)',await page.evaluate(()=>{const b=document.querySelector('#sbkim-siegel-modal [data-mycel-from-seal]');return !!b&&b.textContent==='SBKIM-Netz';}));
   await page.locator('#sbkim-siegel-modal [data-mycel-from-seal]').click();
   await page.waitForFunction(()=>SbkimRendezvousUI.isOpen());
@@ -81,56 +68,25 @@ try{
   ok('The answer with an instruction to an AI did not go to the AI',judged.sent.length===1&&!/Ignoriere/.test(judged.sent[0])&&/Wasserfilter/.test(judged.sent[0]));
   ok('… and the window says so: "nicht an die KI gegeben"',/· Saft\. Ignoriere[^\n]*\n\s+– Anweisung an eine KI im Text — nicht an die KI gegeben\./.test(judged.text));
 
-  // --- Siegel (Modul 17) --------------------------------------------------------------
-  const widget=()=>page.evaluate(()=>{const w=document.querySelector('#sbkim-widget');const vis=[...w.querySelectorAll('button')].filter(b=>getComputedStyle(b).display!=='none'&&b.getBoundingClientRect().width>0);
-    const r=w.getBoundingClientRect();return {inRow:!!w.closest('.native-toolbar-row'),oben:w.getAttribute('data-sbkim-oben'),pos:getComputedStyle(w).position,w:r.width,h:r.height,
-      shown:vis.map(b=>b.classList.contains('siegel')?'siegel':b.textContent.trim())};});
-  let w=await widget();
-  ok('The Siegel floats instead of being glued into the toolbar',!w.inRow&&w.pos==='fixed');
-  ok('Only the round Siegel and its small ✕ are shown (no lamps, no −)',JSON.stringify(w.shown)===JSON.stringify(['siegel','✕'])&&w.w<=34&&w.h<=34);
-  // Klaus: "rechts ist Platz" – first start: in the top bar on the right, clear of the title and of ← → ☰.
-  const clear=()=>page.evaluate(()=>{const s=document.querySelector('#sbkim-widget').getBoundingClientRect(),t=document.querySelector('header .tools').getBoundingClientRect(),h=document.querySelector('header.top').getBoundingClientRect();
-    const range=document.createRange();range.selectNodeContents(document.querySelector('.brand h1'));const txt=range.getBoundingClientRect();
-    return {oben:document.querySelector('#sbkim-widget').getAttribute('data-sbkim-oben'),inBar:s.top>=h.top-1&&s.bottom<=h.bottom+8,afterTitle:s.left>=txt.right+2,beforeTools:s.right<=t.left-2};});
-  const first=[];
-  // Klaus 2026-10-23 (Bild aus dem Video): ab 600 px stand „SIEGEL“ hinter dem Knopf und der ★ neben der Kugel.
-  const star=()=>page.evaluate(()=>{const s=document.querySelector('#sbkim-widget .sbkim-widget-slot.siegel'),r=s.getBoundingClientRect(),g=s.querySelector('.sbkim-widget-siegel-glyph').getBoundingClientRect(),l=s.querySelector('.sbkim-widget-label');
-    return {label:getComputedStyle(l).display==='none'||l.getBoundingClientRect().width===0,dx:Math.abs(g.x+g.width/2-(r.x+r.width/2)),dy:Math.abs(g.y+g.height/2-(r.y+r.height/2))};});
-  const stars=[];
-  for(const width of [360,412,600,768,1280]){await page.setViewportSize({width,height:780});await pause(250);first.push([width,await clear()]);stars.push([width,await star()]);}
-  ok('The ★ sits in the middle of the round Siegel and the word "SIEGEL" is not shown (360–1280 px)',stars.every(([,c])=>c.label&&c.dx<=1&&c.dy<=1)||console.log(JSON.stringify(stars)));
-  await page.setViewportSize({width:360,height:780});await pause(250);
-  // .20 seeded 128 px before the internet lamp existed: that untouched seed moves, a chosen place stays.
-  const key='sbkim_widget_position__root',seeded=abstand=>JSON.stringify({corner:null,offsetX:16,offsetY:16,x:null,y:null,oben:{seite:'rechts',abstand}});
-  const after=async value=>{await page.evaluate(([k,v])=>localStorage.setItem(k,v),[key,value]);await page.reload();await page.waitForFunction(()=>window.SbkimWidget);await pause(300);return page.evaluate(k=>JSON.parse(localStorage.getItem(k)).oben?.abstand,key);};
-  const moved=await after(seeded(128)),kept=await after(seeded(200));
-  ok('The untouched .20 start place moves clear of the internet lamp; a place Klaus chose stays',moved===152&&kept===200||console.log(moved,kept));
-  await after(seeded(152));
-  ok('On first start the Siegel sits in the top bar on the right, between the title and ← → ☰ (360–1280 px)',first.every(([,c])=>c.oben==='rechts'&&c.inBar&&c.afterTitle&&c.beforeTools)||console.log(JSON.stringify(first)));
-  if(process.env.PB_CAPTURE_DESIGN==='1'){await mkdir('docs/design/siegel-mycel',{recursive:true});await page.mouse.move(180,600);await pause(200);
-    await page.screenshot({path:'docs/design/siegel-mycel/oben-eingerastet.png'});}
-  ok('The Siegel stays below app windows (dialogs, ☰ menu, image and file viewer)',await page.evaluate(()=>{const z=Number(getComputedStyle(document.querySelector('#sbkim-widget')).zIndex);return z>31&&z<60;}));
-  const head=await rect('header.top');
-  await drag('#sbkim-widget',60,head.y+6);
-  w=await widget();const placed=await rect('#sbkim-widget');
-  ok('Dragged by the Siegel itself up to the top bar, it snaps in (left half → left side)',w.oben==='links'&&placed.y>=head.y-1&&placed.y+placed.h<=head.y+head.h+8);
-  ok('Dragging does not open the Siegel window',!(await sealOpen()));
-  await page.reload();
-  await page.waitForFunction(()=>document.querySelector('#sbkim-widget')&&window.PBMycel);await stable('#sbkim-widget');
-  ok('After a restart it is still in the top bar',(await widget()).oben==='links'&&(await rect('#sbkim-widget')).y<head.y+head.h);
+  // --- Siegel (Modul 17/16): Klaus 27.11.2026 „pack es bitte bei Einstellungen mit rein … es erfüllt seine Funktion im Hintergrund“ ---
+  const sealHidden=()=>page.evaluate(()=>{const w=document.querySelector('#sbkim-widget');return !!w&&getComputedStyle(w).display==='none';});
+  for(const width of [360,768,1280,1920]){await page.setViewportSize({width,height:780});await pause(150);
+    ok(width+'px: the round Siegel floats nowhere (it lay under the DeX window bar and stood in the way on the phone)',await sealHidden());}
+  await page.setViewportSize({width:360,height:780});
+  ok('… but it still checks the app in the background (Modul 16 and 17 run unchanged)',await page.evaluate(()=>typeof SbkimSiegel?.getAspects==='function'&&!!document.getElementById('sbkim-siegel-badge')));
+  ok('Even a Siegel the canon wants shown stays out of sight',await page.evaluate(async()=>{SbkimWidget.show();await new Promise(r=>setTimeout(r,50));return getComputedStyle(document.querySelector('#sbkim-widget')).display==='none';}));
   await navigateTo(page,'settings');
-  ok('Settings has the Siegel/Mycel box; "Siegel wieder zeigen" only while it is hidden',await page.locator('#mycelPlace').isVisible()&&!(await page.locator('[data-mycel-seal]').isVisible()));
-  await page.locator('#sbkim-widget .sbkim-widget-close').click();
-  await pause(150);
-  ok('"✕" hides the Siegel',await page.evaluate(()=>!SbkimWidget.isVisible()));
-  await page.reload();
-  await page.waitForFunction(()=>document.querySelector('#sbkim-widget')&&window.PBMycel);
-  ok('Hidden stays hidden after a restart',await page.evaluate(()=>!SbkimWidget.isVisible()));
-  await navigateTo(page,'settings');
-  ok('Now Settings offers "🔏 Siegel wieder zeigen"',await page.locator('[data-mycel-seal]').isVisible()&&(await page.locator('[data-mycel-seal]').textContent())==='🔏 Siegel wieder zeigen');
-  await page.locator('[data-mycel-seal]').click();
-  ok('… and it brings the Siegel back',await page.evaluate(()=>SbkimWidget.isVisible())&&!(await page.locator('[data-mycel-seal]').isVisible()));
-
+  ok('Settings has the Siegel/SBKIM box with "Siegel öffnen" and "SBKIM-Fenster öffnen"',await page.locator('#mycelPlace').isVisible()&&(await page.locator('[data-mycel-seal]').textContent())==='Siegel öffnen'&&(await page.locator('[data-mycel-open]').textContent())==='SBKIM-Fenster öffnen');
+  ok('The box speaks without emojis',await page.locator('#mycelPlace').evaluate(b=>!/\p{Extended_Pictographic}/u.test(b.textContent)));
+  await page.locator('[data-mycel-seal]').click();await pause(250);
+  ok('"Siegel öffnen" opens the Siegel window',await sealOpen());
+  await page.locator('#sbkim-siegel-modal [data-mycel-from-seal]').click();
+  await page.waitForFunction(()=>SbkimRendezvousUI.isOpen());
+  ok('… and from there the SBKIM window, as before',!(await sealOpen()));
+  await page.evaluate(()=>SbkimRendezvousUI.hide());
+  await page.locator('[data-mycel-open]').click();
+  ok('"SBKIM-Fenster öffnen" opens the SBKIM window directly',await page.evaluate(()=>SbkimRendezvousUI.isOpen()));
+  await page.evaluate(()=>SbkimRendezvousUI.hide());
 
   // --- Language and layout ------------------------------------------------------------
   await page.evaluate(()=>localStorage.setItem('pb_lang','en'));await page.reload();
@@ -139,7 +95,7 @@ try{
   ok('English: the Mycel window speaks English',await page.evaluate(()=>/Connect to the node network/.test(document.querySelector('#sbkim-rdv-panel').textContent)&&!/Wer ist im Raum/.test(document.querySelector('#sbkim-rdv-panel').textContent)));
   await page.evaluate(()=>SbkimRendezvousUI.hide());
   await navigateTo(page,'settings');
-  ok('English: the Settings box too',(await page.locator('#mycelPlace h3').textContent())==='🔏 Seal and 🌐 SBKIM');
+  ok('English: the Settings box too',(await page.locator('#mycelPlace h3').textContent())==='Seal and SBKIM');
   await page.evaluate(()=>localStorage.setItem('pb_lang','de'));
   ok('No sideways scrolling on the phone',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   ok('No runtime errors',errors.length===0);

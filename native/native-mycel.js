@@ -4,21 +4,30 @@
    and it snaps in, its small ✕ hides it. Tapping it opens the Siegel window, which here gets a
    "🌐 Mycel-Netz" button for the Mycel window (Modul 23-UI, byte-1:1, its own pill hidden).
    The canon brings no way back after ✕, so Settings gets one; the app menu opens the Mycel too.
-   Deviation from the canon, asked for by Klaus: 17 and 23-UI are separate pills there. */
+   Deviation from the canon, asked for by Klaus: 17 and 23-UI are separate pills there.
+   Klaus 27.11.2026: „das Siegel … pack es bitte bei Einstellungen mit rein. Und auch überall da, wo es noch auftaucht,
+   es erfüllt seine Funktion im Hintergrund.“ The round Siegel no longer floats (it lay under the DeX window bar and
+   stood in the way on the phone). Modul 17 and 16 still run unchanged in the background; Settings opens the Siegel
+   window and the SBKIM window. */
 (() => {
   'use strict';
   const words = {
-    de: { title: '🔏 Siegel und 🌐 SBKIM', help: 'Beide lassen sich ziehen. Oben an der Leiste rasten sie ein. „−“ macht sie klein, „✕“ blendet sie aus.', seal: '🔏 Siegel wieder zeigen', net: '🌐 SBKIM-Fenster öffnen', menu: 'SBKIM-Netz' },
-    en: { title: '🔏 Seal and 🌐 SBKIM', help: 'Both can be dragged. At the top bar they snap in. “−” makes them small, “✕” hides them.', seal: '🔏 Show seal again', net: '🌐 Open SBKIM window', menu: 'SBKIM network' },
-    ru: { title: '🔏 Печать и 🌐 SBKIM', help: 'Оба можно перетаскивать. У верхней панели они закрепляются. «−» уменьшает, «✕» скрывает.', seal: '🔏 Снова показать печать', net: '🌐 Открыть окно SBKIM', menu: 'Сеть SBKIM' },
-    pl: { title: '🔏 Pieczęć i 🌐 SBKIM', help: 'Oba można przeciągać. Przy górnym pasku się zaczepiają. „−” zmniejsza, „✕” ukrywa.', seal: '🔏 Pokaż pieczęć ponownie', net: '🌐 Otwórz okno SBKIM', menu: 'Sieć SBKIM' }
+    de: { title: 'Siegel und SBKIM', help: 'Das Siegel prüft die App still im Hintergrund. Hier siehst du, was es geprüft hat. Im SBKIM-Fenster verbindest du die Pro-Apps im Mycel, wenn du das möchtest.', seal: 'Siegel öffnen', net: 'SBKIM-Fenster öffnen', menu: 'SBKIM-Netz' },
+    en: { title: 'Seal and SBKIM', help: 'The seal quietly checks the app in the background. Here you see what it checked. In the SBKIM window you connect the Pro apps in the mycel, if you want to.', seal: 'Open seal', net: 'Open SBKIM window', menu: 'SBKIM network' },
+    ru: { title: 'Печать и SBKIM', help: 'Печать тихо проверяет приложение в фоне. Здесь видно, что она проверила. В окне SBKIM можно связать Pro-приложения в мицелий.', seal: 'Открыть печать', net: 'Открыть окно SBKIM', menu: 'Сеть SBKIM' },
+    pl: { title: 'Pieczęć i SBKIM', help: 'Pieczęć cicho sprawdza aplikację w tle. Tutaj widać, co sprawdziła. W oknie SBKIM połączysz aplikacje Pro w grzybni, jeśli chcesz.', seal: 'Otwórz pieczęć', net: 'Otwórz okno SBKIM', menu: 'Sieć SBKIM' }
   };
   const t = key => (words[document.documentElement.lang] || words.de)[key];
   const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
-  const seal = () => window.SbkimWidget;
   const net = () => window.SbkimRendezvousUI;
+  // The floating Siegel stays out of sight everywhere; its checks keep running (CSS only, nothing stored).
+  const hiddenStyle = make('style'); hiddenStyle.id = 'pb-seal-in-settings';
+  hiddenStyle.textContent = '#sbkim-widget{display:none!important}';
+  (document.head || document.documentElement).append(hiddenStyle);
+  /** Opens the Siegel window (Modul 16) through its badge; the badge lives in the hidden widget. */
   function showSeal() {
-    try { seal()?.show(); seal()?.maximize?.(); } catch (e) { console.warn('[PrivateBrain] Siegel nicht gezeigt:', e); }
+    const badge = document.getElementById('sbkim-siegel-badge') || document.getElementById('sbkim-widget-slot-siegel');
+    try { badge?.click(); } catch (e) { console.warn('[PrivateBrain] Siegel nicht geöffnet:', e); }
     draw();
   }
   function openNet() { try { net()?.show(); } catch (e) { console.warn('[PrivateBrain] Mycel-Fenster nicht geöffnet:', e); } }
@@ -29,8 +38,7 @@
   function draw() {
     if (box) {
       set(title, t('title')); set(help, t('help')); set(sealButton, t('seal')); set(netButton, t('net'));
-      // Only offer the way back while the Siegel is really gone.
-      sealButton.hidden = !seal() || (typeof seal().isVisible === 'function' && seal().isVisible());
+      sealButton.hidden = !document.getElementById('sbkim-siegel-badge') && !document.getElementById('sbkim-widget-slot-siegel');
       netButton.hidden = !net();
     }
     if (menuButton) { set(menuButton, t('menu')); menuButton.title = t('net').replace(/\p{Extended_Pictographic}\uFE0F?\s*/gu, ''); menuButton.hidden = !net(); }
