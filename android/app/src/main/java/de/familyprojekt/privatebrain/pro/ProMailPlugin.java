@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.net.ssl.SSLException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /** Named mail operations only. Credentials are collected by Android, never by the page. */
@@ -100,17 +101,54 @@ public class ProMailPlugin extends Plugin {
     @PluginMethod public void index(PluginCall call) { perform(call, () -> engine.index(account(call), required(call, "folder"), call.getData().optLong("since", -1), call.getData().optLong("before", 0))); }
     @PluginMethod public void locate(PluginCall call) { perform(call, () -> engine.locate(account(call), required(call, "folder"), required(call, "messageId"))); }
     @PluginMethod public void indexText(PluginCall call) { perform(call, () -> engine.indexText(account(call), required(call, "folder"), required(call, "validity"), call.getData().optJSONArray("uids"))); }
-    @PluginMethod public void message(PluginCall call) { perform(call, () -> engine.message(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1))); }
+    @PluginMethod public void message(PluginCall call) { perform(call, () -> recentMessage(call)); }
+    // Klaus 27.11.2026: „dass das Öffnen der Anhänge schneller geht“. A tap on an attachment fetched the whole mail from the
+    // provider a second time. The last mails fetched (opened or prefetched) now stay briefly in memory, so the attachment
+    // opens from there; on a slow line that saves the full download. Only this run of the app, never on disk.
+    private static final int RECENT_MAILS = 4, RECENT_CHARS = 24_000_000;
+    private final java.util.LinkedHashMap<String, JSONObject> recent = new java.util.LinkedHashMap<>(8, .75f, true);
+    private static String recentKey(String account, String folder, String validity, long uid) { return account + "\n" + folder + "\n" + validity + "\n" + uid; }
+    private static long weight(JSONObject mail) {
+        long chars = mail.optString("html", "").length() + mail.optString("text", "").length() + mail.optString("raw", "").length();
+        JSONArray files = mail.optJSONArray("attachments");
+        if (files != null) for (int i = 0; i < files.length(); i++) { JSONObject f = files.optJSONObject(i); if (f != null) chars += f.optString("data", "").length(); }
+        return chars;
+    }
+    private JSONObject recentMessage(PluginCall call) throws Exception {
+        String id = required(call, "account"), folder = required(call, "folder"), validity = required(call, "validity");
+        long uid = call.getData().optLong("uid", -1);
+        String key = recentKey(id, folder, validity, uid);
+        synchronized (recent) { JSONObject hit = recent.get(key); if (hit != null) return hit; }
+        JSONObject mail = engine.message(engine.account(id), folder, validity, uid);
+        if (weight(mail) <= RECENT_CHARS) synchronized (recent) {
+            recent.put(key, mail);
+            long total = 0; for (JSONObject m : recent.values()) total += weight(m);
+            java.util.Iterator<JSONObject> oldest = recent.values().iterator();
+            while (oldest.hasNext() && (recent.size() > RECENT_MAILS || total > RECENT_CHARS)) { JSONObject m = oldest.next(); if (m == mail) break; total -= weight(m); oldest.remove(); }
+        }
+        return mail;
+    }
+    /** A mail that left its folder or lost its stored attachments is not served from memory again. */
+    private void forgetRecent(PluginCall call, JSONArray uids) {
+        String id = call.getString("account", ""), folder = call.getString("folder", ""), validity = call.getString("validity", "");
+        synchronized (recent) {
+            if (uids == null) { recent.remove(recentKey(id, folder, validity, call.getData().optLong("uid", -1))); return; }
+            for (int i = 0; i < uids.length(); i++) recent.remove(recentKey(id, folder, validity, uids.optLong(i, -1)));
+        }
+    }
+    private static boolean flagOnly(String action) { return action != null && java.util.Arrays.asList("read", "unread", "star", "unstar").contains(action); }
     @PluginMethod public void action(PluginCall call) { perform(call, () -> {
+        if (!flagOnly(call.getString("action"))) forgetRecent(call, null);
         engine.action(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1), required(call, "action"), call.getString("target", ""));
         return new JSONObject().put("ok", true);
     }); }
-    @PluginMethod public void actions(PluginCall call) { perform(call, () ->
-        engine.actions(account(call), required(call, "folder"), required(call, "validity"), call.getData().optJSONArray("uids"), required(call, "action"), call.getString("target", ""))); }
+    @PluginMethod public void actions(PluginCall call) { perform(call, () -> {
+        if (!flagOnly(call.getString("action"))) forgetRecent(call, call.getData().optJSONArray("uids"));
+        return engine.actions(account(call), required(call, "folder"), required(call, "validity"), call.getData().optJSONArray("uids"), required(call, "action"), call.getString("target", "")); }); }
     @PluginMethod public void unsubscribe(PluginCall call) { perform(call, () -> { Unsubscribe.Result r = Unsubscribe.oneClick(required(call, "url"), url -> (java.net.HttpURLConnection) url.openConnection()); return new JSONObject().put("ok", r.ok).put("status", r.status); }); }
     @PluginMethod public void send(PluginCall call) { perform(call, () -> engine.send(account(call), draft(call))); backup(); }
     @PluginMethod public void saveDraft(PluginCall call) { perform(call, () -> { engine.saveDraft(account(call), draft(call)); return new JSONObject().put("ok", true); }); backup(); }
-    @PluginMethod public void forgetMessage(PluginCall call) { perform(call, () -> { engine.forgetMessage(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1)); return new JSONObject().put("ok", true); }); }
+    @PluginMethod public void forgetMessage(PluginCall call) { perform(call, () -> { forgetRecent(call, null); engine.forgetMessage(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1)); return new JSONObject().put("ok", true); }); }
     @PluginMethod public void saved(PluginCall call) { perform(call, () -> new JSONObject().put("items", engine.saved(required(call, "account")))); }
     @PluginMethod public void savedDraft(PluginCall call) { perform(call, () -> engine.savedDraft(required(call, "account"), required(call, "id"))); }
 
@@ -191,7 +229,7 @@ public class ProMailPlugin extends Plugin {
 
     @PluginMethod public void openAttachment(PluginCall call) {
         perform(call, () -> {
-            JSONObject mail = engine.message(account(call), required(call, "folder"), required(call, "validity"), call.getData().optLong("uid", -1));
+            JSONObject mail = recentMessage(call);
             int index = call.getData().optInt("index", -1);
             if (index < 0 || index >= mail.getJSONArray("attachments").length()) throw new MailFailure("INVALID_INPUT");
             JSONObject attachment = mail.getJSONArray("attachments").getJSONObject(index);

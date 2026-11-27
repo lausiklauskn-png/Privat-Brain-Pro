@@ -68,8 +68,13 @@ try{
   ok('Opening an email never starts a cloud translation',sent.length===0&&await panel.isHidden());
   await openPanel(reader,panel);await panel.locator('[data-mail-translate=preview]').filter({hasText:'⟦'}).waitFor();
   ok('The actual local mailbox reader offers a named translation action',await reader.locator('[data-mail-translate=open]').getAttribute('aria-expanded')==='true');
-  ok('The translation section is below the original email text',await panel.evaluate(panel=>{const original=panel.parentElement.querySelector(':scope>pre.mail-text');return Boolean(original&&original.compareDocumentPosition(panel)&Node.DOCUMENT_POSITION_FOLLOWING);}));
+  ok('The translation section is below the original email text',await panel.evaluate(panel=>{const original=panel.closest('.pb-mail-translation-box').parentElement.querySelector(':scope>pre.mail-text');return Boolean(original&&original.compareDocumentPosition(panel)&Node.DOCUMENT_POSITION_FOLLOWING);}));
   const preview=panel.locator('[data-mail-translate=preview]');
+  // Klaus 27.11.2026: „Übersetzen“ klappt unten auf und zu wie „Prüfung“, mit Abstand zum Mailtext; die Wahl bleibt.
+  ok('The translation toggle is not in the top action row but below the mail text, with room above it',await reader.evaluate(r=>{const box=r.querySelector(':scope>.pb-mail-translation-box'),text=r.querySelector(':scope>pre.mail-text');const top=r.querySelector('.mail-reader-actions');
+    return Boolean(box&&text&&!top?.contains(box.querySelector('[data-mail-translate=open]'))&&(text.compareDocumentPosition(box)&Node.DOCUMENT_POSITION_FOLLOWING)&&parseFloat(getComputedStyle(box).marginTop)>=16);}));
+  ok('Opening the translation is remembered for the next mail',await page.evaluate(()=>localStorage.getItem('pb_mail_translation_open_v1')==='1'));
+  ok('The toggle is only as high as its text',await reader.locator('[data-mail-translate=open]').evaluate(b=>b.getBoundingClientRect().height<=34));
   ok('The existing anonymization masks header names, email, IBAN and spaced phone',await preview.textContent().then(text=>REAL.slice(0,6).every(value=>!text.includes(value))&&text.includes('⟦')));
   await panel.locator('.pb-mail-translation-extra>summary').click();await panel.locator('[data-mail-translate=names]').fill('Bahnhofstraße 5\nKiel');
   await page.waitForFunction(()=>!document.querySelector('.pb-mail-translation-preview').textContent.includes('Kiel'));
@@ -119,7 +124,7 @@ try{
   await panel.locator('[data-mail-translate=download]').click();await panel.locator('[data-mail-translate=result]').filter({hasText:'Local de:'}).waitFor();
   ok('Only an explicit model-download action prepares models and then translates',await page.evaluate(()=>translationCalls.filter(call=>call.method==='download').length===1&&translationCalls.filter(call=>call.method==='translate').length===1));
   ok('Local translation passes the original text only to the native contract, with no cloud masking/upload',await page.evaluate(body=>translationCalls.find(call=>call.method==='translate').args.text===body,BODY)&&sent.length===0&&external.length===0);
-  ok('Automatic local translation is placed below the unchanged original',await originalUnchanged(page,snapshot)&&await panel.evaluate(panel=>Boolean(panel.parentElement.querySelector(':scope>pre.mail-text').compareDocumentPosition(panel)&Node.DOCUMENT_POSITION_FOLLOWING)));
+  ok('Automatic local translation is placed below the unchanged original',await originalUnchanged(page,snapshot)&&await panel.evaluate(panel=>Boolean(panel.closest('.pb-mail-translation-box').parentElement.querySelector(':scope>pre.mail-text').compareDocumentPosition(panel)&Node.DOCUMENT_POSITION_FOLLOWING)));
   await panel.locator('[data-mail-translate=target]').selectOption('pl');await panel.locator('[data-mail-translate=result]').filter({hasText:'Local pl:'}).waitFor();
   ok('Changing the target actually selects another native translation language',await page.evaluate(()=>translationCalls.filter(call=>call.method==='translate').at(-1).args.target==='pl')&&await panel.locator('[data-mail-translate=result]').getAttribute('lang')==='pl');
   for(const size of [{width:320,height:740},{width:412,height:915},{width:800,height:1280},{width:1024,height:1366},{width:1920,height:1080}]){
@@ -168,6 +173,8 @@ try{
   ({context,page,reader,panel,sent,errors}=await fixture({ready:false,language:'en',pendingDownload:true,delayedCancelSettle:true}));
   await panel.locator('[data-mail-translate=download]').waitFor();await panel.locator('[data-mail-translate=download]').click();await page.waitForFunction(()=>typeof translationDownloadReject==='function');
   await panel.locator('[data-mail-translate=close]').click();await page.waitForFunction(()=>translationCalls.some(call=>call.method==='cancel'));
+  ok('Closing the translation is remembered (the next mail stays folded unless opened)',await page.evaluate(()=>localStorage.getItem('pb_mail_translation_open_v1')==='0'));
+  await page.evaluate(()=>localStorage.removeItem('pb_mail_translation_open_v1'));
   await page.evaluate(()=>{translationModelsReady=true;});await page.locator('[data-mail-id="'+'9'.repeat(64)+'"]').click();
   await reader.locator(':scope>pre.mail-text',{hasText:'A different email text.'}).waitFor();await reader.locator('[role=status]',{hasText:'übersetzt'}).waitFor();
   ok('A cancellation acknowledgement alone cannot start another job while the preceding operation still settles',await page.evaluate(()=>!translationCalls.some(call=>call.method==='translate')));

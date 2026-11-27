@@ -280,6 +280,25 @@ final class DesktopService {
         };
     }
     private void backup()throws Exception {if(vault.configured()&&vault.unlocked())vault.backupMailStore(storage);}
+    // Klaus 27.11.2026: „dass das Öffnen der Anhänge schneller geht“ – wie unter Android bleiben die letzten geholten Mails
+    // (geöffnet oder vorausgeladen) kurz im Speicher, ein Anhang öffnet ohne zweiten Download. Nur in diesem Lauf, nie auf der Platte.
+    private static final int RECENT_MAILS=4,RECENT_CHARS=24_000_000;
+    private final java.util.LinkedHashMap<String,JSONObject> recent=new java.util.LinkedHashMap<>(8,.75f,true);
+    private static String recentKey(String account,String folder,String validity,long uid){return account+"\n"+folder+"\n"+validity+"\n"+uid;}
+    private static long weight(JSONObject m){long n=m.optString("html","").length()+m.optString("text","").length()+m.optString("raw","").length();JSONArray f=m.optJSONArray("attachments");
+        if(f!=null)for(int i=0;i<f.length();i++){JSONObject a=f.optJSONObject(i);if(a!=null)n+=a.optString("data","").length();}return n;}
+    private JSONObject recentMessage(MailAccount account,JSONObject o)throws Exception{
+        String folder=required(o,"folder"),validity=required(o,"validity");long uid=o.optLong("uid",-1);String key=recentKey(account.id,folder,validity,uid);
+        synchronized(recent){JSONObject hit=recent.get(key);if(hit!=null)return hit;}
+        JSONObject m=mail.message(account,folder,validity,uid);
+        if(weight(m)<=RECENT_CHARS)synchronized(recent){recent.put(key,m);long total=0;for(JSONObject x:recent.values())total+=weight(x);
+            java.util.Iterator<JSONObject> oldest=recent.values().iterator();
+            while(oldest.hasNext()&&(recent.size()>RECENT_MAILS||total>RECENT_CHARS)){JSONObject x=oldest.next();if(x==m)break;total-=weight(x);oldest.remove();}}
+        return m;
+    }
+    private void forgetRecent(JSONObject o,JSONArray uids){String a=o.optString("account"),f=o.optString("folder"),v=o.optString("validity");
+        synchronized(recent){if(uids==null){recent.remove(recentKey(a,f,v,o.optLong("uid",-1)));return;}for(int i=0;i<uids.length();i++)recent.remove(recentKey(a,f,v,uids.optLong(i,-1)));}}
+    private static boolean flagOnly(String action){return java.util.List.of("read","unread","star","unstar").contains(action);}
     private JSONObject mail(String method,JSONObject o)throws Exception {
         if(method.equals("accounts"))return new JSONObject().put("items",mail.accounts());
         if(method.equals("addAccount")){
@@ -316,7 +335,7 @@ final class DesktopService {
             case "index" -> mail.index(account,required(o,"folder"),o.optLong("since",-1),o.optLong("before",0));
             case "locate" -> mail.locate(account,required(o,"folder"),required(o,"messageId"));
             case "indexText" -> mail.indexText(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"));
-            case "message" -> mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+            case "message" -> recentMessage(account,o);
             case "openOriginal" -> {
                 byte[] data=mail.raw(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
                 String wunsch=o.optString("name","").trim();if(wunsch.toLowerCase(java.util.Locale.ROOT).endsWith(".eml"))wunsch=wunsch.substring(0,wunsch.length()-4);
@@ -330,17 +349,17 @@ final class DesktopService {
                 yield new JSONObject().put("sourceBase64",Base64.encodeToString(data,Base64.NO_WRAP)).put("groesse",data.length);
             }
             case "openAttachment" -> {
-                JSONObject message=mail.message(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));
+                JSONObject message=recentMessage(account,o);
                 JSONArray attachments=message.getJSONArray("attachments");int index=o.optInt("index",-1);if(index<0||index>=attachments.length())throw new MailFailure("INVALID_INPUT");
                 JSONObject attachment=attachments.getJSONObject(index);
                 if(attachment.has("ref")){java.io.File file=vault.stageAttachment(attachment.getString("ref"));yield export(new Selected(file,attachment.optString("name",file.getName())),false);}
                 yield export(selected(attachment),false);
             }
-            case "action" -> {mail.action(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1),required(o,"action"),o.optString("target"));yield yes();}
-            case "actions" -> mail.actions(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"),required(o,"action"),o.optString("target"));
+            case "action" -> {if(!flagOnly(o.optString("action")))forgetRecent(o,null);mail.action(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1),required(o,"action"),o.optString("target"));yield yes();}
+            case "actions" -> {if(!flagOnly(o.optString("action")))forgetRecent(o,o.optJSONArray("uids"));yield mail.actions(account,required(o,"folder"),required(o,"validity"),o.optJSONArray("uids"),required(o,"action"),o.optString("target"));}
             case "send" -> {JSONObject result=mail.send(account,o.getJSONObject("draft"));backup();yield result;}
             case "saveDraft" -> {mail.saveDraft(account,o.getJSONObject("draft"));backup();yield yes();}
-            case "forgetMessage" -> {mail.forgetMessage(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));yield yes();}
+            case "forgetMessage" -> {forgetRecent(o,null);mail.forgetMessage(account,required(o,"folder"),required(o,"validity"),o.optLong("uid",-1));yield yes();}
             default -> throw new MailFailure("INVALID_INPUT");
         };
     }

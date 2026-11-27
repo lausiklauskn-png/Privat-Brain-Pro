@@ -3,7 +3,10 @@
    the device. The catalog and attachments stay untouched. */
 (() => {
   'use strict';
-  const MAX_TEXT = 40000, PREF = 'pb_mail_translation_language_v1', ROUTE_PREF = 'pb_mail_translation_route_v1';
+  const MAX_TEXT = 40000, PREF = 'pb_mail_translation_language_v1', ROUTE_PREF = 'pb_mail_translation_route_v1', OPEN_PREF = 'pb_mail_translation_open_v1';
+  // Klaus 27.11.2026: „Übersetzen“ klappt wie „Prüfung“ unten unter der Mail auf und zu; die Wahl bleibt für die nächste Mail.
+  const openPref = () => {try{const v=localStorage.getItem(OPEN_PREF);return v==='1'?true:v==='0'?false:null;}catch{return null;}};
+  const keepOpen = value => {try{localStorage.setItem(OPEN_PREF,value?'1':'0');}catch{}};
   const languages = Object.freeze({de:'Deutsch',en:'English',ru:'Русский',pl:'Polski',tr:'Türkçe',ar:'العربية',uk:'Українська',es:'Español',fr:'Français',it:'Italiano',pt:'Português',fa:'فارسی',ro:'Română',bg:'Български',el:'Ελληνικά',zh:'中文'});
   const languageNames = {de:'German',en:'English',ru:'Russian',pl:'Polish',tr:'Turkish',ar:'Arabic',uk:'Ukrainian',es:'Spanish',fr:'French',it:'Italian',pt:'Portuguese',fa:'Persian',ro:'Romanian',bg:'Bulgarian',el:'Greek',zh:'Chinese'};
   const words = {
@@ -43,10 +46,11 @@
     const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d','M3 5h11M8 3v2M5 5c0 4 3 7 7 9M12 5c0 4-3 7-8 9M13 21l4-10 4 10M15 17h4');svg.append(path);return svg;
   }
   function mount({host,actions,source,scope}={}) {
-    if(!host||!actions||typeof source!=='function'||actions.querySelector('[data-mail-translate="open"]'))return null;
+    if(!host||!actions||typeof source!=='function'||actions.querySelector('[data-mail-translate="open"]')||host.querySelector(':scope > .pb-mail-translation-box'))return null;
     const labels=[],bind=(node,key)=>{labels.push([node,key]);return node;};
     const button=key=>{const n=make('button','mail-button');n.type='button';n.dataset.mailTranslate=key;n.append(bind(make('span'),key));return n;};
-    const open=button('open');open.classList.add('pb-mail-translate-action');open.prepend(translationIcon());open.setAttribute('aria-expanded','false');
+    const open=button('open');open.classList.add('pb-mail-translate-action','pb-mail-translate-toggle');open.prepend(translationIcon());open.setAttribute('aria-expanded','false');
+    const box=make('div','pb-mail-translation-box');
     const panel=make('section','pb-mail-translation');panel.hidden=true;
     const routeLabel=make('label','pb-mail-translation-route'),routeText=bind(make('span'),'route'),route=make('select');route.dataset.mailTranslate='route';
     for(const code of ['device','mistral','own'])route.append(new Option('',code));route.options[0].disabled=!device();
@@ -228,21 +232,24 @@
     route.onchange=()=>{try{localStorage.setItem(ROUTE_PREF,route.value);}catch{}reset();};
     names.oninput=()=>{mask();refresh();};
     const hidePanel=focus=>{generation++;cancelLocal();panel.hidden=true;open.setAttribute('aria-expanded','false');setStatus('');if(focus)open.focus();};
-    close.onclick=()=>hidePanel(true);
-    open.onclick=async()=>{
-      if(!panel.hidden){hidePanel(false);return;}panel.hidden=false;open.setAttribute('aria-expanded','true');const before=++generation;
+    close.onclick=()=>{keepOpen(false);hidePanel(true);};
+    const showPanel=async()=>{
+      panel.hidden=false;open.setAttribute('aria-expanded','true');const before=++generation;
       try{await readSource();if(before!==generation||!currentHost())return;}catch{if(before===generation&&currentHost())setStatus('unavailable');return;}
       mask();refresh();if(!src.text.trim())setStatus('empty');else if(route.value==='device')void translateLocal();
     };
-    actions.append(open);actions.after(panel);active.add({panel,refresh,currentHost,cancelLocal});
+    open.onclick=async()=>{if(!panel.hidden){keepOpen(false);hidePanel(false);return;}keepOpen(true);await showPanel();};
+    box.append(open,panel);actions.after(box);active.add({panel,box,refresh,currentHost,cancelLocal});
     // Generalprüfung 16.11.2026: „Alle Konten“ hängt die Leseansicht erst nach mount() in die Seite – refresh() beschriftet nur
     // Eingehängtes, der Knopf „Übersetzen“ blieb dort ohne Namen. Die frisch gebauten Teile bekommen ihren Text hier einmal fest.
     for(const [node,key] of labels)node.textContent=t(key);
     refresh();
-    if(route.value==='device'){panel.hidden=false;open.setAttribute('aria-expanded','true');void translateLocal();}
+    const wanted=openPref();
+    if(wanted===true&&route.value!=='device')void showPanel();
+    else if(wanted!==false&&route.value==='device'){panel.hidden=false;open.setAttribute('aria-expanded','true');void translateLocal();}
     return Object.freeze({button:open,panel});
   }
   new MutationObserver(()=>{for(const item of active)if(item.panel.isConnected)item.refresh();else{item.cancelLocal();active.delete(item);}}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-  new MutationObserver(()=>{for(const item of active){if(!item.currentHost())item.cancelLocal();if(!item.panel.isConnected){active.delete(item);continue;}const host=item.panel.parentElement,original=host?.querySelector(':scope > .mail-original, :scope > pre.mail-text');if(original&&original.nextElementSibling!==item.panel)original.after(item.panel);}}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','style','data-view']});
+  new MutationObserver(()=>{for(const item of active){if(!item.currentHost())item.cancelLocal();if(!item.panel.isConnected){active.delete(item);continue;}const box=item.box,host=box.parentElement,report=host?.querySelector(':scope > .mail-report'),original=host?.querySelector(':scope > .mail-original, :scope > pre.mail-text');if(report){if(report.previousElementSibling!==box)report.before(box);}else if(original&&original.nextElementSibling!==box)original.after(box);}}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden','style','data-view']});
   window.PBMailTranslation=Object.freeze({mount,languages});
 })();

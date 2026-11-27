@@ -38,8 +38,8 @@ try{
   await page.locator('.live-mail .mail-html').waitFor();
   ok('320px touch: Pro name with version fits and the green offline information is removed',await page.locator('.brand h1').evaluate(e=>[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())==='Private Brain Pro'&&await page.locator('#pbVersion').isVisible()&&await page.locator('.badge-off').count()===0&&await page.locator('.brand h1').evaluate(e=>e.getBoundingClientRect().right<=document.querySelector('header .tools').getBoundingClientRect().left));
   ok('The public version stays a plain app number in the actual debug build header',await page.locator('#pbVersion').textContent()==='v1.0.36'&&await page.locator('#pbVersion').getAttribute('aria-label')==='Private Brain Pro v1.0.36');
-  // Klaus 2026-10-21: only the round Siegel floats (lamps not shown); tools/native/test-mycel.mjs covers drag, snap, ✕.
-  ok('The round Siegel is mounted at the actual app origin and floats outside the toolbar',await page.locator('#sbkim-widget-slot-siegel').isVisible()&&await page.locator('.native-toolbar-row #sbkim-widget').count()===0&&await page.locator('#sbkim-widget').evaluate(w=>getComputedStyle(w).position==='fixed'));
+  // Klaus 27.11.2026: the Siegel runs in the background and opens from Settings; nothing of it floats over the app.
+  ok('The Siegel is mounted at the actual app origin but nothing of it floats over the app',await page.locator('#sbkim-widget-slot-siegel').count()===1&&!(await page.locator('#sbkim-widget-slot-siegel').isVisible())&&await page.locator('.native-toolbar-row #sbkim-widget').count()===0);
   for(const width of [320,390,768,1280]){
     await page.setViewportSize({width,height:width<650?640:900});await page.evaluate(()=>document.fonts.ready);
     const layout=await page.evaluate(()=>{
