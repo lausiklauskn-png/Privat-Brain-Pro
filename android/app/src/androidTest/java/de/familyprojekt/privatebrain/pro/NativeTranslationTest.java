@@ -116,12 +116,12 @@ public class NativeTranslationTest {
                     + "const status=f.panel.querySelector('[role=status]')?.textContent||'';"
                     + "if(/konnte nicht|nicht verfügbar|angehalten|nicht sicher|fehlen noch/.test(status))return JSON.stringify({error:status,diagnostics:PBTranslationDevice.diagnostics?.(),models:f.models});"
                     + "if(!output||output.hidden||!result?.textContent.trim()||target.disabled)return '';"
-                    + "return JSON.stringify({text:result.textContent,original:f.original.textContent,below:f.original.nextElementSibling===f.panel,visible:!f.panel.hidden&&f.host.getClientRects().length>0,target:target.value,source:f.panel.querySelector('[data-mail-translate=source]').value,route:f.panel.querySelector('[data-mail-translate=route]').value,resultLanguage:result.lang,offline:PBNetwork.offline});})()", 360, context);
+                    + "return JSON.stringify({text:result.textContent,original:f.original.textContent,below:f.original.nextElementSibling===f.panel.closest('.pb-mail-translation-box'),visible:!f.panel.hidden&&f.host.getClientRects().length>0,target:target.value,source:f.panel.querySelector('[data-mail-translate=source]').value,route:f.panel.querySelector('[data-mail-translate=route]').value,resultLanguage:result.lang,offline:PBNetwork.offline});})()", 360, context);
                 JSONObject result = new JSONObject(new JSONObject("{\"v\":" + raw + "}").getString("v"));
                 assertFalse("real reader/bridge/worker inference failed: " + result + "; local assets=" + TranslationAssets.diagnostics(), result.has("error"));
                 assertTrue("reader translated automatically while offline", result.getBoolean("offline"));
                 assertEquals("original mail text is preserved exactly", originalText, result.getString("original"));
-                assertTrue("translation panel directly follows the original", result.getBoolean("below"));
+                assertTrue("translation fold box (Klaus 27.11.2026) directly follows the original", result.getBoolean("below"));
                 assertTrue("translation is visible in the reader", result.getBoolean("visible"));
                 assertEquals("language was identified without selecting it", "auto", result.getString("source"));
                 assertEquals("device", result.getString("route"));
